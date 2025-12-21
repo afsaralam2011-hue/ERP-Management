@@ -19,6 +19,7 @@ import {
   FiDatabase as FiDatabaseIcon
 } from 'react-icons/fi';
 import { supabase } from '../../../supabaseClient';
+import FlatteningForm from './FlatteningForm';
 import './FlatteningPage.css';
 
 const FlatteningPage = () => {
@@ -32,6 +33,7 @@ const FlatteningPage = () => {
   const [shifts, setShifts] = useState([]);
   const [targets, setTargets] = useState([]);
   const [showReport, setShowReport] = useState(false);
+  const [showFlatteningModal, setShowFlatteningModal] = useState(false);
   
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -75,7 +77,9 @@ const FlatteningPage = () => {
       
       // Check if supabase is available
       if (!supabase) {
-        throw new Error('Supabase client not initialized');
+        const errorMsg = 'Supabase client not initialized';
+        setError(errorMsg);
+        return;
       }
       
       // Fetch shifts from shifts table
@@ -84,7 +88,9 @@ const FlatteningPage = () => {
         .select('*')
         .order('start_time');
       
-      if (shiftsError) throw shiftsError;
+      if (shiftsError) {
+        console.error("Error fetching shifts:", shiftsError);
+      }
 
       // Fetch targets from targets table
       const { data: targetsData, error: targetsError } = await supabase
@@ -93,7 +99,9 @@ const FlatteningPage = () => {
         .eq('section', 'Flattening')
         .eq('is_active', true);
 
-      if (targetsError) throw targetsError;
+      if (targetsError) {
+        console.error("Error fetching targets:", targetsError);
+      }
 
       // Fetch records from flatteningsection table
       const { data: recordsData, error: recordsError } = await supabase
@@ -101,18 +109,43 @@ const FlatteningPage = () => {
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (recordsError) throw recordsError;
+      if (recordsError) {
+        console.error("Error fetching records:", recordsError);
+        setRecords([]);
+        calculateStats([]);
+      } else {
+        setRecords(recordsData || []);
+        calculateStats(recordsData || []);
+      }
 
       setShifts(shiftsData || []);
       setTargets(targetsData || []);
-      setRecords(recordsData || []);
-      calculateStats(recordsData || []);
       
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error('Error in fetchData:', error);
       setError(error.message);
+      setRecords([]);
+      calculateStats([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Test function for debugging
+  const testDatabaseConnection = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('flatteningsection')
+        .select('id, created_at')
+        .limit(1);
+      
+      if (error) {
+        alert(`Error: ${error.message}`);
+      } else {
+        alert(`Connection successful! Found ${data?.length || 0} records.`);
+      }
+    } catch (err) {
+      alert(`Test failed: ${err.message}`);
     }
   };
 
@@ -137,7 +170,7 @@ const FlatteningPage = () => {
       });
       return;
     }
-
+    
     const today = new Date().toISOString().split('T')[0];
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
@@ -475,7 +508,7 @@ const FlatteningPage = () => {
     URL.revokeObjectURL(url);
   };
 
-  // Print report
+  // Print report - Optimized for single page
   const handlePrintReport = () => {
     if (!reportData || reportData.recordCount === 0) {
       alert('No report data to print');
@@ -487,42 +520,116 @@ const FlatteningPage = () => {
       <!DOCTYPE html>
       <html>
       <head>
-        <title>Flattening Section Report - ${reportData.formattedDate}</title>
+        <title>Flattening Report - ${reportData.formattedDate}</title>
         <style>
-          body { font-family: Arial, sans-serif; margin: 40px; }
-          .header { text-align: center; margin-bottom: 30px; }
-          .header h1 { color: #333; margin-bottom: 10px; }
-          .header .date { color: #666; font-size: 18px; }
-          .table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+          body { 
+            font-family: Arial, sans-serif; 
+            margin: 10px;
+            font-size: 9px;
+            line-height: 1.2;
+          }
+          
+          .header { 
+            text-align: center; 
+            margin-bottom: 8px; 
+            padding-bottom: 5px;
+            border-bottom: 1px solid #ccc;
+          }
+          
+          .header h1 { 
+            margin: 0 0 3px 0;
+            font-size: 12px;
+            color: #333;
+          }
+          
+          .header .date { 
+            color: #666; 
+            font-size: 9px;
+          }
+          
+          .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 5px;
+            margin: 8px 0;
+          }
+          
+          .summary-item {
+            padding: 4px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            text-align: center;
+          }
+          
+          .summary-label {
+            font-size: 7px;
+            color: #666;
+            margin-bottom: 1px;
+          }
+          
+          .summary-value {
+            font-size: 10px;
+            font-weight: bold;
+          }
+          
+          .table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin: 6px 0;
+            font-size: 8px;
+          }
+          
           .table th, .table td { 
             border: 1px solid #ddd; 
-            padding: 12px; 
+            padding: 3px; 
             text-align: left; 
           }
-          .table th { background-color: #f8f9fa; }
-          .machine-table, .item-table { margin: 20px 0; }
-          .machine-row, .item-row { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eee; }
-          .summary { 
-            background-color: #f8f9fa; 
-            padding: 20px; 
-            margin: 20px 0; 
-            border-radius: 8px; 
+          
+          .table th { 
+            background-color: #f5f5f5;
+            font-weight: bold;
           }
-          .summary h3 { margin-top: 0; }
-          .efficiency { 
-            font-size: 24px; 
-            font-weight: bold; 
-            color: ${reportData.overallEfficiency >= 90 ? '#28a745' : 
-                    reportData.overallEfficiency >= 80 ? '#ffc107' : '#dc3545'}; 
+          
+          .compact-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin: 8px 0;
           }
+          
+          .compact-box {
+            border: 1px solid #eee;
+            padding: 4px;
+            border-radius: 3px;
+          }
+          
+          .compact-title {
+            font-size: 8px;
+            font-weight: bold;
+            margin-bottom: 3px;
+            color: #333;
+          }
+          
+          .compact-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 1px 0;
+            font-size: 7px;
+          }
+          
           .footer { 
-            margin-top: 40px; 
+            margin-top: 10px; 
             text-align: center; 
             color: #666; 
-            font-size: 12px; 
+            font-size: 7px;
+            padding-top: 5px;
+            border-top: 1px solid #ddd;
           }
+          
           @media print {
-            body { margin: 20px; }
+            body { 
+              margin: 5mm;
+            }
             .no-print { display: none; }
           }
         </style>
@@ -533,7 +640,29 @@ const FlatteningPage = () => {
           <div class="date">${reportData.formattedDate}</div>
         </div>
         
-        <h3>Shift-wise Production:</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="summary-label">Total Production</div>
+            <div class="summary-value">${reportData.totalProduction.toFixed(1)} KG</div>
+          </div>
+          <div class="summary-item">
+            <div class="summary-label">Total Target</div>
+            <div class="summary-value">${reportData.totalTarget.toFixed(1)} KG</div>
+          </div>
+          <div class="summary-item">
+            <div class="summary-label">Overall Efficiency</div>
+            <div class="summary-value" style="color: ${reportData.overallEfficiency >= 90 ? '#28a745' : 
+                    reportData.overallEfficiency >= 80 ? '#ffc107' : '#dc3545'}">
+              ${reportData.overallEfficiency.toFixed(1)}%
+            </div>
+          </div>
+          <div class="summary-item">
+            <div class="summary-label">Total Records</div>
+            <div class="summary-value">${reportData.recordCount}</div>
+          </div>
+        </div>
+        
+        <h3 style="margin: 6px 0 3px 0; font-size: 9px;">Shift-wise Production:</h3>
         <table class="table">
           <thead>
             <tr>
@@ -547,42 +676,34 @@ const FlatteningPage = () => {
             ${Object.entries(reportData.shiftGroups).map(([shift, data]) => `
               <tr>
                 <td>${shift}</td>
-                <td>${data.production.toFixed(1)} KG</td>
-                <td>${data.target.toFixed(1)} KG</td>
+                <td>${data.production.toFixed(1)}</td>
+                <td>${data.target.toFixed(1)}</td>
                 <td>${data.efficiency.toFixed(1)}%</td>
               </tr>
             `).join('')}
           </tbody>
         </table>
         
-        <h3>Machine-wise Production:</h3>
-        <div class="machine-table">
-          ${Object.entries(reportData.machineProduction).map(([machine, data]) => `
-            <div class="machine-row">
-              <div><strong>${machine}</strong></div>
-              <div>${data.production.toFixed(1)} KG</div>
-              <div>${data.efficiency.toFixed(1)}%</div>
-            </div>
-          `).join('')}
-        </div>
-        
-        <h3>Item-wise Production:</h3>
-        <div class="item-table">
-          ${Object.entries(reportData.itemProduction).map(([item, data]) => `
-            <div class="item-row">
-              <div><strong>${item}</strong></div>
-              <div>${data.production.toFixed(1)} KG</div>
-              <div>${data.efficiency.toFixed(1)}%</div>
-            </div>
-          `).join('')}
-        </div>
-        
-        <div class="summary">
-          <h3>Summary:</h3>
-          <p><strong>Total Production:</strong> ${reportData.totalProduction.toFixed(1)} KG</p>
-          <p><strong>Total Target:</strong> ${reportData.totalTarget.toFixed(1)} KG</p>
-          <p><strong>Overall Efficiency:</strong> <span class="efficiency">${reportData.overallEfficiency}%</span></p>
-          <p><strong>Total Records:</strong> ${reportData.recordCount}</p>
+        <div class="compact-section">
+          <div class="compact-box">
+            <div class="compact-title">Machine-wise Production</div>
+            ${Object.entries(reportData.machineProduction).map(([machine, data]) => `
+              <div class="compact-row">
+                <span>${machine}</span>
+                <span>${data.production.toFixed(1)} KG (${data.efficiency.toFixed(1)}%)</span>
+              </div>
+            `).join('')}
+          </div>
+          
+          <div class="compact-box">
+            <div class="compact-title">Item-wise Production</div>
+            ${Object.entries(reportData.itemProduction).map(([item, data]) => `
+              <div class="compact-row">
+                <span>${item}</span>
+                <span>${data.production.toFixed(1)} KG (${data.efficiency.toFixed(1)}%)</span>
+              </div>
+            `).join('')}
+          </div>
         </div>
         
         <div class="footer">
@@ -590,11 +711,11 @@ const FlatteningPage = () => {
           Flattening Section - Production Management System
         </div>
         
-        <div class="no-print" style="margin-top: 20px;">
-          <button onclick="window.print()" style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">
+        <div class="no-print" style="margin-top: 8px; text-align: center;">
+          <button onclick="window.print()" style="padding: 4px 8px; background: #007bff; color: white; border: none; border-radius: 2px; cursor: pointer; font-size: 8px;">
             Print Report
           </button>
-          <button onclick="window.close()" style="padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer; margin-left: 10px;">
+          <button onclick="window.close()" style="padding: 4px 8px; background: #6c757d; color: white; border: none; border-radius: 2px; cursor: pointer; margin-left: 4px; font-size: 8px;">
             Close
           </button>
         </div>
@@ -688,97 +809,78 @@ const FlatteningPage = () => {
     }
   };
 
-  // Production Sections for switcher - آپ کی ترتیب کے مطابق
-  const productionSections = [
-    { id: 'raw-material', name: 'Raw Material Section', icon: FiArchive, path: '/production-sections/raw-material', color: '#06b6d4' },
-    { id: 'flattening', name: 'Flattening Section', icon: FiPackage, path: '/production-sections/flattening', color: '#10b981' },
-    { id: 'spiral', name: 'Spiral Section', icon: FiColumns, path: '/production-sections/spiral', color: '#3b82f6' },
-    { id: 'pvc-coating', name: 'PVC Coating Section', icon: FiLayers, path: '/production-sections/pvc-coating', color: '#8b5cf6' },
-    { id: 'cutting-packing', name: 'Cutting & Packing Section', icon: FiScissors, path: '/production-sections/cutting-packing', color: '#f59e0b' },
-    { id: 'finished-goods', name: 'Finished Goods Section', icon: FiCheckSquare, path: '/production-sections/finished-goods', color: '#ec4899' }
-  ];
-
-  // Stats with different colors and icons
+  // Updated Stats with correct descriptions and in two rows
+  // Row 1: Today's Stats (4 cards)
+  // Row 2: Overall Stats (4 cards)
   const statCards = [
-    {
-      id: 'total-records',
-      title: 'Total Records',
-      value: stats.totalRecords,
-      icon: FiDatabaseIcon,
-      color: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
-      description: 'All records in database',
-      gradientColors: ['#3b82f6', '#1d4ed8'],
-      iconBg: '#3b82f6'
-    },
+    // Row 1: Today's Stats
     {
       id: 'today-records',
       title: "Today's Records",
       value: stats.todayRecords,
       icon: FiClock,
       color: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-      description: 'Added today',
+      description: 'Records added today',
       gradientColors: ['#10b981', '#059669'],
       iconBg: '#10b981'
     },
     {
       id: 'today-production',
-      title: 'Today Production Quantity',
+      title: "Today's Production",
       value: `${stats.todayProduction.toLocaleString()} KG`,
       icon: FiPackage,
-      color: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-      description: "Today's total production",
-      gradientColors: ['#f59e0b', '#d97706'],
-      iconBg: '#f59e0b'
+      color: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+      description: 'Total production today',
+      gradientColors: ['#3b82f6', '#1d4ed8'],
+      iconBg: '#3b82f6'
     },
     {
       id: 'today-efficiency',
-      title: 'Today Efficiency',
+      title: "Today's Efficiency",
       value: `${stats.todayEfficiency}%`,
       icon: FiActivity,
-      color: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
-      description: "Today's average efficiency",
+      color: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+      description: 'Average efficiency today',
       colorValue: true,
       valueColor: stats.todayEfficiency >= 80 ? '#059669' :
                   stats.todayEfficiency >= 60 ? '#d97706' : '#ef4444',
-      gradientColors: ['#8b5cf6', '#7c3aed'],
-      iconBg: '#8b5cf6'
-    },
-    {
-      id: 'total-production',
-      title: 'Total Production',
-      value: `${stats.totalProduction.toLocaleString()} KG`,
-      icon: FiTrendingUpIcon,
-      color: 'linear-gradient(135deg, #ec4899 0%, #be185d 100%)',
-      description: 'Total units produced',
-      gradientColors: ['#ec4899', '#be185d'],
-      iconBg: '#ec4899'
+      gradientColors: ['#f59e0b', '#d97706'],
+      iconBg: '#f59e0b'
     },
     {
       id: 'yesterday-production',
       title: 'Yesterday Production',
       value: `${stats.yesterdayProduction.toLocaleString()} KG`,
       icon: FiTrendingDown,
+      color: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+      description: 'Total production yesterday',
+      gradientColors: ['#8b5cf6', '#7c3aed'],
+      iconBg: '#8b5cf6'
+    },
+    // Row 2: Overall Stats
+    {
+      id: 'total-records',
+      title: 'Total Records',
+      value: stats.totalRecords,
+      icon: FiDatabaseIcon,
+      color: 'linear-gradient(135deg, #ec4899 0%, #be185d 100%)',
+      description: 'All records in database',
+      gradientColors: ['#ec4899', '#be185d'],
+      iconBg: '#ec4899'
+    },
+    {
+      id: 'total-production',
+      title: 'Total Production',
+      value: `${stats.totalProduction.toLocaleString()} KG`,
+      icon: FiTrendingUpIcon,
       color: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
-      description: 'Previous day total',
+      description: 'Total production all time',
       gradientColors: ['#06b6d4', '#0891b2'],
       iconBg: '#06b6d4'
     },
     {
-      id: 'yesterday-efficiency',
-      title: 'Yesterday Efficiency',
-      value: `${stats.yesterdayEfficiency}%`,
-      icon: FiTarget,
-      color: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
-      description: 'Previous day average',
-      colorValue: true,
-      valueColor: stats.yesterdayEfficiency >= 80 ? '#059669' :
-                  stats.yesterdayEfficiency >= 60 ? '#d97706' : '#ef4444',
-      gradientColors: ['#6366f1', '#4f46e5'],
-      iconBg: '#6366f1'
-    },
-    {
       id: 'avg-efficiency',
-      title: 'Avg Efficiency',
+      title: 'Average Efficiency',
       value: `${stats.avgEfficiency}%`,
       icon: FiPercent,
       color: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
@@ -788,6 +890,19 @@ const FlatteningPage = () => {
                   stats.avgEfficiency >= 60 ? '#d97706' : '#ef4444',
       gradientColors: ['#f97316', '#ea580c'],
       iconBg: '#f97316'
+    },
+    {
+      id: 'yesterday-efficiency',
+      title: 'Yesterday Efficiency',
+      value: `${stats.yesterdayEfficiency}%`,
+      icon: FiTarget,
+      color: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
+      description: 'Average efficiency yesterday',
+      colorValue: true,
+      valueColor: stats.yesterdayEfficiency >= 80 ? '#059669' :
+                  stats.yesterdayEfficiency >= 60 ? '#d97706' : '#ef4444',
+      gradientColors: ['#6366f1', '#4f46e5'],
+      iconBg: '#6366f1'
     }
   ];
 
@@ -863,7 +978,7 @@ const FlatteningPage = () => {
 
         <div className="header-actions">
           <button
-            onClick={() => navigate('/production-sections/flattening/new')}
+            onClick={() => setShowFlatteningModal(true)}
             className="primary-btn"
           >
             <FiPlus size={20} /> New Record
@@ -896,59 +1011,22 @@ const FlatteningPage = () => {
         </div>
       </div>
 
-      {/* Production Section Switcher */}
-      <div className="section-switcher-card">
-        <div className="bg-pattern" />
-        
-        <div className="switcher-header">
-          <div className="switcher-icon">
-            <FiGrid size={18} />
-          </div>
-          <div>
-            Switch Production Section
-            <div className="switcher-subtitle">
-              Click any section to switch instantly
-            </div>
-          </div>
+      {/* Flattening Specific Header */}
+      <div className="flattening-header-card">
+        <div className="flattening-header-icon">
+          <FiPackage size={24} />
         </div>
-        
-        <div className="sections-grid">
-          {productionSections.map((section) => (
-            <div
-              key={section.id}
-              className="section-card-wrapper"
-              onClick={() => navigate(section.path)}
-            >
-              <div className={`section-card ${section.id === 'flattening' ? 'active' : ''}`}>
-                <div className="section-card-highlight" />
-                <div className="section-glow-right" />
-                <div className="section-glow-left" />
-                <div className="section-icon-container">
-                  <section.icon size={22} />
-                  <div className="icon-glow" />
-                </div>
-                <div className="section-text-content">
-                  <div className="section-name">
-                    {section.name}
-                  </div>
-                  <div className="section-hint">
-                    <span>📊</span>
-                    <span>Click to open section</span>
-                  </div>
-                </div>
-                <div className="section-hover-overlay" />
-              </div>
-              {section.id !== 'flattening' && (
-                <div className="section-bottom-shadow" />
-              )}
-            </div>
-          ))}
+        <div className="flattening-header-content">
+          <h2>Flattening Production Dashboard</h2>
+          <p>Monitor production, efficiency, and records for Flattening Section</p>
         </div>
-        
-        <div className="switcher-footer">
-          <span>
-            <FiArrowUpRight size={10} /> Click any card above to navigate to that production section
-          </span>
+        <div className="flattening-header-actions">
+          <button
+            onClick={() => navigate('/production')}
+            className="back-to-sections-btn"
+          >
+            <FiGrid size={16} /> All Sections
+          </button>
         </div>
       </div>
 
@@ -1025,9 +1103,59 @@ const FlatteningPage = () => {
         </div>
       </div>
 
-      {/* Stats Cards - 8 Cards with Different Colors and Shadows */}
+      {/* Stats Cards - 2 Rows: 4 cards each */}
       <div className="stats-grid">
-        {statCards.map((card, index) => (
+        {/* Row 1: Today's Stats */}
+        {statCards.slice(0, 4).map((card, index) => (
+          <div
+            key={card.id}
+            className="stat-card"
+            style={{ 
+              cursor: 'default',
+              background: `linear-gradient(135deg, ${card.gradientColors[0]}15 0%, ${card.gradientColors[1]}05 100%)`,
+              border: `1px solid ${card.gradientColors[0]}30`,
+              boxShadow: `0 10px 25px ${card.gradientColors[0]}10, 0 5px 15px ${card.gradientColors[1]}05`
+            }}
+          >
+            {/* Top Glow Effect */}
+            <div 
+              className="stat-card-glow"
+              style={{
+                background: `linear-gradient(90deg, transparent 0%, ${card.gradientColors[0]}30 50%, transparent 100%)`
+              }}
+            />
+            
+            <div className="stat-card-content">
+              <div>
+                <div className="stat-title">{card.title}</div>
+                <div 
+                  className="stat-value"
+                  style={{ 
+                    color: card.colorValue ? card.valueColor : card.gradientColors[0],
+                    textShadow: `0 2px 4px ${card.gradientColors[0]}20`
+                  }}
+                >
+                  {card.value}
+                </div>
+              </div>
+              <div 
+                className="stat-icon"
+                style={{ 
+                  background: card.color,
+                  boxShadow: `0 4px 10px ${card.iconBg}40`
+                }}
+              >
+                <card.icon size={24} />
+              </div>
+            </div>
+            <div className="stat-description">
+              {card.description}
+            </div>
+          </div>
+        ))}
+        
+        {/* Row 2: Overall Stats */}
+        {statCards.slice(4, 8).map((card, index) => (
           <div
             key={card.id}
             className="stat-card"
@@ -1367,7 +1495,7 @@ const FlatteningPage = () => {
                 : 'No production records available. Create your first record to get started.'}
             </div>
             <button
-              onClick={() => navigate('/production-sections/flattening/new')}
+              onClick={() => setShowFlatteningModal(true)}
               className="create-first-btn"
             >
               <FiPlus /> Create First Record
@@ -1586,7 +1714,7 @@ const FlatteningPage = () => {
         
         <div className="footer-actions">
           <button
-            onClick={() => navigate('/production-sections/flattening/new')}
+            onClick={() => setShowFlatteningModal(true)}
             className="footer-btn add-btn"
           >
             <FiPlus size={12} /> Add New Record
@@ -1605,6 +1733,25 @@ const FlatteningPage = () => {
           </button>
         </div>
       </div>
+
+      {/* Flattening Form Modal */}
+      {showFlatteningModal && (
+        <div className="modal-overlay">
+          <div className="modal-container">
+            <FlatteningForm 
+              isModal={true}
+              onClose={() => {
+                setShowFlatteningModal(false);
+                fetchData();
+              }}
+              onSuccess={() => {
+                setShowFlatteningModal(false);
+                fetchData();
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,119 +1,80 @@
 // src/pages/ProductionSections/FlatteningSection/FlatteningEditForm.jsx
 import React, { useState, useEffect } from 'react';
-import { 
-  FiSave, FiX, FiPackage, FiArrowLeft,
-  FiCalendar, FiUser, FiSettings, FiTarget,
-  FiEdit2, FiRefreshCw
-} from 'react-icons/fi';
 import { useNavigate, useParams } from 'react-router-dom';
+import { 
+  FiSave, FiX, FiTarget, FiPackage,
+  FiUser, FiEdit2, FiClipboard, FiSettings,
+  FiCheck, FiAlertCircle, FiPlus,
+  FiTrash2, FiList, FiTrendingUp,
+  FiCalendar, FiClock, FiDatabase
+} from 'react-icons/fi';
 import { supabase } from '../../../supabaseClient';
+import './FlatteningForm.css';
 
-const FlatteningEditForm = () => {
+const FlatteningEditForm = ({ onClose, isModal = true }) => {
   const navigate = useNavigate();
-  const { id } = useParams();
-  
-  const [formData, setFormData] = useState({
-    section_name: 'Flattening',
+  const { id } = useParams(); // Get record ID from URL
+
+  const [targetData, setTargetData] = useState({
+    targets_id: '',
     machine_id: '',
     machine_no: '',
-    item_name: '',
-    production_quantity: '',
-    coil_size: '',
-    shift: '', // Note: shift column, not shift_code
-    operator_name: '',
-    efficiency: 0,
-    remarks: ''
+    shift_code: '',
+    shift_name: '',
+    target_qty: 0,
+    unit: 'Kg'
   });
 
-  const [errors, setErrors] = useState({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [recordLoading, setRecordLoading] = useState(true);
-  
-  // Dynamic data from Supabase
-  const [shifts, setShifts] = useState([]);
+  const [itemsList, setItemsList] = useState([
+    { 
+      id: 1, 
+      item_code: '', 
+      item_name: '',
+      coil_size: '',
+      material_type: '',
+      production_quantity: '', 
+      unit: 'Kg',
+      efficiency: 0
+    }
+  ]);
+
+  const [operatorName, setOperatorName] = useState('');
+  const [remarks, setRemarks] = useState('');
+  const [totalProduction, setTotalProduction] = useState(0);
+  const [overallEfficiency, setOverallEfficiency] = useState(0);
+  const [validationErrors, setValidationErrors] = useState({});
+  const [fieldStatus, setFieldStatus] = useState({});
+  const [recordDate, setRecordDate] = useState('');
+  const [recordTime, setRecordTime] = useState('');
+
   const [items, setItems] = useState([]);
-  const [machineTargets, setMachineTargets] = useState([]);
-  
-  // Calculated efficiency
-  const [calculatedEfficiency, setCalculatedEfficiency] = useState(0);
-  const [machineTarget, setMachineTarget] = useState(null);
-  
-  // Original record data
-  const [originalRecord, setOriginalRecord] = useState(null);
+  const [targets, setTargets] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
 
-  // Fetch all configuration data
   useEffect(() => {
-    fetchConfigurationData();
-  }, []);
-
-  // Fetch existing record data
-  useEffect(() => {
+    fetchAllData();
     if (id) {
       fetchRecordData();
+      setIsEditing(true);
     }
   }, [id]);
 
-  const fetchConfigurationData = async () => {
+  const fetchAllData = async () => {
     try {
       setLoading(true);
+      const [itemsRes, targetsRes] = await Promise.all([
+        supabase.from('items').select('*').eq('is_active', true).order('item_name'),
+        supabase.from('targets').select('*').eq('is_active', true).order('targets_id')
+      ]);
       
-      // Fetch shifts from shifts table
-      const { data: shiftData, error: shiftError } = await supabase
-        .from('shifts')
-        .select('*')
-        .order('start_time');
-      
-      if (shiftError) {
-        console.error('Error fetching shifts:', shiftError);
-      }
-      
-      // Fetch items from items table
-      const { data: itemData, error: itemError } = await supabase
-        .from('items')
-        .select('*')
-        .eq('is_active', true)
-        .order('item_name');
-      
-      if (itemError) {
-        console.error('Error fetching items:', itemError);
-      }
-      
-      // Fetch targets for Flattening section
-      const { data: targetData, error: targetError } = await supabase
-        .from('targets')
-        .select('*')
-        .eq('is_active', true)
-        .eq('section', 'Flattening');
-      
-      if (targetError) {
-        console.error('Error fetching targets:', targetError);
-      }
-
-      setShifts(shiftData || []);
-      setItems(itemData || []);
-      setMachineTargets(targetData || []);
-      
+      setItems(itemsRes.data || []);
+      setTargets(targetsRes.data || []);
     } catch (error) {
-      console.error('Error fetching configuration:', error);
-      // Fallback data
-      setShifts([
-        { id: 1, shift_code: 'M', shift_name: 'Morning', start_time: '08:00:00', end_time: '16:00:00' },
-        { id: 2, shift_code: 'E', shift_name: 'Evening', start_time: '16:00:00', end_time: '00:00:00' },
-        { id: 3, shift_code: 'N', shift_name: 'Night', start_time: '00:00:00', end_time: '08:00:00' }
-      ]);
-      
-      setItems([
-        { id: 1, item_code: 'CW-1.5', item_name: 'Copper Wire 1.5mm', coil_size: '200kg', material_type: 'Copper', unit: 'Kg', is_active: true },
-        { id: 2, item_code: 'CW-2.0', item_name: 'Copper Wire 2mm', coil_size: '300kg', material_type: 'Copper', unit: 'Kg', is_active: true }
-      ]);
-      
-      setMachineTargets([
-        { id: 1, section: 'Flattening', machine_id: 'FLT-001', machine_no: 'FLT-001', shift_code: 'M', target_qty: 5000, uom: 'Kg', is_active: true },
-        { id: 2, section: 'Flattening', machine_id: 'FLT-001', machine_no: 'FLT-001', shift_code: 'E', target_qty: 4500, uom: 'Kg', is_active: true },
-        { id: 3, section: 'Flattening', machine_id: 'FLT-002', machine_no: 'FLT-002', shift_code: 'M', target_qty: 5500, uom: 'Kg', is_active: true }
-      ]);
-      
+      setError('Data loading failed');
     } finally {
       setLoading(false);
     }
@@ -121,1047 +82,747 @@ const FlatteningEditForm = () => {
 
   const fetchRecordData = async () => {
     try {
-      setRecordLoading(true);
-      
+      setLoading(true);
       const { data, error } = await supabase
         .from('flatteningsection')
         .select('*')
         .eq('id', id)
         .single();
-      
-      if (error) {
-        console.error('Error fetching record:', error);
-        alert('Record not found!');
-        navigate('/production-sections/flattening');
-        return;
-      }
-      
+
+      if (error) throw error;
+
       if (data) {
-        console.log('Loaded record from flatteningsection:', data);
-        setOriginalRecord(data);
-        
-        // Map database columns to form fields
-        setFormData({
-          section_name: data.section_name || 'Flattening',
+        // Parse date and time
+        const date = new Date(data.created_at);
+        setRecordDate(date.toLocaleDateString());
+        setRecordTime(date.toLocaleTimeString());
+
+        // Set target data
+        setTargetData({
+          targets_id: data.targets_id || '',
           machine_id: data.machine_id || '',
           machine_no: data.machine_no || '',
-          item_name: data.item_name || '',
-          production_quantity: data.production_quantity || '',
-          coil_size: data.coil_size || '',
-          shift: data.shift || '', // Note: using shift, not shift_code
-          operator_name: data.operator_name || '',
-          efficiency: data.efficiency || 0,
-          remarks: data.remarks || ''
+          shift_code: data.shift_code || '',
+          shift_name: data.shift_name || '',
+          target_qty: 0, // Will be fetched from targets
+          unit: data.unit || 'Kg'
         });
-        
-        // Set calculated efficiency
-        if (data.efficiency) {
-          setCalculatedEfficiency(data.efficiency);
+
+        // Set items list (single item for edit)
+        setItemsList([
+          {
+            id: 1,
+            item_code: data.item_code || '',
+            item_name: data.item_name || '',
+            coil_size: data.coil_size || '',
+            material_type: data.material_type || '',
+            production_quantity: data.production_quantity || '',
+            unit: data.unit || 'Kg',
+            efficiency: data.efficiency || 0
+          }
+        ]);
+
+        setOperatorName(data.operator_name || '');
+        setRemarks(data.remarks || '');
+        setTotalProduction(parseFloat(data.production_quantity) || 0);
+        setOverallEfficiency(parseFloat(data.efficiency) || 0);
+
+        // Fetch target quantity from targets table
+        if (data.targets_id) {
+          const { data: targetData } = await supabase
+            .from('targets')
+            .select('target_qty')
+            .eq('targets_id', data.targets_id)
+            .single();
+
+          if (targetData) {
+            setTargetData(prev => ({
+              ...prev,
+              target_qty: parseFloat(targetData.target_qty) || 0
+            }));
+          }
         }
       }
-      
     } catch (error) {
-      console.error('Error fetching record data:', error);
-      alert('Failed to load record data');
-      navigate('/production-sections/flattening');
+      console.error('Error fetching record:', error);
+      setError('Failed to load record data');
     } finally {
-      setRecordLoading(false);
+      setLoading(false);
     }
   };
 
-  // Calculate efficiency when production quantity or machine changes
-  useEffect(() => {
-    calculateEfficiency();
-  }, [formData.production_quantity, formData.machine_id, formData.shift]);
+  // Get field border class based on status
+  const getFieldClass = (fieldName, value) => {
+    if (!value || value.toString().trim() === '') {
+      return 'empty-required';
+    }
+    return 'filled-valid';
+  };
 
-  const calculateEfficiency = () => {
-    const productionQty = parseInt(formData.production_quantity) || 0;
+  const handleTargetChange = (e) => {
+    const selectedTargetsId = e.target.value;
     
-    if (!formData.machine_id || !formData.shift || productionQty <= 0) {
-      setCalculatedEfficiency(0);
-      setMachineTarget(null);
+    const newStatus = { ...fieldStatus };
+    if (selectedTargetsId) {
+      newStatus.targets_id = 'filled-valid';
+    } else {
+      newStatus.targets_id = 'empty-required';
+    }
+    setFieldStatus(newStatus);
+
+    if (!selectedTargetsId) {
+      setTargetData({
+        targets_id: '',
+        machine_id: '',
+        machine_no: '',
+        shift_code: '',
+        shift_name: '',
+        target_qty: 0,
+        unit: 'Kg'
+      });
+      setTotalProduction(0);
+      setOverallEfficiency(0);
       return;
     }
 
-    // Find machine target (using shift_code from targets table)
-    const target = machineTargets.find(m => 
-      m.machine_id === formData.machine_id && 
-      m.shift_code === formData.shift // Compare shift with shift_code from targets
-    );
+    const target = targets.find(t => t.targets_id === selectedTargetsId);
     
-    setMachineTarget(target);
-
-    if (!target) {
-      setCalculatedEfficiency(0);
-      return;
+    if (target) {
+      const newTargetData = {
+        targets_id: target.targets_id,
+        machine_id: target.machine_id || '',
+        machine_no: target.machine_no || '',
+        shift_code: target.shift_code || '',
+        shift_name: target.shift_name || '',
+        target_qty: parseFloat(target.target_qty) || 0,
+        unit: target.uom || 'Kg'
+      };
+      
+      setTargetData(newTargetData);
+      
+      // Update items efficiency with new target
+      const updatedItems = itemsList.map(item => {
+        if (item.production_quantity) {
+          const quantityNum = parseFloat(item.production_quantity) || 0;
+          const efficiency = newTargetData.target_qty > 0 
+            ? (quantityNum / newTargetData.target_qty) * 100
+            : 0;
+          
+          return {
+            ...item,
+            efficiency: Math.min(100, parseFloat(efficiency.toFixed(2)))
+          };
+        }
+        return item;
+      });
+      
+      setItemsList(updatedItems);
+      
+      // Update overall efficiency
+      if (totalProduction > 0) {
+        const efficiency = (totalProduction / newTargetData.target_qty) * 100;
+        setOverallEfficiency(Math.min(100, parseFloat(efficiency.toFixed(2))));
+      }
     }
-
-    // Calculate efficiency percentage
-    const efficiency = target.target_qty > 0 ? (productionQty / target.target_qty) * 100 : 0;
-    const calculatedEff = parseFloat(efficiency.toFixed(2));
-    setCalculatedEfficiency(calculatedEff);
-    
-    // Update form data with new efficiency
-    setFormData(prev => ({
-      ...prev,
-      efficiency: calculatedEff
-    }));
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
+  const handleItemChange = (id, itemCode) => {
+    const updatedItems = itemsList.map(item => {
+      if (item.id === id) {
+        const selectedItem = items.find(i => i.item_code === itemCode);
+        if (selectedItem) {
+          const newStatus = { ...fieldStatus };
+          newStatus[`item_${id}`] = 'filled-valid';
+          setFieldStatus(newStatus);
+          
+          return {
+            ...item,
+            item_code: itemCode,
+            item_name: selectedItem.item_name || '',
+            coil_size: selectedItem.coil_size || '',
+            material_type: selectedItem.material_type || '',
+            unit: selectedItem.unit || 'Kg'
+          };
+        }
+      }
+      return item;
+    });
     
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setItemsList(updatedItems);
+  };
+
+  const handleQuantityChange = (id, quantity) => {
+    const quantityNum = parseFloat(quantity) || 0;
     
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
+    const updatedItems = itemsList.map(item => {
+      if (item.id === id) {
+        const newStatus = { ...fieldStatus };
+        if (quantity && quantity.trim() !== '') {
+          newStatus[`quantity_${id}`] = 'filled-valid';
+        } else {
+          newStatus[`quantity_${id}`] = 'empty-required';
+        }
+        setFieldStatus(newStatus);
+        
+        const efficiency = targetData.target_qty > 0 
+          ? (quantityNum / targetData.target_qty) * 100
+          : 0;
+          
+        return { 
+          ...item, 
+          production_quantity: quantity,
+          efficiency: Math.min(100, parseFloat(efficiency.toFixed(2)))
+        };
+      }
+      return item;
+    });
+    
+    setItemsList(updatedItems);
+    
+    const total = updatedItems.reduce((sum, item) => {
+      return sum + (parseFloat(item.production_quantity) || 0);
+    }, 0);
+    
+    setTotalProduction(total);
+    
+    if (targetData.target_qty > 0) {
+      const overallEff = (total / targetData.target_qty) * 100;
+      setOverallEfficiency(Math.min(100, parseFloat(overallEff.toFixed(2))));
     }
   };
 
-  const handleMachineChange = (e) => {
-    const machineId = e.target.value;
-    
-    // Find machine details from targets table
-    const selectedMachine = machineTargets.find(m => 
-      m.machine_id === machineId
-    );
-    
-    setFormData(prev => ({
-      ...prev,
-      machine_id: machineId,
-      machine_no: selectedMachine ? selectedMachine.machine_no : ''
-    }));
-    
-    if (errors.machine_id) {
-      setErrors(prev => ({
-        ...prev,
-        machine_id: ''
-      }));
+  const handleOperatorChange = (value) => {
+    const newStatus = { ...fieldStatus };
+    if (value && value.trim() !== '') {
+      newStatus.operator_name = 'filled-valid';
+    } else {
+      newStatus.operator_name = 'empty-required';
     }
+    setFieldStatus(newStatus);
+    setOperatorName(value);
+  };
+
+  const handleRemarksChange = (value) => {
+    const newStatus = { ...fieldStatus };
+    if (value && value.trim() !== '') {
+      newStatus.remarks = 'filled-valid';
+    } else {
+      newStatus.remarks = '';
+    }
+    setFieldStatus(newStatus);
+    setRemarks(value);
   };
 
   const validateForm = () => {
-    const newErrors = {};
+    const errors = {};
+    const newFieldStatus = {};
     
-    if (!formData.section_name.trim()) newErrors.section_name = 'Section is required';
-    if (!formData.machine_id.trim()) newErrors.machine_id = 'Machine ID is required';
-    if (!formData.machine_no.trim()) newErrors.machine_no = 'Machine number is required';
-    if (!formData.item_name.trim()) newErrors.item_name = 'Item name is required';
-    
-    if (!formData.production_quantity) {
-      newErrors.production_quantity = 'Production quantity is required';
-    } else if (isNaN(formData.production_quantity) || parseInt(formData.production_quantity) <= 0) {
-      newErrors.production_quantity = 'Please enter a valid positive number';
+    if (!targetData.targets_id) {
+      errors.targets_id = 'Target ID is required';
+      newFieldStatus.targets_id = 'empty-required';
+    } else {
+      newFieldStatus.targets_id = 'filled-valid';
     }
     
-    if (!formData.coil_size.trim()) newErrors.coil_size = 'Coil size is required';
-    if (!formData.shift.trim()) newErrors.shift = 'Shift is required';
-    if (!formData.operator_name.trim()) newErrors.operator_name = 'Operator name is required';
+    if (!operatorName.trim()) {
+      errors.operator_name = 'Operator name is required';
+      newFieldStatus.operator_name = 'empty-required';
+    } else {
+      newFieldStatus.operator_name = 'filled-valid';
+    }
+    
+    itemsList.forEach((item, index) => {
+      if (!item.item_code) {
+        errors[`item_${item.id}`] = `Item ${index + 1} is required`;
+        newFieldStatus[`item_${item.id}`] = 'empty-required';
+      } else {
+        newFieldStatus[`item_${item.id}`] = 'filled-valid';
+      }
+      
+      if (!item.production_quantity || parseFloat(item.production_quantity) <= 0) {
+        errors[`quantity_${item.id}`] = `Valid quantity for item ${index + 1} is required`;
+        newFieldStatus[`quantity_${item.id}`] = 'empty-required';
+      } else {
+        newFieldStatus[`quantity_${item.id}`] = 'filled-valid';
+      }
+    });
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    setFieldStatus(newFieldStatus);
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (!validateForm()) {
+      setError('Please fill all required fields');
       return;
     }
 
-    if (originalRecord && !hasChanges()) {
-      if (window.confirm('No changes detected. Continue anyway?')) {
-        navigate('/production-sections/flattening');
-      }
-      return;
-    }
-
-    setIsSubmitting(true);
+    setSaving(true);
+    setError('');
+    setSuccess('');
 
     try {
-      // Prepare update data according to your table structure
-      const updateData = {
-        section_name: formData.section_name.trim(),
-        machine_id: formData.machine_id.trim(),
-        machine_no: formData.machine_no.trim(),
-        item_name: formData.item_name.trim(),
-        production_quantity: parseInt(formData.production_quantity),
-        coil_size: formData.coil_size.trim(),
-        shift: formData.shift.trim(), // Storing as shift (e.g., 'M', 'E', 'N')
-        operator_name: formData.operator_name.trim(),
-        efficiency: calculatedEfficiency,
-        remarks: formData.remarks.trim(),
-        updated_at: new Date().toISOString()
-      };
-      
-      console.log('Updating record with data:', updateData);
-      
-      const { data, error } = await supabase
-        .from('flatteningsection')
-        .update(updateData)
-        .eq('id', id)
-        .select();
+      if (isEditing && id) {
+        // UPDATE existing record
+        const updateData = {
+          targets_id: targetData.targets_id,
+          machine_id: targetData.machine_id,
+          machine_no: targetData.machine_no,
+          item_code: itemsList[0].item_code,
+          item_name: itemsList[0].item_name,
+          coil_size: itemsList[0].coil_size,
+          material_type: itemsList[0].material_type,
+          operator_name: operatorName.trim(),
+          production_quantity: parseFloat(itemsList[0].production_quantity),
+          unit: itemsList[0].unit,
+          efficiency: itemsList[0].efficiency,
+          shift_code: targetData.shift_code,
+          shift_name: targetData.shift_name,
+          remarks: remarks?.trim() || '',
+          updated_at: new Date().toISOString()
+        };
 
-      if (error) {
-        console.error('Supabase update error:', error);
-        
-        // Try without updated_at if column doesn't exist
-        if (error.message.includes('column')) {
-          console.log('Trying without updated_at column...');
-          
-          const { updated_at, ...updateDataWithoutUpdatedAt } = updateData;
-          
-          const { data: simpleData, error: simpleError } = await supabase
-            .from('flatteningsection')
-            .update(updateDataWithoutUpdatedAt)
-            .eq('id', id)
-            .select();
-          
-          if (simpleError) throw simpleError;
-          
-          alert('Flattening section record updated successfully!');
-          navigate('/production-sections/flattening');
-          return;
-        }
-        
-        throw error;
+        const { error: updateError } = await supabase
+          .from('flatteningsection')
+          .update(updateData)
+          .eq('id', id);
+
+        if (updateError) throw updateError;
+
+        setSuccess('Record updated successfully!');
+      } else {
+        // CREATE new record
+        const records = itemsList.map(item => ({
+          section_name: 'Flattening',
+          targets_id: targetData.targets_id,
+          machine_id: targetData.machine_id,
+          machine_no: targetData.machine_no,
+          item_code: item.item_code,
+          item_name: item.item_name,
+          coil_size: item.coil_size,
+          material_type: item.material_type,
+          operator_name: operatorName.trim(),
+          production_quantity: parseFloat(item.production_quantity),
+          unit: item.unit,
+          efficiency: item.efficiency,
+          shift_code: targetData.shift_code,
+          shift_name: targetData.shift_name,
+          remarks: remarks?.trim() || '',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }));
+
+        const { error: insertError } = await supabase
+          .from('flatteningsection')
+          .insert(records);
+
+        if (insertError) throw insertError;
+
+        setSuccess(`${records.length} record(s) saved successfully!`);
       }
       
-      console.log('Update successful:', data);
-      alert('Flattening section record updated successfully!');
-      navigate('/production-sections/flattening');
-      
+      setTimeout(() => {
+        if (isModal && onClose) {
+          onClose();
+        } else {
+          navigate('/production-sections/flattening');
+        }
+      }, 1500);
+
     } catch (error) {
-      console.error('Error updating record:', error);
-      alert(`Failed to update record. Error: ${error.message}`);
+      console.error('Save error:', error);
+      setError(isEditing ? 'Update failed: ' : 'Save failed: ' + error.message);
     } finally {
-      setIsSubmitting(false);
+      setSaving(false);
     }
   };
 
-  const handleCancel = () => {
-    if (hasChanges()) {
-      if (window.confirm('Are you sure you want to cancel? All unsaved changes will be lost.')) {
-        navigate('/production-sections/flattening');
-      }
+  const handleReset = () => {
+    if (isEditing && id) {
+      fetchRecordData(); // Reset to original values
+    } else {
+      setTargetData({
+        targets_id: '',
+        machine_id: '',
+        machine_no: '',
+        shift_code: '',
+        shift_name: '',
+        target_qty: 0,
+        unit: 'Kg'
+      });
+      setItemsList([
+        { 
+          id: 1, 
+          item_code: '', 
+          item_name: '',
+          coil_size: '',
+          material_type: '',
+          production_quantity: '', 
+          unit: 'Kg',
+          efficiency: 0
+        }
+      ]);
+      setOperatorName('');
+      setRemarks('');
+      setTotalProduction(0);
+      setOverallEfficiency(0);
+      setRecordDate('');
+      setRecordTime('');
+    }
+    setValidationErrors({});
+    setFieldStatus({});
+    setError('');
+    setSuccess('');
+  };
+
+  const handleClose = () => {
+    if (isModal && onClose) {
+      onClose();
     } else {
       navigate('/production-sections/flattening');
     }
   };
 
-  const handleReset = () => {
-    if (originalRecord) {
-      if (window.confirm('Reset all fields to original values?')) {
-        setFormData({
-          section_name: originalRecord.section_name || 'Flattening',
-          machine_id: originalRecord.machine_id || '',
-          machine_no: originalRecord.machine_no || '',
-          item_name: originalRecord.item_name || '',
-          production_quantity: originalRecord.production_quantity || '',
-          coil_size: originalRecord.coil_size || '',
-          shift: originalRecord.shift || '',
-          operator_name: originalRecord.operator_name || '',
-          efficiency: originalRecord.efficiency || 0,
-          remarks: originalRecord.remarks || ''
-        });
-        setErrors({});
-        if (originalRecord.efficiency) {
-          setCalculatedEfficiency(originalRecord.efficiency);
-        }
-      }
-    }
-  };
-
-  const hasChanges = () => {
-    if (!originalRecord) return false;
-    
+  if (loading) {
     return (
-      formData.section_name !== (originalRecord.section_name || 'Flattening') ||
-      formData.machine_id !== (originalRecord.machine_id || '') ||
-      formData.machine_no !== (originalRecord.machine_no || '') ||
-      formData.item_name !== (originalRecord.item_name || '') ||
-      formData.production_quantity !== (originalRecord.production_quantity?.toString() || '') ||
-      formData.coil_size !== (originalRecord.coil_size || '') ||
-      formData.shift !== (originalRecord.shift || '') ||
-      formData.operator_name !== (originalRecord.operator_name || '') ||
-      formData.efficiency !== (originalRecord.efficiency || 0) ||
-      formData.remarks !== (originalRecord.remarks || '')
-    );
-  };
-
-  // Get unique machines from targets table for Flattening section
-  const flatteningMachines = machineTargets
-    .filter((value, index, self) => 
-      index === self.findIndex(t => t.machine_id === value.machine_id)
-    );
-
-  if (loading || recordLoading) {
-    return (
-      <div style={{ 
-        padding: '50px', 
-        textAlign: 'center', 
-        color: '#64748b' 
-      }}>
-        <div style={{ 
-          width: '40px', 
-          height: '40px', 
-          border: '3px solid #e2e8f0',
-          borderTopColor: '#f59e0b',
-          borderRadius: '50%',
-          animation: 'spin 1s linear infinite',
-          margin: '0 auto 20px'
-        }} />
-        <p>
-          {recordLoading ? 'Loading record data...' : 'Loading configuration data...'}
-        </p>
+      <div className="flattening-modal-overlay" onClick={handleClose}>
+        <div className="flattening-modal-container" onClick={(e) => e.stopPropagation()}>
+          <div className="loading-container">
+            <div className="loading-spinner"></div>
+            <p>{isEditing ? 'Loading Record...' : 'Loading Form...'}</p>
+          </div>
+        </div>
       </div>
     );
   }
-
-  if (!originalRecord) {
-    return (
-      <div style={{ padding: '50px', textAlign: 'center', color: '#ef4444' }}>
-        <h3>Record Not Found</h3>
-        <p>Unable to load record with ID: {id}</p>
-        <button
-          onClick={() => navigate('/production-sections/flattening')}
-          style={{
-            marginTop: '20px',
-            padding: '10px 20px',
-            background: '#10b981',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            cursor: 'pointer'
-          }}
-        >
-          Go Back
-        </button>
-      </div>
-    );
-  }
-
-  // Get shift display name
-  const getShiftDisplayName = (shiftCode) => {
-    const shiftInfo = shifts.find(s => s.shift_code === shiftCode);
-    return shiftInfo ? `${shiftInfo.shift_name} (${shiftInfo.shift_code})` : shiftCode;
-  };
 
   return (
-    <div style={{ padding: '20px', maxWidth: '1000px', margin: '0 auto' }}>
-      {/* Header */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '30px',
-        flexWrap: 'wrap',
-        gap: '20px'
-      }}>
-        <div>
-          <button
-            onClick={() => navigate('/production-sections/flattening')}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: '#64748b',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              fontSize: '14px',
-              marginBottom: '10px',
-              padding: '8px 16px',
-              borderRadius: '8px',
-              transition: 'all 0.2s ease'
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.background = '#f8fafc';
-              e.target.style.color = '#475569';
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.background = 'transparent';
-              e.target.style.color = '#64748b';
-            }}
-          >
-            <FiArrowLeft /> Back to Flattening Section
+    <div className="flattening-modal-overlay" onClick={handleClose}>
+      <div className="flattening-modal-container" onClick={(e) => e.stopPropagation()}>
+        
+        <div className="modal-header">
+          <div className="header-content">
+            <div className="header-icon">
+              {isEditing ? <FiEdit2 /> : <FiPackage />}
+            </div>
+            <div className="header-text">
+              <h1>{isEditing ? 'EDIT FLATTENING RECORD' : 'NEW FLATTENING PRODUCTION'}</h1>
+              <p>
+                <FiDatabase /> {isEditing ? 'Editing existing record' : 'Create new production entry'}
+              </p>
+            </div>
+          </div>
+          <button className="close-button" onClick={handleClose}>
+            <FiX />
           </button>
-          <h1 style={{
-            margin: '0',
-            fontSize: '32px',
-            color: '#1e293b',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '15px'
-          }}>
-            <div style={{
-              width: '60px',
-              height: '60px',
-              background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-              borderRadius: '15px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'white'
-            }}>
-              <FiEdit2 size={28} />
-            </div>
-            Edit Flattening Record
-            <span style={{
-              fontSize: '16px',
-              background: '#fef3c7',
-              color: '#92400e',
-              padding: '4px 12px',
-              borderRadius: '20px',
-              marginLeft: '15px'
-            }}>
-              ID: {id}
-            </span>
-          </h1>
-          <p style={{ 
-            margin: '10px 0 0 75px', 
-            color: '#64748b',
-            fontSize: '16px'
-          }}>
-            Edit existing record in flatteningsection table
-          </p>
         </div>
-      </div>
 
-      {/* Change Indicator */}
-      {hasChanges() && (
-        <div style={{
-          background: '#fef3c7',
-          border: '1px solid #fbbf24',
-          borderRadius: '10px',
-          padding: '15px 20px',
-          marginBottom: '25px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '15px'
-        }}>
-          <div style={{
-            width: '30px',
-            height: '30px',
-            background: '#f59e0b',
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'white',
-            fontWeight: 'bold'
-          }}>
-            !
+        {success && (
+          <div className="message success">
+            <FiCheck /> {success}
           </div>
-          <div>
-            <strong style={{ color: '#92400e' }}>Unsaved Changes Detected</strong>
-            <div style={{ color: '#b45309', fontSize: '14px', marginTop: '5px' }}>
-              You have made changes to this record. Don't forget to save.
+        )}
+
+        {error && (
+          <div className="message error">
+            <FiAlertCircle /> {error}
+          </div>
+        )}
+
+        {/* Record Info Section for Edit Mode */}
+        {isEditing && (recordDate || recordTime) && (
+          <div className="record-info-section">
+            <div className="record-info-grid">
+              <div className="record-info-item">
+                <FiCalendar /> Record Date: <span>{recordDate}</span>
+              </div>
+              <div className="record-info-item">
+                <FiClock /> Record Time: <span>{recordTime}</span>
+              </div>
+              <div className="record-info-item">
+                <FiDatabase /> Record ID: <span>#{id}</span>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Form Container */}
-      <form onSubmit={handleSubmit}>
-        <div style={{
-          background: 'white',
-          borderRadius: '12px',
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-          padding: '30px',
-          marginBottom: '30px'
-        }}>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-            gap: '25px',
-            marginBottom: '30px'
-          }}>
-            {/* Section Name */}
-            <div>
-              <label style={{
-                marginBottom: '10px',
-                fontWeight: '600',
-                color: '#1e293b',
-                fontSize: '15px',
-                display: 'block'
-              }}>
-                Section Name *
-              </label>
-              <input
-                type="text"
-                name="section_name"
-                value={formData.section_name}
-                readOnly
-                style={{
-                  width: '100%',
-                  padding: '12px 15px',
-                  borderRadius: '10px',
-                  border: '1px solid #e2e8f0',
-                  background: '#f1f5f9',
-                  fontSize: '15px',
-                  color: '#64748b',
-                  fontWeight: '600'
-                }}
-              />
+        <form onSubmit={handleSubmit}>
+          
+          <div className="target-section">
+            <div className="section-title">
+              <FiTarget /> TARGET & MACHINE DETAILS
             </div>
+            <div className="target-grid">
+              
+              <div className="selection-box">
+                <label className="selection-label required">
+                  <FiTarget /> TARGET ID
+                </label>
+                <select
+                  value={targetData.targets_id}
+                  onChange={handleTargetChange}
+                  className={`form-select ${fieldStatus.targets_id || getFieldClass('targets_id', targetData.targets_id)}`}
+                >
+                  <option value="">-- SELECT TARGET --</option>
+                  {targets.map(target => (
+                    <option key={target.targets_id} value={target.targets_id}>
+                      {target.targets_id}
+                    </option>
+                  ))}
+                </select>
+                {validationErrors.targets_id && (
+                  <span className="error-text">{validationErrors.targets_id}</span>
+                )}
+              </div>
 
-            {/* Machine ID */}
-            <div>
-              <label style={{
-                marginBottom: '10px',
-                fontWeight: '600',
-                color: '#1e293b',
-                fontSize: '15px',
-                display: 'block'
-              }}>
-                Machine ID *
-              </label>
-              <select
-                name="machine_id"
-                value={formData.machine_id}
-                onChange={handleMachineChange}
-                style={{
-                  width: '100%',
-                  padding: '12px 15px',
-                  borderRadius: '10px',
-                  border: `1px solid ${errors.machine_id ? '#ef4444' : '#e2e8f0'}`,
-                  background: '#f8fafc',
-                  fontSize: '15px',
-                  color: '#1e293b',
-                  cursor: 'pointer'
-                }}
-              >
-                <option value="">Select Machine</option>
-                {flatteningMachines.map(machine => (
-                  <option key={machine.id} value={machine.machine_id}>
-                    {machine.machine_id} ({machine.machine_no})
-                  </option>
-                ))}
-              </select>
-              {errors.machine_id && (
-                <div style={{ color: '#ef4444', fontSize: '13px', marginTop: '5px' }}>
-                  ⚠ {errors.machine_id}
+              <div className="selection-box">
+                <label className="selection-label">MACHINE ID</label>
+                <input
+                  type="text"
+                  value={targetData.machine_id}
+                  readOnly
+                  className="selection-input readonly"
+                />
+              </div>
+
+              <div className="selection-box">
+                <label className="selection-label">MACHINE NO</label>
+                <input
+                  type="text"
+                  value={targetData.machine_no}
+                  readOnly
+                  className="selection-input readonly"
+                />
+              </div>
+
+              <div className="selection-box">
+                <label className="selection-label">SHIFT CODE</label>
+                <input
+                  type="text"
+                  value={targetData.shift_code}
+                  readOnly
+                  className="selection-input readonly"
+                />
+              </div>
+
+              <div className="selection-box target-qty-box">
+                <label className="selection-label">TARGET QTY & UNIT</label>
+                <div className="target-qty-value">
+                  {targetData.target_qty.toFixed(2)} {targetData.unit}
                 </div>
-              )}
-            </div>
+              </div>
 
-            {/* Machine Number */}
-            <div>
-              <label style={{
-                marginBottom: '10px',
-                fontWeight: '600',
-                color: '#1e293b',
-                fontSize: '15px',
-                display: 'block'
-              }}>
-                Machine Number *
-              </label>
-              <input
-                type="text"
-                name="machine_no"
-                value={formData.machine_no}
-                readOnly
-                style={{
-                  width: '100%',
-                  padding: '12px 15px',
-                  borderRadius: '10px',
-                  border: '1px solid #e2e8f0',
-                  background: '#f1f5f9',
-                  fontSize: '15px',
-                  color: '#64748b'
-                }}
-              />
-            </div>
-
-            {/* Item Name */}
-            <div>
-              <label style={{
-                marginBottom: '10px',
-                fontWeight: '600',
-                color: '#1e293b',
-                fontSize: '15px',
-                display: 'block'
-              }}>
-                Item Name *
-              </label>
-              <input
-                type="text"
-                name="item_name"
-                value={formData.item_name}
-                onChange={handleChange}
-                placeholder="Enter item name"
-                style={{
-                  width: '100%',
-                  padding: '12px 15px',
-                  borderRadius: '10px',
-                  border: `1px solid ${errors.item_name ? '#ef4444' : '#e2e8f0'}`,
-                  background: '#f8fafc',
-                  fontSize: '15px',
-                  color: '#1e293b'
-                }}
-              />
-              {errors.item_name && (
-                <div style={{ color: '#ef4444', fontSize: '13px', marginTop: '5px' }}>
-                  ⚠ {errors.item_name}
-                </div>
-              )}
-            </div>
-
-            {/* Production Quantity */}
-            <div>
-              <label style={{
-                marginBottom: '10px',
-                fontWeight: '600',
-                color: '#1e293b',
-                fontSize: '15px',
-                display: 'block'
-              }}>
-                Production Quantity *
-              </label>
-              <input
-                type="number"
-                name="production_quantity"
-                value={formData.production_quantity}
-                onChange={handleChange}
-                placeholder="Enter production quantity"
-                min="1"
-                step="1"
-                style={{
-                  width: '100%',
-                  padding: '12px 15px',
-                  borderRadius: '10px',
-                  border: `1px solid ${errors.production_quantity ? '#ef4444' : '#e2e8f0'}`,
-                  background: '#f8fafc',
-                  fontSize: '15px',
-                  color: '#1e293b'
-                }}
-              />
-              {errors.production_quantity && (
-                <div style={{ color: '#ef4444', fontSize: '13px', marginTop: '5px' }}>
-                  ⚠ {errors.production_quantity}
-                </div>
-              )}
-            </div>
-
-            {/* Coil Size */}
-            <div>
-              <label style={{
-                marginBottom: '10px',
-                fontWeight: '600',
-                color: '#1e293b',
-                fontSize: '15px',
-                display: 'block'
-              }}>
-                Coil Size *
-              </label>
-              <input
-                type="text"
-                name="coil_size"
-                value={formData.coil_size}
-                onChange={handleChange}
-                placeholder="e.g., 200kg"
-                style={{
-                  width: '100%',
-                  padding: '12px 15px',
-                  borderRadius: '10px',
-                  border: `1px solid ${errors.coil_size ? '#ef4444' : '#e2e8f0'}`,
-                  background: '#f8fafc',
-                  fontSize: '15px',
-                  color: '#1e293b'
-                }}
-              />
-              {errors.coil_size && (
-                <div style={{ color: '#ef4444', fontSize: '13px', marginTop: '5px' }}>
-                  ⚠ {errors.coil_size}
-                </div>
-              )}
-            </div>
-
-            {/* Shift */}
-            <div>
-              <label style={{
-                marginBottom: '10px',
-                fontWeight: '600',
-                color: '#1e293b',
-                fontSize: '15px',
-                display: 'block'
-              }}>
-                Shift *
-              </label>
-              <select
-                name="shift"
-                value={formData.shift}
-                onChange={handleChange}
-                style={{
-                  width: '100%',
-                  padding: '12px 15px',
-                  borderRadius: '10px',
-                  border: `1px solid ${errors.shift ? '#ef4444' : '#e2e8f0'}`,
-                  background: '#f8fafc',
-                  fontSize: '15px',
-                  color: '#1e293b',
-                  cursor: 'pointer'
-                }}
-              >
-                <option value="">Select shift</option>
-                {shifts.map(shift => (
-                  <option key={shift.id} value={shift.shift_code}>
-                    {shift.shift_name} ({shift.shift_code})
-                  </option>
-                ))}
-              </select>
-              {errors.shift && (
-                <div style={{ color: '#ef4444', fontSize: '13px', marginTop: '5px' }}>
-                  ⚠ {errors.shift}
-                </div>
-              )}
-            </div>
-
-            {/* Operator Name */}
-            <div>
-              <label style={{
-                marginBottom: '10px',
-                fontWeight: '600',
-                color: '#1e293b',
-                fontSize: '15px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
-              }}>
-                <FiUser /> Operator Name *
-              </label>
-              <input
-                type="text"
-                name="operator_name"
-                value={formData.operator_name}
-                onChange={handleChange}
-                placeholder="e.g., Ali Khan"
-                style={{
-                  width: '100%',
-                  padding: '12px 15px',
-                  borderRadius: '10px',
-                  border: `1px solid ${errors.operator_name ? '#ef4444' : '#e2e8f0'}`,
-                  background: '#f8fafc',
-                  fontSize: '15px',
-                  color: '#1e293b'
-                }}
-              />
-              {errors.operator_name && (
-                <div style={{ color: '#ef4444', fontSize: '13px', marginTop: '5px' }}>
-                  ⚠ {errors.operator_name}
-                </div>
-              )}
-            </div>
-
-            {/* Efficiency Display */}
-            <div style={{ gridColumn: '1 / -1' }}>
-              <div style={{
-                background: '#f0f9ff',
-                border: '1px solid #bae6fd',
-                borderRadius: '12px',
-                padding: '20px',
-                marginBottom: '20px'
-              }}>
-                <div style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '15px', 
-                  marginBottom: '15px' 
-                }}>
-                  <div style={{
-                    width: '40px',
-                    height: '40px',
-                    background: '#0ea5e9',
-                    borderRadius: '10px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'white'
-                  }}>
-                    <FiTarget size={20} />
-                  </div>
-                  <div>
-                    <h3 style={{ margin: '0 0 5px 0', color: '#0369a1' }}>
-                      Efficiency Calculation
-                    </h3>
-                    <p style={{ margin: '0', color: '#0c4a6e', fontSize: '14px' }}>
-                      Based on targets table
-                    </p>
-                  </div>
-                </div>
-
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                  gap: '15px'
-                }}>
-                  <div style={{
-                    background: 'white',
-                    padding: '15px',
-                    borderRadius: '8px',
-                    border: '1px solid #bae6fd'
-                  }}>
-                    <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '5px' }}>
-                      Shift Target ({machineTarget?.uom || 'Kg'})
-                    </div>
-                    <div style={{ 
-                      fontSize: '24px', 
-                      fontWeight: 'bold', 
-                      color: machineTarget ? '#059669' : '#94a3b8' 
-                    }}>
-                      {machineTarget ? machineTarget.target_qty.toFixed(0) : '--'}
-                    </div>
-                    <div style={{ fontSize: '12px', color: '#64748b', marginTop: '5px' }}>
-                      {getShiftDisplayName(formData.shift)}
-                    </div>
-                  </div>
-
-                  <div style={{
-                    background: 'white',
-                    padding: '15px',
-                    borderRadius: '8px',
-                    border: '1px solid #bae6fd'
-                  }}>
-                    <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '5px' }}>
-                      Production Quantity
-                    </div>
-                    <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#3b82f6' }}>
-                      {formData.production_quantity || '--'}
-                    </div>
-                    <div style={{ fontSize: '12px', color: '#64748b', marginTop: '5px' }}>
-                      Actual Production
-                    </div>
-                  </div>
-
-                  <div style={{
-                    background: 'white',
-                    padding: '15px',
-                    borderRadius: '8px',
-                    border: '1px solid #bae6fd'
-                  }}>
-                    <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '5px' }}>
-                      Efficiency (Will be saved)
-                    </div>
-                    <div style={{ 
-                      fontSize: '24px', 
-                      fontWeight: 'bold', 
-                      color: calculatedEfficiency > 100 ? '#ef4444' :
-                             calculatedEfficiency >= 90 ? '#059669' :
-                             calculatedEfficiency >= 80 ? '#d97706' : '#ef4444'
-                    }}>
-                      {calculatedEfficiency.toFixed(2)}%
-                    </div>
-                    <div style={{ 
-                      fontSize: '12px', 
-                      color: calculatedEfficiency > 100 ? '#ef4444' :
-                             calculatedEfficiency >= 90 ? '#059669' :
-                             calculatedEfficiency >= 80 ? '#d97706' : '#ef4444',
-                      marginTop: '5px'
-                    }}>
-                      {calculatedEfficiency > 100 ? 'Over Target' :
-                       calculatedEfficiency >= 90 ? 'Excellent' :
-                       calculatedEfficiency >= 80 ? 'Good' : 'Below Target'}
-                    </div>
-                  </div>
-                </div>
-
-                <div style={{
-                  background: '#e0f2fe',
-                  padding: '10px 15px',
-                  borderRadius: '8px',
-                  fontSize: '13px',
-                  color: '#0c4a6e',
-                  marginTop: '15px'
-                }}>
-                  <strong>Note:</strong> Efficiency ({calculatedEfficiency.toFixed(2)}%) will be automatically saved with the record.
-                  {machineTarget && (
-                    <div style={{ marginTop: '5px' }}>
-                      <strong>Source:</strong> targets table | Machine: {formData.machine_id} | Shift: {formData.shift}
-                    </div>
-                  )}
+              <div className="selection-box efficiency-box">
+                <label className="selection-label">
+                  <FiTrendingUp /> EFFICIENCY
+                </label>
+                <div className="efficiency-value">
+                  {overallEfficiency.toFixed(1)}%
                 </div>
               </div>
             </div>
+          </div>
 
-            {/* Remarks */}
-            <div style={{ gridColumn: '1 / -1' }}>
-              <label style={{
-                marginBottom: '10px',
-                fontWeight: '600',
-                color: '#1e293b',
-                fontSize: '15px',
-                display: 'block'
-              }}>
-                Remarks
-              </label>
-              <textarea
-                name="remarks"
-                value={formData.remarks}
-                onChange={handleChange}
-                placeholder="Enter any additional notes or remarks..."
-                rows="4"
-                style={{
-                  width: '100%',
-                  padding: '12px 15px',
-                  borderRadius: '10px',
-                  border: '1px solid #e2e8f0',
-                  background: '#f8fafc',
-                  fontSize: '15px',
-                  color: '#1e293b',
-                  resize: 'vertical',
-                  fontFamily: 'inherit'
-                }}
-              />
+          <div className="items-section">
+            <div className="items-header">
+              <div className="section-title-secondary">
+                <FiList /> ITEMS PRODUCTION
+              </div>
+              {!isEditing && (
+                <button
+                  type="button"
+                  onClick={addItemRow}
+                  className="add-item-btn"
+                >
+                  <FiPlus /> ADD ITEM
+                </button>
+              )}
+            </div>
+
+            <table className="items-table">
+              <thead>
+                <tr>
+                  <th>ITEM CODE</th>
+                  <th>ITEM NAME</th>
+                  <th>COIL SIZE</th>
+                  <th>MATERIAL TYPE</th>
+                  <th>QUANTITY</th>
+                  <th>UNIT</th>
+                  <th>EFFICIENCY</th>
+                  {!isEditing && <th>ACTION</th>}
+                </tr>
+              </thead>
+              <tbody>
+                {itemsList.map((item, index) => (
+                  <tr key={item.id}>
+                    <td>
+                      <select
+                        value={item.item_code}
+                        onChange={(e) => handleItemChange(item.id, e.target.value)}
+                        className={`item-select ${fieldStatus[`item_${item.id}`] || getFieldClass('item_code', item.item_code)}`}
+                      >
+                        <option value="">-- SELECT ITEM --</option>
+                        {items.map(itm => (
+                          <option key={itm.id} value={itm.item_code}>
+                            {itm.item_code} - {itm.item_name}
+                          </option>
+                        ))}
+                      </select>
+                      {validationErrors[`item_${item.id}`] && (
+                        <div className="error-text">{validationErrors[`item_${item.id}`]}</div>
+                      )}
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        value={item.item_name}
+                        readOnly
+                        className="item-input readonly"
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        value={item.coil_size}
+                        readOnly
+                        className="item-input readonly"
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        value={item.material_type}
+                        readOnly
+                        className="item-input readonly"
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="number"
+                        value={item.production_quantity}
+                        onChange={(e) => handleQuantityChange(item.id, e.target.value)}
+                        step="0.01"
+                        min="0"
+                        className={`item-input quantity-input ${fieldStatus[`quantity_${item.id}`] || getFieldClass('quantity', item.production_quantity)}`}
+                        placeholder="0.00"
+                      />
+                      {validationErrors[`quantity_${item.id}`] && (
+                        <div className="error-text">{validationErrors[`quantity_${item.id}`]}</div>
+                      )}
+                    </td>
+                    <td className="unit-cell">
+                      {item.unit}
+                    </td>
+                    <td className="efficiency-cell" style={{
+                      color: item.efficiency >= 90 ? '#27ae60' : 
+                             item.efficiency >= 80 ? '#f39c12' : 
+                             item.efficiency >= 70 ? '#f39c12' : '#e74c3c',
+                    }}>
+                      {item.efficiency.toFixed(1)}%
+                    </td>
+                    {!isEditing && (
+                      <td style={{ textAlign: 'center' }}>
+                        {itemsList.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => removeItemRow(item.id)}
+                            className="remove-item-btn"
+                            title="Remove Item"
+                          >
+                            <FiTrash2 />
+                          </button>
+                        )}
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="bottom-section">
+            <div className="operator-row">
+              <div className="form-group">
+                <label className="form-label required" style={{ color: '#2ecc71' }}>
+                  <FiUser /> OPERATOR NAME
+                </label>
+                <input
+                  type="text"
+                  value={operatorName}
+                  onChange={(e) => handleOperatorChange(e.target.value)}
+                  className={`item-input ${fieldStatus.operator_name || getFieldClass('operator_name', operatorName)}`}
+                  placeholder="Enter operator name"
+                />
+                {validationErrors.operator_name && (
+                  <span className="error-text">{validationErrors.operator_name}</span>
+                )}
+              </div>
+              
+              <div className="form-group">
+                <label className="form-label" style={{ color: '#3498db' }}>
+                  <FiClipboard /> REMARKS
+                </label>
+                <textarea
+                  value={remarks}
+                  onChange={(e) => handleRemarksChange(e.target.value)}
+                  className={`form-textarea ${fieldStatus.remarks || ''}`}
+                  placeholder="Enter any additional notes or remarks..."
+                  rows="3"
+                />
+              </div>
             </div>
           </div>
 
-          {/* Form Actions */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            paddingTop: '25px',
-            borderTop: '1px solid #e2e8f0'
-          }}>
-            <div style={{ display: 'flex', gap: '15px' }}>
+          <div className="actions-section">
+            <div className="total-info">
+              TOTAL PRODUCTION: <span>{totalProduction.toFixed(2)} {targetData.unit}</span>
+            </div>
+            
+            <div className="action-buttons">
               <button
                 type="button"
                 onClick={handleReset}
-                style={{
-                  background: 'transparent',
-                  border: '2px solid #e2e8f0',
-                  padding: '12px 24px',
-                  borderRadius: '10px',
-                  color: '#64748b',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                  fontWeight: '600'
-                }}
+                className="btn btn-reset"
               >
-                <FiRefreshCw /> Reset
+                <FiSettings /> {isEditing ? 'RESET' : 'CLEAR'}
               </button>
               
               <button
                 type="button"
-                onClick={handleCancel}
-                style={{
-                  background: 'transparent',
-                  border: '2px solid #e2e8f0',
-                  padding: '12px 28px',
-                  borderRadius: '10px',
-                  color: '#64748b',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                  fontWeight: '600'
-                }}
+                onClick={handleClose}
+                className="btn btn-cancel"
               >
-                <FiX /> Cancel
+                <FiX /> CANCEL
+              </button>
+              
+              <button
+                type="submit"
+                disabled={saving}
+                className="btn btn-submit"
+              >
+                {saving ? (
+                  <>
+                    <div className="loading-spinner" style={{ 
+                      width: '16px', 
+                      height: '16px', 
+                      borderWidth: '2px',
+                      margin: '0'
+                    }}></div>
+                    {isEditing ? 'UPDATING...' : 'SAVING...'}
+                  </>
+                ) : (
+                  <>
+                    <FiSave /> {isEditing ? 'UPDATE RECORD' : `SAVE (${itemsList.length} ITEM${itemsList.length > 1 ? 'S' : ''})`}
+                  </>
+                )}
               </button>
             </div>
-
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              style={{
-                background: isSubmitting 
-                  ? '#94a3b8' 
-                  : hasChanges() 
-                    ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
-                    : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                border: 'none',
-                padding: '12px 32px',
-                borderRadius: '10px',
-                color: 'white',
-                cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                fontSize: '16px',
-                fontWeight: '600'
-              }}
-            >
-              {isSubmitting ? 'Updating...' : <><FiSave /> Update Record</>}
-            </button>
           </div>
-        </div>
-      </form>
-
-      {/* Original Record Info */}
-      {originalRecord && (
-        <div style={{
-          background: '#f8fafc',
-          borderRadius: '12px',
-          padding: '20px',
-          marginTop: '30px',
-          border: '1px solid #e2e8f0'
-        }}>
-          <h3 style={{ margin: '0 0 15px 0', color: '#475569', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <FiCalendar /> Record Information
-          </h3>
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
-            gap: '15px',
-            fontSize: '14px'
-          }}>
-            <div>
-              <div style={{ color: '#64748b', marginBottom: '3px' }}>Created At</div>
-              <div style={{ fontWeight: '600', color: '#1e293b' }}>
-                {originalRecord.created_at ? new Date(originalRecord.created_at).toLocaleString() : 'N/A'}
-              </div>
-            </div>
-            <div>
-              <div style={{ color: '#64748b', marginBottom: '3px' }}>Original Efficiency</div>
-              <div style={{ 
-                fontWeight: '600', 
-                color: originalRecord.efficiency > 100 ? '#ef4444' :
-                       originalRecord.efficiency >= 90 ? '#059669' :
-                       originalRecord.efficiency >= 80 ? '#d97706' : '#ef4444'
-              }}>
-                {originalRecord.efficiency?.toFixed(2) || '0.00'}%
-              </div>
-            </div>
-            <div>
-              <div style={{ color: '#64748b', marginBottom: '3px' }}>Current Efficiency</div>
-              <div style={{ 
-                fontWeight: '600', 
-                color: calculatedEfficiency > 100 ? '#ef4444' :
-                       calculatedEfficiency >= 90 ? '#059669' :
-                       calculatedEfficiency >= 80 ? '#d97706' : '#ef4444'
-              }}>
-                {calculatedEfficiency.toFixed(2)}%
-              </div>
-            </div>
-            <div>
-              <div style={{ color: '#64748b', marginBottom: '3px' }}>Record Status</div>
-              <div style={{ 
-                fontWeight: '600', 
-                color: hasChanges() ? '#d97706' : '#059669'
-              }}>
-                {hasChanges() ? 'Modified (Unsaved)' : 'No Changes'}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <style>{`
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      `}</style>
+        </form>
+      </div>
     </div>
   );
 };
