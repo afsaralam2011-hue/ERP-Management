@@ -6,7 +6,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json());
@@ -48,7 +48,7 @@ app.get('/api/test', (req, res) => {
 app.post('/api/auth/register', async (req, res) => {
   try {
     const { firstName, lastName, email, password } = req.body;
-    
+
     // Validation
     if (!firstName || !lastName || !email || !password) {
       return res.status(400).json({
@@ -56,7 +56,7 @@ app.post('/api/auth/register', async (req, res) => {
         message: 'All fields are required'
       });
     }
-    
+
     // Dummy response
     res.json({
       success: true,
@@ -70,7 +70,7 @@ app.post('/api/auth/register', async (req, res) => {
       },
       token: 'dummy-jwt-token-' + Date.now()
     });
-    
+
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -84,7 +84,7 @@ app.post('/api/auth/register', async (req, res) => {
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body;
-    
+
     // Validation
     if (!email || !password) {
       return res.status(400).json({
@@ -92,7 +92,7 @@ app.post('/api/auth/login', async (req, res) => {
         message: 'Email and password are required'
       });
     }
-    
+
     // Dummy check
     if (email === 'admin@example.com' && password === 'admin123') {
       return res.json({
@@ -108,7 +108,7 @@ app.post('/api/auth/login', async (req, res) => {
         token: 'admin-jwt-token'
       });
     }
-    
+
     // Default user
     res.json({
       success: true,
@@ -122,7 +122,7 @@ app.post('/api/auth/login', async (req, res) => {
       },
       token: 'user-jwt-token-' + Date.now()
     });
-    
+
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -153,13 +153,13 @@ app.get('/api/users', async (req, res) => {
         createdAt: new Date()
       }
     ];
-    
+
     res.json({
       success: true,
       count: users.length,
       users
     });
-    
+
   } catch (error) {
     res.status(500).json({
       success: false,
