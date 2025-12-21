@@ -1,35 +1,28 @@
 {
-  "name": "erp-frontend",
-  "version": "0.1.0",
+  "name": "devine-water-erp",
+  "version": "1.0.0",
+  "description": "Devine Water - ERP Water Delivery Management System",
   "private": true,
-  "dependencies": {
-    "@supabase/supabase-js": "^2.87.2",
-    "axios": "^1.13.2",
-    "jspdf": "^3.0.4",
-    "jspdf-autotable": "^5.0.2",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-icons": "^5.5.0",
-    "react-router-dom": "^7.10.1",
-    "react-scripts": "^5.0.1"
-  },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "vercel-build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "install:all": "cd frontend && npm install && cd ../backend && npm install",
+    "dev:frontend": "cd frontend && npm start",
+    "dev:backend": "cd backend && npm run dev",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "build:frontend": "cd frontend && npm run build",
+    "start:backend": "cd backend && npm start"
   },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
+  "keywords": [
+    "erp",
+    "water-delivery",
+    "management-system"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "sequelize-cli": "^6.6.3",
+    "concurrently": "^8.0.0"
+  },
+  "dependencies": {
+    "sequelize": "^6.37.7"
   }
 }
