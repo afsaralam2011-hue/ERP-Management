@@ -1,21 +1,18 @@
 // ========================================================
-// FILE: RawMaterialLogForm.jsx
-// PURPOSE: Material Transaction Form (Received/Issue/Return)
+// FILE: RawMaterialLogForm.jsx - FIXED VERSION
 // ========================================================
 
 import React, { useState, useEffect } from 'react';
 import { 
   FiSave, FiX, FiPackage, FiBox, FiRefreshCw,
   FiUser, FiClipboard, FiSettings, FiCheck, 
-  FiAlertCircle, FiDatabase, FiHash, FiTag, 
-  FiTool, FiFileText, FiBriefcase, FiArrowLeftCircle,
-  FiArrowRightCircle, FiCornerDownLeft
+  FiAlertCircle, FiDatabase, FiTool, FiFileText
 } from 'react-icons/fi';
 import { supabase } from '../../../supabaseClient';
 
 const RawMaterialLogForm = ({ onClose, editData, isModal = true }) => {
   // ========================================================
-  // STATE VARIABLES
+  // STATE - SIMPLIFIED
   // ========================================================
   const [formData, setFormData] = useState({
     gate_pass: '',
@@ -25,75 +22,32 @@ const RawMaterialLogForm = ({ onClose, editData, isModal = true }) => {
     shape: 'coil_form',
     weight: '',
     remarks: '',
-    reason: '',
     department: 'Production',
     reference_no: '',
     received_by: '',
     issued_by: '',
-    returned_by: '',
-    status: 'active'
+    returned_by: ''
   });
 
-  const [validationErrors, setValidationErrors] = useState({});
-  const [fieldStatus, setFieldStatus] = useState({});
   const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  const [departments, setDepartments] = useState([]);
-
   // ========================================================
-  // EFFECT HOOKS
+  // INITIALIZE FORM
   // ========================================================
   useEffect(() => {
-    fetchDepartments();
     if (editData) {
       setFormData(editData);
+    } else {
+      // Auto-generate gate pass on load
+      generateGatePass();
     }
   }, [editData]);
 
   // ========================================================
-  // DATA FUNCTIONS
+  // SIMPLE GATE PASS GENERATOR
   // ========================================================
-  const fetchDepartments = async () => {
-    setDepartments([
-      'Production', 'Warehouse', 'Flattening', 
-      'Spiral', 'PVC Coating', 'Cutting & Packing', 
-      'Finished Goods'
-    ]);
-  };
-
-  // ========================================================
-  // FIELD STATUS
-  // ========================================================
-  const getFieldClass = (fieldName, value) => {
-    if (!value || value.toString().trim() === '') {
-      return 'empty-required';
-    }
-    return 'filled-valid';
-  };
-
-  // ========================================================
-  // FORM HANDLERS
-  // ========================================================
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    
-    const newStatus = { ...fieldStatus };
-    if (value && value.toString().trim() !== '') {
-      newStatus[name] = 'filled-valid';
-    } else {
-      newStatus[name] = 'empty-required';
-    }
-    setFieldStatus(newStatus);
-
-    if (validationErrors[name]) {
-      setValidationErrors(prev => ({ ...prev, [name]: '' }));
-    }
-  };
-
   const generateGatePass = () => {
     const date = new Date();
     const year = date.getFullYear();
@@ -103,90 +57,50 @@ const RawMaterialLogForm = ({ onClose, editData, isModal = true }) => {
     const gatePass = `GP-${year}${month}${day}-${random}`;
     
     setFormData(prev => ({ ...prev, gate_pass: gatePass }));
-    setFieldStatus(prev => ({ ...prev, gate_pass: 'filled-valid' }));
   };
 
   // ========================================================
-  // TRANSACTION TYPE CONFIGURATION
+  // HANDLE INPUT CHANGE - SIMPLE
   // ========================================================
-  const transactionTypes = [
-    { 
-      value: 'receive', 
-      label: 'Receive', 
-      icon: FiPackage, 
-      color: '#10b981',
-      description: 'Material Received',
-      personField: 'received_by'
-    },
-    { 
-      value: 'issue', 
-      label: 'Issue', 
-      icon: FiBox, 
-      color: '#f59e0b',
-      description: 'Material Issued',
-      personField: 'issued_by'
-    },
-    { 
-      value: 'return', 
-      label: 'Return', 
-      icon: FiArrowLeftCircle, 
-      color: '#8b5cf6',
-      description: 'Material Returned',
-      personField: 'returned_by'
-    }
-  ];
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
 
   // ========================================================
-  // VALIDATION
+  // VALIDATION - SIMPLE
   // ========================================================
   const validateForm = () => {
-    const errors = {};
-    const newFieldStatus = {};
-    
-    // Check gate pass
     if (!formData.gate_pass.trim()) {
-      errors.gate_pass = 'Gate pass number is required';
-      newFieldStatus.gate_pass = 'empty-required';
-    } else {
-      newFieldStatus.gate_pass = 'filled-valid';
+      setError('گیٹ پاس نمبر درج کریں');
+      return false;
     }
     
-    // Check weight
     if (!formData.weight || parseFloat(formData.weight) <= 0) {
-      errors.weight = 'Valid weight is required (greater than 0)';
-      newFieldStatus.weight = 'empty-required';
-    } else {
-      newFieldStatus.weight = 'filled-valid';
+      setError('وزن درج کریں (0 سے زیادہ)');
+      return false;
     }
     
-    // Check person field based on transaction type
-    const currentTransaction = transactionTypes.find(t => t.value === formData.transaction_type);
-    if (currentTransaction) {
-      const personField = currentTransaction.personField;
-      if (!formData[personField]?.trim()) {
-        errors[personField] = `${currentTransaction.label} by is required`;
-        newFieldStatus[personField] = 'empty-required';
-      } else {
-        newFieldStatus[personField] = 'filled-valid';
-      }
+    // Check person based on transaction type
+    const personField = formData.transaction_type === 'receive' ? 'received_by' :
+                       formData.transaction_type === 'issue' ? 'issued_by' : 'returned_by';
+    
+    if (!formData[personField]?.trim()) {
+      setError('ذمہ دار شخص کا نام درج کریں');
+      return false;
     }
-
-    setFieldStatus(newFieldStatus);
-    setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
+    
+    return true;
   };
 
   // ========================================================
-  // DATABASE SAVE
+  // SAVE TO DATABASE - SIMPLE
   // ========================================================
   const saveToDatabase = async () => {
     try {
-      setSaving(true);
+      setLoading(true);
       setError('');
-      setSuccess('');
-
-      const currentTransaction = transactionTypes.find(t => t.value === formData.transaction_type);
-
+      
       const dbData = {
         gate_pass: formData.gate_pass,
         transaction_type: formData.transaction_type,
@@ -195,59 +109,54 @@ const RawMaterialLogForm = ({ onClose, editData, isModal = true }) => {
         shape: formData.shape,
         weight: parseFloat(formData.weight),
         remarks: formData.remarks,
-        reason: formData.reason,
         department: formData.department,
         reference_no: formData.reference_no,
-        status: formData.status,
-        created_by: 'system',
-        updated_by: 'system',
+        status: 'active',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
-
-      // Add person field based on transaction type
-      if (currentTransaction) {
-        dbData[currentTransaction.personField] = formData[currentTransaction.personField];
-      }
-
+      
+      // Add person field
+      if (formData.transaction_type === 'receive') dbData.received_by = formData.received_by;
+      if (formData.transaction_type === 'issue') dbData.issued_by = formData.issued_by;
+      if (formData.transaction_type === 'return') dbData.returned_by = formData.returned_by;
+      
       // Save to Supabase
       const { error: insertError } = await supabase
         .from('raw_material_log')
         .insert([dbData]);
-
+      
       if (insertError) throw insertError;
-
-      setSuccess(`✅ Material ${currentTransaction?.label.toLowerCase()} saved successfully!`);
+      
+      setSuccess('ڈیٹا محفوظ ہو گیا!');
       
       setTimeout(() => {
-        handleReset();
         if (onClose) onClose();
-      }, 2000);
-
+      }, 1500);
+      
     } catch (error) {
       console.error('Save error:', error);
-      setError('❌ Save failed: ' + error.message);
+      setError('محفوظ کرنے میں خرابی: ' + error.message);
     } finally {
-      setSaving(false);
+      setLoading(false);
     }
   };
 
   // ========================================================
-  // FORM SUBMISSION
+  // FORM SUBMIT
   // ========================================================
   const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (!validateForm()) {
-      setError('Please fill all required fields');
       return;
     }
-
+    
     await saveToDatabase();
   };
 
   // ========================================================
-  // FORM RESET
+  // RESET FORM
   // ========================================================
   const handleReset = () => {
     setFormData({
@@ -258,352 +167,495 @@ const RawMaterialLogForm = ({ onClose, editData, isModal = true }) => {
       shape: 'coil_form',
       weight: '',
       remarks: '',
-      reason: '',
       department: 'Production',
       reference_no: '',
       received_by: '',
       issued_by: '',
-      returned_by: '',
-      status: 'active'
+      returned_by: ''
     });
-    setValidationErrors({});
-    setFieldStatus({});
     setError('');
     setSuccess('');
+    generateGatePass();
   };
 
   // ========================================================
-  // OPTIONS DATA
+  // OPTIONS
   // ========================================================
   const wireSizes = ['1.20mm', '1.50mm', '2.00mm', '2.50mm', '3.00mm', '3.50mm', '4.00mm', '4.50mm', '5.00mm'];
   const categories = ['B4', 'B6', 'B8', 'B10', 'B12', 'B14', 'B16'];
   const shapes = ['coil_form', 'bobbins_form', 'sheet_form', 'rod_form'];
+  const departments = ['Production', 'Warehouse', 'Flattening', 'Spiral', 'PVC Coating', 'Cutting & Packing'];
 
   // ========================================================
-  // RENDER
+  // SIMPLE CSS STYLES (Add to your CSS file or style tag)
   // ========================================================
-  const currentTransaction = transactionTypes.find(t => t.value === formData.transaction_type);
+  const styles = `
+    .simple-form-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    
+    .simple-form-container {
+      background: white;
+      width: 90%;
+      max-width: 600px;
+      max-height: 90vh;
+      overflow-y: auto;
+      border-radius: 10px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+    
+    .simple-form-header {
+      background: #1e40af;
+      color: white;
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-radius: 10px 10px 0 0;
+    }
+    
+    .simple-form-title {
+      font-size: 18px;
+      font-weight: bold;
+      margin: 0;
+    }
+    
+    .simple-form-close {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 20px;
+      cursor: pointer;
+    }
+    
+    .simple-form-content {
+      padding: 20px;
+    }
+    
+    .simple-form-group {
+      margin-bottom: 15px;
+    }
+    
+    .simple-form-label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+      color: #374151;
+      font-size: 14px;
+    }
+    
+    .simple-form-input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 5px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+    
+    .simple-form-select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 5px;
+      font-size: 14px;
+      background: white;
+    }
+    
+    .simple-form-row {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+    
+    .simple-form-row > div {
+      flex: 1;
+    }
+    
+    .simple-form-actions {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid #e5e7eb;
+    }
+    
+    .simple-form-btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 500;
+    }
+    
+    .simple-form-btn-primary {
+      background: #1e40af;
+      color: white;
+    }
+    
+    .simple-form-btn-secondary {
+      background: #6b7280;
+      color: white;
+    }
+    
+    .simple-form-btn-danger {
+      background: #dc2626;
+      color: white;
+    }
+    
+    .simple-message {
+      padding: 10px;
+      margin: 10px 20px;
+      border-radius: 5px;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .simple-message-success {
+      background: #d1fae5;
+      color: #065f46;
+      border: 1px solid #a7f3d0;
+    }
+    
+    .simple-message-error {
+      background: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #fecaca;
+    }
+    
+    .transaction-type-container {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    
+    .transaction-btn-simple {
+      flex: 1;
+      padding: 12px;
+      border: 2px solid #d1d5db;
+      border-radius: 8px;
+      background: white;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      font-size: 13px;
+    }
+    
+    .transaction-btn-simple.active {
+      border-color: #1e40af;
+      background: #eff6ff;
+    }
+    
+    @media (max-width: 768px) {
+      .simple-form-container {
+        width: 95%;
+      }
+      
+      .simple-form-row {
+        flex-direction: column;
+        gap: 10px;
+      }
+      
+      .transaction-type-container {
+        flex-direction: column;
+      }
+    }
+  `;
 
   return (
-    <div className="form-modal-overlay" onClick={onClose}>
-      <div className="form-modal-container" onClick={(e) => e.stopPropagation()}>
-        
-        {/* ============================================ */}
-        {/* HEADER - NAVY BLUE WITH WHITE TEXT */}
-        {/* ============================================ */}
-        <div className="form-modal-header">
-          <div className="form-modal-title-section">
-            <div className="form-modal-icon" style={{ background: currentTransaction?.color }}>
-              {currentTransaction?.icon && React.createElement(currentTransaction.icon)}
+    <>
+      <style>{styles}</style>
+      <div className="simple-form-modal" onClick={onClose}>
+        <div className="simple-form-container" onClick={(e) => e.stopPropagation()}>
+          
+          {/* HEADER */}
+          <div className="simple-form-header">
+            <h2 className="simple-form-title">
+              خام مال کی انٹری
+            </h2>
+            <button className="simple-form-close" onClick={onClose}>
+              <FiX />
+            </button>
+          </div>
+          
+          {/* MESSAGES */}
+          {success && (
+            <div className="simple-message simple-message-success">
+              <FiCheck /> {success}
             </div>
-            <div>
-              <h2 className="form-modal-title">RAW MATERIAL TRANSACTION</h2>
-              <p className="form-modal-subtitle">
-                <FiDatabase /> {currentTransaction?.description} | Table: raw_material_log
-              </p>
+          )}
+          
+          {error && (
+            <div className="simple-message simple-message-error">
+              <FiAlertCircle /> {error}
             </div>
-          </div>
-          <button className="form-modal-close" onClick={onClose}>
-            <FiX />
-          </button>
-        </div>
-
-        {/* ============================================ */}
-        {/* MESSAGES */}
-        {/* ============================================ */}
-        {success && (
-          <div className="message success">
-            <FiCheck /> {success}
-          </div>
-        )}
-
-        {error && (
-          <div className="message error">
-            <FiAlertCircle /> {error}
-          </div>
-        )}
-
-        {/* ============================================ */}
-        {/* FORM */}
-        {/* ============================================ */}
-        <div className="raw-material-log-form">
-          <form onSubmit={handleSubmit}>
-            
-            {/* ============================================ */}
-            {/* SECTION 1: TRANSACTION TYPE */}
-            {/* ============================================ */}
-            <div className="form-group">
-              <label className="form-label required">
-                Transaction Type
-              </label>
-              <div className="transaction-type-buttons">
-                {transactionTypes.map((type) => (
+          )}
+          
+          {/* FORM CONTENT */}
+          <div className="simple-form-content">
+            <form onSubmit={handleSubmit}>
+              
+              {/* TRANSACTION TYPE */}
+              <div className="simple-form-group">
+                <label className="simple-form-label">ٹرانزیکشن کی قسم</label>
+                <div className="transaction-type-container">
                   <button
-                    key={type.value}
                     type="button"
-                    className={`transaction-btn ${formData.transaction_type === type.value ? 'active' : ''}`}
-                    onClick={() => {
-                      setFormData(prev => ({ ...prev, transaction_type: type.value }));
-                      setFieldStatus(prev => ({ ...prev, transaction_type: 'filled-valid' }));
-                    }}
-                    style={{
-                      borderColor: formData.transaction_type === type.value ? type.color : '#e2e8f0',
-                      color: formData.transaction_type === type.value ? type.color : '#475569'
-                    }}
+                    className={`transaction-btn-simple ${formData.transaction_type === 'receive' ? 'active' : ''}`}
+                    onClick={() => setFormData({...formData, transaction_type: 'receive'})}
                   >
-                    <div 
-                      className="transaction-icon"
-                      style={{ 
-                        background: formData.transaction_type === type.value ? type.color : '#e2e8f0',
-                        color: formData.transaction_type === type.value ? 'white' : '#94a3b8'
-                      }}
-                    >
-                      {React.createElement(type.icon)}
-                    </div>
-                    {type.label}
+                    <FiPackage size={20} />
+                    وصولی
                   </button>
-                ))}
+                  
+                  <button
+                    type="button"
+                    className={`transaction-btn-simple ${formData.transaction_type === 'issue' ? 'active' : ''}`}
+                    onClick={() => setFormData({...formData, transaction_type: 'issue'})}
+                  >
+                    <FiBox size={20} />
+                    جاری
+                  </button>
+                  
+                  <button
+                    type="button"
+                    className={`transaction-btn-simple ${formData.transaction_type === 'return' ? 'active' : ''}`}
+                    onClick={() => setFormData({...formData, transaction_type: 'return'})}
+                  >
+                    <FiPackage size={20} />
+                    واپسی
+                  </button>
+                </div>
               </div>
-            </div>
-
-            {/* ============================================ */}
-            {/* SECTION 2: GATE PASS & REFERENCE */}
-            {/* ============================================ */}
-            <div className="form-row">
-              <div className="form-group">
-                <label className="form-label required">
-                  Gate Pass Number
-                </label>
-                <div style={{ display: 'flex', gap: '10px' }}>
+              
+              {/* GATE PASS & REFERENCE */}
+              <div className="simple-form-row">
+                <div className="simple-form-group">
+                  <label className="simple-form-label">گیٹ پاس نمبر *</label>
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <input
+                      type="text"
+                      name="gate_pass"
+                      value={formData.gate_pass}
+                      onChange={handleChange}
+                      className="simple-form-input"
+                      placeholder="GP-2024001"
+                      required
+                    />
+                    <button 
+                      type="button" 
+                      onClick={generateGatePass}
+                      className="simple-form-btn simple-form-btn-secondary"
+                      style={{ whiteSpace: 'nowrap' }}
+                    >
+                      <FiRefreshCw /> نیا نمبر
+                    </button>
+                  </div>
+                </div>
+                
+                <div className="simple-form-group">
+                  <label className="simple-form-label">ریفرینس نمبر</label>
                   <input
                     type="text"
-                    name="gate_pass"
-                    value={formData.gate_pass}
+                    name="reference_no"
+                    value={formData.reference_no}
                     onChange={handleChange}
-                    className={`form-input ${fieldStatus.gate_pass || getFieldClass('gate_pass', formData.gate_pass)}`}
-                    placeholder="GP-2024-001"
+                    className="simple-form-input"
+                    placeholder="PO-2024001"
                   />
-                  <button 
-                    type="button" 
-                    onClick={generateGatePass}
-                    className="form-btn secondary"
-                    style={{ whiteSpace: 'nowrap' }}
-                  >
-                    <FiRefreshCw /> Generate
-                  </button>
                 </div>
-                {validationErrors.gate_pass && (
-                  <div className="form-error">{validationErrors.gate_pass}</div>
-                )}
               </div>
-
-              <div className="form-group">
-                <label className="form-label">
-                  Reference Number
-                </label>
-                <input
-                  type="text"
-                  name="reference_no"
-                  value={formData.reference_no}
-                  onChange={handleChange}
-                  className="form-input"
-                  placeholder="PO-2024-001"
-                />
-              </div>
-            </div>
-
-            {/* ============================================ */}
-            {/* SECTION 3: MATERIAL DETAILS */}
-            {/* ============================================ */}
-            <div className="form-group">
-              <h3 style={{ marginBottom: '15px', color: '#1e293b', fontSize: '16px', fontWeight: '600' }}>
-                <FiTool /> Material Details
-              </h3>
               
-              <div className="form-row">
-                <div className="form-group">
-                  <label className="form-label required">Wire Size</label>
-                  <select
-                    name="wire_size"
-                    value={formData.wire_size}
-                    onChange={handleChange}
-                    className={`form-select ${fieldStatus.wire_size || getFieldClass('wire_size', formData.wire_size)}`}
-                  >
-                    <option value="">Select wire size</option>
-                    {wireSizes.map(size => (
-                      <option key={size} value={size}>{size}</option>
-                    ))}
-                  </select>
+              {/* MATERIAL DETAILS */}
+              <div className="simple-form-group">
+                <h4 style={{ marginBottom: '15px', color: '#1e293b' }}>
+                  <FiTool /> مال کی تفصیلات
+                </h4>
+                
+                <div className="simple-form-row">
+                  <div className="simple-form-group">
+                    <label className="simple-form-label">تار کا سائز *</label>
+                    <select
+                      name="wire_size"
+                      value={formData.wire_size}
+                      onChange={handleChange}
+                      className="simple-form-select"
+                      required
+                    >
+                      {wireSizes.map(size => (
+                        <option key={size} value={size}>{size}</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div className="simple-form-group">
+                    <label className="simple-form-label">قسم *</label>
+                    <select
+                      name="category"
+                      value={formData.category}
+                      onChange={handleChange}
+                      className="simple-form-select"
+                      required
+                    >
+                      {categories.map(cat => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
-
-                <div className="form-group">
-                  <label className="form-label required">Category</label>
-                  <select
-                    name="category"
-                    value={formData.category}
-                    onChange={handleChange}
-                    className={`form-select ${fieldStatus.category || getFieldClass('category', formData.category)}`}
-                  >
-                    <option value="">Select category</option>
-                    {categories.map(cat => (
-                      <option key={cat} value={cat}>{cat}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label className="form-label required">Shape</label>
-                  <select
-                    name="shape"
-                    value={formData.shape}
-                    onChange={handleChange}
-                    className={`form-select ${fieldStatus.shape || getFieldClass('shape', formData.shape)}`}
-                  >
-                    <option value="">Select shape</option>
-                    {shapes.map(shape => (
-                      <option key={shape} value={shape}>
-                        {shape.replace('_', ' ').toUpperCase()}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label required">Weight</label>
-                  <div className="weight-input-container">
+                
+                <div className="simple-form-row">
+                  <div className="simple-form-group">
+                    <label className="simple-form-label">شکل *</label>
+                    <select
+                      name="shape"
+                      value={formData.shape}
+                      onChange={handleChange}
+                      className="simple-form-select"
+                      required
+                    >
+                      {shapes.map(shape => (
+                        <option key={shape} value={shape}>
+                          {shape.replace('_form', '').toUpperCase()}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div className="simple-form-group">
+                    <label className="simple-form-label">وزن (KG) *</label>
                     <input
                       type="number"
                       name="weight"
                       value={formData.weight}
                       onChange={handleChange}
-                      className={`form-input ${fieldStatus.weight || getFieldClass('weight', formData.weight)}`}
+                      className="simple-form-input"
                       placeholder="0.00"
                       step="0.01"
                       min="0"
+                      required
                     />
-                    <span className="weight-unit">KG</span>
                   </div>
-                  {validationErrors.weight && (
-                    <div className="form-error">{validationErrors.weight}</div>
-                  )}
                 </div>
               </div>
-            </div>
-
-            {/* ============================================ */}
-            {/* SECTION 4: DEPARTMENT & PERSON */}
-            {/* ============================================ */}
-            <div className="form-row">
-              <div className="form-group">
-                <label className="form-label">Department</label>
-                <select
-                  name="department"
-                  value={formData.department}
-                  onChange={handleChange}
-                  className="form-select"
-                >
-                  {departments.map(dept => (
-                    <option key={dept} value={dept}>{dept}</option>
-                  ))}
-                </select>
+              
+              {/* DEPARTMENT & PERSON */}
+              <div className="simple-form-row">
+                <div className="simple-form-group">
+                  <label className="simple-form-label">محکمہ</label>
+                  <select
+                    name="department"
+                    value={formData.department}
+                    onChange={handleChange}
+                    className="simple-form-select"
+                  >
+                    {departments.map(dept => (
+                      <option key={dept} value={dept}>{dept}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div className="simple-form-group">
+                  <label className="simple-form-label">
+                    {formData.transaction_type === 'receive' ? 'وصول کنندہ' : 
+                     formData.transaction_type === 'issue' ? 'جاری کنندہ' : 'واپس کنندہ'} *
+                  </label>
+                  <input
+                    type="text"
+                    name={formData.transaction_type === 'receive' ? 'received_by' : 
+                          formData.transaction_type === 'issue' ? 'issued_by' : 'returned_by'}
+                    value={formData.transaction_type === 'receive' ? formData.received_by : 
+                          formData.transaction_type === 'issue' ? formData.issued_by : formData.returned_by}
+                    onChange={handleChange}
+                    className="simple-form-input"
+                    placeholder="نام درج کریں"
+                    required
+                  />
+                </div>
               </div>
-
-              <div className="form-group">
-                <label className="form-label required">
-                  {currentTransaction?.label} By
+              
+              {/* REMARKS */}
+              <div className="simple-form-group">
+                <label className="simple-form-label">
+                  <FiClipboard /> ریمارکس
                 </label>
-                <input
-                  type="text"
-                  name={currentTransaction?.personField}
-                  value={formData[currentTransaction?.personField || '']}
+                <textarea
+                  name="remarks"
+                  value={formData.remarks}
                   onChange={handleChange}
-                  className={`form-input ${fieldStatus[currentTransaction?.personField || ''] || getFieldClass(currentTransaction?.personField || '', formData[currentTransaction?.personField || ''])}`}
-                  placeholder={`Person who ${currentTransaction?.label.toLowerCase()} material`}
+                  className="simple-form-input"
+                  placeholder="اضافی معلومات..."
+                  rows="3"
+                  style={{ resize: 'vertical' }}
                 />
-                {validationErrors[currentTransaction?.personField || ''] && (
-                  <div className="form-error">{validationErrors[currentTransaction?.personField || '']}</div>
-                )}
               </div>
-            </div>
-
-            {/* ============================================ */}
-            {/* SECTION 5: NOTES */}
-            {/* ============================================ */}
-            <div className="form-group">
-              <label className="form-label">
-                <FiClipboard /> Remarks
-              </label>
-              <textarea
-                name="remarks"
-                value={formData.remarks}
-                onChange={handleChange}
-                className="form-textarea"
-                placeholder="Additional notes or observations..."
-                rows="3"
-              />
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">
-                <FiFileText /> Reason
-              </label>
-              <textarea
-                name="reason"
-                value={formData.reason}
-                onChange={handleChange}
-                className="form-textarea"
-                placeholder="Reason for this transaction..."
-                rows="2"
-              />
-            </div>
-
-            {/* ============================================ */}
-            {/* SECTION 6: FORM ACTIONS */}
-            {/* ============================================ */}
-            <div className="form-actions">
-              <div className="form-action-left">
+              
+              {/* FORM ACTIONS */}
+              <div className="simple-form-actions">
                 <button
                   type="button"
                   onClick={handleReset}
-                  className="form-btn secondary"
+                  className="simple-form-btn simple-form-btn-secondary"
                 >
-                  <FiSettings /> Reset
-                </button>
-              </div>
-              
-              <div className="form-action-right">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="form-btn cancel"
-                >
-                  <FiX /> Cancel
+                  <FiSettings /> صاف کریں
                 </button>
                 
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="form-btn primary"
-                >
-                  {saving ? (
-                    <>
-                      <div className="spinner-small"></div>
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <FiSave /> Save {currentTransaction?.label}
-                    </>
-                  )}
-                </button>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="simple-form-btn simple-form-btn-danger"
+                  >
+                    <FiX /> منسوخ
+                  </button>
+                  
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="simple-form-btn simple-form-btn-primary"
+                  >
+                    {loading ? (
+                      <>
+                        <div style={{
+                          width: '16px',
+                          height: '16px',
+                          border: '2px solid white',
+                          borderTop: '2px solid transparent',
+                          borderRadius: '50%',
+                          animation: 'spin 1s linear infinite'
+                        }}></div>
+                        محفوظ ہو رہا ہے...
+                      </>
+                    ) : (
+                      <>
+                        <FiSave /> محفوظ کریں
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
-            </div>
-          </form>
+            </form>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
