@@ -2,77 +2,19 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8" />
-  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="utf-8" />
+  <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#000000" />
+  <meta name="description" content="Pakistan Wire Industries - ERP Management System" />
+  <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+  <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
   <title>Pakistan Wire Industries - ERP System</title>
-  <style>
-    /* Loading styles */
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-        'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-        sans-serif;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .loading-container {
-      text-align: center;
-      color: white;
-    }
-
-    .loading-spinner {
-      width: 50px;
-      height: 50px;
-      border: 5px solid rgba(255, 255, 255, 0.3);
-      border-top: 5px solid white;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin: 0 auto 20px;
-    }
-
-
-    @keyframes spin {
-      0% {
-        transform: rotate(0deg);
-      }
-
-      100% {
-        transform: rotate(360deg);
-      }
-    }
-
-    /* Hide loading screen when React mounts */
-    #root:not(:empty)~.loading-container {
-      display: none;
-    }
-
-    #root {
-      background: transparent;
-    }
-  </style>
 </head>
 
 <body>
-  <!-- React app will mount here and replace the loading screen -->
-  <div id="root">
-    <!-- Loading screen while React loads -->
-    <div class="loading-container">
-      <div class="loading-spinner"></div>
-      <h2>Loading ERP System...</h2>
-      <p>Pakistan Wire Industries Production Management</p>
-    </div>
-  </div>
-
-  <!-- Entry point for React -->
-  <script type="module" src="/src/main.jsx"></script>
+  <noscript>You need to enable JavaScript to run this app.</noscript>
+  <div id="root"></div>
 </body>
 
 </html>
