@@ -1,0 +1,527 @@
+/* 
+==============================================
+COMPLETE CHARTS.CSS - FINAL VERSION
+src/components/departments/Production/DashboardStyles/charts.css
+==============================================
+*/
+
+/* ============ CHARTS CONTAINER ============ */
+.charts-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 25px;
+  margin-bottom: 30px;
+}
+
+.chart-card {
+  background: white;
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+  transition: all 0.3s ease;
+}
+
+.chart-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* ============ CHART HEADER ============ */
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.chart-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.chart-controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+/* ============ CHART BODY ============ */
+.chart-body {
+  position: relative;
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chart-placeholder {
+  width: 100%;
+  height: 300px;
+  background: #f8fafc;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  border: 2px dashed #e2e8f0;
+}
+
+/* ============ CHART LEGEND ============ */
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #64748b;
+}
+
+.legend-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+.legend-label {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.legend-value {
+  font-weight: 600;
+  color: #1e293b;
+  margin-left: 5px;
+}
+
+/* ============ CHART TYPES ============ */
+/* Line Chart */
+.line-chart-container {
+  width: 100%;
+  height: 300px;
+}
+
+/* Bar Chart */
+.bar-chart-container {
+  width: 100%;
+  height: 300px;
+}
+
+/* Pie Chart */
+.pie-chart-container {
+  width: 100%;
+  height: 300px;
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+/* Gauge Chart */
+.gauge-chart-container {
+  width: 100%;
+  height: 250px;
+  position: relative;
+}
+
+.gauge-value {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.gauge-main-value {
+  font-size: 32px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.gauge-label {
+  font-size: 14px;
+  color: #64748b;
+  margin-top: 5px;
+}
+
+/* ============ CHART TOOLTIPS ============ */
+.chart-tooltip {
+  background: white;
+  padding: 10px 15px;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+  font-size: 13px;
+}
+
+.tooltip-header {
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 5px;
+}
+
+.tooltip-content {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.tooltip-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tooltip-color {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+.tooltip-label {
+  color: #64748b;
+  min-width: 80px;
+}
+
+.tooltip-value {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+/* ============ CHART CONTROLS ============ */
+.chart-period-selector {
+  display: flex;
+  gap: 5px;
+  background: #f1f5f9;
+  padding: 5px;
+  border-radius: 8px;
+}
+
+.period-btn {
+  padding: 6px 15px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: #64748b;
+  transition: all 0.2s ease;
+}
+
+.period-btn.active {
+  background: white;
+  color: #3b82f6;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.period-btn:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.chart-export-btn {
+  padding: 8px 15px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.chart-export-btn:hover {
+  background: #e2e8f0;
+}
+
+/* ============ CHART METRICS ============ */
+.chart-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+  margin-top: 20px;
+  padding: 20px;
+  background: #f8fafc;
+  border-radius: 10px;
+}
+
+.metric-box {
+  text-align: center;
+  padding: 15px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.metric-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 5px;
+}
+
+.metric-label {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.metric-change {
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 5px;
+}
+
+.change-positive {
+  color: #10b981;
+}
+
+.change-negative {
+  color: #ef4444;
+}
+
+/* ============ SPARKLINE CHARTS ============ */
+.sparkline-container {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.sparkline-chart {
+  width: 100px;
+  height: 40px;
+}
+
+.sparkline-info {
+  flex: 1;
+}
+
+.sparkline-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 2px;
+}
+
+.sparkline-label {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.sparkline-change {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* ============ COMPARISON CHARTS ============ */
+.comparison-chart {
+  display: flex;
+  align-items: flex-end;
+  height: 200px;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.comparison-bar {
+  flex: 1;
+  background: linear-gradient(to top, #3b82f6, #60a5fa);
+  border-radius: 4px 4px 0 0;
+  position: relative;
+  transition: height 0.3s ease;
+}
+
+.comparison-bar:hover {
+  opacity: 0.9;
+}
+
+.comparison-label {
+  position: absolute;
+  bottom: -25px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.comparison-value {
+  position: absolute;
+  top: -25px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+/* ============ LOADING STATES ============ */
+.chart-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  height: 300px;
+}
+
+.chart-loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #e2e8f0;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: chartSpin 1s linear infinite;
+}
+
+@keyframes chartSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* ============ RESPONSIVE DESIGN ============ */
+@media (max-width: 768px) {
+  .charts-container {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  .chart-card {
+    padding: 20px;
+  }
+  
+  .chart-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .chart-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .chart-body {
+    min-height: 250px;
+  }
+  
+  .line-chart-container,
+  .bar-chart-container,
+  .pie-chart-container {
+    height: 250px;
+  }
+  
+  .gauge-chart-container {
+    height: 200px;
+  }
+  
+  .gauge-main-value {
+    font-size: 28px;
+  }
+}
+
+@media (max-width: 480px) {
+  .chart-card {
+    padding: 15px;
+  }
+  
+  .chart-metrics {
+    grid-template-columns: 1fr;
+  }
+  
+  .comparison-chart {
+    height: 150px;
+  }
+  
+  .comparison-value {
+    font-size: 12px;
+    top: -20px;
+  }
+  
+  .comparison-label {
+    font-size: 10px;
+    bottom: -20px;
+  }
+}
+
+/* ============ DARK MODE SUPPORT ============ */
+@media (prefers-color-scheme: dark) {
+  .chart-card {
+    background: #1e293b;
+    border-color: #334155;
+  }
+  
+  .chart-title {
+    color: #f1f5f9;
+  }
+  
+  .chart-placeholder {
+    background: #334155;
+    border-color: #475569;
+    color: #94a3b8;
+  }
+  
+  .legend-value,
+  .gauge-main-value,
+  .tooltip-header,
+  .tooltip-value,
+  .metric-value,
+  .sparkline-value,
+  .comparison-value {
+    color: #f1f5f9;
+  }
+  
+  .legend-label,
+  .legend-item,
+  .gauge-label,
+  .tooltip-label,
+  .metric-label,
+  .sparkline-label,
+  .comparison-label {
+    color: #94a3b8;
+  }
+  
+  .chart-metrics {
+    background: #0f172a;
+  }
+  
+  .metric-box {
+    background: #334155;
+    border-color: #475569;
+  }
+  
+  .chart-tooltip {
+    background: #1e293b;
+    border-color: #475569;
+  }
+  
+  .period-btn.active {
+    background: #334155;
+    color: #60a5fa;
+  }
+  
+  .chart-export-btn {
+    background: #334155;
+    border-color: #475569;
+    color: #cbd5e1;
+  }
+}

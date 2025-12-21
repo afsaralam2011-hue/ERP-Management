@@ -1,0 +1,264 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+
+/* ----------------------- */
+/* INPUT + BUTTON DESIGN   */
+/* ----------------------- */
+
+.inp {
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  width: 100%;
+  font-size: 15px;
+}
+
+.btn-green {
+  background: #00bfa5;
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 15px;
+}
+.btn-green:hover {
+  background: #009f8c;
+}
+
+/* ----------------------- */
+/* MODAL DESIGN            */
+/* ----------------------- */
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.modal-body {
+  background: white;
+  padding: 22px;
+  border-radius: 14px;
+  width: 90%;
+  max-width: 700px;
+  text-align: left;
+  animation: popup 0.2s ease-out;
+}
+
+@keyframes popup {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* ----------------------- */
+/* TABLE DESIGN            */
+/* ----------------------- */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  font-size: 15px;
+}
+
+table th, table td {
+  padding: 10px;
+  border-bottom: 1px solid #e6e6e6;
+}
+
+table th {
+  background: #f4f4f4;
+  text-align: left;
+}
+
+table tr:hover {
+  background: #fafafa;
+}
+.btn-red {
+  background: #ff5252;
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+}
+.btn-red:hover {
+  background: #e64545;
+}
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+
+/* ----------------------- */
+/* INPUT + BUTTON DESIGN   */
+/* ----------------------- */
+
+.inp {
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  width: 100%;
+  font-size: 15px;
+}
+
+.btn-green {
+  background: #00bfa5;
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 15px;
+}
+.btn-green:hover {
+  background: #009f8c;
+}
+
+/* ----------------------- */
+/* MODAL DESIGN            */
+/* ----------------------- */
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.modal-body {
+  background: white;
+  padding: 22px;
+  border-radius: 14px;
+  width: 90%;
+  max-width: 700px;
+  text-align: left;
+  animation: popup 0.2s ease-out;
+}
+
+@keyframes popup {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* ----------------------- */
+/* TABLE DESIGN            */
+/* ----------------------- */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  font-size: 15px;
+}
+
+table th, table td {
+  padding: 10px;
+  border-bottom: 1px solid #e6e6e6;
+}
+
+table th {
+  background: #f4f4f4;
+  text-align: left;
+}
+
+table tr:hover {
+  background: #fafafa;
+}
+.btn-red {
+  background: #ff5252;
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+}
+.btn-red:hover {
+  background: #e64545;
+}

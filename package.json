@@ -1,0 +1,29 @@
+{
+  "name": "devine-water-erp",
+  "version": "1.0.0",
+  "description": "Devine Water - ERP Water Delivery Management System",
+  "private": true,
+  "scripts": {
+    "install:all": "cd frontend && npm install && cd ../backend && npm install",
+    "dev:frontend": "cd frontend && npm start",
+    "dev:backend": "cd backend && npm run dev",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "build:frontend": "cd frontend && npm run build",
+    "start:backend": "cd backend && npm start"
+  },
+  "keywords": [
+    "erp",
+    "water-delivery",
+    "management-system"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "sequelize-cli": "^6.6.3",
+    "vite": "^7.3.0",
+    "concurrently": "^8.0.0"
+  },
+  "dependencies": {
+    "sequelize": "^6.37.7"
+  }
+}
