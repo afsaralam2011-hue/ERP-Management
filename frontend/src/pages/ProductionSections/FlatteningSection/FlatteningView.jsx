@@ -1,78 +1,72 @@
 // src/pages/ProductionSections/FlatteningSection/FlatteningView.jsx
 import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams, Link } from 'react-router-dom';
 import { 
-  FiArrowLeft, FiPackage, FiEdit, FiPrinter, FiDownload,
-  FiTool, FiBox, FiHash, FiUser, FiCalendar, 
-  FiTarget, FiTrendingUp, FiBarChart2, FiGrid,
-  FiCheck, FiAlertCircle, FiDollarSign, FiClock,
-  FiTag, FiLayers, FiSliders, FiArchive,
-  FiCpu, FiDatabase, FiRepeat
+  FiArrowLeft, FiEdit2, FiPrinter, FiDownload,
+  FiCalendar, FiClock, FiUser, FiPackage,
+  FiTarget, FiTrendingUp, FiDatabase,
+  FiBox, FiLayers, FiMonitor, FiHash,
+  FiCheckCircle, FiAlertCircle, FiX
 } from 'react-icons/fi';
-import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '../../../supabaseClient';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import './FlatteningView.css';
 
-const FlatteningView = () => {
+const FlatteningView = ({ onClose, isModal = true }) => {
   const navigate = useNavigate();
   const { id } = useParams();
   
   const [record, setRecord] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [targetDetails, setTargetDetails] = useState(null);
-  const [relatedItems, setRelatedItems] = useState([]);
+  const [itemDetails, setItemDetails] = useState(null);
 
   useEffect(() => {
-    fetchRecordDetails();
+    if (id) {
+      fetchRecordDetails();
+    }
   }, [id]);
 
   const fetchRecordDetails = async () => {
     try {
       setLoading(true);
       
-      // 1. ریکارڈ کی مکمل تفصیلات
+      // Fetch record
       const { data: recordData, error: recordError } = await supabase
         .from('flatteningsection')
         .select('*')
         .eq('id', id)
         .single();
 
-      if (recordError) {
-        console.error('Error fetching record:', recordError);
-        alert('Record not found!');
-        navigate('/production-sections/flattening');
-        return;
-      }
+      if (recordError) throw recordError;
 
       setRecord(recordData);
 
-      // 2. متعلقہ ٹارگٹ کی تفصیلات
-      if (recordData.machine_id && recordData.shift_code) {
+      // Fetch target details
+      if (recordData.targets_id) {
         const { data: targetData } = await supabase
           .from('targets')
           .select('*')
-          .eq('machine_id', recordData.machine_id)
-          .eq('shift_code', recordData.shift_code)
-          .eq('section', 'Flattening')
+          .eq('targets_id', recordData.targets_id)
           .single();
 
-        setTargetDetails(targetData);
+        setTargetDetails(targetData || {});
       }
 
-      // 3. اسی آئٹم کی دوسری پیداواریں
-      const { data: relatedData } = await supabase
-        .from('flatteningsection')
-        .select('*')
-        .eq('item_code', recordData.item_code)
-        .neq('id', id)
-        .order('created_at', { ascending: false })
-        .limit(5);
+      // Fetch item details
+      if (recordData.item_code) {
+        const { data: itemData } = await supabase
+          .from('items')
+          .select('*')
+          .eq('item_code', recordData.item_code)
+          .single();
 
-      setRelatedItems(relatedData || []);
+        setItemDetails(itemData || {});
+      }
 
     } catch (error) {
-      console.error('Error fetching details:', error);
-      alert('Error loading record details');
+      console.error('Error fetching record:', error);
+      setError('Failed to load record details');
     } finally {
       setLoading(false);
     }
@@ -82,677 +76,390 @@ const FlatteningView = () => {
     window.print();
   };
 
-  const handleDownloadPDF = () => {
-    const doc = new jsPDF();
+  const handleExport = () => {
+    const dataStr = JSON.stringify(record, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+    const exportFileDefaultName = `flattening_record_${id}.json`;
     
-    // Header
-    doc.setFontSize(20);
-    doc.setTextColor(40, 40, 40);
-    doc.text('Flattening Section Production Report', 105, 20, { align: 'center' });
-    
-    doc.setFontSize(12);
-    doc.setTextColor(100, 100, 100);
-    doc.text(`Report ID: ${record?.id} | Date: ${new Date(record?.created_at).toLocaleDateString()}`, 105, 30, { align: 'center' });
-    
-    // Basic Information
-    doc.setFontSize(14);
-    doc.setTextColor(16, 185, 129);
-    doc.text('Basic Information', 20, 45);
-    
-    doc.setFontSize(10);
-    doc.setTextColor(0, 0, 0);
-    doc.text(`Machine: ${record?.machine_id} (${record?.machine_no})`, 20, 55);
-    doc.text(`Shift: ${record?.shift_name || record?.shift_code}`, 20, 60);
-    doc.text(`Operator: ${record?.operator_name}`, 20, 65);
-    doc.text(`Date: ${new Date(record?.created_at).toLocaleString()}`, 20, 70);
-    
-    // Production Details
-    doc.setFontSize(14);
-    doc.setTextColor(59, 130, 246);
-    doc.text('Production Details', 20, 85);
-    
-    doc.setFontSize(10);
-    doc.setTextColor(0, 0, 0);
-    doc.text(`Item: ${record?.item_name} (${record?.item_code})`, 20, 95);
-    doc.text(`Production Quantity: ${record?.production_quantity} ${record?.unit || 'Meter'}`, 20, 100);
-    doc.text(`Coil Size: ${record?.coil_size || 'N/A'}`, 20, 105);
-    doc.text(`Weight: ${record?.calculated_weight || record?.weight || 'N/A'} KG`, 20, 110);
-    
-    // Efficiency & Target
-    doc.setFontSize(14);
-    doc.setTextColor(245, 158, 11);
-    doc.text('Performance Metrics', 20, 125);
-    
-    doc.setFontSize(10);
-    doc.setTextColor(0, 0, 0);
-    doc.text(`Efficiency: ${record?.efficiency || 0}%`, 20, 135);
-    doc.text(`Target: ${targetDetails?.target_qty || 'N/A'} ${targetDetails?.uom || 'Kg'}`, 20, 140);
-    doc.text(`Status: ${getEfficiencyStatus(record?.efficiency || 0)}`, 20, 145);
-    
-    // Footer
-    doc.setFontSize(8);
-    doc.setTextColor(150, 150, 150);
-    doc.text('Generated by Pakistan Wire Industries ERP System', 105, 280, { align: 'center' });
-    doc.text(new Date().toLocaleString(), 105, 285, { align: 'center' });
-    
-    doc.save(`Flattening_Record_${record?.id}_${new Date().toISOString().split('T')[0]}.pdf`);
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
   };
 
   const handleEdit = () => {
+    if (isModal && onClose) {
+      onClose();
+    }
     navigate(`/production-sections/flattening/edit/${id}`);
   };
 
+  const handleClose = () => {
+    if (isModal && onClose) {
+      onClose();
+    } else {
+      navigate('/production-sections/flattening');
+    }
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    });
+  };
+
+  const formatTime = (dateString) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('en-GB', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+  };
+
   const getEfficiencyColor = (efficiency) => {
-    efficiency = efficiency || 0;
-    if (efficiency > 100) return '#ef4444';
-    if (efficiency >= 90) return '#10b981';
-    if (efficiency >= 80) return '#f59e0b';
-    return '#ef4444';
+    if (efficiency >= 90) return '#27ae60';
+    if (efficiency >= 80) return '#f39c12';
+    if (efficiency >= 70) return '#e67e22';
+    return '#e74c3c';
   };
 
   const getEfficiencyStatus = (efficiency) => {
-    efficiency = efficiency || 0;
-    if (efficiency > 100) return 'Over Target';
     if (efficiency >= 90) return 'Excellent';
     if (efficiency >= 80) return 'Good';
+    if (efficiency >= 70) return 'Average';
     return 'Below Target';
   };
 
   if (loading) {
     return (
-      <div style={{ 
-        padding: '50px', 
-        textAlign: 'center', 
-        color: '#64748b' 
-      }}>
-        <div style={{ 
-          width: '40px', 
-          height: '40px', 
-          border: '3px solid #e2e8f0',
-          borderTopColor: '#10b981',
-          borderRadius: '50%',
-          animation: 'spin 1s linear infinite',
-          margin: '0 auto 20px'
-        }} />
-        <p>Loading record details...</p>
+      <div className="flattening-view-overlay" onClick={handleClose}>
+        <div className="flattening-view-container" onClick={(e) => e.stopPropagation()}>
+          <div className="loading-container">
+            <div className="loading-spinner"></div>
+            <p>Loading Record Details...</p>
+          </div>
+        </div>
       </div>
     );
   }
 
-  if (!record) {
+  if (error || !record) {
     return (
-      <div style={{ padding: '50px', textAlign: 'center' }}>
-        <div style={{ fontSize: '48px', color: '#ef4444', marginBottom: '20px' }}>⚠️</div>
-        <h3 style={{ color: '#1e293b' }}>Record Not Found</h3>
-        <p style={{ color: '#64748b', marginBottom: '30px' }}>The requested record could not be found.</p>
-        <button
-          onClick={() => navigate('/production-sections/flattening')}
-          style={{
-            background: '#3b82f6',
-            color: 'white',
-            border: 'none',
-            padding: '12px 24px',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontWeight: '600'
-          }}
-        >
-          Back to Flattening Section
-        </button>
+      <div className="flattening-view-overlay" onClick={handleClose}>
+        <div className="flattening-view-container" onClick={(e) => e.stopPropagation()}>
+          <div className="error-container">
+            <FiAlertCircle size={50} color="#e74c3c" />
+            <h3>Error Loading Record</h3>
+            <p>{error || 'Record not found'}</p>
+            <button className="back-btn" onClick={handleClose}>
+              <FiArrowLeft /> Back to List
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
-      {/* Header */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '30px',
-        flexWrap: 'wrap',
-        gap: '20px'
-      }}>
-        <div>
-          <button
-            onClick={() => navigate('/production-sections/flattening')}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: '#64748b',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              fontSize: '14px',
-              marginBottom: '10px',
-              padding: '8px 16px',
-              borderRadius: '8px',
-              transition: 'all 0.2s ease'
-            }}
-          >
-            <FiArrowLeft /> Back to Flattening Section
-          </button>
-          <h1 style={{
-            margin: '0',
-            fontSize: '32px',
-            color: '#1e293b',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '15px'
-          }}>
-            <div style={{
-              width: '60px',
-              height: '60px',
-              background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
-              borderRadius: '15px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'white'
-            }}>
-              <FiRepeat size={28} />
-            </div>
-            Flattening Section Record Details
-          </h1>
-          <p style={{ 
-            margin: '10px 0 0 75px', 
-            color: '#64748b',
-            fontSize: '16px'
-          }}>
-            Record ID: {record.id} | Created: {new Date(record.created_at).toLocaleString()}
-          </p>
-        </div>
-
-        {/* Action Buttons */}
-        <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
-          <button
-            onClick={handleEdit}
-            style={{
-              background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-              border: 'none',
-              padding: '12px 24px',
-              borderRadius: '10px',
-              color: 'white',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-              fontWeight: '600'
-            }}
-          >
-            <FiEdit /> Edit Record
-          </button>
-          
-          <button
-            onClick={handlePrint}
-            style={{
-              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-              border: 'none',
-              padding: '12px 24px',
-              borderRadius: '10px',
-              color: 'white',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-              fontWeight: '600'
-            }}
-          >
-            <FiPrinter /> Print
-          </button>
-          
-          <button
-            onClick={handleDownloadPDF}
-            style={{
-              background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
-              border: 'none',
-              padding: '12px 24px',
-              borderRadius: '10px',
-              color: 'white',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-              fontWeight: '600'
-            }}
-          >
-            <FiDownload /> Download PDF
-          </button>
-        </div>
-      </div>
-
-      {/* Main Content Grid */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
-        gap: '25px',
-        marginBottom: '30px'
-      }}>
-        {/* Card 1: Basic Information */}
-        <div style={{
-          background: 'white',
-          borderRadius: '12px',
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-          padding: '25px',
-          border: '1px solid #e5e7eb'
-        }}>
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '15px', 
-            marginBottom: '20px' 
-          }}>
-            <div style={{
-              width: '40px',
-              height: '40px',
-              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-              borderRadius: '10px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'white'
-            }}>
-              <FiHash size={20} />
-            </div>
-            <h3 style={{ margin: '0', color: '#1e293b', fontSize: '20px' }}>
-              Basic Information
-            </h3>
-          </div>
-
-          <div style={{ display: 'grid', gap: '15px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '10px', borderBottom: '1px solid #f1f5f9' }}>
-              <div style={{ color: '#64748b' }}>Section</div>
-              <div style={{ fontWeight: '600', color: '#1e293b' }}>{record.section || 'Flattening Section'}</div>
-            </div>
-            
-            <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '10px', borderBottom: '1px solid #f1f5f9' }}>
-              <div style={{ color: '#64748b' }}>Machine ID</div>
-              <div style={{ fontWeight: '600', color: '#1e293b' }}>{record.machine_id}</div>
-            </div>
-            
-            <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '10px', borderBottom: '1px solid #f1f5f9' }}>
-              <div style={{ color: '#64748b' }}>Machine No</div>
-              <div style={{ fontWeight: '600', color: '#1e293b' }}>{record.machine_no}</div>
-            </div>
-            
-            <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '10px', borderBottom: '1px solid #f1f5f9' }}>
-              <div style={{ color: '#64748b' }}>Shift</div>
-              <div style={{ fontWeight: '600', color: '#1e293b' }}>{record.shift_name || record.shift_code}</div>
-            </div>
-            
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <div style={{ color: '#64748b' }}>Operator</div>
-              <div style={{ fontWeight: '600', color: '#1e293b' }}>{record.operator_name}</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Card 2: Item Details */}
-        <div style={{
-          background: 'white',
-          borderRadius: '12px',
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-          padding: '25px',
-          border: '1px solid #e5e7eb'
-        }}>
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '15px', 
-            marginBottom: '20px' 
-          }}>
-            <div style={{
-              width: '40px',
-              height: '40px',
-              background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
-              borderRadius: '10px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'white'
-            }}>
-              <FiBox size={20} />
-            </div>
-            <h3 style={{ margin: '0', color: '#1e293b', fontSize: '20px' }}>
-              Item Details
-            </h3>
-          </div>
-
-          <div style={{ display: 'grid', gap: '15px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '10px', borderBottom: '1px solid #f1f5f9' }}>
-              <div style={{ color: '#64748b' }}>Item Code</div>
-              <div style={{ fontWeight: '600', color: '#1e293b' }}>{record.item_code}</div>
-            </div>
-            
-            <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '10px', borderBottom: '1px solid #f1f5f9' }}>
-              <div style={{ color: '#64748b' }}>Item Name</div>
-              <div style={{ fontWeight: '600', color: '#1e293b' }}>{record.item_name}</div>
-            </div>
-            
-            <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '10px', borderBottom: '1px solid #f1f5f9' }}>
-              <div style={{ color: '#64748b' }}>Coil Size</div>
-              <div style={{ fontWeight: '600', color: '#1e293b' }}>{record.coil_size || 'N/A'}</div>
-            </div>
-            
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <div style={{ color: '#64748b' }}>Unit</div>
-              <div style={{ fontWeight: '600', color: '#1e293b' }}>{record.unit || 'Kg'}</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Card 3: Production Details */}
-        <div style={{
-          background: 'white',
-          borderRadius: '12px',
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-          padding: '25px',
-          border: '1px solid #e5e7eb'
-        }}>
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '15px', 
-            marginBottom: '20px' 
-          }}>
-            <div style={{
-              width: '40px',
-              height: '40px',
-              background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
-              borderRadius: '10px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'white'
-            }}>
-              <FiTool size={20} />
-            </div>
-            <h3 style={{ margin: '0', color: '#1e293b', fontSize: '20px' }}>
-              Production Details
-            </h3>
-          </div>
-
-          <div style={{ display: 'grid', gap: '15px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '10px', borderBottom: '1px solid #f1f5f9' }}>
-              <div style={{ color: '#64748b' }}>Production Quantity</div>
-              <div style={{ fontWeight: '600', color: '#1e293b' }}>
-                {record.production_quantity} {record.unit || 'Kg'}
-              </div>
-            </div>
-            
-            <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '10px', borderBottom: '1px solid #f1f5f9' }}>
-              <div style={{ color: '#64748b' }}>Calculated Weight</div>
-              <div style={{ fontWeight: '600', color: '#10b981', fontSize: '18px' }}>
-                {record.calculated_weight || record.weight || '0'} KG
-              </div>
-            </div>
-            
-            <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '10px', borderBottom: '1px solid #f1f5f9' }}>
-              <div style={{ color: '#64748b' }}>Created Date</div>
-              <div style={{ fontWeight: '600', color: '#1e293b' }}>
-                {new Date(record.created_at).toLocaleString()}
-              </div>
-            </div>
-            
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <div style={{ color: '#64748b' }}>Last Updated</div>
-              <div style={{ fontWeight: '600', color: '#1e293b' }}>
-                {new Date(record.updated_at || record.created_at).toLocaleString()}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Card 4: Performance Metrics */}
-        <div style={{
-          background: 'white',
-          borderRadius: '12px',
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-          padding: '25px',
-          border: '1px solid #e5e7eb'
-        }}>
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '15px', 
-            marginBottom: '20px' 
-          }}>
-            <div style={{
-              width: '40px',
-              height: '40px',
-              background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-              borderRadius: '10px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'white'
-            }}>
-              <FiTarget size={20} />
-            </div>
-            <h3 style={{ margin: '0', color: '#1e293b', fontSize: '20px' }}>
-              Performance Metrics
-            </h3>
-          </div>
-
-          <div style={{ display: 'grid', gap: '15px' }}>
-            <div style={{ 
-              display: 'flex', 
-              justifyContent: 'space-between', 
-              alignItems: 'center',
-              paddingBottom: '10px', 
-              borderBottom: '1px solid #f1f5f9' 
-            }}>
-              <div style={{ color: '#64748b' }}>Efficiency</div>
-              <div style={{ 
-                fontWeight: '700', 
-                fontSize: '24px',
-                color: getEfficiencyColor(record.efficiency)
-              }}>
-                {record.efficiency || 0}%
-              </div>
-            </div>
-            
-            <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '10px', borderBottom: '1px solid #f1f5f9' }}>
-              <div style={{ color: '#64748b' }}>Status</div>
-              <div style={{ 
-                fontWeight: '600', 
-                color: getEfficiencyColor(record.efficiency),
-                background: `${getEfficiencyColor(record.efficiency)}20`,
-                padding: '4px 12px',
-                borderRadius: '20px'
-              }}>
-                {getEfficiencyStatus(record.efficiency || 0)}
-              </div>
-            </div>
-            
-            <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '10px', borderBottom: '1px solid #f1f5f9' }}>
-              <div style={{ color: '#64748b' }}>Shift Target</div>
-              <div style={{ fontWeight: '600', color: '#1e293b' }}>
-                {targetDetails ? `${targetDetails.target_qty} ${targetDetails.uom}` : 'Not Available'}
-              </div>
-            </div>
-            
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <div style={{ color: '#64748b' }}>Record ID</div>
-              <div style={{ fontWeight: '600', color: '#64748b', fontFamily: 'monospace' }}>
-                #{record.id}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Remarks Section */}
-      {record.remarks && (
-        <div style={{
-          background: 'white',
-          borderRadius: '12px',
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-          padding: '25px',
-          marginBottom: '30px',
-          border: '1px solid #e5e7eb'
-        }}>
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '15px', 
-            marginBottom: '20px' 
-          }}>
-            <div style={{
-              width: '40px',
-              height: '40px',
-              background: 'linear-gradient(135deg, #64748b 0%, #475569 100%)',
-              borderRadius: '10px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'white'
-            }}>
-              <FiArchive size={20} />
-            </div>
-            <h3 style={{ margin: '0', color: '#1e293b', fontSize: '20px' }}>
-              Remarks
-            </h3>
-          </div>
-          
-          <div style={{
-            background: '#f8fafc',
-            padding: '20px',
-            borderRadius: '8px',
-            borderLeft: '4px solid #8b5cf6',
-            fontStyle: 'italic',
-            color: '#475569'
-          }}>
-            {record.remarks}
-          </div>
-        </div>
-      )}
-
-      {/* Related Records */}
-      {relatedItems.length > 0 && (
-        <div style={{
-          background: 'white',
-          borderRadius: '12px',
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-          padding: '25px',
-          marginBottom: '30px',
-          border: '1px solid #e5e7eb'
-        }}>
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '15px', 
-            marginBottom: '20px' 
-          }}>
-            <div style={{
-              width: '40px',
-              height: '40px',
-              background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
-              borderRadius: '10px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'white'  // ✅ یہاں درست کیا
-            }}>
-              <FiLayers size={20} />
-            </div>
-            <h3 style={{ margin: '0', color: '#1e293b', fontSize: '20px' }}>
-              Related Production Records
-            </h3>
-          </div>
-          
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ background: '#f8fafc' }}>
-                  <th style={{ padding: '12px', textAlign: 'left', color: '#64748b', fontWeight: '600' }}>Date</th>
-                  <th style={{ padding: '12px', textAlign: 'left', color: '#64748b', fontWeight: '600' }}>Machine</th>
-                  <th style={{ padding: '12px', textAlign: 'left', color: '#64748b', fontWeight: '600' }}>Quantity</th>
-                  <th style={{ padding: '12px', textAlign: 'left', color: '#64748b', fontWeight: '600' }}>Weight</th>
-                  <th style={{ padding: '12px', textAlign: 'left', color: '#64748b', fontWeight: '600' }}>Efficiency</th>
-                  <th style={{ padding: '12px', textAlign: 'left', color: '#64748b', fontWeight: '600' }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {relatedItems.map((item) => (
-                  <tr key={item.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                    <td style={{ padding: '12px', color: '#64748b' }}>
-                      {new Date(item.created_at).toLocaleDateString()}
-                    </td>
-                    <td style={{ padding: '12px', fontWeight: '600' }}>{item.machine_id}</td>
-                    <td style={{ padding: '12px' }}>
-                      {item.production_quantity} {item.unit || 'Kg'}
-                    </td>
-                    <td style={{ padding: '12px', color: '#10b981', fontWeight: '600' }}>
-                      {item.calculated_weight || item.weight || '0'} KG
-                    </td>
-                    <td style={{ padding: '12px' }}>
-                      <div style={{ 
-                        display: 'inline-block',
-                        fontWeight: '600',
-                        color: getEfficiencyColor(item.efficiency),
-                        background: `${getEfficiencyColor(item.efficiency)}20`,
-                        padding: '4px 12px',
-                        borderRadius: '20px'
-                      }}>
-                        {item.efficiency || 0}%
-                      </div>
-                    </td>
-                    <td style={{ padding: '12px' }}>
-                      <button
-                        onClick={() => navigate(`/production-sections/flattening/view/${item.id}`)}
-                        style={{
-                          background: 'transparent',
-                          border: '1px solid #3b82f6',
-                          color: '#3b82f6',
-                          padding: '6px 12px',
-                          borderRadius: '6px',
-                          cursor: 'pointer',
-                          fontSize: '13px'
-                        }}
-                      >
-                        View
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* Print Styles */}
-      <style jsx global>{`
-        @media print {
-          body * {
-            visibility: hidden;
-          }
-          
-          #printable-area, #printable-area * {
-            visibility: visible;
-          }
-          
-          #printable-area {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            padding: 20px;
-          }
-          
-          button {
-            display: none !important;
-          }
-        }
+    <div className="flattening-view-overlay" onClick={handleClose}>
+      <div className="flattening-view-container" onClick={(e) => e.stopPropagation()}>
         
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      `}</style>
+        {/* Header */}
+        <div className="view-header">
+          <div className="header-content">
+            <div className="header-icon">
+              <FiPackage />
+            </div>
+            <div className="header-text">
+              <h1>FLATTENING PRODUCTION RECORD</h1>
+              <p>Viewing detailed information of production record</p>
+            </div>
+          </div>
+          <button className="close-button" onClick={handleClose}>
+            <FiX />
+          </button>
+        </div>
+
+        {/* Record Info Bar */}
+        <div className="record-info-bar">
+          <div className="info-item">
+            <FiDatabase /> Record ID: <span>#{id}</span>
+          </div>
+          <div className="info-item">
+            <FiCalendar /> Date: <span>{formatDate(record.created_at)}</span>
+          </div>
+          <div className="info-item">
+            <FiClock /> Time: <span>{formatTime(record.created_at)}</span>
+          </div>
+          <div className="info-item">
+            <FiCheckCircle /> Status: <span style={{ color: '#27ae60' }}>Completed</span>
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <div className="view-content">
+          
+          {/* Section 1: Production Summary */}
+          <div className="content-section summary-section">
+            <div className="section-header">
+              <h2><FiTrendingUp /> Production Summary</h2>
+            </div>
+            
+            <div className="summary-grid">
+              <div className="summary-card">
+                <div className="card-icon" style={{ background: '#3498db' }}>
+                  <FiTarget />
+                </div>
+                <div className="card-content">
+                  <h3>Target ID</h3>
+                  <p className="card-value">{record.targets_id || 'N/A'}</p>
+                  <p className="card-label">Production Target</p>
+                </div>
+              </div>
+
+              <div className="summary-card">
+                <div className="card-icon" style={{ background: '#2ecc71' }}>
+                  <FiPackage />
+                </div>
+                <div className="card-content">
+                  <h3>Item Code</h3>
+                  <p className="card-value">{record.item_code || 'N/A'}</p>
+                  <p className="card-label">Production Item</p>
+                </div>
+              </div>
+
+              <div className="summary-card">
+                <div className="card-icon" style={{ background: '#9b59b6' }}>
+                  <FiUser />
+                </div>
+                <div className="card-content">
+                  <h3>Operator</h3>
+                  <p className="card-value">{record.operator_name || 'N/A'}</p>
+                  <p className="card-label">Machine Operator</p>
+                </div>
+              </div>
+
+              <div className="summary-card efficiency-card" style={{ 
+                borderColor: getEfficiencyColor(record.efficiency),
+                background: getEfficiencyColor(record.efficiency) + '15'
+              }}>
+                <div className="card-icon" style={{ 
+                  background: getEfficiencyColor(record.efficiency) 
+                }}>
+                  <FiTrendingUp />
+                </div>
+                <div className="card-content">
+                  <h3>Efficiency</h3>
+                  <p className="card-value" style={{ color: getEfficiencyColor(record.efficiency) }}>
+                    {record.efficiency?.toFixed(1) || '0'}%
+                  </p>
+                  <p className="card-label">{getEfficiencyStatus(record.efficiency || 0)}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Section 2: Production Details */}
+          <div className="details-grid">
+            
+            {/* Left Column: Target & Machine */}
+            <div className="detail-column">
+              <div className="detail-section">
+                <div className="section-header">
+                  <h3><FiTarget /> Target & Machine Details</h3>
+                </div>
+                
+                <div className="detail-list">
+                  <div className="detail-item">
+                    <span className="detail-label">Target ID:</span>
+                    <span className="detail-value">{record.targets_id || 'N/A'}</span>
+                  </div>
+                  
+                  <div className="detail-item">
+                    <span className="detail-label">Machine ID:</span>
+                    <span className="detail-value">{record.machine_id || 'N/A'}</span>
+                  </div>
+                  
+                  <div className="detail-item">
+                    <span className="detail-label">Machine No:</span>
+                    <span className="detail-value">{record.machine_no || 'N/A'}</span>
+                  </div>
+                  
+                  <div className="detail-item">
+                    <span className="detail-label">Shift:</span>
+                    <span className="detail-value">
+                      {record.shift_name} ({record.shift_code})
+                    </span>
+                  </div>
+                  
+                  <div className="detail-item">
+                    <span className="detail-label">Target Quantity:</span>
+                    <span className="detail-value" style={{ color: '#27ae60' }}>
+                      {targetDetails?.target_qty || 'N/A'} {targetDetails?.uom || record.unit}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Middle Column: Item Details */}
+            <div className="detail-column">
+              <div className="detail-section">
+                <div className="section-header">
+                  <h3><FiBox /> Item Details</h3>
+                </div>
+                
+                <div className="detail-list">
+                  <div className="detail-item">
+                    <span className="detail-label">Item Code:</span>
+                    <span className="detail-value">{record.item_code || 'N/A'}</span>
+                  </div>
+                  
+                  <div className="detail-item">
+                    <span className="detail-label">Item Name:</span>
+                    <span className="detail-value">{record.item_name || 'N/A'}</span>
+                  </div>
+                  
+                  <div className="detail-item">
+                    <span className="detail-label">Coil Size:</span>
+                    <span className="detail-value">{record.coil_size || 'N/A'}</span>
+                  </div>
+                  
+                  <div className="detail-item">
+                    <span className="detail-label">Material Type:</span>
+                    <span className="detail-value">{record.material_type || 'N/A'}</span>
+                  </div>
+                  
+                  <div className="detail-item">
+                    <span className="detail-label">Production Quantity:</span>
+                    <span className="detail-value" style={{ 
+                      color: '#3498db', 
+                      fontWeight: 'bold',
+                      fontSize: '18px'
+                    }}>
+                      {record.production_quantity?.toFixed(2)} {record.unit}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column: Production Metrics */}
+            <div className="detail-column">
+              <div className="detail-section">
+                <div className="section-header">
+                  <h3><FiTrendingUp /> Production Metrics</h3>
+                </div>
+                
+                <div className="detail-list">
+                  <div className="detail-item">
+                    <span className="detail-label">Production Date:</span>
+                    <span className="detail-value">{formatDate(record.created_at)}</span>
+                  </div>
+                  
+                  <div className="detail-item">
+                    <span className="detail-label">Production Time:</span>
+                    <span className="detail-value">{formatTime(record.created_at)}</span>
+                  </div>
+                  
+                  <div className="detail-item">
+                    <span className="detail-label">Updated At:</span>
+                    <span className="detail-value">
+                      {record.updated_at ? formatDate(record.updated_at) : 'N/A'}
+                    </span>
+                  </div>
+                  
+                  <div className="detail-item">
+                    <span className="detail-label">Section:</span>
+                    <span className="detail-value">{record.section_name || 'Flattening'}</span>
+                  </div>
+                  
+                  <div className="detail-item">
+                    <span className="detail-label">Database Table:</span>
+                    <span className="detail-value" style={{ 
+                      fontFamily: 'monospace',
+                      color: '#9b59b6'
+                    }}>
+                      flatteningsection
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Section 3: Remarks */}
+          {record.remarks && (
+            <div className="remarks-section">
+              <div className="section-header">
+                <h3><FiLayers /> Remarks & Notes</h3>
+              </div>
+              
+              <div className="remarks-content">
+                <p>{record.remarks}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Section 4: Additional Info */}
+          <div className="additional-info">
+            <div className="info-grid">
+              <div className="info-item">
+                <span className="info-label">Created By:</span>
+                <span className="info-value">System</span>
+              </div>
+              
+              <div className="info-item">
+                <span className="info-label">Last Updated:</span>
+                <span className="info-value">
+                  {record.updated_at ? formatTime(record.updated_at) : 'N/A'}
+                </span>
+              </div>
+              
+              <div className="info-item">
+                <span className="info-label">Record Status:</span>
+                <span className="info-value" style={{ color: '#27ae60' }}>
+                  <FiCheckCircle /> Active
+                </span>
+              </div>
+              
+              <div className="info-item">
+                <span className="info-label">Data Source:</span>
+                <span className="info-value">Supabase Database</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Actions Footer */}
+        <div className="view-actions">
+          <div className="action-buttons-left">
+            <button className="action-btn back-btn" onClick={handleClose}>
+              <FiArrowLeft /> Back to List
+            </button>
+          </div>
+          
+          <div className="action-buttons-right">
+            <button className="action-btn print-btn" onClick={handlePrint}>
+              <FiPrinter /> Print
+            </button>
+            
+            <button className="action-btn export-btn" onClick={handleExport}>
+              <FiDownload /> Export
+            </button>
+            
+            <button className="action-btn edit-btn" onClick={handleEdit}>
+              <FiEdit2 /> Edit Record
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

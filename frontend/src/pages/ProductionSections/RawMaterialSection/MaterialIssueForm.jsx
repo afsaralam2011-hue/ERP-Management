@@ -1,7 +1,7 @@
 // MaterialIssueForm.jsx - COMPLETE FINAL VERSION
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
+import { 
   FiBox, FiSave, FiArrowLeft, FiRefreshCw,
   FiTag, FiPackage, FiUser, FiFileText,
   FiMessageSquare, FiHash, FiBriefcase,
@@ -9,8 +9,6 @@ import {
 } from 'react-icons/fi';
 import axios from 'axios';
 import './RawMaterialPage.css';
-
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 const MaterialIssueForm = () => {
   const navigate = useNavigate();
@@ -87,7 +85,7 @@ const MaterialIssueForm = () => {
   const fetchAvailableStock = async () => {
     try {
       // API call to fetch available stock
-      const response = await axios.get(`${API_URL}/api/raw-material/available-stock`);
+      const response = await axios.get('http://localhost:5000/api/raw-material/available-stock');
       setAvailableStock(response.data);
     } catch (error) {
       console.error('Error fetching stock:', error);
@@ -97,12 +95,12 @@ const MaterialIssueForm = () => {
   // Handle input change
   const handleChange = (e) => {
     const { name, value } = e.target;
-
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
+    
+    setFormData(prev => ({ 
+      ...prev, 
+      [name]: value 
     }));
-
+    
     // Clear error
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
@@ -122,21 +120,21 @@ const MaterialIssueForm = () => {
     const day = String(date.getDate()).padStart(2, '0');
     const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
     const gatePass = `MI-${year}${month}${day}-${random}`; // MI = Material Issue
-
-    setFormData(prev => ({
-      ...prev,
-      gate_pass: gatePass
+    
+    setFormData(prev => ({ 
+      ...prev, 
+      gate_pass: gatePass 
     }));
   };
 
   // Check available quantity
   const checkAvailableQuantity = () => {
     if (formData.wire_size && formData.category) {
-      const stockItem = availableStock.find(item =>
-        item.wire_size === formData.wire_size &&
+      const stockItem = availableStock.find(item => 
+        item.wire_size === formData.wire_size && 
         item.category === formData.category
       );
-
+      
       if (stockItem && parseFloat(formData.kg_wt) > stockItem.available_quantity) {
         setErrors(prev => ({
           ...prev,
@@ -149,56 +147,56 @@ const MaterialIssueForm = () => {
   // Validate form
   const validateForm = () => {
     const newErrors = {};
-
+    
     // Required fields
     if (!formData.gate_pass.trim()) {
       newErrors.gate_pass = 'Gate pass number is required';
     }
-
+    
     if (!formData.wire_size) {
       newErrors.wire_size = 'Wire size is required';
     }
-
+    
     if (!formData.category) {
       newErrors.category = 'Category is required';
     }
-
+    
     if (!formData.shape) {
       newErrors.shape = 'Shape is required';
     }
-
+    
     if (!formData.kg_wt || parseFloat(formData.kg_wt) <= 0) {
       newErrors.kg_wt = 'Valid weight is required (must be greater than 0)';
     }
-
+    
     if (!formData.issued_by.trim()) {
       newErrors.issued_by = 'Issued by is required';
     }
-
+    
     if (!formData.issued_to.trim()) {
       newErrors.issued_to = 'Issued to is required';
     }
-
+    
     if (!formData.purpose) {
       newErrors.purpose = 'Purpose is required';
     }
-
+    
     if (!formData.production_order_no.trim()) {
       newErrors.production_order_no = 'Production order number is required';
     }
-
+    
     // Check stock availability
     if (formData.wire_size && formData.category && formData.kg_wt) {
-      const stockItem = availableStock.find(item =>
-        item.wire_size === formData.wire_size &&
+      const stockItem = availableStock.find(item => 
+        item.wire_size === formData.wire_size && 
         item.category === formData.category
       );
-
+      
       if (stockItem && parseFloat(formData.kg_wt) > stockItem.available_quantity) {
         newErrors.kg_wt = `Insufficient stock. Available: ${stockItem.available_quantity} KG`;
       }
     }
-
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -206,13 +204,13 @@ const MaterialIssueForm = () => {
   // Handle form submit
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    
     if (!validateForm()) {
       return;
     }
-
+    
     setLoading(true);
-
+    
     try {
       // Prepare data
       const dataToSave = {
@@ -223,10 +221,10 @@ const MaterialIssueForm = () => {
         created_at: new Date().toISOString(),
         issued_date: formData.issued_date
       };
-
+      
       // API call to save material issue
       const response = await axios.post(
-        `${API_URL}/api/raw-material-log/issue`,
+        'http://localhost:5000/api/raw-material-log/issue', 
         dataToSave,
         {
           headers: {
@@ -234,22 +232,22 @@ const MaterialIssueForm = () => {
           }
         }
       );
-
+      
       if (response.data.success) {
         setSuccessMessage('Material issued successfully!');
-
+        
         // Reset form after successful submission
         setTimeout(() => {
           resetForm();
           setSuccessMessage('');
-
+          
           // Redirect to main page after 2 seconds
           setTimeout(() => {
             navigate('/production-sections/raw-material');
           }, 2000);
         }, 2000);
       }
-
+      
     } catch (error) {
       console.error('Error issuing material:', error);
       setSuccessMessage('Error issuing material. Please try again.');
@@ -287,8 +285,8 @@ const MaterialIssueForm = () => {
   // Get available quantity for selected material
   const getAvailableQuantity = () => {
     if (formData.wire_size && formData.category) {
-      const stockItem = availableStock.find(item =>
-        item.wire_size === formData.wire_size &&
+      const stockItem = availableStock.find(item => 
+        item.wire_size === formData.wire_size && 
         item.category === formData.category
       );
       return stockItem ? stockItem.available_quantity : 0;
@@ -300,13 +298,13 @@ const MaterialIssueForm = () => {
     <div className="form-page-container">
       {/* Header */}
       <div className="form-page-header">
-        <button
-          className="back-btn"
+        <button 
+          className="back-btn" 
           onClick={() => navigate('/production-sections/raw-material')}
         >
           <FiArrowLeft /> Back to Raw Material
         </button>
-
+        
         <div className="header-content">
           <h1>
             <FiBox /> Material Issue Form
@@ -330,7 +328,7 @@ const MaterialIssueForm = () => {
           {/* Section 1: Basic Information */}
           <div className="form-section">
             <h3><FiTag /> Basic Information</h3>
-
+            
             <div className="form-row">
               <div className="form-group">
                 <label className="required">Gate Pass Number</label>
@@ -344,8 +342,8 @@ const MaterialIssueForm = () => {
                     className={errors.gate_pass ? 'error' : ''}
                     readOnly
                   />
-                  <button
-                    type="button"
+                  <button 
+                    type="button" 
                     className="btn-small"
                     onClick={generateGatePass}
                   >
@@ -356,7 +354,7 @@ const MaterialIssueForm = () => {
                   <div className="error-text">{errors.gate_pass}</div>
                 )}
               </div>
-
+              
               <div className="form-group">
                 <label className="required">Production Order No.</label>
                 <input
@@ -384,7 +382,7 @@ const MaterialIssueForm = () => {
                   max={new Date().toISOString().split('T')[0]}
                 />
               </div>
-
+              
               <div className="form-group">
                 <label>Shift</label>
                 <select
@@ -404,7 +402,7 @@ const MaterialIssueForm = () => {
           {/* Section 2: Material Details */}
           <div className="form-section">
             <h3><FiPackage /> Material Details</h3>
-
+            
             <div className="form-row">
               <div className="form-group">
                 <label className="required">Wire Size</label>
@@ -423,7 +421,7 @@ const MaterialIssueForm = () => {
                   <div className="error-text">{errors.wire_size}</div>
                 )}
               </div>
-
+              
               <div className="form-group">
                 <label className="required">Category</label>
                 <select
@@ -461,7 +459,7 @@ const MaterialIssueForm = () => {
                   <div className="error-text">{errors.shape}</div>
                 )}
               </div>
-
+              
               <div className="form-group">
                 <label className="required">Weight (KG)</label>
                 <div className="input-with-unit">
@@ -492,7 +490,7 @@ const MaterialIssueForm = () => {
           {/* Section 3: Issuing Details */}
           <div className="form-section">
             <h3><FiUser /> Issuing Details</h3>
-
+            
             <div className="form-row">
               <div className="form-group">
                 <label className="required">Issued By</label>
@@ -508,7 +506,7 @@ const MaterialIssueForm = () => {
                   <div className="error-text">{errors.issued_by}</div>
                 )}
               </div>
-
+              
               <div className="form-group">
                 <label className="required">Issued To</label>
                 <input
@@ -543,7 +541,7 @@ const MaterialIssueForm = () => {
                   <div className="error-text">{errors.purpose}</div>
                 )}
               </div>
-
+              
               <div className="form-group">
                 <label>Machine No.</label>
                 <select
@@ -576,7 +574,7 @@ const MaterialIssueForm = () => {
           {/* Section 4: Additional Information */}
           <div className="form-section">
             <h3><FiFileText /> Additional Information</h3>
-
+            
             <div className="form-group">
               <label>Remarks</label>
               <textarea
@@ -587,7 +585,7 @@ const MaterialIssueForm = () => {
                 rows="3"
               />
             </div>
-
+            
             <div className="form-group">
               <label>Reason for Issue</label>
               <textarea
@@ -613,27 +611,27 @@ const MaterialIssueForm = () => {
 
           {/* Form Actions */}
           <div className="form-actions">
-            <button
-              type="button"
+            <button 
+              type="button" 
               className="btn-secondary"
               onClick={resetForm}
               disabled={loading}
             >
               <FiRefreshCw /> Reset Form
             </button>
-
+            
             <div className="action-buttons">
-              <button
-                type="button"
+              <button 
+                type="button" 
                 className="btn-outline"
                 onClick={() => navigate('/production-sections/raw-material')}
                 disabled={loading}
               >
                 <FiX /> Cancel
               </button>
-
-              <button
-                type="submit"
+              
+              <button 
+                type="submit" 
                 className="btn-primary"
                 disabled={loading}
               >

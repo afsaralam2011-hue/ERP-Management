@@ -1,0 +1,816 @@
+/* ============================================= */
+/* FLATTENING FORM CSS - COMPLETE WITH COMMENTS  */
+/* ============================================= */
+
+/* OVERLAY SECTION */
+/* ============================================= */
+/* This is the dark background behind the modal */
+/* If you want to change overlay opacity, modify background rgba value */
+/* Current: rgba(0, 0, 0, 0.8) - 80% black overlay */
+
+.flattening-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8); /* CHANGE OVERLAY OPACITY HERE */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+/* MODAL CONTAINER */
+/* ============================================= */
+/* Main modal container - background and border */
+/* To change modal background color, modify #111111 */
+/* To change border color, modify border: 2px solid #333 */
+
+.flattening-modal-container {
+  width: 100%;
+  max-width: 1300px;
+  max-height: 90vh; /* پہلے 90vh تھا، اب 85vh */
+  background: #111111; /* CHANGE MODAL BACKGROUND COLOR HERE */
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.9);
+  border: 1px solid #333; /* CHANGE MODAL BORDER COLOR HERE */
+}
+
+/* HEADER SECTION */
+/* ============================================= */
+/* Header with title and close button */
+/* Header background: #000000 */
+/* Header border bottom: #27ae60 (green) */
+
+.modal-header {
+  background: #000000; /* CHANGE HEADER BACKGROUND COLOR HERE */
+  padding: 20px 25px;
+  border-bottom: 3px solid #27ae60; /* CHANGE HEADER BOTTOM BORDER COLOR HERE */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+/* Header Icon - Change icon background and color here */
+.header-icon {
+  width: 50px;
+  height: 50px;
+  background: #222; /* CHANGE ICON BACKGROUND HERE */
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #27ae60; /* CHANGE ICON BORDER COLOR HERE */
+}
+
+.header-icon svg {
+  color: #27ae60; /* CHANGE ICON COLOR HERE */
+  width: 24px;
+  height: 24px;
+}
+
+/* Header Text - Change text colors here */
+.header-text h1 {
+  margin: 0;
+  font-size: 24px; /* CHANGE HEADER TITLE FONT SIZE HERE */
+  font-weight: 700;
+  color: #ffffff; /* CHANGE HEADER TITLE COLOR HERE - WHITE */
+  letter-spacing: 0.5px;
+}
+
+.header-text p {
+  margin: 5px 0 0 0;
+  color: #888; /* CHANGE HEADER SUBTITLE COLOR HERE */
+  font-size: 14px; /* CHANGE HEADER SUBTITLE FONT SIZE HERE */
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Close Button - Change button colors here */
+.close-button {
+  background: #222; /* CHANGE CLOSE BUTTON BACKGROUND HERE */
+  border: 1px solid #444; /* CHANGE CLOSE BUTTON BORDER HERE */
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ccc; /* CHANGE CLOSE BUTTON ICON COLOR HERE */
+  cursor: pointer;
+  font-size: 20px;
+  transition: all 0.3s ease;
+}
+
+.close-button:hover {
+  background: #e74c3c; /* CHANGE CLOSE BUTTON HOVER BACKGROUND HERE */
+  color: white; /* CHANGE CLOSE BUTTON HOVER ICON COLOR HERE */
+  border-color: #e74c3c; /* CHANGE CLOSE BUTTON HOVER BORDER HERE */
+}
+
+/* TARGET SECTION */
+/* ============================================= */
+/* Target selection section with 6 boxes */
+/* Section background: #151515 */
+/* Section border bottom: #333 */
+
+.target-section {
+  padding: 20px 25px;
+  background: #151515; /* CHANGE TARGET SECTION BACKGROUND HERE */
+  border-bottom: 1px solid #333; /* CHANGE TARGET SECTION BORDER COLOR HERE */
+}
+
+.section-title {
+  font-size: 18px; /* CHANGE SECTION TITLE FONT SIZE HERE */
+  font-weight: 600;
+  color: white; /* CHANGE SECTION TITLE COLOR HERE - WHITE */
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Target Grid - 6 columns layout */
+.target-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr); /* CHANGE GRID COLUMNS COUNT HERE */
+  gap: 15px; /* CHANGE GRID GAP SPACING HERE */
+}
+
+/* Selection Box - Individual input container */
+.selection-box {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Selection Label - Labels above inputs */
+.selection-label {
+  font-size: 14px; /* CHANGE LABEL FONT SIZE HERE - INCREASED */
+  font-weight: 600;
+  color: #ffffff; /* CHANGE LABEL COLOR HERE - WHITE */
+  margin-bottom: 8px; /* CHANGE LABEL MARGIN HERE */
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Required field indicator - Red star */
+.selection-label.required::after {
+  content: " *";
+  color: #e74c3c; /* CHANGE REQUIRED STAR COLOR HERE */
+  font-weight: bold;
+}
+
+/* Input and Select Fields - Base styling */
+.selection-input, .form-select {
+  width: 100%;
+  padding: 12px 14px; /* CHANGE INPUT PADDING HERE - INCREASED */
+  border: 1px solid #444; /* CHANGE INPUT BORDER COLOR HERE */
+  border-radius: 8px;
+  font-size: 16px; /* CHANGE INPUT FONT SIZE HERE - INCREASED */
+  color: #ffffff; /* CHANGE INPUT TEXT COLOR HERE - WHITE */
+  background: #222; /* CHANGE INPUT BACKGROUND COLOR HERE */
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+}
+
+/* Form Select - Dropdown styling */
+.form-select {
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23888'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+}
+
+/* EMPTY REQUIRED FIELDS - RED BORDER */
+/* ============================================= */
+/* When required field is empty - shows red border */
+.form-select.empty-required,
+.selection-input.empty-required,
+.item-select.empty-required,
+.item-input.empty-required,
+.form-textarea.empty-required {
+  border-color: #e74c3c; /* CHANGE EMPTY FIELD BORDER COLOR HERE */
+  box-shadow: 0 0 0 2px rgba(231, 76, 60, 0.3); /* CHANGE EMPTY FIELD GLOW EFFECT HERE */
+}
+
+/* FILLED VALID FIELDS - GREEN BORDER */
+/* ============================================= */
+/* When field is properly filled - shows green border */
+.form-select.filled-valid,
+.selection-input.filled-valid,
+.item-select.filled-valid,
+.item-input.filled-valid,
+.form-textarea.filled-valid {
+  border-color: #27ae60; /* CHANGE FILLED FIELD BORDER COLOR HERE */
+  box-shadow: 0 0 0 2px rgba(39, 174, 96, 0.3); /* CHANGE FILLED FIELD GLOW EFFECT HERE */
+}
+
+/* Focus state for inputs */
+.selection-input:focus, .form-select:focus {
+  outline: none;
+  border-color: #555; /* CHANGE FOCUS BORDER COLOR HERE */
+  box-shadow: 0 0 0 2px #555; /* CHANGE FOCUS GLOW EFFECT HERE */
+}
+
+/* Readonly inputs - disabled state */
+.selection-input.readonly {
+  background: #1a1a1a; /* CHANGE READONLY BACKGROUND HERE */
+  color: #888; /* CHANGE READONLY TEXT COLOR HERE */
+  border-color: #444; /* CHANGE READONLY BORDER HERE */
+  cursor: not-allowed;
+}
+
+/* TARGET QUANTITY BOX - Dark Gray */
+/* ============================================= */
+.target-qty-box {
+  background: #1a1a1a; /* CHANGE TARGET QTY BOX BACKGROUND HERE */
+  padding: 12px 14px; /* CHANGE TARGET QTY BOX PADDING HERE - INCREASED */
+  border-radius: 8px;
+  border: 1px solid #333; /* CHANGE TARGET QTY BOX BORDER HERE */
+  text-align: center;
+}
+
+.target-qty-value {
+  font-size: 18px; /* CHANGE TARGET QTY VALUE FONT SIZE HERE - INCREASED */
+  font-weight: 700;
+  color: #27ae60; /* CHANGE TARGET QTY VALUE COLOR HERE */
+}
+
+.target-qty-label {
+  font-size: 12px; /* CHANGE TARGET QTY LABEL FONT SIZE HERE */
+  color: #888; /* CHANGE TARGET QTY LABEL COLOR HERE */
+  margin-top: 4px;
+}
+
+/* EFFICIENCY BOX - Dark Theme */
+/* ============================================= */
+.efficiency-box {
+  background: #1a1a1a; /* CHANGE EFFICIENCY BOX BACKGROUND HERE */
+  padding: 12px 14px; /* CHANGE EFFICIENCY BOX PADDING HERE - INCREASED */
+  border-radius: 8px;
+  border: 1px solid #333; /* CHANGE EFFICIENCY BOX BORDER HERE */
+  text-align: center;
+}
+
+.efficiency-value {
+  font-size: 18px; /* CHANGE EFFICIENCY VALUE FONT SIZE HERE - INCREASED */
+  font-weight: 700;
+  color: #f39c12; /* CHANGE EFFICIENCY VALUE COLOR HERE */
+}
+
+.efficiency-label {
+  font-size: 12px; /* CHANGE EFFICIENCY LABEL FONT SIZE HERE */
+  color: #888; /* CHANGE EFFICIENCY LABEL COLOR HERE */
+  margin-top: 4px;
+}
+
+/* ITEMS SECTION */
+/* ============================================= */
+.items-section {
+  padding: 20px 25px;
+  background: #111111; /* CHANGE ITEMS SECTION BACKGROUND HERE */
+  border-bottom: 1px solid #333; /* CHANGE ITEMS SECTION BORDER HERE */
+}
+
+.items-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #333; /* CHANGE ITEMS HEADER BORDER HERE */
+}
+
+/* ITEMS PRODUCTION title - now in one line */
+.section-title-secondary {
+  font-size: 18px; /* CHANGE ITEMS TITLE FONT SIZE HERE - INCREASED */
+  font-weight: 600;
+  color: white; /* CHANGE ITEMS TITLE COLOR HERE - WHITE */
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap; /* Forces text to stay in one line */
+}
+
+/* Add Item Button */
+.add-item-btn {
+  background: #222; /* CHANGE ADD BUTTON BACKGROUND HERE */
+  color: #ccc; /* CHANGE ADD BUTTON TEXT COLOR HERE */
+  border: 1px solid #444; /* CHANGE ADD BUTTON BORDER HERE */
+  padding: 10px 18px; /* CHANGE ADD BUTTON PADDING HERE - INCREASED */
+  border-radius: 8px;
+  font-size: 15px; /* CHANGE ADD BUTTON FONT SIZE HERE - INCREASED */
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.add-item-btn:hover {
+  background: #333; /* CHANGE ADD BUTTON HOVER BACKGROUND HERE */
+  color: white; /* CHANGE ADD BUTTON HOVER TEXT COLOR HERE */
+}
+
+/* ITEMS TABLE */
+/* ============================================= */
+.items-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-bottom: 25px; /* CHANGE TABLE MARGIN HERE - INCREASED */
+  border: 1px solid #333; /* CHANGE TABLE BORDER HERE */
+  border-radius: 8px;
+  overflow: hidden;
+  background: #151515; /* CHANGE TABLE BACKGROUND HERE */
+}
+
+/* Table Headers */
+.items-table th {
+  background: #1a1a1a; /* CHANGE TABLE HEADER BACKGROUND HERE */
+  padding: 16px 12px; /* CHANGE TABLE HEADER PADDING HERE - INCREASED */
+  color: #ccc; /* CHANGE TABLE HEADER TEXT COLOR HERE */
+  font-size: 15px; /* CHANGE TABLE HEADER FONT SIZE HERE - INCREASED */
+  font-weight: 600;
+  text-align: left;
+  border-right: 1px solid #333; /* CHANGE TABLE HEADER BORDER HERE */
+  border-bottom: 1px solid #333; /* CHANGE TABLE HEADER BOTTOM BORDER HERE */
+  white-space: nowrap;
+}
+
+.items-table th:last-child {
+  border-right: none;
+}
+
+/* EFFICIENCY % header - adds percentage sign */
+.items-table th:nth-child(7)::after {
+  content: " %";
+  color: #888; /* CHANGE PERCENTAGE SIGN COLOR HERE */
+  font-size: 13px;
+  margin-left: 2px;
+}
+
+/* Table Rows - alternating colors */
+.items-table tr:nth-child(even) {
+  background: #181818; /* CHANGE EVEN ROW BACKGROUND HERE */
+}
+
+.items-table tr:hover {
+  background: #1a1a1a; /* CHANGE ROW HOVER BACKGROUND HERE */
+}
+
+/* Table Cells */
+.items-table td {
+  padding: 14px 12px; /* CHANGE CELL PADDING HERE - INCREASED */
+  border-right: 1px solid #333; /* CHANGE CELL BORDER HERE */
+  border-bottom: 1px solid #333; /* CHANGE CELL BOTTOM BORDER HERE */
+  vertical-align: middle;
+  color: #eee; /* CHANGE CELL TEXT COLOR HERE */
+}
+
+.items-table tr:last-child td {
+  border-bottom: none;
+}
+
+.items-table td:last-child {
+  border-right: none;
+}
+
+/* Item Select Dropdown in Table */
+.item-select {
+  width: 100%;
+  padding: 12px 14px; /* CHANGE ITEM SELECT PADDING HERE - INCREASED */
+  border: 1px solid #444; /* CHANGE ITEM SELECT BORDER HERE */
+  border-radius: 6px;
+  font-size: 15px; /* CHANGE ITEM SELECT FONT SIZE HERE - INCREASED */
+  color: #eee; /* CHANGE ITEM SELECT TEXT COLOR HERE */
+  background: #222; /* CHANGE ITEM SELECT BACKGROUND HERE */
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+}
+
+.item-select:focus {
+  border-color: #555; /* CHANGE ITEM SELECT FOCUS BORDER HERE */
+  outline: none;
+}
+
+/* Item Inputs in Table */
+.item-input {
+  width: 100%;
+  padding: 12px 14px; /* CHANGE ITEM INPUT PADDING HERE - INCREASED */
+  border: 1px solid #444; /* CHANGE ITEM INPUT BORDER HERE */
+  border-radius: 6px;
+  font-size: 15px; /* CHANGE ITEM INPUT FONT SIZE HERE - INCREASED */
+  color: #eee; /* CHANGE ITEM INPUT TEXT COLOR HERE */
+  background: #222; /* CHANGE ITEM INPUT BACKGROUND HERE */
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+}
+
+.item-input:focus {
+  border-color: #555; /* CHANGE ITEM INPUT FOCUS BORDER HERE */
+  outline: none;
+}
+
+.item-input.readonly {
+  background: #1a1a1a; /* CHANGE READONLY ITEM INPUT BACKGROUND HERE */
+  color: #888; /* CHANGE READONLY ITEM INPUT TEXT COLOR HERE */
+  border-color: #333; /* CHANGE READONLY ITEM INPUT BORDER HERE */
+}
+
+/* Quantity Input - Special styling */
+.quantity-input {
+  font-weight: 600;
+  color: white; /* CHANGE QUANTITY INPUT TEXT COLOR HERE - WHITE */
+  font-size: 16px; /* CHANGE QUANTITY INPUT FONT SIZE HERE - INCREASED */
+}
+
+/* Unit Cell - Centered with green color */
+.unit-cell {
+  text-align: center;
+  font-weight: 600;
+  color: #27ae60; /* CHANGE UNIT TEXT COLOR HERE */
+  font-size: 15px; /* CHANGE UNIT FONT SIZE HERE - INCREASED */
+}
+
+/* Efficiency Cell - Colored based on percentage */
+.efficiency-cell {
+  text-align: center;
+  font-weight: 700;
+  font-size: 15px; /* CHANGE EFFICIENCY CELL FONT SIZE HERE - INCREASED */
+  padding: 8px 12px; /* CHANGE EFFICIENCY CELL PADDING HERE */
+  border-radius: 6px;
+  background: #1a1a1a; /* CHANGE EFFICIENCY CELL BACKGROUND HERE */
+}
+
+/* Remove Item Button */
+.remove-item-btn {
+  background: #222; /* CHANGE REMOVE BUTTON BACKGROUND HERE */
+  color: #ccc; /* CHANGE REMOVE BUTTON ICON COLOR HERE */
+  border: 1px solid #444; /* CHANGE REMOVE BUTTON BORDER HERE */
+  width: 32px; /* CHANGE REMOVE BUTTON SIZE HERE - INCREASED */
+  height: 32px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin: 0 auto;
+  transition: all 0.3s ease;
+}
+
+.remove-item-btn:hover {
+  background: #333; /* CHANGE REMOVE BUTTON HOVER BACKGROUND HERE */
+  color: white; /* CHANGE REMOVE BUTTON HOVER ICON COLOR HERE */
+  border-color: #555; /* CHANGE REMOVE BUTTON HOVER BORDER HERE */
+}
+
+/* BOTTOM SECTION - OPERATOR & REMARKS */
+/* ============================================= */
+.bottom-section {
+  padding: 20px 25px;
+  background: #151515; /* CHANGE BOTTOM SECTION BACKGROUND HERE */
+  border-bottom: 1px solid #333; /* CHANGE BOTTOM SECTION BORDER HERE */
+}
+
+.operator-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* 2 columns layout */
+  gap: 20px; /* CHANGE GAP BETWEEN COLUMNS HERE - INCREASED */
+  margin-bottom: 20px; /* CHANGE ROW MARGIN HERE - INCREASED */
+}
+
+/* Form Group - Container for label + input */
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+/* FORM LABELS - OPERATOR NAME & REMARKS */
+/* ============================================= */
+/* Labels styling - Change colors and sizes here */
+.form-label {
+  font-size: 50px; /* CHANGE LABEL FONT SIZE HERE - INCREASED */
+  font-weight: 900; /* CHANGE LABEL FONT WEIGHT HERE - BOLD */
+  color: #000000; /* CHANGE LABEL COLOR HERE - WHITE */
+  margin-bottom: 10px; /* CHANGE LABEL MARGIN HERE - INCREASED */
+  display: flex;
+  align-items: center;
+  gap: 10px; /* CHANGE ICON GAP HERE - INCREASED */
+  padding: 8px 0;
+  border-bottom: 2px solid transparent; /* Adds separation line */
+}
+
+/* OPERATOR NAME label - Green color */
+.operator-row .form-group:first-child .form-label {
+  color: #3498db; /* CHANGE OPERATOR NAME LABEL COLOR HERE - GREEN */
+  border-bottom-color: #3498db; /* CHANGE OPERATOR NAME BORDER COLOR HERE */
+}
+
+/* REMARKS label - Blue color */
+.operator-row .form-group:last-child .form-label {
+  color: #3498db; /* CHANGE REMARKS LABEL COLOR HERE - BLUE */
+  border-bottom-color: #3498db; /* CHANGE REMARKS BORDER COLOR HERE */
+}
+
+/* Required field indicator */
+.form-label.required::after {
+  content: " *";
+  color: #e74c3c; /* CHANGE REQUIRED STAR COLOR HERE */
+  font-weight: bold;
+}
+
+/* Remarks Textarea */
+.form-textarea {
+  width: 100%;
+  padding: 14px 16px; /* CHANGE TEXTAREA PADDING HERE - INCREASED */
+  border: 1px solid #444; /* CHANGE TEXTAREA BORDER HERE */
+  border-radius: 8px;
+  font-size: 50px; /* CHANGE TEXTAREA FONT SIZE HERE - INCREASED */
+  color: #000000; /* CHANGE TEXTAREA TEXT COLOR HERE */
+  background: #e6b7b7; /* CHANGE TEXTAREA BACKGROUND HERE */
+  resize: vertical;
+  min-height: 100px; /* CHANGE TEXTAREA MIN HEIGHT HERE - INCREASED */
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+  line-height: 1.5; /* Improves text readability */
+}
+
+.form-textarea:focus {
+  border-color: #555; /* CHANGE TEXTAREA FOCUS BORDER HERE */
+  outline: none;
+}
+
+/* ACTIONS SECTION */
+/* ============================================= */
+.actions-section {
+  padding: 20px 25px;
+  background: #111111; /* CHANGE ACTIONS SECTION BACKGROUND HERE */
+  border-top: 1px solid #333; /* CHANGE ACTIONS SECTION BORDER HERE */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Total Production Info */
+.total-info {
+  font-size: 16px; /* CHANGE TOTAL INFO FONT SIZE HERE - INCREASED */
+  font-weight: 600;
+  color: #ccc; /* CHANGE TOTAL INFO TEXT COLOR HERE */
+}
+
+.total-info span {
+  color: #27ae60; /* CHANGE TOTAL PRODUCTION VALUE COLOR HERE */
+  font-weight: 700;
+  font-size: 18px; /* CHANGE TOTAL VALUE FONT SIZE HERE - INCREASED */
+}
+
+/* Action Buttons Container */
+.action-buttons {
+  display: flex;
+  gap: 15px; /* CHANGE BUTTONS GAP HERE - INCREASED */
+}
+
+/* Base Button Styling */
+.btn {
+  padding: 12px 24px; /* CHANGE BUTTON PADDING HERE - INCREASED */
+  border-radius: 8px;
+  font-size: 15px; /* CHANGE BUTTON FONT SIZE HERE - INCREASED */
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px; /* CHANGE BUTTON ICON GAP HERE - INCREASED */
+  cursor: pointer;
+  border: 2px solid transparent; /* CHANGE BUTTON BORDER WIDTH HERE - INCREASED */
+  transition: all 0.3s ease;
+  min-height: 48px; /* CHANGE BUTTON MIN HEIGHT HERE */
+}
+
+/* RESET Button - Gray */
+.btn-reset {
+  background: #222; /* CHANGE RESET BUTTON BACKGROUND HERE */
+  color: #ccc; /* CHANGE RESET BUTTON TEXT COLOR HERE */
+  border-color: #444; /* CHANGE RESET BUTTON BORDER HERE */
+}
+
+.btn-reset:hover {
+  background: #333; /* CHANGE RESET BUTTON HOVER BACKGROUND HERE */
+  color: white; /* CHANGE RESET BUTTON HOVER TEXT COLOR HERE */
+  border-color: #555; /* CHANGE RESET BUTTON HOVER BORDER HERE */
+  transform: translateY(-2px);
+}
+
+/* CANCEL Button - Red */
+.btn-cancel {
+  background: #222; /* CHANGE CANCEL BUTTON BACKGROUND HERE */
+  color: #e74c3c; /* CHANGE CANCEL BUTTON TEXT COLOR HERE - RED */
+  border-color: #e74c3c; /* CHANGE CANCEL BUTTON BORDER HERE - RED */
+}
+
+.btn-cancel:hover {
+  background: #e74c3c; /* CHANGE CANCEL BUTTON HOVER BACKGROUND HERE - RED */
+  color: white; /* CHANGE CANCEL BUTTON HOVER TEXT COLOR HERE */
+  border-color: #e74c3c; /* CHANGE CANCEL BUTTON HOVER BORDER HERE - RED */
+  transform: translateY(-2px);
+}
+
+/* SUBMIT Button - Green */
+.btn-submit {
+  background: #222; /* CHANGE SUBMIT BUTTON BACKGROUND HERE */
+  color: #27ae60; /* CHANGE SUBMIT BUTTON TEXT COLOR HERE - GREEN */
+  border-color: #27ae60; /* CHANGE SUBMIT BUTTON BORDER HERE - GREEN */
+}
+
+.btn-submit:hover:not(:disabled) {
+  background: #27ae60; /* CHANGE SUBMIT BUTTON HOVER BACKGROUND HERE - GREEN */
+  color: white; /* CHANGE SUBMIT BUTTON HOVER TEXT COLOR HERE */
+  border-color: #27ae60; /* CHANGE SUBMIT BUTTON HOVER BORDER HERE - GREEN */
+  transform: translateY(-2px);
+}
+
+.btn-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  color: #666; /* CHANGE DISABLED BUTTON TEXT COLOR HERE */
+  border-color: #444; /* CHANGE DISABLED BUTTON BORDER HERE */
+}
+
+/* MESSAGES (Success/Error) */
+/* ============================================= */
+.message {
+  margin: 15px 25px;
+  padding: 15px 20px; /* CHANGE MESSAGE PADDING HERE - INCREASED */
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 12px; /* CHANGE MESSAGE ICON GAP HERE - INCREASED */
+  font-size: 15px; /* CHANGE MESSAGE FONT SIZE HERE - INCREASED */
+  font-weight: 500;
+  border: 2px solid; /* CHANGE MESSAGE BORDER WIDTH HERE - INCREASED */
+}
+
+/* Success Message - Green */
+.message.success {
+  background: rgba(39, 174, 96, 0.05); /* CHANGE SUCCESS BACKGROUND OPACITY HERE */
+  border-color: #27ae60; /* CHANGE SUCCESS BORDER COLOR HERE */
+  color: #27ae60; /* CHANGE SUCCESS TEXT COLOR HERE */
+}
+
+/* Error Message - Red */
+.message.error {
+  background: rgba(231, 76, 60, 0.05); /* CHANGE ERROR BACKGROUND OPACITY HERE */
+  border-color: #e74c3c; /* CHANGE ERROR BORDER COLOR HERE */
+  color: #e74c3c; /* CHANGE ERROR TEXT COLOR HERE */
+}
+
+/* LOADING SPINNER */
+/* ============================================= */
+.loading-container {
+  padding: 60px 25px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  background: #111111; /* CHANGE LOADING BACKGROUND HERE */
+}
+
+.loading-spinner {
+  width: 60px; /* CHANGE SPINNER SIZE HERE - INCREASED */
+  height: 60px;
+  border: 4px solid #333; /* CHANGE SPINNER BORDER HERE */
+  border-top: 4px solid #27ae60; /* CHANGE SPINNER ACTIVE COLOR HERE */
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 25px; /* CHANGE SPINNER MARGIN HERE - INCREASED */
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ERROR TEXT */
+/* ============================================= */
+.error-text {
+  color: #e74c3c; /* CHANGE ERROR TEXT COLOR HERE */
+  font-size: 13px; /* CHANGE ERROR TEXT FONT SIZE HERE - INCREASED */
+  margin-top: 6px; /* CHANGE ERROR TEXT MARGIN HERE - INCREASED */
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* SCROLLBAR STYLING */
+/* ============================================= */
+.modal-content::-webkit-scrollbar {
+  width: 10px; /* CHANGE SCROLLBAR WIDTH HERE - INCREASED */
+}
+
+.modal-content::-webkit-scrollbar-track {
+  background: #1a1a1a; /* CHANGE SCROLLBAR TRACK COLOR HERE */
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+  background: #333; /* CHANGE SCROLLBAR THUMB COLOR HERE */
+  border-radius: 5px; /* CHANGE SCROLLBAR BORDER RADIUS HERE */
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover {
+  background: #444; /* CHANGE SCROLLBAR HOVER COLOR HERE */
+}
+
+/* RESPONSIVE DESIGN */
+/* ============================================= */
+@media (max-width: 1024px) {
+  .target-grid {
+    grid-template-columns: repeat(3, 1fr); /* 3 columns on medium screens */
+  }
+  
+  .items-table th,
+  .items-table td {
+    padding: 12px 10px; /* Reduced padding on smaller screens */
+  }
+}
+
+@media (max-width: 768px) {
+  .flattening-modal-container {
+    max-width: 95%; /* Full width on small screens */
+    border-radius: 8px; /* Smaller border radius */
+  }
+  
+  .target-grid {
+    grid-template-columns: repeat(2, 1fr); /* 2 columns on small screens */
+    gap: 12px; /* Smaller gap */
+  }
+  
+  .operator-row {
+    grid-template-columns: 1fr; /* Stack operator and remarks */
+    gap: 15px;
+  }
+  
+  .action-buttons {
+    flex-direction: column; /* Stack buttons vertically */
+    width: 100%;
+  }
+  
+  .btn {
+    width: 100%; /* Full width buttons */
+    justify-content: center;
+  }
+  
+  .items-table {
+    font-size: 14px; /* Smaller font in table */
+  }
+  
+  .items-table th,
+  .items-table td {
+    padding: 10px 8px; /* Smaller padding */
+  }
+}
+
+@media (max-width: 480px) {
+  .target-grid {
+    grid-template-columns: 1fr; /* 1 column on extra small screens */
+  }
+  
+  .modal-header {
+    flex-direction: column; /* Stack header content */
+    gap: 15px;
+    text-align: center;
+  }
+  
+  .header-content {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .section-title,
+  .section-title-secondary {
+    font-size: 16px; /* Smaller section titles */
+  }
+  
+  .selection-input,
+  .form-select,
+  .item-input,
+  .form-textarea {
+    font-size: 14px; /* Smaller input text */
+    padding: 10px 12px; /* Smaller padding */
+  }
+}
