@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="ur">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Production Records</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f8f9fa;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 20px 30px;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        
+        .stats {
+            display: flex;
+            gap: 20px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .stat-box {
+            background: rgba(255,255,255,0.15);
+            padding: 12px 18px;
+            border-radius: 8px;
+            min-width: 150px;
+        }
+        
+        .stat-value {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+        
+        .filters {
+            background: #f1f5f9;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .shift-colors {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .shift-color-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+        }
+        
+        .color-box {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+        }
+        
+        /* شفٹ کے رنگ */
+        .shift-A { background-color: #e3f2fd; }  /* ہلکا نیلا */
+        .shift-B { background-color: #f3e5f5; }  /* ہلکا بنفشی */
+        .shift-C { background-color: #e8f5e8; }  /* ہلکا سبز */
+        .shift-Day { background-color: #fff3e0; } /* ہلکا نارنجی */
+        .shift-Night { background-color: #f5f5f5; } /* ہلکا سرمئی */
+        
+        .table-container {
+            overflow-x: auto;
+            padding: 0;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        
+        thead {
+            background-color: #1e40af;
+            color: white;
+        }
+        
+        th {
+            padding: 12px 10px;
+            text-align: left;
+            font-weight: 600;
+            white-space: nowrap;
+            border-right: 1px solid #2d4fc2;
+        }
+        
+        th:last-child {
+            border-right: none;
+        }
+        
+        td {
+            padding: 10px 10px;
+            border-bottom: 1px solid #e5e7eb;
+            vertical-align: top;
+            line-height: 1.4;
+        }
+        
+        tr:hover {
+            background-color: #f8fafc;
+        }
+        
+        .prod-target-cell {
+            min-width: 140px;
+        }
+        
+        .prod-line {
+            font-weight: bold;
+            color: #1e40af;
+            margin-bottom: 3px;
+        }
+        
+        .target-line {
+            font-size: 12px;
+            color: #666;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .target-value {
+            font-weight: 500;
+        }
+        
+        .efficiency-cell {
+            font-weight: bold;
+            min-width: 70px;
+        }
+        
+        .high-eff { color: #059669; }
+        .medium-eff { color: #d97706; }
+        .low-eff { color: #dc2626; }
+        
+        .machine-cell {
+            font-weight: 500;
+            color: #374151;
+        }
+        
+        .item-details {
+            font-size: 12px;
+            color: #4b5563;
+            line-height: 1.3;
+        }
+        
+        .date-time {
+            font-size: 12px;
+            color: #6b7280;
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            gap: 10px;
+        }
+        
+        .page-btn {
+            padding: 8px 15px;
+            background: #e5e7eb;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .page-btn.active {
+            background: #1e40af;
+            color: white;
+        }
+        
+        @media (max-width: 1024px) {
+            .container {
+                border-radius: 0;
+            }
+            
+            .stats {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .stat-box {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- ہیڈر -->
+        <div class="header">
+            <h1>Production Records</h1>
+            <p>Total: 31 records | Showing: 13 filtered | Page: 1/2</p>
+            
+            <div class="stats">
+                <div class="stat-box">
+                    <div class="stat-value">1,541 KG</div>
+                    <div class="stat-label">Production today</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value">67.8%</div>
+                    <div class="stat-label">Efficiency today</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value">75%</div>
+                    <div class="stat-label">Average efficiency</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- فلٹر اور شفٹ رنگ کی چابی -->
+        <div class="filters">
+            <div class="shift-colors">
+                <div class="shift-color-item">
+                    <div class="color-box shift-A"></div>
+                    <span>Shift A</span>
+                </div>
+                <div class="shift-color-item">
+                    <div class="color-box shift-B"></div>
+                    <span>Shift B</span>
+                </div>
+                <div class="shift-color-item">
+                    <div class="color-box shift-C"></div>
+                    <span>Shift C</span>
+                </div>
+                <div class="shift-color-item">
+                    <div class="color-box shift-Day"></div>
+                    <span>Day Shift</span>
+                </div>
+                <div class="shift-color-item">
+                    <div class="color-box shift-Night"></div>
+                    <span>Night Shift</span>
+                </div>
+            </div>
+            
+            <div>
+                <button class="page-btn" onclick="exportData()">Export Report</button>
+            </div>
+        </div>
+        
+        <!-- ٹیبل -->
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>MACHINE</th>
+                        <th>ITEM DETAILS</th>
+                        <th>PRODUCTION & TARGET</th>
+                        <th>SHIFT</th>
+                        <th>OPERATOR NAME</th>
+                        <th>EFFICIENCY</th>
+                        <th>DATE & TIME</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- ریکارڈ #75 -->
+                    <tr class="shift-C">
+                        <td><strong>#75</strong></td>
+                        <td class="machine-cell">FT 0.05 Machine Nrc.05</td>
+                        <td>
+                            <div class="item-details">
+                                T0.95_W1.90<br>
+                                Size: 1.40mmHD
+                            </div>
+                        </td>
+                        <td class="prod-target-cell">
+                            <div class="prod-line">45 KILOGRAMS</div>
+                            <div class="target-line">
+                                <span>Target:</span>
+                                <span class="target-value">60 KILOGRAMS</span>
+                                <span style="color:#059669; font-size:10px;">✓</span>
+                            </div>
+                        </td>
+                        <td><strong>C</strong></td>
+                        <td>Mohsin Operator</td>
+                        <td class="efficiency-cell low-eff">28.6%</td>
+                        <td class="date-time">22/12/2025 04:55 pm</td>
+                    </tr>
+                    
+                    <!-- ریکارڈ #76 -->
+                    <tr class="shift-C">
+                        <td><strong>#76</strong></td>
+                        <td class="machine-cell">FT 0.05 Machine Nrc.05</td>
+                        <td>
+                            <div class="item-details">
+                                T0.80_W1.70<br>
+                                Size: 1.25mmHD
+                            </div>
+                        </td>
+                        <td class="prod-target-cell">
+                            <div class="prod-line">37 KILOGRAMS</div>
+                            <div class="target-line">
+                                <span>Target:</span>
+                                <span class="target-value">50 KILOGRAMS</span>
+                                <span style="color:#dc2626; font-size:10px;">✗</span>
+                            </div>
+                        </td>
+                        <td><strong>C</strong></td>
+                        <td>Mohsin Operator</td>
+                        <td class="efficiency-cell low-eff">23.5%</td>
+                        <td class="date-time">22/12/2025 04:55 pm</td>
+                    </tr>
+                    
+                    <!-- ریکارڈ #74 -->
+                    <tr class="shift-C">
+                        <td><strong>#74</strong></td>
+                        <td class="machine-cell">FT 0.04 Machine Nrc.04</td>
+                        <td>
+                            <div class="item-details">
+                                T0.55_W3.40<br>
+                                Size: 1.65mm
+                            </div>
+                        </td>
+                        <td class="prod-target-cell">
+                            <div class="prod-line">280 KILOGRAMS</div>
+                            <div class="target-line">
+                                <span>Target:</span>
+                                <span class="target-value">280 KILOGRAMS</span>
+                                <span style="color:#059669; font-size:10px;">✓</span>
+                            </div>
+                        </td>
+                        <td><strong>C</strong></td>
+                        <td>Mohsin Operator</td>
+                        <td class="efficiency-cell high-eff">100.0%</td>
+                        <td class="date-time">22/12/2025 04:55 pm</td>
+                    </tr>
+                    
+                    <!-- ریکارڈ #73 -->
+                    <tr class="shift-B">
+                        <td><strong>#73</strong></td>
+                        <td class="machine-cell">FT 0.03 Machine Nrc.03</td>
+                        <td>
+                            <div class="item-details">
+                                T0.50_W2.95<br>
+                                Size: 1.45mm
+                            </div>
+                        </td>
+                        <td class="prod-target-cell">
+                            <div class="prod-line">140 KILOGRAMS</div>
+                            <div class="target-line">
+                                <span>Target:</span>
+                                <span class="target-value">160 KILOGRAMS</span>
+                                <span style="color:#d97706; font-size:10px;">~</span>
+                            </div>
+                        </td>
+                        <td><strong>B</strong></td>
+                        <td>Ali Operator</td>
+                        <td class="efficiency-cell medium-eff">88.9%</td>
+                        <td class="date-time">22/12/2025 04:55 pm</td>
+                    </tr>
+                    
+                    <!-- ریکارڈ #72 -->
+                    <tr class="shift-A">
+                        <td><strong>#72</strong></td>
+                        <td class="machine-cell">FT 0.01 Machine Nrc.01</td>
+                        <td>
+                            <div class="item-details">
+                                T0.50_W2.95<br>
+                                Size: 1.45mm
+                            </div>
+                        </td>
+                        <td class="prod-target-cell">
+                            <div class="prod-line">70 KILOGRAMS</div>
+                            <div class="target-line">
+                                <span>Target:</span>
+                                <span class="target-value">80 KILOGRAMS</span>
+                                <span style="color:#d97706; font-size:10px;">~</span>
+                            </div>
+                        </td>
+                        <td><strong>A</strong></td>
+                        <td>Ahmed Operator</td>
+                        <td class="efficiency-cell medium-eff">44.4%</td>
+                        <td class="date-time">22/12/2025 04:45 pm</td>
+                    </tr>
+                    
+                    <!-- ریکارڈ #71 (نائٹ شفٹ مثال) -->
+                    <tr class="shift-Night">
+                        <td><strong>#71</strong></td>
+                        <td class="machine-cell">FT 0.02 Machine Nrc.02</td>
+                        <td>
+                            <div class="item-details">
+                                T0.60_W2.20<br>
+                                Size: 1.50mm
+                            </div>
+                        </td>
+                        <td class="prod-target-cell">
+                            <div class="prod-line">95 KILOGRAMS</div>
+                            <div class="target-line">
+                                <span>Target:</span>
+                                <span class="target-value">100 KILOGRAMS</span>
+                                <span style="color:#059669; font-size:10px;">✓</span>
+                            </div>
+                        </td>
+                        <td><strong>Night</strong></td>
+                        <td>Usman Operator</td>
+                        <td class="efficiency-cell high-eff">95.0%</td>
+                        <td class="date-time">22/12/2025 12:30 am</td>
+                    </tr>
+                    
+                    <!-- ریکارڈ #70 (ڈے شفٹ مثال) -->
+                    <tr class="shift-Day">
+                        <td><strong>#70</strong></td>
+                        <td class="machine-cell">FT 0.06 Machine Nrc.06</td>
+                        <td>
+                            <div class="item-details">
+                                T0.75_W1.85<br>
+                                Size: 1.30mmHD
+                            </div>
+                        </td>
+                        <td class="prod-target-cell">
+                            <div class="prod-line">120 KILOGRAMS</div>
+                            <div class="target-line">
+                                <span>Target:</span>
+                                <span class="target-value">120 KILOGRAMS</span>
+                                <span style="color:#059669; font-size:10px;">✓</span>
+                            </div>
+                        </td>
+                        <td><strong>Day</strong></td>
+                        <td>Kamran Operator</td>
+                        <td class="efficiency-cell high-eff">100.0%</td>
+                        <td class="date-time">21/12/2025 02:30 pm</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- پیجینیشن -->
+        <div class="pagination">
+            <button class="page-btn active">1</button>
+            <button class="page-btn">2</button>
+            <button class="page-btn">3</button>
+            <button class="page-btn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // شفٹ کے مطابق رنگ
+        function colorShifts() {
+            // کوڈ میں کلاسز پہلے سے لگائی جا چکی ہیں
+            console.log("Shift coloring applied");
+        }
+        
+        // ڈیٹا ایکسپورٹ
+        function exportData() {
+            alert("Report exported successfully!");
+            // یہاں ایکسپورٹ کا کوڈ آئے گا
+        }
+        
+        // پیج لوڈ ہونے پر
+        document.addEventListener('DOMContentLoaded', function() {
+            colorShifts();
+        });
+    </script>
+</body>
+</html>
