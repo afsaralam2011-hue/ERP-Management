@@ -1,62 +1,26 @@
 // ========================================================
 // FILE: FlatteningForm.jsx
 // PURPOSE: Production Entry Form for Flattening Section
-// DESCRIPTION: 
-// - Create new production records for flattening section
-// - Multiple items entry for same target
-// - Auto-fill machine details from target selection
-// - Auto-fill item details from item selection
-// - Automatic efficiency calculation
-// - Form validation and error handling
+// FINAL VERSION: Works on Local, Web & Mobile
 // ========================================================
 
-// ========================================================
-// SECTION 1: IMPORTS
-// ========================================================
-// React and Router imports
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-
-// Icons from react-icons/fi
 import { 
   FiSave, FiX, FiTarget, FiPackage,
   FiUser, FiEdit2, FiClipboard, FiSettings,
   FiCheck, FiAlertCircle, FiPlus,
   FiTrash2, FiList, FiTrendingUp,
-  FiDatabase, FiRefreshCw, FiInfo
+  FiDatabase, FiRefreshCw, FiInfo,
+  FiArrowLeft, FiArrowRight
 } from 'react-icons/fi';
-
-// Database connection
 import { supabase } from '../../../supabaseClient';
-
-// CSS styles
 import './FlatteningForm.css';
 
-// ========================================================
-// SECTION 2: MAIN COMPONENT - FlatteningForm
-// ========================================================
-// PROPS:
-// - onClose: Function to close modal (if used as modal)
-// - isModal: Boolean indicating if component is used as modal
-// ========================================================
-
 const FlatteningForm = ({ onClose, isModal = true }) => {
-  // ========================================================
-  // SECTION 3: STATE VARIABLES
-  // ========================================================
-  
-  // NAVIGATION
   const navigate = useNavigate();
-
-  // TARGET DATA STATE
-  // Stores information about selected target
-  // - targets_id: Selected target ID
-  // - machine_id: Auto-filled from target
-  // - machine_no: Auto-filled from target  
-  // - shift_code: Auto-filled from target
-  // - shift_name: Auto-filled from target
-  // - target_qty: Target quantity from targets table
-  // - unit: Measurement unit (Kg, etc.)
+  
+  // States
   const [targetData, setTargetData] = useState({
     targets_id: '',
     machine_id: '',
@@ -67,17 +31,6 @@ const FlatteningForm = ({ onClose, isModal = true }) => {
     unit: 'Kg'
   });
 
-  // ITEMS LIST STATE
-  // Array of items for production entry
-  // Each item has:
-  // - id: Unique identifier
-  // - item_code: Selected item code
-  // - item_name: Auto-filled from items table
-  // - coil_size: Auto-filled from items table
-  // - material_type: Auto-filled from items table
-  // - production_quantity: User entered quantity
-  // - unit: Measurement unit
-  // - efficiency: Calculated efficiency percentage
   const [itemsList, setItemsList] = useState([
     { 
       id: 1, 
@@ -91,122 +44,100 @@ const FlatteningForm = ({ onClose, isModal = true }) => {
     }
   ]);
 
-  // FORM DATA STATES
-  const [operatorName, setOperatorName] = useState(''); // Operator name input
-  const [remarks, setRemarks] = useState(''); // Remarks textarea
-  const [totalProduction, setTotalProduction] = useState(0); // Sum of all items quantity
-  const [overallEfficiency, setOverallEfficiency] = useState(0); // Overall efficiency percentage
+  const [operatorName, setOperatorName] = useState('');
+  const [remarks, setRemarks] = useState('');
+  const [totalProduction, setTotalProduction] = useState(0);
+  const [overallEfficiency, setOverallEfficiency] = useState(0);
+  
+  const [validationErrors, setValidationErrors] = useState({});
+  const [fieldStatus, setFieldStatus] = useState({});
+  
+  const [items, setItems] = useState([]);
+  const [targets, setTargets] = useState([]);
+  
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [isMobile, setIsMobile] = useState(false);
 
-  // VALIDATION STATES
-  const [validationErrors, setValidationErrors] = useState({}); // Field validation errors
-  const [fieldStatus, setFieldStatus] = useState({}); // Field status (empty/filled)
-
-  // DATA FETCHING STATES
-  const [items, setItems] = useState([]); // Items from database
-  const [targets, setTargets] = useState([]); // Targets from database
-
-  // UI STATES
-  const [loading, setLoading] = useState(true); // Loading state for data fetching
-  const [saving, setSaving] = useState(false); // Saving state for form submission
-  const [error, setError] = useState(''); // Error message display
-  const [success, setSuccess] = useState(''); // Success message display
-
-  // ========================================================
-  // SECTION 4: EFFECT HOOKS (useEffect)
-  // ========================================================
-
-  // EFFECT 1: Fetch initial data on component mount
-  // Fetches items and targets from database
+  // ==================== CHECK MOBILE ====================
   useEffect(() => {
-    fetchAllData();
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // EFFECT 2: Recalculate efficiency when production quantity changes
-  // Runs when production_quantity or target_qty changes
-  useEffect(() => {
-    calculateOverallEfficiency();
-  }, [totalProduction, targetData.target_qty]);
+  // ==================== DEBUG FUNCTION ====================
+  const debugLog = (message, data) => {
+    console.log(`🔍 FLATTENING DEBUG - ${message}:`, data);
+  };
 
-  // ========================================================
-  // SECTION 5: DATA FETCHING FUNCTIONS
-  // ========================================================
-
-  /**
-   * FUNCTION: fetchAllData
-   * PURPOSE: Fetch items and targets from database
-   * FETCHES:
-   * - Items: Active items from items table
-   * - Targets: Active targets from targets table
-   */
+  // ==================== DATA FETCHING ====================
   const fetchAllData = async () => {
     try {
       setLoading(true);
       setError('');
-
-      // Fetch items with all details
+      
+      debugLog('Fetching started from environment', window.location.href);
+      
+      // Fetch without filters first
       const { data: itemsData, error: itemsError } = await supabase
         .from('items')
         .select('*')
-        .eq('is_active', true)
         .order('item_name');
-
-      // Fetch targets
+      
       const { data: targetsData, error: targetsError } = await supabase
         .from('targets')
         .select('*')
-        .eq('is_active', true)
-        .order('targets_id');
-
-      if (itemsError || targetsError) {
-        throw new Error(itemsError?.message || targetsError?.message);
+        .order('id', { ascending: true });
+      
+      debugLog('Items fetched', itemsData?.length || 0);
+      debugLog('Targets fetched', targetsData?.length || 0);
+      
+      if (targetsData && targetsData.length > 0) {
+        debugLog('First target object', targetsData[0]);
       }
-
+      
+      if (targetsError) {
+        console.error('❌ Targets fetch error:', targetsError);
+        
+        const { data: targetsData2 } = await supabase
+          .from('targets')
+          .select('*');
+        
+        setTargets(targetsData2 || []);
+      } else {
+        setTargets(targetsData || []);
+      }
+      
       setItems(itemsData || []);
-      setTargets(targetsData || []);
 
     } catch (error) {
-      console.error('Data fetching error:', error);
+      console.error('❌ Data fetching error:', error);
       setError('Data loading failed: ' + error.message);
     } finally {
       setLoading(false);
     }
   };
 
-  // ========================================================
-  // SECTION 6: FIELD STATUS FUNCTIONS
-  // ========================================================
+  useEffect(() => {
+    fetchAllData();
+  }, []);
 
-  /**
-   * FUNCTION: getFieldClass
-   * PURPOSE: Determine CSS class for field based on status
-   * RETURNS:
-   * - 'empty-required': Field is empty but required
-   * - 'filled-valid': Field is properly filled
-   */
-  const getFieldClass = (fieldName, value) => {
-    if (!value || value.toString().trim() === '') {
-      return 'empty-required';
-    }
-    return 'filled-valid';
-  };
+  useEffect(() => {
+    calculateOverallEfficiency();
+  }, [totalProduction, targetData.target_qty]);
 
-  // ========================================================
-  // SECTION 7: TARGET HANDLING FUNCTIONS
-  // ========================================================
-
-  /**
-   * FUNCTION: handleTargetChange
-   * PURPOSE: Handle target selection change
-   * ACTIONS:
-   * 1. Updates targetData state
-   * 2. Auto-fills machine details
-   * 3. Updates field status
-   * 4. Recalculates efficiencies
-   */
+  // ==================== TARGET HANDLING ====================
   const handleTargetChange = (e) => {
     const selectedTargetsId = e.target.value;
     
-    // Update field status for validation
     const newStatus = { ...fieldStatus };
     if (selectedTargetsId) {
       newStatus.targets_id = 'filled-valid';
@@ -215,7 +146,6 @@ const FlatteningForm = ({ onClose, isModal = true }) => {
     }
     setFieldStatus(newStatus);
 
-    // Clear form if no target selected
     if (!selectedTargetsId) {
       setTargetData({
         targets_id: '',
@@ -231,23 +161,25 @@ const FlatteningForm = ({ onClose, isModal = true }) => {
       return;
     }
 
-    // Find selected target and update state
-    const target = targets.find(t => t.targets_id === selectedTargetsId);
+    const target = targets.find(t => {
+      return t.targets_id === selectedTargetsId || 
+             t.id === selectedTargetsId ||
+             t.target_id === selectedTargetsId;
+    });
     
     if (target) {
       const newTargetData = {
-        targets_id: target.targets_id,
-        machine_id: target.machine_id || '',
-        machine_no: target.machine_no || '',
-        shift_code: target.shift_code || '',
-        shift_name: target.shift_name || '',
-        target_qty: parseFloat(target.target_qty) || 0,
-        unit: target.uom || 'Kg'
+        targets_id: target.targets_id || target.id || target.target_id || '',
+        machine_id: target.machine_id || target.machine || '',
+        machine_no: target.machine_no || target.machine_number || target.machine_code || '',
+        shift_code: target.shift_code || target.shift || '',
+        shift_name: target.shift_name || target.shift_name || '',
+        target_qty: parseFloat(target.target_qty || target.quantity || target.qty || 0),
+        unit: target.uom || target.unit || 'Kg'
       };
       
       setTargetData(newTargetData);
       
-      // Update items efficiency with new target
       const updatedItems = itemsList.map(item => {
         if (item.production_quantity) {
           const quantityNum = parseFloat(item.production_quantity) || 0;
@@ -267,35 +199,23 @@ const FlatteningForm = ({ onClose, isModal = true }) => {
     }
   };
 
-  // ========================================================
-  // SECTION 8: ITEM HANDLING FUNCTIONS
-  // ========================================================
-
-  /**
-   * FUNCTION: handleItemChange
-   * PURPOSE: Handle item selection change for specific row
-   * ACTIONS:
-   * 1. Updates itemsList state
-   * 2. Auto-fills item details from database
-   * 3. Updates field status
-   */
+  // ==================== ITEM HANDLING ====================
   const handleItemChange = (id, itemCode) => {
     const updatedItems = itemsList.map(item => {
       if (item.id === id) {
         const selectedItem = items.find(i => i.item_code === itemCode);
+        
         if (selectedItem) {
-          // Update field status
           const newStatus = { ...fieldStatus };
           newStatus[`item_${id}`] = 'filled-valid';
           setFieldStatus(newStatus);
           
-          // Auto-fill item details
           return {
             ...item,
             item_code: itemCode,
-            item_name: selectedItem.item_name || '',
-            coil_size: selectedItem.coil_size || '',
-            material_type: selectedItem.material_type || '',
+            item_name: selectedItem.item_name || selectedItem.name || '',
+            coil_size: selectedItem.coil_size || selectedItem.size || '',
+            material_type: selectedItem.material_type || selectedItem.material || '',
             unit: selectedItem.unit || 'Kg'
           };
         }
@@ -306,21 +226,11 @@ const FlatteningForm = ({ onClose, isModal = true }) => {
     setItemsList(updatedItems);
   };
 
-  /**
-   * FUNCTION: handleQuantityChange
-   * PURPOSE: Handle quantity change for specific item
-   * ACTIONS:
-   * 1. Updates itemsList state
-   * 2. Calculates item efficiency
-   * 3. Updates total production
-   * 4. Updates field status
-   */
   const handleQuantityChange = (id, quantity) => {
     const quantityNum = parseFloat(quantity) || 0;
     
     const updatedItems = itemsList.map(item => {
       if (item.id === id) {
-        // Update field status
         const newStatus = { ...fieldStatus };
         if (quantity && quantity.trim() !== '') {
           newStatus[`quantity_${id}`] = 'filled-valid';
@@ -329,7 +239,6 @@ const FlatteningForm = ({ onClose, isModal = true }) => {
         }
         setFieldStatus(newStatus);
         
-        // Calculate efficiency
         const efficiency = targetData.target_qty > 0 
           ? (quantityNum / targetData.target_qty) * 100
           : 0;
@@ -345,7 +254,6 @@ const FlatteningForm = ({ onClose, isModal = true }) => {
     
     setItemsList(updatedItems);
     
-    // Calculate total production
     const total = updatedItems.reduce((sum, item) => {
       return sum + (parseFloat(item.production_quantity) || 0);
     }, 0);
@@ -353,14 +261,7 @@ const FlatteningForm = ({ onClose, isModal = true }) => {
     setTotalProduction(total);
   };
 
-  // ========================================================
-  // SECTION 9: FORM INPUT HANDLERS
-  // ========================================================
-
-  /**
-   * FUNCTION: handleOperatorChange
-   * PURPOSE: Handle operator name input change
-   */
+  // ==================== FORM INPUT HANDLERS ====================
   const handleOperatorChange = (value) => {
     const newStatus = { ...fieldStatus };
     if (value && value.trim() !== '') {
@@ -372,10 +273,6 @@ const FlatteningForm = ({ onClose, isModal = true }) => {
     setOperatorName(value);
   };
 
-  /**
-   * FUNCTION: handleRemarksChange
-   * PURPOSE: Handle remarks textarea change
-   */
   const handleRemarksChange = (value) => {
     const newStatus = { ...fieldStatus };
     if (value && value.trim() !== '') {
@@ -387,15 +284,7 @@ const FlatteningForm = ({ onClose, isModal = true }) => {
     setRemarks(value);
   };
 
-  // ========================================================
-  // SECTION 10: ITEM ROW MANAGEMENT
-  // ========================================================
-
-  /**
-   * FUNCTION: addItemRow
-   * PURPOSE: Add new item row to the form
-   * CREATES: New item object with unique ID
-   */
+  // ==================== ITEM ROW MANAGEMENT ====================
   const addItemRow = () => {
     const newId = itemsList.length > 0 ? Math.max(...itemsList.map(i => i.id)) + 1 : 1;
     setItemsList([
@@ -413,17 +302,11 @@ const FlatteningForm = ({ onClose, isModal = true }) => {
     ]);
   };
 
-  /**
-   * FUNCTION: removeItemRow
-   * PURPOSE: Remove item row from the form
-   * PREVENTS: Removal if only one item remains
-   */
   const removeItemRow = (id) => {
     if (itemsList.length > 1) {
       const newItemsList = itemsList.filter(item => item.id !== id);
       setItemsList(newItemsList);
       
-      // Recalculate total production
       const total = newItemsList.reduce((sum, item) => {
         return sum + (parseFloat(item.production_quantity) || 0);
       }, 0);
@@ -432,15 +315,7 @@ const FlatteningForm = ({ onClose, isModal = true }) => {
     }
   };
 
-  // ========================================================
-  // SECTION 11: CALCULATION FUNCTIONS
-  // ========================================================
-
-  /**
-   * FUNCTION: calculateOverallEfficiency
-   * PURPOSE: Calculate overall efficiency based on total production
-   * FORMULA: (Total Production ÷ Target Quantity) × 100
-   */
+  // ==================== CALCULATIONS ====================
   const calculateOverallEfficiency = () => {
     if (targetData.target_qty > 0 && totalProduction > 0) {
       const overallEff = (totalProduction / targetData.target_qty) * 100;
@@ -450,24 +325,11 @@ const FlatteningForm = ({ onClose, isModal = true }) => {
     }
   };
 
-  // ========================================================
-  // SECTION 12: VALIDATION FUNCTIONS
-  // ========================================================
-
-  /**
-   * FUNCTION: validateForm
-   * PURPOSE: Validate all form fields
-   * CHECKS:
-   * - Required fields are filled
-   * - Valid quantities entered
-   * - Valid item selections
-   * RETURNS: Boolean (true if valid, false if errors)
-   */
+  // ==================== VALIDATION ====================
   const validateForm = () => {
     const errors = {};
     const newFieldStatus = {};
     
-    // Check target selection
     if (!targetData.targets_id) {
       errors.targets_id = 'Target ID is required';
       newFieldStatus.targets_id = 'empty-required';
@@ -475,7 +337,6 @@ const FlatteningForm = ({ onClose, isModal = true }) => {
       newFieldStatus.targets_id = 'filled-valid';
     }
     
-    // Check operator name
     if (!operatorName.trim()) {
       errors.operator_name = 'Operator name is required';
       newFieldStatus.operator_name = 'empty-required';
@@ -483,7 +344,6 @@ const FlatteningForm = ({ onClose, isModal = true }) => {
       newFieldStatus.operator_name = 'filled-valid';
     }
     
-    // Check each item
     itemsList.forEach((item, index) => {
       if (!item.item_code) {
         errors[`item_${item.id}`] = `Item ${index + 1} is required`;
@@ -505,24 +365,10 @@ const FlatteningForm = ({ onClose, isModal = true }) => {
     return Object.keys(errors).length === 0;
   };
 
-  // ========================================================
-  // SECTION 13: FORM SUBMISSION
-  // ========================================================
-
-  /**
-   * FUNCTION: handleSubmit
-   * PURPOSE: Handle form submission
-   * ACTIONS:
-   * 1. Validates form
-   * 2. Prepares data for database
-   * 3. Saves to Supabase
-   * 4. Shows success/error messages
-   * 5. Resets form on success
-   */
+  // ==================== FORM SUBMISSION ====================
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Validate form before submission
     if (!validateForm()) {
       setError('Please fill all required fields');
       return;
@@ -533,7 +379,6 @@ const FlatteningForm = ({ onClose, isModal = true }) => {
     setSuccess('');
 
     try {
-      // Prepare data for each item
       const records = itemsList.map(item => ({
         section_name: 'Flattening',
         targets_id: targetData.targets_id,
@@ -554,43 +399,29 @@ const FlatteningForm = ({ onClose, isModal = true }) => {
         updated_at: new Date().toISOString()
       }));
 
-      // Save to database
       const { error: insertError } = await supabase
         .from('flatteningsection')
         .insert(records);
 
       if (insertError) throw insertError;
 
-      // ✅ SUCCESS: Show message and reset form
       setSuccess(`✅ ${records.length} record(s) saved successfully!`);
       
-      // ✅ RESET FORM AFTER 2 SECONDS
       setTimeout(() => {
-        handleReset(); // Reset all form fields
-        setSuccess(''); // Clear success message
+        handleReset();
+        setSuccess('');
       }, 2000);
 
-      // ✅ NO REDIRECT - STAY ON SAME PAGE
-
     } catch (error) {
-      console.error('Save error:', error);
+      console.error('❌ Save error:', error);
       setError('❌ Save failed: ' + error.message);
     } finally {
       setSaving(false);
     }
   };
 
-  // ========================================================
-  // SECTION 14: FORM RESET FUNCTIONS
-  // ========================================================
-
-  /**
-   * FUNCTION: handleReset
-   * PURPOSE: Reset entire form to initial state
-   * RESETS: All form fields and states
-   */
+  // ==================== FORM RESET ====================
   const handleReset = () => {
-    // Reset target data
     setTargetData({
       targets_id: '',
       machine_id: '',
@@ -601,7 +432,6 @@ const FlatteningForm = ({ onClose, isModal = true }) => {
       unit: 'Kg'
     });
     
-    // Reset items list (keep one empty item)
     setItemsList([
       { 
         id: 1, 
@@ -615,40 +445,30 @@ const FlatteningForm = ({ onClose, isModal = true }) => {
       }
     ]);
     
-    // Reset form inputs
     setOperatorName('');
     setRemarks('');
     setTotalProduction(0);
     setOverallEfficiency(0);
     
-    // Reset validation states
     setValidationErrors({});
     setFieldStatus({});
     setError('');
     setSuccess('');
   };
 
-  // ========================================================
-  // SECTION 15: UI HELPER FUNCTIONS
-  // ========================================================
-
-  /**
-   * FUNCTION: getEfficiencyColor
-   * PURPOSE: Get color based on efficiency percentage
-   * RETURNS: Hex color code
-   */
-  const getEfficiencyColor = (efficiency) => {
-    if (efficiency >= 90) return '#27ae60'; // Green - Excellent
-    if (efficiency >= 80) return '#f39c12'; // Orange - Good
-    if (efficiency >= 70) return '#e67e22'; // Dark Orange - Average
-    return '#e74c3c'; // Red - Below Target
+  // ==================== BACK BUTTON HANDLER ====================
+  const handleBackClick = () => {
+    navigate('/production-sections/flattening');
   };
 
-  /**
-   * FUNCTION: getEfficiencyStatus
-   * PURPOSE: Get status text based on efficiency percentage
-   * RETURNS: Status string
-   */
+  // ==================== UI HELPERS ====================
+  const getEfficiencyColor = (efficiency) => {
+    if (efficiency >= 90) return '#27ae60';
+    if (efficiency >= 80) return '#f39c12';
+    if (efficiency >= 70) return '#e67e22';
+    return '#e74c3c';
+  };
+
   const getEfficiencyStatus = (efficiency) => {
     if (efficiency >= 90) return 'Excellent';
     if (efficiency >= 80) return 'Good';
@@ -656,26 +476,22 @@ const FlatteningForm = ({ onClose, isModal = true }) => {
     return 'Below Target';
   };
 
-  // ========================================================
-  // SECTION 16: MODAL HANDLING
-  // ========================================================
+  const getFieldClass = (fieldName, value) => {
+    if (!value || value.toString().trim() === '') {
+      return 'empty-required';
+    }
+    return 'filled-valid';
+  };
 
-  /**
-   * FUNCTION: handleClose
-   * PURPOSE: Close modal or navigate back
-   */
   const handleClose = () => {
     if (isModal && onClose) {
-      onClose(); // Close modal
+      onClose();
     } else {
-      navigate('/production-sections/flattening'); // Navigate back
+      navigate('/production-sections/flattening');
     }
   };
 
-  // ========================================================
-  // SECTION 17: LOADING STATE
-  // ========================================================
-  
+  // ==================== LOADING STATE ====================
   if (loading) {
     return (
       <div className="flattening-modal-overlay" onClick={handleClose}>
@@ -684,11 +500,8 @@ const FlatteningForm = ({ onClose, isModal = true }) => {
             <div className="loading-spinner"></div>
             <p>Loading Production Form...</p>
             <div className="loading-details">
-              <p>Fetching from database:</p>
-              <ul>
-                <li><FiPackage /> Items: {items.length} loaded</li>
-                <li><FiTarget /> Targets: {targets.length} loaded</li>
-              </ul>
+              <p>🔄 Fetching data from: {window.location.hostname}</p>
+              <p>📊 Checking database connection...</p>
             </div>
           </div>
         </div>
@@ -696,17 +509,12 @@ const FlatteningForm = ({ onClose, isModal = true }) => {
     );
   }
 
-  // ========================================================
-  // SECTION 18: MAIN RENDER
-  // ========================================================
-
+  // ==================== MAIN RENDER ====================
   return (
     <div className="flattening-modal-overlay" onClick={handleClose}>
       <div className="flattening-modal-container" onClick={(e) => e.stopPropagation()}>
         
-        {/* ============================================ */}
-        {/* HEADER SECTION */}
-        {/* ============================================ */}
+        {/* HEADER - WHITE TEXT WITH BACK BUTTON */}
         <div className="modal-header">
           <div className="header-content">
             <div className="header-icon">
@@ -715,18 +523,26 @@ const FlatteningForm = ({ onClose, isModal = true }) => {
             <div className="header-text">
               <h1>FLATTENING PRODUCTION ENTRY</h1>
               <p>
-                <FiDatabase /> Section: Flattening | Tables: items, targets, flatteningsection
+                <FiDatabase /> Data Loaded: {items.length} items, {targets.length} targets
+                {isMobile && <span className="mobile-indicator">📱</span>}
               </p>
             </div>
           </div>
-          <button className="close-button" onClick={handleClose}>
-            <FiX />
-          </button>
+          <div className="header-actions">
+            <button 
+              className="back-button"
+              onClick={handleBackClick}
+              title="Back to Flattening Section"
+            >
+              <FiArrowLeft /> {!isMobile && 'BACK TO FLATTENING'}
+            </button>
+            <button className="close-button" onClick={handleClose}>
+              <FiX />
+            </button>
+          </div>
         </div>
 
-        {/* ============================================ */}
-        {/* MESSAGES SECTION - Success/Error */}
-        {/* ============================================ */}
+        {/* MESSAGES */}
         {success && (
           <div className="message success">
             <FiCheck /> {success}
@@ -739,21 +555,17 @@ const FlatteningForm = ({ onClose, isModal = true }) => {
           </div>
         )}
 
-        {/* ============================================ */}
-        {/* MAIN FORM */}
-        {/* ============================================ */}
+        {/* FORM */}
         <form onSubmit={handleSubmit}>
           
-          {/* ============================================ */}
-          {/* SECTION 1: TARGET & MACHINE DETAILS */}
-          {/* ============================================ */}
+          {/* TARGET SECTION */}
           <div className="target-section">
             <div className="section-title">
               <FiTarget /> TARGET & MACHINE DETAILS
             </div>
             
-            <div className="target-grid">
-              {/* Target Selection - Required */}
+            <div className={`target-grid ${isMobile ? 'mobile-grid' : ''}`}>
+              {/* Target Selection */}
               <div className="selection-box">
                 <label className="selection-label required">
                   <FiTarget /> TARGET ID
@@ -763,19 +575,23 @@ const FlatteningForm = ({ onClose, isModal = true }) => {
                   onChange={handleTargetChange}
                   className={`form-select ${fieldStatus.targets_id || getFieldClass('targets_id', targetData.targets_id)}`}
                 >
-                  <option value="">-- SELECT TARGET --</option>
-                  {targets.map(target => (
-                    <option key={target.targets_id} value={target.targets_id}>
-                      {target.targets_id}
-                    </option>
-                  ))}
+                  <option value="">-- SELECT TARGET ({targets.length} available) --</option>
+                  {targets.map(target => {
+                    const displayId = target.targets_id || target.id || target.target_id || 'No ID';
+                    const displayName = target.target_name || target.name || '';
+                    return (
+                      <option key={displayId} value={displayId}>
+                        {displayId} {displayName ? `- ${displayName}` : ''}
+                      </option>
+                    );
+                  })}
                 </select>
                 {validationErrors.targets_id && (
                   <span className="error-text">{validationErrors.targets_id}</span>
                 )}
               </div>
 
-              {/* Machine ID - Auto-filled */}
+              {/* Auto-filled fields */}
               <div className="selection-box">
                 <label className="selection-label">MACHINE ID</label>
                 <input
@@ -786,7 +602,6 @@ const FlatteningForm = ({ onClose, isModal = true }) => {
                 />
               </div>
 
-              {/* Machine No - Auto-filled */}
               <div className="selection-box">
                 <label className="selection-label">MACHINE NO</label>
                 <input
@@ -797,7 +612,6 @@ const FlatteningForm = ({ onClose, isModal = true }) => {
                 />
               </div>
 
-              {/* Shift Code - Auto-filled */}
               <div className="selection-box">
                 <label className="selection-label">SHIFT CODE</label>
                 <input
@@ -808,15 +622,13 @@ const FlatteningForm = ({ onClose, isModal = true }) => {
                 />
               </div>
 
-              {/* Target Quantity & Unit - Combined Display */}
               <div className="selection-box target-qty-box">
-                <label className="selection-label">TARGET QTY & UNIT</label>
+                <label className="selection-label">TARGET QTY</label>
                 <div className="target-qty-value">
                   {targetData.target_qty.toFixed(2)} {targetData.unit}
                 </div>
               </div>
 
-              {/* Overall Efficiency Display */}
               <div className="selection-box efficiency-box">
                 <label className="selection-label">
                   <FiTrendingUp /> EFFICIENCY
@@ -834,9 +646,7 @@ const FlatteningForm = ({ onClose, isModal = true }) => {
             </div>
           </div>
 
-          {/* ============================================ */}
-          {/* SECTION 2: ITEMS PRODUCTION */}
-          {/* ============================================ */}
+          {/* ITEMS SECTION */}
           <div className="items-section">
             <div className="items-header">
               <div className="section-title-secondary">
@@ -847,135 +657,130 @@ const FlatteningForm = ({ onClose, isModal = true }) => {
                 onClick={addItemRow}
                 className="add-item-btn"
               >
-                <FiPlus /> ADD ITEM
+                <FiPlus /> {!isMobile && 'ADD ITEM'}
               </button>
             </div>
 
-            {/* Items Table */}
-            <table className="items-table">
-              <thead>
-                <tr>
-                  <th>ITEM CODE</th>
-                  <th>ITEM NAME</th>
-                  <th>COIL SIZE</th>
-                  <th>MATERIAL TYPE</th>
-                  <th>QUANTITY</th>
-                  <th>UNIT</th>
-                  <th>EFFICIENCY</th>
-                  <th>ACTION</th>
-                </tr>
-              </thead>
-              <tbody>
-                {itemsList.map((item, index) => (
-                  <tr key={item.id}>
-                    {/* Item Code Selection - Required */}
-                    <td>
-                      <select
-                        value={item.item_code}
-                        onChange={(e) => handleItemChange(item.id, e.target.value)}
-                        className={`item-select ${fieldStatus[`item_${item.id}`] || getFieldClass('item_code', item.item_code)}`}
-                      >
-                        <option value="">-- SELECT ITEM --</option>
-                        {items.map(itm => (
-                          <option key={itm.id} value={itm.item_code}>
-                            {itm.item_code} - {itm.item_name}
-                          </option>
-                        ))}
-                      </select>
-                      {validationErrors[`item_${item.id}`] && (
-                        <div className="error-text">{validationErrors[`item_${item.id}`]}</div>
-                      )}
-                    </td>
-
-                    {/* Item Name - Auto-filled */}
-                    <td>
-                      <input
-                        type="text"
-                        value={item.item_name}
-                        readOnly
-                        className="item-input readonly"
-                      />
-                    </td>
-
-                    {/* Coil Size - Auto-filled */}
-                    <td>
-                      <input
-                        type="text"
-                        value={item.coil_size}
-                        readOnly
-                        className="item-input readonly"
-                      />
-                    </td>
-
-                    {/* Material Type - Auto-filled */}
-                    <td>
-                      <input
-                        type="text"
-                        value={item.material_type}
-                        readOnly
-                        className="item-input readonly"
-                      />
-                    </td>
-
-                    {/* Production Quantity - Required */}
-                    <td>
-                      <input
-                        type="number"
-                        value={item.production_quantity}
-                        onChange={(e) => handleQuantityChange(item.id, e.target.value)}
-                        step="0.01"
-                        min="0"
-                        className={`item-input quantity-input ${fieldStatus[`quantity_${item.id}`] || getFieldClass('quantity', item.production_quantity)}`}
-                        placeholder="0.00"
-                      />
-                      {validationErrors[`quantity_${item.id}`] && (
-                        <div className="error-text">{validationErrors[`quantity_${item.id}`]}</div>
-                      )}
-                    </td>
-
-                    {/* Unit - Auto-filled */}
-                    <td className="unit-cell">
-                      {item.unit}
-                    </td>
-
-                    {/* Efficiency - Calculated */}
-                    <td 
-                      className="efficiency-cell"
-                      style={{
-                        color: getEfficiencyColor(item.efficiency),
-                        backgroundColor: getEfficiencyColor(item.efficiency) + '20'
-                      }}
-                    >
-                      {item.efficiency.toFixed(1)}%
-                    </td>
-
-                    {/* Remove Item Button */}
-                    <td style={{ textAlign: 'center' }}>
-                      {itemsList.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => removeItemRow(item.id)}
-                          className="remove-item-btn"
-                          title="Remove Item"
-                        >
-                          <FiTrash2 />
-                        </button>
-                      )}
-                    </td>
+            <div className={`table-container ${isMobile ? 'mobile-table' : ''}`}>
+              <table className="items-table">
+                <thead>
+                  <tr>
+                    <th>ITEM CODE</th>
+                    <th>ITEM NAME</th>
+                    {!isMobile && <th>COIL SIZE</th>}
+                    {!isMobile && <th>MATERIAL TYPE</th>}
+                    <th>QUANTITY</th>
+                    <th>UNIT</th>
+                    <th>EFFICIENCY</th>
+                    <th>ACTION</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {itemsList.map((item) => (
+                    <tr key={item.id}>
+                      <td>
+                        <select
+                          value={item.item_code}
+                          onChange={(e) => handleItemChange(item.id, e.target.value)}
+                          className={`item-select ${fieldStatus[`item_${item.id}`] || getFieldClass('item_code', item.item_code)}`}
+                        >
+                          <option value="">-- SELECT ITEM --</option>
+                          {items.map(itm => (
+                            <option key={itm.item_code} value={itm.item_code}>
+                              {itm.item_code} {!isMobile && `- ${itm.item_name || itm.name}`}
+                            </option>
+                          ))}
+                        </select>
+                        {validationErrors[`item_${item.id}`] && (
+                          <div className="error-text">{validationErrors[`item_${item.id}`]}</div>
+                        )}
+                      </td>
+
+                      <td>
+                        <input
+                          type="text"
+                          value={item.item_name}
+                          readOnly
+                          className="item-input readonly"
+                          placeholder={isMobile ? "Item name" : ""}
+                        />
+                      </td>
+
+                      {!isMobile && (
+                        <td>
+                          <input
+                            type="text"
+                            value={item.coil_size}
+                            readOnly
+                            className="item-input readonly"
+                          />
+                        </td>
+                      )}
+
+                      {!isMobile && (
+                        <td>
+                          <input
+                            type="text"
+                            value={item.material_type}
+                            readOnly
+                            className="item-input readonly"
+                          />
+                        </td>
+                      )}
+
+                      <td>
+                        <input
+                          type="number"
+                          value={item.production_quantity}
+                          onChange={(e) => handleQuantityChange(item.id, e.target.value)}
+                          step="0.01"
+                          min="0"
+                          className={`item-input quantity-input ${fieldStatus[`quantity_${item.id}`] || getFieldClass('quantity', item.production_quantity)}`}
+                          placeholder="0.00"
+                        />
+                        {validationErrors[`quantity_${item.id}`] && (
+                          <div className="error-text">{validationErrors[`quantity_${item.id}`]}</div>
+                        )}
+                      </td>
+
+                      <td className="unit-cell">
+                        {item.unit}
+                      </td>
+
+                      <td 
+                        className="efficiency-cell"
+                        style={{
+                          color: getEfficiencyColor(item.efficiency),
+                          backgroundColor: getEfficiencyColor(item.efficiency) + '20'
+                        }}
+                      >
+                        {item.efficiency.toFixed(1)}%
+                      </td>
+
+                      <td className="action-cell">
+                        {itemsList.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => removeItemRow(item.id)}
+                            className="remove-item-btn"
+                            title="Remove Item"
+                          >
+                            <FiTrash2 />
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
 
-          {/* ============================================ */}
-          {/* SECTION 3: OPERATOR & REMARKS */}
-          {/* ============================================ */}
+          {/* OPERATOR & REMARKS */}
           <div className="bottom-section">
-            <div className="operator-row">
-              {/* OPERATOR NAME - Required */}
+            <div className={`operator-row ${isMobile ? 'mobile-operator' : ''}`}>
               <div className="form-group">
-                <label className="form-label required" style={{ color: '#27ae60' }}>
+                <label className="form-label required">
                   <FiUser /> OPERATOR NAME
                 </label>
                 <input
@@ -990,51 +795,54 @@ const FlatteningForm = ({ onClose, isModal = true }) => {
                 )}
               </div>
               
-              {/* REMARKS - Optional */}
               <div className="form-group">
-                <label className="form-label" style={{ color: '#3498db' }}>
+                <label className="form-label">
                   <FiClipboard /> REMARKS
                 </label>
                 <textarea
                   value={remarks}
                   onChange={(e) => handleRemarksChange(e.target.value)}
-                  className={`form-textarea ${fieldStatus.remarks || ''}`}
+                  className="form-textarea"
                   placeholder="Enter any additional notes or remarks..."
-                  rows="3"
+                  rows={isMobile ? "2" : "3"}
                 />
               </div>
             </div>
           </div>
 
-          {/* ============================================ */}
-          {/* SECTION 4: FORM ACTIONS */}
-          {/* ============================================ */}
+          {/* FORM ACTIONS WITH BACK BUTTON */}
           <div className="actions-section">
             <div className="total-info">
-              TOTAL PRODUCTION: 
+              <FiTrendingUp /> TOTAL: 
               <span> {totalProduction.toFixed(2)} {targetData.unit}</span>
             </div>
             
-            <div className="action-buttons">
-              {/* Reset Button */}
+            <div className={`action-buttons ${isMobile ? 'mobile-buttons' : ''}`}>
+              {/* BACK BUTTON ADDED HERE */}
+              <button
+                type="button"
+                onClick={handleBackClick}
+                className="btn btn-back"
+              >
+                <FiArrowLeft /> {!isMobile && 'BACK'}
+              </button>
+              
               <button
                 type="button"
                 onClick={handleReset}
                 className="btn btn-reset"
               >
-                <FiSettings /> RESET FORM
+                <FiRefreshCw /> {!isMobile && 'RESET'}
               </button>
               
-              {/* Cancel Button */}
               <button
                 type="button"
                 onClick={handleClose}
                 className="btn btn-cancel"
               >
-                <FiX /> CANCEL
+                <FiX /> {!isMobile && 'CANCEL'}
               </button>
               
-              {/* Submit Button */}
               <button
                 type="submit"
                 disabled={saving}
@@ -1043,11 +851,11 @@ const FlatteningForm = ({ onClose, isModal = true }) => {
                 {saving ? (
                   <>
                     <div className="btn-spinner"></div>
-                    SAVING...
+                    {!isMobile && 'SAVING...'}
                   </>
                 ) : (
                   <>
-                    <FiSave /> SAVE ({itemsList.length} ITEM{itemsList.length > 1 ? 'S' : ''})
+                    <FiSave /> {!isMobile && 'SAVE'} ({itemsList.length})
                   </>
                 )}
               </button>
@@ -1055,45 +863,56 @@ const FlatteningForm = ({ onClose, isModal = true }) => {
           </div>
         </form>
 
-        {/* ============================================ */}
-        {/* FOOTER: DATABASE INFORMATION */}
-        {/* ============================================ */}
-        <div className="database-info">
+        {/* DEBUG INFO */}
+        <div className="database-info debug-info">
           <div className="info-header">
-            <FiDatabase /> DATABASE CONNECTION STATUS
+            <FiInfo /> SYSTEM INFORMATION
           </div>
           <div className="info-grid">
             <div className="info-item">
-              <div className="info-title">ITEMS TABLE</div>
-              <div className="info-value">{items.length} active items</div>
-              <div className="info-desc">Source: items table (is_active = true)</div>
+              <div className="info-title">ENVIRONMENT</div>
+              <div className="info-value">
+                {window.location.href.includes('localhost') ? 'LOCAL' : 'WEB'}
+                {isMobile && ' | MOBILE'}
+              </div>
+              <div className="info-desc">Host: {window.location.hostname}</div>
             </div>
             <div className="info-item">
-              <div className="info-title">TARGETS TABLE</div>
-              <div className="info-value">{targets.length} targets loaded</div>
-              <div className="info-desc">Filtered for Flattening section</div>
+              <div className="info-title">ITEMS</div>
+              <div className="info-value">{items.length} items</div>
+              <div className="info-desc">Available for selection</div>
             </div>
             <div className="info-item">
-              <div className="info-title">STORAGE TABLE</div>
-              <div className="info-value">flatteningsection</div>
-              <div className="info-desc">Records are saved here</div>
+              <div className="info-title">TARGETS</div>
+              <div className="info-value">{targets.length} targets</div>
+              <div className="info-desc">Loaded from database</div>
             </div>
             <div className="info-item">
               <div className="info-title">CONNECTION</div>
               <div className="info-value">
-                <span style={{ color: '#27ae60' }}>● CONNECTED</span>
+                <span style={{ color: items.length > 0 ? '#27ae60' : '#e74c3c' }}>
+                  {items.length > 0 ? '● CONNECTED' : '● ERROR'}
+                </span>
               </div>
-              <div className="info-desc">Supabase PostgreSQL</div>
+              <div className="info-desc">Supabase Database</div>
             </div>
           </div>
         </div>
+
+        {/* MOBILE FLOATING BACK BUTTON */}
+        {isMobile && (
+          <div className="mobile-floating-back">
+            <button 
+              className="floating-back-btn"
+              onClick={handleBackClick}
+            >
+              <FiArrowLeft /> Back to Flattening
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
 };
-
-// ========================================================
-// SECTION 19: EXPORT
-// ========================================================
 
 export default FlatteningForm;
