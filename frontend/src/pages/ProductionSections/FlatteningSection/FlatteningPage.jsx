@@ -10,15 +10,13 @@ import {
   FiClock, FiLayers, FiActivity, FiArrowUpRight,
   FiAlertCircle, FiChevronLeft, FiChevronRight,
   FiDatabase, FiCheckCircle, FiXCircle,
-  FiGrid, FiSettings, FiX as FiXIcon, FiTool,
-  FiCheckSquare, FiCrop, FiDivide,
+  FiGrid, FiSettings, FiX, FiScissors,
+  FiCheckSquare, FiCrop, FiDivide, FiTool,
   FiBriefcase, FiBox, FiArchive, FiColumns,
   FiArrowRight, FiBarChart, FiHash, FiTag,
-  FiDollarSign, FiPercent,
+  FiDollarSign, FiPercent, FiGrid as FiGridIcon,
   FiTrendingDown, FiTrendingUp as FiTrendingUpIcon,
-  FiDatabase as FiDatabaseIcon, FiArrowUp, FiArrowDown,
-  FiStar, FiAward, FiCoffee, FiWind, FiZap,
-  FiCheck, FiAlertTriangle, FiCircle
+  FiDatabase as FiDatabaseIcon
 } from 'react-icons/fi';
 import { supabase } from '../../../supabaseClient';
 import FlatteningForm from './FlatteningForm';
@@ -64,7 +62,6 @@ const FlatteningPage = () => {
     yesterdayProduction: 0,
     yesterdayEfficiency: 0,
     totalProduction: 0,
-    totalTarget: 0,
     machineWiseToday: {},
     itemWiseToday: {}
   });
@@ -78,13 +75,14 @@ const FlatteningPage = () => {
       setLoading(true);
       setError(null);
       
+      // Check if supabase is available
       if (!supabase) {
         const errorMsg = 'Supabase client not initialized';
         setError(errorMsg);
         return;
       }
       
-      // Fetch shifts
+      // Fetch shifts from shifts table
       const { data: shiftsData, error: shiftsError } = await supabase
         .from('shifts')
         .select('*')
@@ -94,7 +92,7 @@ const FlatteningPage = () => {
         console.error("Error fetching shifts:", shiftsError);
       }
 
-      // Fetch targets
+      // Fetch targets from targets table
       const { data: targetsData, error: targetsError } = await supabase
         .from('targets')
         .select('*')
@@ -105,7 +103,7 @@ const FlatteningPage = () => {
         console.error("Error fetching targets:", targetsError);
       }
 
-      // Fetch records
+      // Fetch records from flatteningsection table
       const { data: recordsData, error: recordsError } = await supabase
         .from('flatteningsection')
         .select('*')
@@ -114,10 +112,10 @@ const FlatteningPage = () => {
       if (recordsError) {
         console.error("Error fetching records:", recordsError);
         setRecords([]);
-        calculateStats([], targetsData || []);
+        calculateStats([]);
       } else {
         setRecords(recordsData || []);
-        calculateStats(recordsData || [], targetsData || []);
+        calculateStats(recordsData || []);
       }
 
       setShifts(shiftsData || []);
@@ -127,14 +125,36 @@ const FlatteningPage = () => {
       console.error('Error in fetchData:', error);
       setError(error.message);
       setRecords([]);
-      calculateStats([], []);
+      calculateStats([]);
     } finally {
       setLoading(false);
     }
   };
 
-  // Calculate stats with targets
-  const calculateStats = (recordsData, targetsData) => {
+  // Test function for debugging
+  const testDatabaseConnection = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('flatteningsection')
+        .select('id, created_at')
+        .limit(1);
+      
+      if (error) {
+        alert(`Error: ${error.message}`);
+      } else {
+        alert(`Connection successful! Found ${data?.length || 0} records.`);
+      }
+    } catch (err) {
+      alert(`Test failed: ${err.message}`);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  // Calculate stats
+  const calculateStats = (recordsData) => {
     if (!recordsData || recordsData.length === 0) {
       setStats({
         totalRecords: 0,
@@ -145,7 +165,6 @@ const FlatteningPage = () => {
         yesterdayProduction: 0,
         yesterdayEfficiency: 0,
         totalProduction: 0,
-        totalTarget: 0,
         machineWiseToday: {},
         itemWiseToday: {}
       });
@@ -204,16 +223,12 @@ const FlatteningPage = () => {
       ? todayTotalEfficiency / todayRecords.length 
       : 0;
 
-    // Calculate total target from targetsData
-    const totalTarget = targetsData.reduce((sum, target) => 
-      sum + (parseFloat(target.target_qty) || 0), 0
-    );
-
     // Machine-wise today production
     const machineWiseToday = {};
     const itemWiseToday = {};
     
     todayRecords.forEach(record => {
+      // Machine data
       const machine = record.machine_no || record.machine_id || 'Unknown';
       if (!machineWiseToday[machine]) {
         machineWiseToday[machine] = {
@@ -226,6 +241,7 @@ const FlatteningPage = () => {
       machineWiseToday[machine].efficiency += parseFloat(record.efficiency) || 0;
       machineWiseToday[machine].count += 1;
 
+      // Item data
       const item = record.item_name || 'Unknown';
       if (!itemWiseToday[item]) {
         itemWiseToday[item] = {
@@ -239,12 +255,14 @@ const FlatteningPage = () => {
       itemWiseToday[item].count += 1;
     });
 
+    // Calculate average efficiency for each machine
     Object.keys(machineWiseToday).forEach(machine => {
       if (machineWiseToday[machine].count > 0) {
         machineWiseToday[machine].efficiency = machineWiseToday[machine].efficiency / machineWiseToday[machine].count;
       }
     });
 
+    // Calculate average efficiency for each item
     Object.keys(itemWiseToday).forEach(item => {
       if (itemWiseToday[item].count > 0) {
         itemWiseToday[item].efficiency = itemWiseToday[item].efficiency / itemWiseToday[item].count;
@@ -260,7 +278,6 @@ const FlatteningPage = () => {
       yesterdayProduction,
       yesterdayEfficiency: parseFloat(yesterdayEfficiency.toFixed(1)),
       totalProduction,
-      totalTarget,
       machineWiseToday,
       itemWiseToday
     });
@@ -282,25 +299,6 @@ const FlatteningPage = () => {
 
     return matchesSearch && matchesShift && matchesDate;
   });
-
-  // Get target for a record
-  const getTargetForRecord = (record) => {
-    const targetRecord = targets.find(t => 
-      t.shift_code === (record.shift_code || record.shift) && 
-      t.machine_id === record.machine_id
-    );
-    return targetRecord ? parseFloat(targetRecord.target_qty) : 0;
-  };
-
-  // Sort machines by number
-  const getSortedMachines = () => {
-    return Object.entries(stats.machineWiseToday)
-      .sort(([a], [b]) => {
-        const numA = parseInt(a.replace(/\D/g, '')) || 0;
-        const numB = parseInt(b.replace(/\D/g, '')) || 0;
-        return numA - numB;
-      });
-  };
 
   // Pagination
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -347,6 +345,7 @@ const FlatteningPage = () => {
       const item = record.item_name || 'Unknown';
       const qty = parseFloat(record.production_quantity) || 0;
       
+      // Shift groups
       if (!shiftGroups[shift]) {
         shiftGroups[shift] = {
           production: 0,
@@ -360,6 +359,7 @@ const FlatteningPage = () => {
       totalProduction += qty;
       shiftGroups[shift].records.push(record);
       
+      // Machine production
       if (!machineProduction[machine]) {
         machineProduction[machine] = {
           production: 0,
@@ -371,6 +371,7 @@ const FlatteningPage = () => {
       machineProduction[machine].efficiency += parseFloat(record.efficiency) || 0;
       machineProduction[machine].count += 1;
       
+      // Item production
       if (!itemProduction[item]) {
         itemProduction[item] = {
           production: 0,
@@ -382,6 +383,7 @@ const FlatteningPage = () => {
       itemProduction[item].efficiency += parseFloat(record.efficiency) || 0;
       itemProduction[item].count += 1;
       
+      // Find target
       const targetRecord = targets.find(t => 
         t.shift_code === shift && 
         t.machine_id === record.machine_id
@@ -393,17 +395,20 @@ const FlatteningPage = () => {
       }
     });
 
+    // Calculate efficiency
     Object.keys(shiftGroups).forEach(shift => {
       const group = shiftGroups[shift];
       group.efficiency = group.target > 0 ? (group.production / group.target) * 100 : 0;
     });
 
+    // Calculate average efficiency for each machine
     Object.keys(machineProduction).forEach(machine => {
       if (machineProduction[machine].count > 0) {
         machineProduction[machine].efficiency = machineProduction[machine].efficiency / machineProduction[machine].count;
       }
     });
 
+    // Calculate average efficiency for each item
     Object.keys(itemProduction).forEach(item => {
       if (itemProduction[item].count > 0) {
         itemProduction[item].efficiency = itemProduction[item].efficiency / itemProduction[item].count;
@@ -475,7 +480,7 @@ const FlatteningPage = () => {
     }
 
     const csvContent = [
-      ['ID', 'Section', 'Machine ID', 'Machine No', 'Item Name', 'Production (KG)', 'Target (KG)', 'Coil Size', 'Shift', 'Operator', 'Efficiency %', 'Remarks', 'Created At'],
+      ['ID', 'Section', 'Machine ID', 'Machine No', 'Item Name', 'Production (KG)', 'Coil Size', 'Shift', 'Operator', 'Efficiency %', 'Remarks', 'Created At'],
       ...filteredRecords.map(record => [
         record.id,
         `"${record.section_name || 'Flattening'}"`,
@@ -483,7 +488,6 @@ const FlatteningPage = () => {
         `"${record.machine_no || ''}"`,
         `"${record.item_name || ''}"`,
         parseFloat(record.production_quantity) || 0,
-        getTargetForRecord(record),
         `"${record.coil_size || ''}"`,
         `"${record.shift_code || record.shift || ''}"`,
         `"${record.operator_name || ''}"`,
@@ -504,7 +508,7 @@ const FlatteningPage = () => {
     URL.revokeObjectURL(url);
   };
 
-  // Print report - Improved design
+  // Print report - Optimized for single page
   const handlePrintReport = () => {
     if (!reportData || reportData.recordCount === 0) {
       alert('No report data to print');
@@ -517,263 +521,123 @@ const FlatteningPage = () => {
       <html>
       <head>
         <title>Flattening Report - ${reportData.formattedDate}</title>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
         <style>
-          * { 
-            margin: 0; 
-            padding: 0; 
-            box-sizing: border-box; 
-          }
-          
           body { 
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
-            margin: 15px;
-            font-size: 12px;
-            line-height: 1.5;
-            color: #1e293b;
-            background: #ffffff;
+            font-family: Arial, sans-serif; 
+            margin: 10px;
+            font-size: 9px;
+            line-height: 1.2;
           }
           
           .header { 
             text-align: center; 
-            margin-bottom: 20px; 
-            padding-bottom: 15px;
-            border-bottom: 2px solid #e2e8f0;
+            margin-bottom: 8px; 
+            padding-bottom: 5px;
+            border-bottom: 1px solid #ccc;
           }
           
-          .company-name {
-            font-size: 24px;
-            font-weight: 700;
-            color: #1e40af;
-            margin-bottom: 5px;
+          .header h1 { 
+            margin: 0 0 3px 0;
+            font-size: 12px;
+            color: #333;
           }
           
-          .report-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: #334155;
-            margin-bottom: 8px;
-          }
-          
-          .report-date { 
-            color: #64748b; 
-            font-size: 14px;
-            font-weight: 500;
+          .header .date { 
+            color: #666; 
+            font-size: 9px;
           }
           
           .summary-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 12px;
-            margin: 20px 0;
+            gap: 5px;
+            margin: 8px 0;
           }
           
           .summary-item {
-            padding: 15px;
-            border-radius: 10px;
+            padding: 4px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
             text-align: center;
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            transition: all 0.3s ease;
-          }
-          
-          .summary-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
           }
           
           .summary-label {
-            font-size: 11px;
-            color: #64748b;
-            margin-bottom: 8px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-weight: 600;
+            font-size: 7px;
+            color: #666;
+            margin-bottom: 1px;
           }
           
           .summary-value {
-            font-size: 20px;
-            font-weight: 700;
-            color: #1e293b;
-          }
-          
-          .section-title {
-            font-size: 16px;
-            font-weight: 600;
-            color: #334155;
-            margin: 25px 0 12px 0;
-            padding-bottom: 8px;
-            border-bottom: 1px solid #e2e8f0;
+            font-size: 10px;
+            font-weight: bold;
           }
           
           .table { 
             width: 100%; 
             border-collapse: collapse; 
-            margin: 15px 0;
-            font-size: 11px;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            margin: 6px 0;
+            font-size: 8px;
           }
           
           .table th, .table td { 
-            border: 1px solid #e2e8f0; 
-            padding: 10px 12px; 
-            text-align: center; 
+            border: 1px solid #ddd; 
+            padding: 3px; 
+            text-align: left; 
           }
           
           .table th { 
-            background-color: #f1f5f9;
-            font-weight: 600;
-            color: #475569;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-          }
-          
-          .table tr:nth-child(even) {
-            background-color: #f8fafc;
-          }
-          
-          .table tr:hover {
-            background-color: #f1f5f9;
-          }
-          
-          .efficiency-good {
-            color: #059669;
-            font-weight: 600;
-          }
-          
-          .efficiency-average {
-            color: #d97706;
-            font-weight: 600;
-          }
-          
-          .efficiency-poor {
-            color: #dc3545;
-            font-weight: 600;
+            background-color: #f5f5f5;
+            font-weight: bold;
           }
           
           .compact-section {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin: 20px 0;
+            gap: 8px;
+            margin: 8px 0;
           }
           
           .compact-box {
-            border: 1px solid #e2e8f0;
-            padding: 15px;
-            border-radius: 10px;
-            background: #f8fafc;
+            border: 1px solid #eee;
+            padding: 4px;
+            border-radius: 3px;
           }
           
           .compact-title {
-            font-size: 14px;
-            font-weight: 600;
-            color: #334155;
-            margin-bottom: 10px;
-            padding-bottom: 8px;
-            border-bottom: 1px solid #e2e8f0;
+            font-size: 8px;
+            font-weight: bold;
+            margin-bottom: 3px;
+            color: #333;
           }
           
           .compact-row {
             display: flex;
             justify-content: space-between;
-            padding: 8px 0;
-            font-size: 12px;
-            border-bottom: 1px solid #f1f5f9;
-          }
-          
-          .compact-row:last-child {
-            border-bottom: none;
+            padding: 1px 0;
+            font-size: 7px;
           }
           
           .footer { 
-            margin-top: 30px; 
+            margin-top: 10px; 
             text-align: center; 
-            color: #64748b; 
-            font-size: 11px;
-            padding-top: 15px;
-            border-top: 1px solid #e2e8f0;
-          }
-          
-          .footer strong {
-            color: #334155;
-            font-weight: 600;
-          }
-          
-          .signature-section {
-            margin-top: 40px;
-            display: flex;
-            justify-content: space-between;
-            padding-top: 20px;
-            border-top: 1px solid #e2e8f0;
-          }
-          
-          .signature-box {
-            text-align: center;
-            width: 30%;
-          }
-          
-          .signature-line {
-            margin-top: 40px;
-            border-top: 1px solid #94a3b8;
-            width: 100%;
-          }
-          
-          .signature-name {
-            margin-top: 5px;
-            font-weight: 600;
-            color: #334155;
-          }
-          
-          .signature-title {
-            font-size: 11px;
-            color: #64748b;
+            color: #666; 
+            font-size: 7px;
+            padding-top: 5px;
+            border-top: 1px solid #ddd;
           }
           
           @media print {
             body { 
-              margin: 10mm;
-              font-size: 11px;
+              margin: 5mm;
             }
-            
-            .no-print { 
-              display: none; 
-            }
-            
-            .header {
-              margin-bottom: 15px;
-            }
-            
-            .summary-grid {
-              gap: 8px;
-              margin: 15px 0;
-            }
-            
-            .summary-item {
-              padding: 10px;
-            }
-            
-            .section-title {
-              margin: 20px 0 10px 0;
-            }
-            
-            .table {
-              font-size: 10px;
-            }
-            
-            .table th, .table td {
-              padding: 8px 10px;
-            }
+            .no-print { display: none; }
           }
         </style>
       </head>
       <body>
         <div class="header">
-          <div class="company-name">ERP Management System</div>
-          <div class="report-title">Flattening Section Production Report</div>
-          <div class="report-date">${reportData.formattedDate}</div>
+          <h1>Flattening Section Production Report</h1>
+          <div class="date">${reportData.formattedDate}</div>
         </div>
         
         <div class="summary-grid">
@@ -787,10 +651,8 @@ const FlatteningPage = () => {
           </div>
           <div class="summary-item">
             <div class="summary-label">Overall Efficiency</div>
-            <div class="summary-value ${
-              reportData.overallEfficiency >= 90 ? 'efficiency-good' :
-              reportData.overallEfficiency >= 80 ? 'efficiency-average' : 'efficiency-poor'
-            }">
+            <div class="summary-value" style="color: ${reportData.overallEfficiency >= 90 ? '#28a745' : 
+                    reportData.overallEfficiency >= 80 ? '#ffc107' : '#dc3545'}">
               ${reportData.overallEfficiency.toFixed(1)}%
             </div>
           </div>
@@ -800,7 +662,7 @@ const FlatteningPage = () => {
           </div>
         </div>
         
-        <div class="section-title">Shift-wise Production Summary</div>
+        <h3 style="margin: 6px 0 3px 0; font-size: 9px;">Shift-wise Production:</h3>
         <table class="table">
           <thead>
             <tr>
@@ -808,26 +670,15 @@ const FlatteningPage = () => {
               <th>Production (KG)</th>
               <th>Target (KG)</th>
               <th>Efficiency</th>
-              <th>Status</th>
             </tr>
           </thead>
           <tbody>
             ${Object.entries(reportData.shiftGroups).map(([shift, data]) => `
               <tr>
-                <td><strong>${shift}</strong></td>
+                <td>${shift}</td>
                 <td>${data.production.toFixed(1)}</td>
                 <td>${data.target.toFixed(1)}</td>
-                <td class="${
-                  data.efficiency >= 90 ? 'efficiency-good' :
-                  data.efficiency >= 80 ? 'efficiency-average' : 'efficiency-poor'
-                }">
-                  ${data.efficiency.toFixed(1)}%
-                </td>
-                <td>
-                  ${data.efficiency >= 90 ? '✓ Excellent' :
-                    data.efficiency >= 80 ? '✓ Good' :
-                    data.efficiency >= 70 ? '✓ Average' : '⚠ Needs Improvement'}
-                </td>
+                <td>${data.efficiency.toFixed(1)}%</td>
               </tr>
             `).join('')}
           </tbody>
@@ -836,24 +687,10 @@ const FlatteningPage = () => {
         <div class="compact-section">
           <div class="compact-box">
             <div class="compact-title">Machine-wise Production</div>
-            ${Object.entries(reportData.machineProduction)
-              .sort(([a], [b]) => {
-                const numA = parseInt(a.replace(/\D/g, '')) || 0;
-                const numB = parseInt(b.replace(/\D/g, '')) || 0;
-                return numA - numB;
-              })
-              .map(([machine, data]) => `
+            ${Object.entries(reportData.machineProduction).map(([machine, data]) => `
               <div class="compact-row">
-                <span><strong>${machine}</strong></span>
-                <span>
-                  ${data.production.toFixed(1)} KG 
-                  <span class="${
-                    data.efficiency >= 90 ? 'efficiency-good' :
-                    data.efficiency >= 80 ? 'efficiency-average' : 'efficiency-poor'
-                  }">
-                    (${data.efficiency.toFixed(1)}%)
-                  </span>
-                </span>
+                <span>${machine}</span>
+                <span>${data.production.toFixed(1)} KG (${data.efficiency.toFixed(1)}%)</span>
               </div>
             `).join('')}
           </div>
@@ -862,82 +699,24 @@ const FlatteningPage = () => {
             <div class="compact-title">Item-wise Production</div>
             ${Object.entries(reportData.itemProduction).map(([item, data]) => `
               <div class="compact-row">
-                <span><strong>${item}</strong></span>
-                <span>
-                  ${data.production.toFixed(1)} KG 
-                  <span class="${
-                    data.efficiency >= 90 ? 'efficiency-good' :
-                    data.efficiency >= 80 ? 'efficiency-average' : 'efficiency-poor'
-                  }">
-                    (${data.efficiency.toFixed(1)}%)
-                  </span>
-                </span>
+                <span>${item}</span>
+                <span>${data.production.toFixed(1)} KG (${data.efficiency.toFixed(1)}%)</span>
               </div>
             `).join('')}
           </div>
         </div>
         
-        <div class="signature-section">
-          <div class="signature-box">
-            <div>Prepared By</div>
-            <div class="signature-line"></div>
-            <div class="signature-name">Production Supervisor</div>
-            <div class="signature-title">Flattening Section</div>
-          </div>
-          
-          <div class="signature-box">
-            <div>Checked By</div>
-            <div class="signature-line"></div>
-            <div class="signature-name">Production Manager</div>
-            <div class="signature-title">Manufacturing</div>
-          </div>
-          
-          <div class="signature-box">
-            <div>Approved By</div>
-            <div class="signature-line"></div>
-            <div class="signature-name">Plant Head</div>
-            <div class="signature-title">Operations</div>
-          </div>
-        </div>
-        
         <div class="footer">
-          <strong>Report generated:</strong> ${new Date().toLocaleString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-          })}<br/>
-          <strong>Data source:</strong> flatteningsection table • <strong>System:</strong> ERP Management System v2.0
+          Generated on ${new Date().toLocaleString()}<br/>
+          Flattening Section - Production Management System
         </div>
         
-        <div class="no-print" style="margin-top: 20px; text-align: center;">
-          <button onclick="window.print()" style="
-            padding: 10px 20px;
-            background: linear-gradient(135deg, #059669 0%, #047857 100%);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-          ">
-            🖨️ Print Report
+        <div class="no-print" style="margin-top: 8px; text-align: center;">
+          <button onclick="window.print()" style="padding: 4px 8px; background: #007bff; color: white; border: none; border-radius: 2px; cursor: pointer; font-size: 8px;">
+            Print Report
           </button>
-          <button onclick="window.close()" style="
-            padding: 10px 20px;
-            background: linear-gradient(135deg, #64748b 0%, #475569 100%);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            margin-left: 10px;
-            font-size: 14px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-          ">
-            ✕ Close Window
+          <button onclick="window.close()" style="padding: 4px 8px; background: #6c757d; color: white; border: none; border-radius: 2px; cursor: pointer; margin-left: 4px; font-size: 8px;">
+            Close
           </button>
         </div>
         
@@ -962,56 +741,37 @@ const FlatteningPage = () => {
     const csvContent = [
       ['Flattening Section Production Report', reportData.formattedDate],
       [],
-      ['Shift', 'Production (KG)', 'Target (KG)', 'Efficiency (%)', 'Status'],
+      ['Shift', 'Production (KG)', 'Target (KG)', 'Efficiency (%)'],
       ...Object.entries(reportData.shiftGroups).map(([shift, data]) => [
         shift,
         data.production.toFixed(1),
         data.target.toFixed(1),
-        data.efficiency.toFixed(1),
-        data.efficiency >= 90 ? 'Excellent' :
-        data.efficiency >= 80 ? 'Good' :
-        data.efficiency >= 70 ? 'Average' : 'Needs Improvement'
+        data.efficiency.toFixed(1)
       ]),
       [],
       ['Machine-wise Production'],
-      ['Machine', 'Production (KG)', 'Efficiency (%)', 'Status'],
-      ...Object.entries(reportData.machineProduction)
-        .sort(([a], [b]) => {
-          const numA = parseInt(a.replace(/\D/g, '')) || 0;
-          const numB = parseInt(b.replace(/\D/g, '')) || 0;
-          return numA - numB;
-        })
-        .map(([machine, data]) => [
-          machine,
-          data.production.toFixed(1),
-          data.efficiency.toFixed(1),
-          data.efficiency >= 90 ? 'Excellent' :
-          data.efficiency >= 80 ? 'Good' :
-          data.efficiency >= 70 ? 'Average' : 'Needs Improvement'
-        ]),
+      ['Machine', 'Production (KG)', 'Efficiency (%)'],
+      ...Object.entries(reportData.machineProduction).map(([machine, data]) => [
+        machine,
+        data.production.toFixed(1),
+        data.efficiency.toFixed(1)
+      ]),
       [],
       ['Item-wise Production'],
-      ['Item', 'Production (KG)', 'Efficiency (%)', 'Status'],
+      ['Item', 'Production (KG)', 'Efficiency (%)'],
       ...Object.entries(reportData.itemProduction).map(([item, data]) => [
         item,
         data.production.toFixed(1),
-        data.efficiency.toFixed(1),
-        data.efficiency >= 90 ? 'Excellent' :
-        data.efficiency >= 80 ? 'Good' :
-        data.efficiency >= 70 ? 'Average' : 'Needs Improvement'
+        data.efficiency.toFixed(1)
       ]),
       [],
       ['SUMMARY'],
       ['Total Production (KG):', reportData.totalProduction.toFixed(1)],
       ['Total Target (KG):', reportData.totalTarget.toFixed(1)],
-      ['Overall Efficiency (%):', reportData.overallEfficiency.toFixed(1)],
-      ['Status:', reportData.overallEfficiency >= 90 ? 'Excellent' :
-                reportData.overallEfficiency >= 80 ? 'Good' :
-                reportData.overallEfficiency >= 70 ? 'Average' : 'Needs Improvement'],
+      ['Overall Efficiency (%):', reportData.overallEfficiency],
       ['Total Records:', reportData.recordCount],
       [],
-      ['Generated on:', new Date().toLocaleString()],
-      ['Generated by:', 'ERP Management System']
+      ['Generated on:', new Date().toLocaleString()]
     ].map(row => row.join(',')).join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -1049,39 +809,37 @@ const FlatteningPage = () => {
     }
   };
 
-  // Enhanced stat cards with indicators
+  // Clean stat cards with proper structure
   const statCards = [
     {
       id: 'today-records',
-      title: "Today's Records",
+      title: "Records",
       value: stats.todayRecords,
       icon: FiClock,
       description: 'Records added today',
-      color: '#10b981',
-      indicator: stats.todayRecords > 0 ? 'up' : 'neutral',
-      trend: stats.todayRecords > stats.yesterdayProduction ? '+12%' : '-5%'
+      gradientColors: ['#10b981', '#059669'],
+      iconBg: '#10b981'
     },
     {
       id: 'today-production',
-      title: "Today's Production",
+      title: "Production",
       value: `${stats.todayProduction.toLocaleString()} KG`,
       icon: FiPackage,
       description: 'Production today',
-      color: '#3b82f6',
-      indicator: stats.todayProduction > stats.yesterdayProduction ? 'up' : 'down',
-      trend: stats.todayProduction > stats.yesterdayProduction ? '+8%' : '-3%'
+      gradientColors: ['#3b82f6', '#1d4ed8'],
+      iconBg: '#3b82f6'
     },
     {
       id: 'today-efficiency',
-      title: "Today's Efficiency",
+      title: "Efficiency",
       value: `${stats.todayEfficiency}%`,
       icon: FiActivity,
       description: 'Efficiency today',
-      color: stats.todayEfficiency >= 80 ? '#10b981' :
-             stats.todayEfficiency >= 60 ? '#f59e0b' : '#ef4444',
-      indicator: stats.todayEfficiency >= 80 ? 'excellent' :
-                 stats.todayEfficiency >= 60 ? 'good' : 'poor',
-      trend: stats.todayEfficiency > stats.yesterdayEfficiency ? '+5%' : '-2%'
+      colorValue: true,
+      valueColor: stats.todayEfficiency >= 80 ? '#059669' :
+                  stats.todayEfficiency >= 60 ? '#d97706' : '#ef4444',
+      gradientColors: ['#f59e0b', '#d97706'],
+      iconBg: '#f59e0b'
     },
     {
       id: 'yesterday',
@@ -1090,19 +848,18 @@ const FlatteningPage = () => {
       subValue: `${stats.yesterdayEfficiency}%`,
       icon: FiTrendingDown,
       description: 'Production & Efficiency',
-      color: '#8b5cf6',
-      indicator: stats.yesterdayEfficiency >= 80 ? 'good' : 'average',
-      trend: 'Previous Day'
+      gradientColors: ['#8b5cf6', '#7c3aed'],
+      iconBg: '#8b5cf6',
+      hasSubValue: true
     },
     {
       id: 'total-records',
       title: 'Total Records',
       value: stats.totalRecords,
       icon: FiDatabaseIcon,
-      description: 'All time records',
-      color: '#ec4899',
-      indicator: 'neutral',
-      trend: 'Database'
+      description: 'All records',
+      gradientColors: ['#ec4899', '#be185d'],
+      iconBg: '#ec4899'
     },
     {
       id: 'total-production',
@@ -1110,31 +867,30 @@ const FlatteningPage = () => {
       value: `${stats.totalProduction.toLocaleString()} KG`,
       icon: FiTrendingUpIcon,
       description: 'All time production',
-      color: '#06b6d4',
-      indicator: 'up',
-      trend: '+15% MoM'
+      gradientColors: ['#06b6d4', '#0891b2'],
+      iconBg: '#06b6d4'
     },
     {
       id: 'avg-efficiency',
       title: 'Avg Efficiency',
       value: `${stats.avgEfficiency}%`,
       icon: FiPercent,
-      description: 'Overall average',
-      color: stats.avgEfficiency >= 80 ? '#10b981' :
-             stats.avgEfficiency >= 60 ? '#f59e0b' : '#ef4444',
-      indicator: stats.avgEfficiency >= 80 ? 'excellent' :
-                 stats.avgEfficiency >= 60 ? 'good' : 'needs-improvement',
-      trend: 'Historical'
+      description: 'Average efficiency',
+      colorValue: true,
+      valueColor: stats.avgEfficiency >= 80 ? '#059669' :
+                  stats.avgEfficiency >= 60 ? '#d97706' : '#ef4444',
+      gradientColors: ['#f97316', '#ea580c'],
+      iconBg: '#f97316'
     },
     {
-      id: 'target-achievement',
-      title: 'Target vs Actual',
-      value: stats.totalTarget > 0 ? `${((stats.totalProduction / stats.totalTarget) * 100).toFixed(1)}%` : 'N/A',
-      icon: FiTarget,
-      description: 'Target achievement',
-      color: stats.totalTarget > 0 && (stats.totalProduction / stats.totalTarget) >= 1 ? '#10b981' : '#ef4444',
-      indicator: stats.totalTarget > 0 && (stats.totalProduction / stats.totalTarget) >= 1 ? 'achieved' : 'not-achieved',
-      trend: `${stats.totalProduction.toLocaleString()}/${stats.totalTarget.toLocaleString()} KG`
+      id: 'database-status',
+      title: 'Database',
+      value: isSupabaseConnected ? 'Connected' : 'Offline',
+      icon: isSupabaseConnected ? FiCheckCircle : FiXCircle,
+      description: 'Database connection',
+      gradientColors: isSupabaseConnected ? ['#10b981', '#059669'] : ['#ef4444', '#dc2626'],
+      iconBg: isSupabaseConnected ? '#10b981' : '#ef4444',
+      valueColor: isSupabaseConnected ? '#059669' : '#ef4444'
     }
   ];
 
@@ -1142,7 +898,7 @@ const FlatteningPage = () => {
   if (loading && records.length === 0) {
     return (
       <div className="loading-container">
-        <div className="loading-spinner"></div>
+        <div className="loading-spinner" />
         <h3>Loading Flattening Section Data...</h3>
         <p className="loading-subtext">Fetching records from database</p>
       </div>
@@ -1156,9 +912,9 @@ const FlatteningPage = () => {
         <div className="database-alert">
           <FiAlertCircle size={20} />
           <div>
-            <strong>Database Connection Issue</strong>
+            <strong>Supabase Connection Issue</strong>
             <div className="alert-subtext">
-              Please check your connection settings
+              Check your .env file for REACT_APP_SUPABASE_URL and REACT_APP_SUPABASE_ANON_KEY
             </div>
           </div>
         </div>
@@ -1166,19 +922,19 @@ const FlatteningPage = () => {
 
       {/* Header Section */}
       <div className="header-section">
-        <div className="header-left">
+        <div>
           <div className="breadcrumb-nav">
             <button
-              onClick={() => navigate('/production')}
-              className="breadcrumb-btn back-btn"
-            >
-              <FiArrowLeft size={18} /> Back to Production
-            </button>
-            <button
               onClick={() => navigate('/dashboard')}
-              className="breadcrumb-btn secondary"
+              className="breadcrumb-btn"
             >
               <FiHome size={16} /> Dashboard
+            </button>
+            <button
+              onClick={() => navigate('/production')}
+              className="breadcrumb-btn secondary"
+            >
+              <FiGrid size={16} /> Production Sections
             </button>
           </div>
           <div className="title-section">
@@ -1187,19 +943,22 @@ const FlatteningPage = () => {
             </div>
             <div>
               <h1 className="page-title">
-                <span className="title-main">Flattening Section</span>
-                <span className="title-sub">Production Dashboard</span>
+                Flattening Section
+                <div className={`connection-badge ${isSupabaseConnected ? 'connected' : 'offline'}`}>
+                  {isSupabaseConnected ? (
+                    <>
+                      <FiCheckCircle size={10} /> Connected
+                    </>
+                  ) : (
+                    <>
+                      <FiXCircle size={10} /> Offline
+                    </>
+                  )}
+                </div>
               </h1>
               <p className="page-subtitle">
-                <span className="subtitle-item">
-                  <FiDatabase size={14} /> Total Records: {stats.totalRecords}
-                </span>
-                <span className="subtitle-item">
-                  <FiTarget size={14} /> Target: {stats.totalTarget.toLocaleString()} KG
-                </span>
-                <span className="subtitle-item">
-                  <FiTrendingUp size={14} /> Production: {stats.totalProduction.toLocaleString()} KG
-                </span>
+                <FiDatabase size={14} />
+                Data from: flatteningsection table • Total Records: {stats.totalRecords}
               </p>
             </div>
           </div>
@@ -1240,468 +999,394 @@ const FlatteningPage = () => {
         </div>
       </div>
 
-      {/* Stats Cards Section - Enhanced Design */}
-      <div className="stats-section">
-        <div className="section-header">
-          <div className="header-icon">
-            <FiBarChart size={24} />
-          </div>
-          <div>
-            <h2>Key Performance Indicators</h2>
-            <p className="section-subtitle">Real-time performance metrics for Flattening Section</p>
-          </div>
-        </div>
-
-        <div className="stats-grid-enhanced">
-          {statCards.map((card) => (
-            <div
-              key={card.id}
-              className="stat-card-enhanced"
-              style={{ '--card-color': card.color }}
-            >
-              <div className="stat-card-header">
-                <div className="stat-icon-wrapper">
-                  <div className="stat-icon-enhanced">
-                    <card.icon size={22} />
-                  </div>
-                  <div className="stat-title-wrapper">
-                    <div className="stat-title-enhanced">{card.title}</div>
-                    <div className="stat-trend">
-                      {card.trend && (
-                        <span className={`trend-${card.indicator}`}>
-                          {card.indicator === 'up' && <FiArrowUp size={12} />}
-                          {card.indicator === 'down' && <FiArrowDown size={12} />}
-                          {card.indicator === 'excellent' && <FiStar size={12} />}
-                          {card.indicator === 'good' && <FiCheck size={12} />}
-                          {card.indicator === 'poor' && <FiAlertTriangle size={12} />}
-                          {card.indicator === 'achieved' && <FiAward size={12} />}
-                          {card.indicator === 'not-achieved' && <FiXIcon size={12} />}
-                          {card.indicator === 'neutral' && <FiCircle size={12} />}
-                          {card.trend}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
+      {/* Stats Cards - Clean Design */}
+      <div className="stats-grid">
+        {statCards.map((card) => (
+          <div
+            key={card.id}
+            className="stat-card-clean"
+            style={{ 
+              background: `linear-gradient(135deg, ${card.gradientColors[0]}15 0%, ${card.gradientColors[1]}05 100%)`,
+              border: `1px solid ${card.gradientColors[0]}30`,
+            }}
+          >
+            <div className="stat-card-top">
+              <div className="stat-icon-clean" style={{ background: card.color }}>
+                <card.icon size={20} />
               </div>
-              
-              <div className="stat-card-body">
-                <div className="stat-value-enhanced">{card.value}</div>
-                {card.subValue && (
-                  <div className="stat-subvalue">{card.subValue}</div>
-                )}
+              <div className="stat-title-clean">{card.title}</div>
+            </div>
+            
+            <div className="stat-card-middle">
+              <div 
+                className="stat-value-clean"
+                style={{ color: card.valueColor || card.gradientColors[0] }}
+              >
+                {card.value}
               </div>
-              
-              <div className="stat-card-footer">
-                <div className="stat-description">{card.description}</div>
-                <div className={`indicator indicator-${card.indicator}`}>
-                  {card.indicator === 'up' && '↑ Increasing'}
-                  {card.indicator === 'down' && '↓ Decreasing'}
-                  {card.indicator === 'excellent' && '★ Excellent'}
-                  {card.indicator === 'good' && '✓ Good'}
-                  {card.indicator === 'poor' && '⚠ Needs Attention'}
-                  {card.indicator === 'achieved' && '🏆 Target Achieved'}
-                  {card.indicator === 'not-achieved' && '🎯 Target Pending'}
-                  {card.indicator === 'neutral' && '● Stable'}
+              {card.hasSubValue && card.subValue && (
+                <div 
+                  className="stat-subvalue-clean"
+                  style={{ 
+                    color: card.gradientColors[0],
+                    opacity: 0.8
+                  }}
+                >
+                  {card.subValue}
                 </div>
+              )}
+            </div>
+            
+            <div className="stat-card-bottom">
+              <div className="stat-description-clean">
+                {card.description}
               </div>
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
       </div>
 
       {/* Today's Production & Efficiency Section */}
       <div className="today-production-section">
         <div className="section-header">
           <div className="header-icon">
-            <FiTool size={24} />
+            <FiBarChart size={20} />
           </div>
           <div>
-            <h2>Today's Production Analysis</h2>
-            <p className="section-subtitle">Machine-wise and Item-wise production for today</p>
+            <h3>Today's Production & Efficiency</h3>
+            <p className="section-subtitle">Real-time production data for today</p>
           </div>
         </div>
 
-        <div className="production-analysis-container">
-          <div className="machine-analysis">
-            <div className="analysis-header">
-              <h3>Machine-wise Production</h3>
-              <div className="analysis-summary">
-                <span>Total: {getSortedMachines().reduce((sum, [_, data]) => sum + data.production, 0).toFixed(0)} KG</span>
-              </div>
-            </div>
-            
-            <div className="machine-analysis-grid">
-              {getSortedMachines().map(([machine, data]) => (
-                <div key={machine} className="machine-analysis-card">
-                  <div className="machine-analysis-header">
-                    <div className="machine-analysis-icon">
-                      <FiTool size={16} />
+        <div className="production-stats-container">
+          <div className="machine-production-grid">
+            <h4 className="grid-title">Machine-wise Production</h4>
+            {Object.entries(stats.machineWiseToday).length > 0 ? (
+              Object.entries(stats.machineWiseToday).map(([machine, data]) => (
+                <div key={machine} className="machine-card">
+                  <div className="machine-header">
+                    <div className="machine-icon-small">
+                      <FiTool size={14} />
                     </div>
-                    <div className="machine-analysis-name">{machine}</div>
-                    <div className={`machine-status ${data.efficiency >= 80 ? 'status-good' : data.efficiency >= 60 ? 'status-average' : 'status-poor'}`}></div>
+                    <div className="machine-name">{machine}</div>
                   </div>
-                  
-                  <div className="machine-analysis-stats">
-                    <div className="production-stats">
-                      <div className="production-value">{data.production.toFixed(0)} KG</div>
-                      <div className="production-label">Production</div>
+                  <div className="machine-stats">
+                    <div className="machine-production-value">
+                      {data.production.toFixed(0)} <span className="unit">KG</span>
                     </div>
-                    
-                    <div className="efficiency-stats">
-                      <div className={`efficiency-value ${data.efficiency >= 80 ? 'value-good' : data.efficiency >= 60 ? 'value-average' : 'value-poor'}`}>
-                        {data.efficiency.toFixed(1)}%
-                      </div>
-                      <div className="efficiency-label">Efficiency</div>
-                    </div>
-                  </div>
-                  
-                  <div className="machine-analysis-footer">
-                    <div className="performance-bar">
-                      <div 
-                        className="performance-fill"
-                        style={{ 
-                          width: `${Math.min(data.efficiency, 100)}%`,
-                          backgroundColor: data.efficiency >= 80 ? '#10b981' :
-                                         data.efficiency >= 60 ? '#f59e0b' : '#ef4444'
-                        }}
-                      ></div>
+                    <div className={`machine-efficiency ${data.efficiency >= 80 ? 'high' : data.efficiency >= 60 ? 'medium' : 'low'}`}>
+                      {data.efficiency.toFixed(1)}% <FiActivity size={12} />
                     </div>
                   </div>
                 </div>
-              ))}
-            </div>
+              ))
+            ) : (
+              <div className="no-production">
+                <FiPackage size={24} />
+                <div>No production recorded today</div>
+              </div>
+            )}
           </div>
 
-          <div className="item-analysis">
-            <div className="analysis-header">
-              <h3>Item-wise Production</h3>
-              <div className="analysis-summary">
-                <span>Total: {Object.values(stats.itemWiseToday).reduce((sum, data) => sum + data.production, 0).toFixed(0)} KG</span>
-              </div>
-            </div>
-            
-            <div className="item-analysis-grid">
-              {Object.entries(stats.itemWiseToday).map(([item, data]) => (
-                <div key={item} className="item-analysis-card">
-                  <div className="item-analysis-header">
-                    <div className="item-analysis-icon">
-                      <FiPackage size={16} />
+          <div className="item-production-grid">
+            <h4 className="grid-title">Item-wise Production</h4>
+            {Object.entries(stats.itemWiseToday).length > 0 ? (
+              Object.entries(stats.itemWiseToday).map(([item, data]) => (
+                <div key={item} className="item-card">
+                  <div className="item-header">
+                    <div className="item-icon-small">
+                      <FiTag size={14} />
                     </div>
-                    <div className="item-analysis-name">{item}</div>
+                    <div className="item-name">{item}</div>
                   </div>
-                  
-                  <div className="item-analysis-stats">
-                    <div className="production-stats">
-                      <div className="production-value">{data.production.toFixed(0)} KG</div>
-                      <div className="production-label">Production</div>
+                  <div className="item-stats">
+                    <div className="item-production-value">
+                      {data.production.toFixed(0)} <span className="unit">KG</span>
                     </div>
-                    
-                    <div className="efficiency-stats">
-                      <div className={`efficiency-value ${data.efficiency >= 80 ? 'value-good' : data.efficiency >= 60 ? 'value-average' : 'value-poor'}`}>
-                        {data.efficiency.toFixed(1)}%
-                      </div>
-                      <div className="efficiency-label">Efficiency</div>
-                    </div>
-                  </div>
-                  
-                  <div className="item-analysis-footer">
-                    <div className="performance-indicator">
-                      {data.efficiency >= 80 ? 'Excellent' :
-                       data.efficiency >= 60 ? 'Good' : 'Needs Improvement'}
+                    <div className={`item-efficiency ${data.efficiency >= 80 ? 'high' : data.efficiency >= 60 ? 'medium' : 'low'}`}>
+                      {data.efficiency.toFixed(1)}% <FiActivity size={12} />
                     </div>
                   </div>
                 </div>
-              ))}
-            </div>
+              ))
+            ) : (
+              <div className="no-production">
+                <FiPackage size={24} />
+                <div>No items recorded today</div>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
       {/* Filters Section */}
-      <div className="filters-section-enhanced">
-        <div className="filter-section-header">
-          <FiFilter size={18} />
-          <h3>Filter Records</h3>
+      <div className="filters-section">
+        <div className="filter-header">
+          <FiFilter size={10} /> FILTERS
         </div>
         
-        <div className="filter-controls">
-          <div className="filter-group">
-            <label className="filter-label">
-              <FiSearch />
-              Search Records
-            </label>
-            <input
-              type="text"
-              placeholder="Search by machine, operator, item..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="filter-input-enhanced"
-            />
-          </div>
+        <div className="filter-input-group">
+          <label className="filter-label">
+            <FiSearch style={{ marginRight: '8px', verticalAlign: 'middle' }} />
+            Search Records
+          </label>
+          <input
+            type="text"
+            placeholder="Search by machine, operator, or item..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="filter-input"
+          />
+        </div>
 
-          <div className="filter-group">
-            <label className="filter-label">
-              <FiFilter />
-              Filter by Shift
-            </label>
-            <select
-              value={filterShift}
-              onChange={(e) => setFilterShift(e.target.value)}
-              className="filter-select-enhanced"
-            >
-              <option value="">All Shifts</option>
-              {uniqueShiftCodes.map(shiftCode => (
-                <option key={shiftCode} value={shiftCode}>
-                  {shiftCode}
-                </option>
-              ))}
-            </select>
-          </div>
+        <div className="filter-select-group">
+          <label className="filter-label">
+            <FiFilter style={{ marginRight: '8px', verticalAlign: 'middle' }} />
+            Filter by Shift
+          </label>
+          <select
+            value={filterShift}
+            onChange={(e) => setFilterShift(e.target.value)}
+            className="filter-select"
+          >
+            <option value="">All Shifts</option>
+            {uniqueShiftCodes.map(shiftCode => (
+              <option key={shiftCode} value={shiftCode}>
+                {shiftCode}
+              </option>
+            ))}
+          </select>
+        </div>
 
-          <div className="filter-group">
-            <label className="filter-label">
-              <FiCal />
-              Filter by Date
-            </label>
-            <input
-              type="date"
-              value={filterDate}
-              onChange={(e) => {
-                setFilterDate(e.target.value);
-                setShowReport(!!e.target.value);
-                setCurrentPage(1);
-              }}
-              max={new Date().toISOString().split('T')[0]}
-              className="filter-date-enhanced"
-            />
-          </div>
+        <div className="filter-date-group">
+          <label className="filter-label">
+            <FiCal style={{ marginRight: '8px', verticalAlign: 'middle' }} />
+            Filter by Date
+          </label>
+          <input
+            type="date"
+            value={filterDate}
+            onChange={(e) => {
+              setFilterDate(e.target.value);
+              setShowReport(!!e.target.value);
+              setCurrentPage(1);
+            }}
+            max={new Date().toISOString().split('T')[0]}
+            className="filter-date"
+          />
+        </div>
 
-          <div className="filter-actions">
-            <button
-              onClick={() => {
-                if (!filterDate) {
-                  alert('Please select a date first to generate report');
-                  return;
-                }
-                setShowReport(true);
-              }}
-              className="report-btn-enhanced"
-            >
-              <FiBarChart2 /> Generate Report
-            </button>
+        <div className="filter-buttons">
+          <button
+            onClick={() => {
+              if (!filterDate) {
+                alert('Please select a date first to generate report');
+                return;
+              }
+              setShowReport(true);
+            }}
+            className="report-btn"
+          >
+            <FiBarChart2 /> Generate Report
+          </button>
 
-            <button
-              onClick={() => {
-                setSearchTerm('');
-                setFilterShift('');
-                setFilterDate('');
-                setShowReport(false);
-                setCurrentPage(1);
-              }}
-              className="clear-btn-enhanced"
-            >
-              <FiXIcon /> Clear Filters
-            </button>
-          </div>
+          <button
+            onClick={() => {
+              setSearchTerm('');
+              setFilterShift('');
+              setFilterDate('');
+              setShowReport(false);
+              setCurrentPage(1);
+            }}
+            className="clear-btn"
+          >
+            <FiX /> Clear Filters
+          </button>
         </div>
       </div>
 
       {/* Report Section */}
       {showReport && reportData && (
-        <div className="report-section-enhanced">
+        <div className="report-section">
           <div className="report-bg-pattern" />
           
-          <div className="report-header-enhanced">
-            <div className="report-title-section">
+          <div className="report-header">
+            <div>
               <h2>Flattening Section Daily Report</h2>
-              <div className="report-date-enhanced">
-                <FiCalendar />
+              <div className="report-date">
                 {reportData.formattedDate}
               </div>
             </div>
-            <div className="report-actions-enhanced">
+            <div className="report-actions">
               <button
                 onClick={handlePrintReport}
-                className="print-btn-enhanced"
+                className="print-btn"
               >
                 <FiPrinter /> Print Report
               </button>
               <button
                 onClick={handleExportReport}
-                className="export-report-btn-enhanced"
+                className="export-report-btn"
               >
                 <FiDownload /> Export Report
               </button>
               <button
                 onClick={() => setShowReport(false)}
-                className="close-report-btn-enhanced"
+                className="close-report-btn"
               >
-                <FiXIcon /> Close
+                Close
               </button>
             </div>
           </div>
 
-          {/* Report Content */}
-          <div className="report-content">
-            {/* Summary Cards */}
-            <div className="report-summary-cards">
-              <div className="summary-card">
-                <div className="summary-icon">
-                  <FiPackage />
-                </div>
-                <div className="summary-content">
-                  <div className="summary-label">Total Production</div>
-                  <div className="summary-value">{reportData.totalProduction.toFixed(1)} KG</div>
-                </div>
-              </div>
-              
-              <div className="summary-card">
-                <div className="summary-icon">
-                  <FiTarget />
-                </div>
-                <div className="summary-content">
-                  <div className="summary-label">Total Target</div>
-                  <div className="summary-value">{reportData.totalTarget.toFixed(1)} KG</div>
-                </div>
-              </div>
-              
-              <div className="summary-card">
-                <div className="summary-icon">
-                  <FiActivity />
-                </div>
-                <div className="summary-content">
-                  <div className="summary-label">Overall Efficiency</div>
-                  <div className="summary-value" style={{ 
-                    color: reportData.overallEfficiency >= 80 ? '#10b981' :
-                           reportData.overallEfficiency >= 60 ? '#f59e0b' : '#ef4444'
-                  }}>
-                    {reportData.overallEfficiency.toFixed(1)}%
+          {/* Shift-wise Production */}
+          {Object.keys(reportData.shiftGroups).length > 0 && (
+            <div className="shift-production-section">
+              <h3>Shift-wise Production Summary</h3>
+              <div className="shift-grid">
+                {Object.entries(reportData.shiftGroups).map(([shift, data]) => (
+                  <div key={shift} className="shift-card">
+                    <div className="shift-label">
+                      Shift ({shift})
+                    </div>
+                    <div className="shift-production">
+                      {data.production.toFixed(1)} KG
+                    </div>
+                    <div 
+                      className="shift-efficiency"
+                      style={{ 
+                        color: data.efficiency >= 80 ? '#059669' :
+                               data.efficiency >= 60 ? '#d97706' : '#ef4444'
+                      }}
+                    >
+                      Efficiency: {data.efficiency.toFixed(1)}%
+                    </div>
+                    <div className="shift-target">
+                      Target: {data.target.toFixed(1)} KG
+                    </div>
                   </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Machine-wise Production in Report */}
+          {Object.keys(reportData.machineProduction).length > 0 && (
+            <div className="machine-report-section">
+              <h3>Machine-wise Production</h3>
+              <div className="machine-report-grid">
+                {Object.entries(reportData.machineProduction).map(([machine, data]) => (
+                  <div key={machine} className="machine-report-card">
+                    <div className="machine-report-header">
+                      <div className="machine-report-icon">
+                        <FiTool size={16} />
+                      </div>
+                      <div className="machine-report-name">{machine}</div>
+                    </div>
+                    <div className="machine-report-stats">
+                      <div className="machine-report-production">
+                        {data.production.toFixed(1)} KG
+                      </div>
+                      <div 
+                        className="machine-report-efficiency"
+                        style={{ 
+                          color: data.efficiency >= 80 ? '#059669' :
+                                 data.efficiency >= 60 ? '#d97706' : '#ef4444'
+                        }}
+                      >
+                        {data.efficiency.toFixed(1)}%
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Item-wise Production in Report */}
+          {Object.keys(reportData.itemProduction).length > 0 && (
+            <div className="item-report-section">
+              <h3>Item-wise Production</h3>
+              <div className="item-report-grid">
+                {Object.entries(reportData.itemProduction).map(([item, data]) => (
+                  <div key={item} className="item-report-card">
+                    <div className="item-report-header">
+                      <div className="item-report-icon">
+                        <FiTag size={16} />
+                      </div>
+                      <div className="item-report-name">{item}</div>
+                    </div>
+                    <div className="item-report-stats">
+                      <div className="item-report-production">
+                        {data.production.toFixed(1)} KG
+                      </div>
+                      <div 
+                        className="item-report-efficiency"
+                        style={{ 
+                          color: data.efficiency >= 80 ? '#059669' :
+                                 data.efficiency >= 60 ? '#d97706' : '#ef4444'
+                        }}
+                      >
+                        {data.efficiency.toFixed(1)}%
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Summary Section */}
+          <div className="report-summary">
+            <h3>Summary</h3>
+            
+            <div className="summary-grid">
+              <div className="summary-item">
+                <div className="summary-label">Total Production</div>
+                <div className="summary-value production-value">
+                  {reportData.totalProduction.toFixed(1)} KG
                 </div>
               </div>
-              
-              <div className="summary-card">
-                <div className="summary-icon">
-                  <FiDatabase />
+              <div className="summary-item">
+                <div className="summary-label">Total Target</div>
+                <div className="summary-value target-value">
+                  {reportData.totalTarget.toFixed(1)} KG
                 </div>
-                <div className="summary-content">
-                  <div className="summary-label">Total Records</div>
-                  <div className="summary-value">{reportData.recordCount}</div>
+              </div>
+              <div className="summary-item">
+                <div className="summary-label">Overall Efficiency</div>
+                <div 
+                  className="summary-value efficiency-value"
+                  style={{ 
+                    color: reportData.overallEfficiency >= 80 ? '#059669' :
+                           reportData.overallEfficiency >= 60 ? '#d97706' : '#ef4444'
+                  }}
+                >
+                  {reportData.overallEfficiency}%
+                </div>
+              </div>
+              <div className="summary-item">
+                <div className="summary-label">Total Records</div>
+                <div className="summary-value records-value">
+                  {reportData.recordCount}
                 </div>
               </div>
             </div>
-
-            {/* Shift-wise Production */}
-            {Object.keys(reportData.shiftGroups).length > 0 && (
-              <div className="report-section-block">
-                <h3>Shift-wise Production</h3>
-                <div className="shift-report-grid">
-                  {Object.entries(reportData.shiftGroups).map(([shift, data]) => (
-                    <div key={shift} className="shift-report-card">
-                      <div className="shift-report-header">
-                        <div className="shift-name">Shift {shift}</div>
-                        <div className={`shift-status ${data.efficiency >= 80 ? 'status-good' : data.efficiency >= 60 ? 'status-average' : 'status-poor'}`}>
-                          {data.efficiency >= 80 ? 'Excellent' :
-                           data.efficiency >= 60 ? 'Good' : 'Needs Improvement'}
-                        </div>
-                      </div>
-                      <div className="shift-report-stats">
-                        <div className="stat-item">
-                          <div className="stat-label">Production</div>
-                          <div className="stat-value">{data.production.toFixed(1)} KG</div>
-                        </div>
-                        <div className="stat-item">
-                          <div className="stat-label">Target</div>
-                          <div className="stat-value">{data.target.toFixed(1)} KG</div>
-                        </div>
-                        <div className="stat-item">
-                          <div className="stat-label">Efficiency</div>
-                          <div className="stat-value" style={{ 
-                            color: data.efficiency >= 80 ? '#10b981' :
-                                   data.efficiency >= 60 ? '#f59e0b' : '#ef4444'
-                          }}>
-                            {data.efficiency.toFixed(1)}%
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Machine-wise Production */}
-            {Object.keys(reportData.machineProduction).length > 0 && (
-              <div className="report-section-block">
-                <h3>Machine-wise Production</h3>
-                <div className="machine-report-list">
-                  {Object.entries(reportData.machineProduction)
-                    .sort(([a], [b]) => {
-                      const numA = parseInt(a.replace(/\D/g, '')) || 0;
-                      const numB = parseInt(b.replace(/\D/g, '')) || 0;
-                      return numA - numB;
-                    })
-                    .map(([machine, data]) => (
-                    <div key={machine} className="machine-report-item">
-                      <div className="machine-report-header">
-                        <div className="machine-report-name">
-                          <FiTool size={14} />
-                          {machine}
-                        </div>
-                        <div className="machine-report-efficiency">
-                          {data.efficiency.toFixed(1)}%
-                        </div>
-                      </div>
-                      <div className="machine-report-details">
-                        <div className="detail-item">
-                          <span className="detail-label">Production:</span>
-                          <span className="detail-value">{data.production.toFixed(1)} KG</span>
-                        </div>
-                        <div className="detail-item">
-                          <span className="detail-label">Status:</span>
-                          <span className={`detail-status ${data.efficiency >= 80 ? 'status-good' : data.efficiency >= 60 ? 'status-average' : 'status-poor'}`}>
-                            {data.efficiency >= 80 ? 'Excellent' :
-                             data.efficiency >= 60 ? 'Good' : 'Needs Improvement'}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
 
-          <div className="report-footer-enhanced">
-            <div className="report-footer-content">
-              <div className="footer-info">
-                <span>Report generated on {new Date().toLocaleString()}</span>
-                <span>•</span>
-                <span>Data source: flatteningsection table</span>
-                <span>•</span>
-                <span>ERP Management System</span>
-              </div>
-            </div>
+          <div className="report-footer">
+            Report generated on {new Date().toLocaleString()} • Data source: flatteningsection table
           </div>
         </div>
       )}
 
-      {/* Records Table Section */}
-      <div className="records-table-section-enhanced">
+      {/* Records Table */}
+      <div className="records-table-section">
         <div className="table-header-section">
-          <div className="table-header-left">
-            <h2>Production Records</h2>
+          <div>
+            <h3>Production Records</h3>
             <div className="table-stats">
-              <span className="stat-item">
-                <FiDatabase /> Total: {records.length} records
-              </span>
-              <span className="stat-item">
-                <FiFilter /> Showing: {filteredRecords.length} filtered
-              </span>
-              <span className="stat-item">
-                <FiHash /> Page: {currentPage}/{totalPages}
-              </span>
+              Total: {records.length} records • Showing: {filteredRecords.length} filtered • Page: {currentPage}/{totalPages}
             </div>
           </div>
           <div className="database-status">
@@ -1713,184 +1398,175 @@ const FlatteningPage = () => {
         {loading ? (
           <div className="loading-records">
             <div className="table-spinner" />
-            <div className="loading-text">Loading production records...</div>
+            Loading records from flatteningsection...
           </div>
         ) : filteredRecords.length === 0 ? (
           <div className="empty-records">
-            <div className="empty-icon">
-              <FiPackage size={48} />
+            <FiPackage size={48} />
+            <div className="empty-title">No records found</div>
+            <div className="empty-message">
+              {searchTerm || filterDate || filterShift 
+                ? 'No records match your search criteria. Try adjusting your filters.'
+                : 'No production records available. Create your first record to get started.'}
             </div>
-            <div className="empty-content">
-              <h3>No records found</h3>
-              <p>
-                {searchTerm || filterDate || filterShift 
-                  ? 'No records match your search criteria. Try adjusting your filters.'
-                  : 'No production records available. Create your first record to get started.'}
-              </p>
-              <button
-                onClick={() => setShowFlatteningModal(true)}
-                className="create-first-btn"
-              >
-                <FiPlus /> Create First Record
-              </button>
-            </div>
+            <button
+              onClick={() => setShowFlatteningModal(true)}
+              className="create-first-btn"
+            >
+              <FiPlus /> Create First Record
+            </button>
           </div>
         ) : (
           <>
-            <div className="table-container-enhanced">
-              <table className="production-table-enhanced">
+            <div className="table-container">
+              <table className="production-table">
                 <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Machine</th>
-                    <th>Item Details</th>
-                    <th>Production (KG)</th>
-                    <th>Target (KG)</th>
-                    <th>Shift</th>
-                    <th>Operator</th>
-                    <th>Efficiency</th>
-                    <th>Date & Time</th>
-                    <th>Actions</th>
+                  <tr className="table-header-row">
+                    <th className="table-header-cell">ID</th>
+                    <th className="table-header-cell">Machine</th>
+                    <th className="table-header-cell">Item Details</th>
+                    <th className="table-header-cell">Production Quantity</th>
+                    <th className="table-header-cell">Shift</th>
+                    <th className="table-header-cell">Operator Name</th>
+                    <th className="table-header-cell">Efficiency</th>
+                    <th className="table-header-cell">Date & Time</th>
+                    <th className="table-header-cell">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {currentRecords.map((record, index) => {
-                    const target = getTargetForRecord(record);
-                    const efficiency = record.efficiency ? parseFloat(record.efficiency) : 0;
-                    const isEfficiencyGood = efficiency >= 80;
-                    const isEfficiencyAverage = efficiency >= 60 && efficiency < 80;
-                    
-                    return (
-                      <tr key={record.id} className={index % 2 === 0 ? 'even' : 'odd'}>
-                        <td className="id-cell">#{record.id}</td>
-                        <td>
-                          <div className="machine-cell">
-                            <div className="machine-icon">
-                              <FiTool size={14} />
+                  {currentRecords.map((record, index) => (
+                    <tr 
+                      key={record.id}
+                      className={`table-row ${index % 2 === 0 ? 'even' : 'odd'}`}
+                    >
+                      <td className="table-cell id-cell">
+                        #{record.id}
+                      </td>
+                      <td className="table-cell">
+                        <div className="machine-info">
+                          <div className="machine-icon">
+                            <FiTool size={16} />
+                          </div>
+                          <div>
+                            <div className="machine-id">
+                              {record.machine_id || 'N/A'}
                             </div>
-                            <div className="machine-details">
-                              <div className="machine-id">{record.machine_id || 'N/A'}</div>
-                              <div className="machine-number">No: {record.machine_no || 'N/A'}</div>
+                            <div className="machine-number">
+                              Machine No: {record.machine_no || 'N/A'}
                             </div>
                           </div>
-                        </td>
-                        <td>
-                          <div className="item-cell">
-                            <div className="item-icon">
-                              <FiPackage size={14} />
+                        </div>
+                      </td>
+                      <td className="table-cell">
+                        <div className="item-info">
+                          <div className="item-icon">
+                            <FiPackage size={16} />
+                          </div>
+                          <div>
+                            <div className="item-name">
+                              {record.item_name || 'N/A'}
                             </div>
-                            <div className="item-details">
-                              <div className="item-name">{record.item_name || 'N/A'}</div>
-                              <div className="item-size">Size: {record.coil_size || 'N/A'}</div>
+                            <div className="item-size">
+                              Size: {record.coil_size || 'N/A'}
                             </div>
                           </div>
-                        </td>
-                        <td className="production-cell">
-                          <div className="production-badge">
-                            <div className="production-value">
-                              {parseFloat(record.production_quantity).toLocaleString()}
-                            </div>
-                            <div className="production-label">KG</div>
+                        </div>
+                      </td>
+                      <td className="table-cell production-cell">
+                        <div className="production-badge">
+                          <div className="production-value">
+                            {parseFloat(record.production_quantity).toLocaleString()}
                           </div>
-                        </td>
-                        <td className="target-cell">
-                          <div className="target-badge">
-                            <div className="target-value">
-                              {target.toLocaleString()}
-                            </div>
-                            <div className="target-label">KG</div>
+                          <div className="production-unit">
+                            KILOGRAMS
                           </div>
-                        </td>
-                        <td>
-                          <div className={`shift-badge ${record.shift_code || record.shift || 'default'}`}>
-                            {record.shift_code || record.shift || 'N/A'}
+                        </div>
+                      </td>
+                      <td className="table-cell">
+                        <div className="shift-badge">
+                          {record.shift_code || record.shift || 'N/A'}
+                        </div>
+                      </td>
+                      <td className="table-cell">
+                        <div className="operator-info">
+                          <div className="operator-avatar">
+                            {record.operator_name?.charAt(0) || 'U'}
                           </div>
-                        </td>
-                        <td>
-                          <div className="operator-cell">
-                            <div className="operator-avatar">
-                              {record.operator_name?.charAt(0) || 'U'}
+                          <div>
+                            <div className="operator-name">
+                              {record.operator_name || 'Unknown'}
                             </div>
-                            <div className="operator-details">
-                              <div className="operator-name">{record.operator_name || 'Unknown'}</div>
-                              <div className="operator-role">Operator</div>
+                            <div className="operator-role">
+                              Operator
                             </div>
                           </div>
-                        </td>
-                        <td>
-                          <div className={`efficiency-cell ${isEfficiencyGood ? 'good' : isEfficiencyAverage ? 'average' : 'poor'}`}>
-                            <div className="efficiency-value">
-                              {efficiency ? `${efficiency.toFixed(1)}%` : 'N/A'}
-                            </div>
-                            <div className="efficiency-indicator">
-                              {isEfficiencyGood && <FiArrowUp size={12} />}
-                              {isEfficiencyAverage && <FiCircle size={12} />}
-                              {!isEfficiencyGood && !isEfficiencyAverage && <FiArrowDown size={12} />}
-                            </div>
+                        </div>
+                      </td>
+                      <td className="table-cell">
+                        <div className={`efficiency-badge ${
+                          record.efficiency > 80 ? 'high' :
+                          record.efficiency > 60 ? 'medium' : 'low'
+                        }`}>
+                          {record.efficiency ? `${parseFloat(record.efficiency).toFixed(1)}%` : 'N/A'}
+                        </div>
+                      </td>
+                      <td className="table-cell">
+                        <div className="datetime-badge">
+                          <div className="date-part">
+                            <FiCalendar size={12} />
+                            {new Date(record.created_at).toLocaleDateString('en-GB')}
                           </div>
-                        </td>
-                        <td>
-                          <div className="datetime-cell">
-                            <div className="date-part">
-                              <FiCalendar size={12} />
-                              {new Date(record.created_at).toLocaleDateString('en-GB')}
-                            </div>
-                            <div className="time-part">
-                              <FiClock size={12} />
-                              {new Date(record.created_at).toLocaleTimeString([], { 
-                                hour: '2-digit', 
-                                minute: '2-digit' 
-                              })}
-                            </div>
+                          <div className="time-part">
+                            <FiClock size={10} />
+                            {new Date(record.created_at).toLocaleTimeString([], { 
+                              hour: '2-digit', 
+                              minute: '2-digit' 
+                            })}
                           </div>
-                        </td>
-                        <td className="actions-cell">
-                          <div className="action-buttons">
-                            <button
-                              onClick={() => handleView(record.id)}
-                              className="view-btn"
-                              title="View Details"
-                            >
-                              <FiEye size={14} />
-                            </button>
-                            <button
-                              onClick={() => handleEdit(record.id)}
-                              className="edit-btn"
-                              title="Edit Record"
-                            >
-                              <FiEdit size={14} />
-                            </button>
-                            <button
-                              onClick={() => handleDelete(record.id)}
-                              className="delete-btn"
-                              title="Delete Record"
-                            >
-                              <FiTrash2 size={14} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
+                        </div>
+                      </td>
+                      <td className="table-cell actions-cell">
+                        <div className="action-buttons">
+                          <button
+                            onClick={() => handleView(record.id)}
+                            className="view-btn"
+                          >
+                            <FiEye size={12} /> View
+                          </button>
+                          <button
+                            onClick={() => handleEdit(record.id)}
+                            className="edit-btn"
+                          >
+                            <FiEdit size={12} /> Edit
+                          </button>
+                          <button
+                            onClick={() => handleDelete(record.id)}
+                            className="delete-btn"
+                          >
+                            <FiTrash2 size={12} /> Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="pagination-section-enhanced">
+              <div className="pagination-section">
                 <div className="pagination-info">
-                  Showing {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, filteredRecords.length)} of {filteredRecords.length} records
+                  Page {currentPage} of {totalPages} • Showing {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, filteredRecords.length)} of {filteredRecords.length} records
                 </div>
                 <div className="pagination-controls">
                   <button
                     onClick={handlePrevPage}
                     disabled={currentPage === 1}
-                    className={`pagination-btn ${currentPage === 1 ? 'disabled' : ''}`}
+                    className={`pagination-btn prev ${currentPage === 1 ? 'disabled' : ''}`}
                   >
                     <FiChevronLeft /> Previous
                   </button>
-                  
                   <div className="page-numbers">
                     {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                       let pageNum;
@@ -1914,24 +1590,11 @@ const FlatteningPage = () => {
                         </button>
                       );
                     })}
-                    
-                    {totalPages > 5 && currentPage < totalPages - 2 && (
-                      <>
-                        <span className="page-dots">...</span>
-                        <button
-                          onClick={() => setCurrentPage(totalPages)}
-                          className={`page-number ${currentPage === totalPages ? 'active' : ''}`}
-                        >
-                          {totalPages}
-                        </button>
-                      </>
-                    )}
                   </div>
-                  
                   <button
                     onClick={handleNextPage}
                     disabled={currentPage === totalPages}
-                    className={`pagination-btn ${currentPage === totalPages ? 'disabled' : ''}`}
+                    className={`pagination-btn next ${currentPage === totalPages ? 'disabled' : ''}`}
                   >
                     Next <FiChevronRight />
                   </button>
@@ -1943,9 +1606,9 @@ const FlatteningPage = () => {
       </div>
 
       {/* Footer */}
-      <div className="page-footer-enhanced">
+      <div className="page-footer">
         <div className="footer-content">
-          <div className="footer-left">
+          <div>
             <div className="footer-title">
               Flattening Section • Production Management System
             </div>
@@ -1953,15 +1616,13 @@ const FlatteningPage = () => {
               Database: flatteningsection table • Last updated: {new Date().toLocaleTimeString()}
             </div>
           </div>
-          <div className="footer-right">
-            <div className="footer-status">
-              <div className={`database-status ${isSupabaseConnected ? 'connected' : 'offline'}`}>
-                <div className="status-dot" />
-                {isSupabaseConnected ? 'Connected to Database' : 'Database Offline'}
-              </div>
-              <div className="footer-stats">
-                {stats.totalRecords} records • {stats.todayProduction} KG today • {stats.totalProduction.toLocaleString()} KG total
-              </div>
+          <div className="footer-status">
+            <div className={`database-connection ${isSupabaseConnected ? 'connected' : 'offline'}`}>
+              <div className={`connection-dot ${isSupabaseConnected ? 'connected' : 'offline'}`} />
+              {isSupabaseConnected ? 'Supabase Database Connected' : 'Database Connection Issue'}
+            </div>
+            <div className="footer-stats">
+              {stats.totalRecords} total records • {stats.todayProduction} KG today • {stats.totalProduction.toLocaleString()} KG total production
             </div>
           </div>
         </div>
@@ -1971,19 +1632,19 @@ const FlatteningPage = () => {
             onClick={() => setShowFlatteningModal(true)}
             className="footer-btn add-btn"
           >
-            <FiPlus /> Add New Record
+            <FiPlus size={12} /> Add New Record
           </button>
           <button
             onClick={fetchData}
-            className="footer-btn refresh-btn"
+            className="footer-btn refresh-footer-btn"
           >
-            <FiRefreshCw /> Refresh Data
+            <FiRefreshCw size={12} /> Refresh Data
           </button>
           <button
-            onClick={() => navigate('/production')}
-            className="footer-btn production-btn"
+            onClick={() => navigate('/dashboard')}
+            className="footer-btn dashboard-btn"
           >
-            <FiGrid /> Production Sections
+            <FiTrendingUp size={12} /> View Dashboard
           </button>
         </div>
       </div>
