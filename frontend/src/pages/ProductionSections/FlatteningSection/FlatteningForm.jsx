@@ -393,6 +393,7 @@ const FlatteningForm = ({ onClose, isModal = true }) => {
         unit: item.unit,
         efficiency: item.efficiency,
         shift_code: targetData.shift_code,
+        target_qty: targetData.target_qty,  // NEW LINE
         shift_name: targetData.shift_name,
         remarks: remarks?.trim() || '',
         created_at: new Date().toISOString(),

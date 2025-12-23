@@ -418,7 +418,7 @@ const ProductionDashboard = () => {
             }}>
               <FiPackage size={28} />
             </div>
-            Production Department Dashboard
+            Production Dashboard
           </h1>
           <p style={{ 
             margin: "10px 0 0 75px", 
@@ -618,7 +618,7 @@ const ProductionDashboard = () => {
         <button
           onClick={() => setActiveTab('records')}
           style={{
-            background: activeTab === 'records' ? '#10b981' : 'transparent',
+            background: activeTab === 'records' ? '#2910b9ff' : 'transparent',
             color: activeTab === 'records' ? 'white' : '#64748b',
             border: 'none',
             padding: '10px 20px',

@@ -20,7 +20,7 @@ import {
   FiShoppingCart, FiDroplet, FiFeather,
   FiClipboard, FiList, FiCpu, FiTrendingUp as FiTrendingUp2,
   FiTool as FiMachine, FiHash as FiCode, FiFeather as FiWeight,
-  FiZap, FiBox as FiProduct
+  FiZap, FiBox as FiProduct, FiArrowLeft as FiBack
 } from 'react-icons/fi';
 import { supabase } from '../../../supabaseClient';
 import './SpiralPage.css';
@@ -728,16 +728,6 @@ const SpiralPage = () => {
     }
   };
 
-  // Production Sections for switcher
-  const productionSections = [
-    { id: 'raw-material', name: 'Raw Material Section', icon: FiArchive, path: '/production-sections/raw-material', color: '#06b6d4' },
-    { id: 'flattening', name: 'Flattening Section', icon: FiPackage, path: '/production-sections/flattening', color: '#10b981' },
-    { id: 'spiral', name: 'Spiral Section', icon: FiColumns, path: '/production-sections/spiral', color: '#3b82f6' },
-    { id: 'pvc-coating', name: 'PVC Coating Section', icon: FiLayers, path: '/production-sections/pvc-coating', color: '#8b5cf6' },
-    { id: 'cutting-packing', name: 'Cutting & Packing Section', icon: FiScissors, path: '/production-sections/cutting-packing', color: '#f59e0b' },
-    { id: 'finished-goods', name: 'Finished Goods Section', icon: FiCheckSquare, path: '/production-sections/finished-goods', color: '#ec4899' }
-  ];
-
   // Stats cards - Updated according to your stats structure
   const statCards = [
     {
@@ -853,16 +843,16 @@ const SpiralPage = () => {
         <div>
           <div className="breadcrumb-nav">
             <button
-              onClick={() => navigate('/dashboard')}
-              className="breadcrumb-btn"
+              onClick={() => navigate('/production')}
+              className="breadcrumb-btn back-btn"
             >
-              <FiHome size={16} /> Dashboard
+              <FiBack size={16} /> Back to Production Sections
             </button>
             <button
-              onClick={() => navigate('/production')}
+              onClick={() => navigate('/dashboard')}
               className="breadcrumb-btn secondary"
             >
-              <FiGrid size={16} /> Production Sections
+              <FiGrid size={16} /> Back to Dashboard
             </button>
           </div>
           <div className="title-section">
@@ -893,6 +883,17 @@ const SpiralPage = () => {
         </div>
 
         <div className="header-actions">
+          <button
+            onClick={() => navigate('/production')}
+            className="production-sections-btn"
+            style={{ 
+              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+              color: 'white'
+            }}
+          >
+            <FiGrid size={16} /> All Production Sections
+          </button>
+          
           <button
             onClick={() => navigate('/production-sections/spiral/new')}
             className="primary-btn"
@@ -928,60 +929,55 @@ const SpiralPage = () => {
         </div>
       </div>
 
-      {/* Production Section Switcher */}
-      <div className="section-switcher-card">
-        <div className="bg-pattern" style={{ background: 'radial-gradient(circle at 30% 30%, rgba(59, 130, 246, 0.05) 0%, transparent 70%)' }} />
-        
-        <div className="switcher-header">
-          <div className="switcher-icon" style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }}>
-            <FiGrid size={18} />
-          </div>
-          <div>
-            Switch Production Section
-            <div className="switcher-subtitle">
-              Click any section to switch instantly
-            </div>
-          </div>
-        </div>
-        
-        <div className="sections-grid">
-          {productionSections.map((section) => (
-            <div
-              key={section.id}
-              className="section-card-wrapper"
-              onClick={() => navigate(section.path)}
-            >
-              <div className={`section-card ${section.id === 'spiral' ? 'active' : ''}`}>
-                <div className="section-card-highlight" />
-                <div className="section-glow-right" />
-                <div className="section-glow-left" />
-                <div className="section-icon-container">
-                  <section.icon size={22} />
-                  <div className="icon-glow" />
+      {/* Stats Cards */}
+      <div className="stats-grid">
+        {statCards.map((card, index) => (
+          <div
+            key={card.id}
+            className="stat-card"
+            style={{ 
+              cursor: 'default',
+              background: `linear-gradient(135deg, ${card.gradientColors[0]}15 0%, ${card.gradientColors[1]}05 100%)`,
+              border: `1px solid ${card.gradientColors[0]}30`,
+              boxShadow: `0 10px 25px ${card.gradientColors[0]}10, 0 5px 15px ${card.gradientColors[1]}05`
+            }}
+          >
+            {/* Top Glow Effect */}
+            <div 
+              className="stat-card-glow"
+              style={{
+                background: `linear-gradient(90deg, transparent 0%, ${card.gradientColors[0]}30 50%, transparent 100%)`
+              }}
+            />
+            
+            <div className="stat-card-content">
+              <div>
+                <div className="stat-title">{card.title}</div>
+                <div 
+                  className="stat-value"
+                  style={{ 
+                    color: card.colorValue ? card.valueColor : card.gradientColors[0],
+                    textShadow: `0 2px 4px ${card.gradientColors[0]}20`
+                  }}
+                >
+                  {card.value}
                 </div>
-                <div className="section-text-content">
-                  <div className="section-name">
-                    {section.name}
-                  </div>
-                  <div className="section-hint">
-                    <span>📊</span>
-                    <span>Click to open section</span>
-                  </div>
-                </div>
-                <div className="section-hover-overlay" />
               </div>
-              {section.id !== 'spiral' && (
-                <div className="section-bottom-shadow" />
-              )}
+              <div 
+                className="stat-icon"
+                style={{ 
+                  background: card.color,
+                  boxShadow: `0 4px 10px ${card.iconBg}40`
+                }}
+              >
+                <card.icon size={24} />
+              </div>
             </div>
-          ))}
-        </div>
-        
-        <div className="switcher-footer">
-          <span>
-            <FiArrowUpRight size={10} /> Click any card above to navigate to that production section
-          </span>
-        </div>
+            <div className="stat-description">
+              {card.description}
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* Today's Production Dashboard */}
@@ -1111,57 +1107,6 @@ const SpiralPage = () => {
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="stats-grid">
-        {statCards.map((card, index) => (
-          <div
-            key={card.id}
-            className="stat-card"
-            style={{ 
-              cursor: 'default',
-              background: `linear-gradient(135deg, ${card.gradientColors[0]}15 0%, ${card.gradientColors[1]}05 100%)`,
-              border: `1px solid ${card.gradientColors[0]}30`,
-              boxShadow: `0 10px 25px ${card.gradientColors[0]}10, 0 5px 15px ${card.gradientColors[1]}05`
-            }}
-          >
-            {/* Top Glow Effect */}
-            <div 
-              className="stat-card-glow"
-              style={{
-                background: `linear-gradient(90deg, transparent 0%, ${card.gradientColors[0]}30 50%, transparent 100%)`
-              }}
-            />
-            
-            <div className="stat-card-content">
-              <div>
-                <div className="stat-title">{card.title}</div>
-                <div 
-                  className="stat-value"
-                  style={{ 
-                    color: card.colorValue ? card.valueColor : card.gradientColors[0],
-                    textShadow: `0 2px 4px ${card.gradientColors[0]}20`
-                  }}
-                >
-                  {card.value}
-                </div>
-              </div>
-              <div 
-                className="stat-icon"
-                style={{ 
-                  background: card.color,
-                  boxShadow: `0 4px 10px ${card.iconBg}40`
-                }}
-              >
-                <card.icon size={24} />
-              </div>
-            </div>
-            <div className="stat-description">
-              {card.description}
-            </div>
-          </div>
-        ))}
       </div>
 
       {/* Filters Section */}
@@ -1611,19 +1556,21 @@ const SpiralPage = () => {
                           <button
                             onClick={() => handleView(record.id)}
                             className="view-btn"
-                            style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }}
+                            style={{ background: '#3b82f6', color: 'white' }}
                           >
                             <FiEye size={12} /> View
                           </button>
                           <button
                             onClick={() => handleEdit(record.id)}
                             className="edit-btn"
+                            style={{ background: '#f59e0b', color: 'white' }}
                           >
                             <FiEdit size={12} /> Edit
                           </button>
                           <button
                             onClick={() => handleDelete(record.id)}
                             className="delete-btn"
+                            style={{ background: '#ef4444', color: 'white' }}
                           >
                             <FiTrash2 size={12} /> Delete
                           </button>
@@ -1712,6 +1659,13 @@ const SpiralPage = () => {
         
         <div className="footer-actions">
           <button
+            onClick={() => navigate('/production')}
+            className="footer-btn sections-btn"
+            style={{ borderColor: '#10b981', color: '#10b981' }}
+          >
+            <FiGrid size={12} /> All Production Sections
+          </button>
+          <button
             onClick={() => navigate('/production-sections/spiral/new')}
             className="footer-btn add-btn"
             style={{ borderColor: '#3b82f6', color: '#3b82f6' }}
@@ -1723,12 +1677,6 @@ const SpiralPage = () => {
             className="footer-btn refresh-footer-btn"
           >
             <FiRefreshCw size={12} /> Refresh Data
-          </button>
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="footer-btn dashboard-btn"
-          >
-            <FiTrendingUp size={12} /> View Dashboard
           </button>
         </div>
       </div>

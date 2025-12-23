@@ -1,58 +1,248 @@
 // src/pages/ProductionSections/FlatteningSection/FlatteningPage.jsx
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { 
-  FiPlus, FiEdit, FiTrash2, FiSearch, 
-  FiFilter, FiDownload, FiRefreshCw,
-  FiPackage, FiCalendar, FiUser, FiTarget,
-  FiBarChart2, FiPrinter, FiCalendar as FiCal,
-  FiArrowLeft, FiEye, FiHome, FiTrendingUp,
-  FiClock, FiLayers, FiActivity, FiArrowUpRight,
-  FiAlertCircle, FiChevronLeft, FiChevronRight,
-  FiDatabase, FiCheckCircle, FiXCircle,
-  FiGrid, FiSettings, FiX, FiScissors,
-  FiCheckSquare, FiCrop, FiDivide, FiTool,
-  FiBriefcase, FiBox, FiArchive, FiColumns,
-  FiArrowRight, FiBarChart, FiHash, FiTag,
-  FiDollarSign, FiPercent, FiGrid as FiGridIcon,
-  FiTrendingDown, FiTrendingUp as FiTrendingUpIcon,
+import React, { useState, useEffect, Suspense, lazy } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  FiPlus,
+  FiEdit,
+  FiTrash2,
+  FiSearch,
+  FiFilter,
+  FiDownload,
+  FiRefreshCw,
+  FiPackage,
+  FiCalendar,
+  FiUser,
+  FiTarget,
+  FiBarChart2,
+  FiPrinter,
+  FiCalendar as FiCal,
+  FiArrowLeft,
+  FiEye,
+  FiHome,
+  FiTrendingUp,
+  FiClock,
+  FiLayers,
+  FiActivity,
+  FiArrowUpRight,
+  FiAlertCircle,
+  FiChevronLeft,
+  FiChevronRight,
+  FiDatabase,
+  FiCheckCircle,
+  FiXCircle,
+  FiGrid,
+  FiSettings,
+  FiX,
+  FiScissors,
+  FiCheckSquare,
+  FiCrop,
+  FiDivide,
+  FiTool,
+  FiBriefcase,
+  FiBox,
+  FiArchive,
+  FiColumns,
+  FiArrowRight,
+  FiBarChart,
+  FiHash,
+  FiTag,
+  FiDollarSign,
+  FiPercent,
+  FiGrid as FiGridIcon,
+  FiTrendingDown,
+  FiTrendingUp as FiTrendingUpIcon,
   FiDatabase as FiDatabaseIcon,
-  FiFile  // FiFileText کی جگہ FiFile استعمال کریں
-} from 'react-icons/fi';
-import { supabase } from '../../../supabaseClient';
-import FlatteningForm from './FlatteningForm';
-import './FlatteningPage.css';
+  FiFile,
+} from "react-icons/fi";
+import { supabase } from "../../../supabaseClient";
+import FlatteningForm from "./FlatteningForm";
+import "./FlatteningPage.css";
+
+// PDF Report Modal Component (Inline definition)
+const PDFReportModal = ({ data, onClose }) => {
+  if (!data) return null;
+
+  return (
+    <div className="modal-overlay">
+      <div className="pdf-modal-container">
+        <div className="pdf-modal-header">
+          <h2>Flattening Section Production Report - PDF Preview</h2>
+          <button className="close-pdf-btn" onClick={onClose}>
+            <FiX size={24} />
+          </button>
+        </div>
+
+        <div className="pdf-content">
+          <div className="pdf-header">
+            <h1>{data.title}</h1>
+            <div className="pdf-date">Date: {data.date}</div>
+            <div className="pdf-generated">Generated: {data.generatedDate}</div>
+          </div>
+
+          <div className="pdf-summary">
+            <h3>Summary</h3>
+            <div className="pdf-summary-grid">
+              <div className="pdf-summary-item">
+                <div className="pdf-summary-label">Total Production</div>
+                <div className="pdf-summary-value">{data.summary.totalProduction} KG</div>
+              </div>
+              <div className="pdf-summary-item">
+                <div className="pdf-summary-label">Total Target</div>
+                <div className="pdf-summary-value">{data.summary.totalTarget} KG</div>
+              </div>
+              <div className="pdf-summary-item">
+                <div className="pdf-summary-label">Overall Efficiency</div>
+                <div className="pdf-summary-value">{data.summary.overallEfficiency}%</div>
+              </div>
+              <div className="pdf-summary-item">
+                <div className="pdf-summary-label">Total Records</div>
+                <div className="pdf-summary-value">{data.summary.recordCount}</div>
+              </div>
+            </div>
+          </div>
+
+          {data.shiftWise.length > 0 && (
+            <div className="pdf-section">
+              <h3>Shift-wise Production</h3>
+              <table className="pdf-table">
+                <thead>
+                  <tr>
+                    <th>Shift</th>
+                    <th>Production (KG)</th>
+                    <th>Target (KG)</th>
+                    <th>Efficiency (%)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.shiftWise.map((shift, index) => (
+                    <tr key={index}>
+                      <td>{shift.shift}</td>
+                      <td>{shift.production}</td>
+                      <td>{shift.target}</td>
+                      <td>{shift.efficiency}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {data.machineWise.length > 0 && (
+            <div className="pdf-section">
+              <h3>Machine-wise Production</h3>
+              <table className="pdf-table">
+                <thead>
+                  <tr>
+                    <th>Machine</th>
+                    <th>Production (KG)</th>
+                    <th>Efficiency (%)</th>
+                    <th>Records</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.machineWise.map((machine, index) => (
+                    <tr key={index}>
+                      <td>{machine.machine}</td>
+                      <td>{machine.production}</td>
+                      <td>{machine.efficiency}</td>
+                      <td>{machine.count}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {data.itemWise.length > 0 && (
+            <div className="pdf-section">
+              <h3>Item-wise Production</h3>
+              <table className="pdf-table">
+                <thead>
+                  <tr>
+                    <th>Item</th>
+                    <th>Production (KG)</th>
+                    <th>Efficiency (%)</th>
+                    <th>Records</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.itemWise.map((item, index) => (
+                    <tr key={index}>
+                      <td>{item.item}</td>
+                      <td>{item.production}</td>
+                      <td>{item.efficiency}</td>
+                      <td>{item.count}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          <div className="pdf-footer">
+            <div className="pdf-footer-text">
+              This is a PDF preview. To generate actual PDF, install a PDF library like jsPDF or react-pdf.
+            </div>
+            <div className="pdf-modal-actions">
+              <button
+                className="pdf-download-btn"
+                onClick={() => {
+                  alert("PDF download functionality requires jsPDF library installation.");
+                  onClose();
+                }}
+              >
+                <FiDownload /> Download as PDF
+              </button>
+              <button
+                className="pdf-print-btn"
+                onClick={() => {
+                  window.print();
+                  onClose();
+                }}
+              >
+                <FiPrinter /> Print Report
+              </button>
+              <button className="pdf-close-btn" onClick={onClose}>
+                Close Preview
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const FlatteningPage = () => {
   const navigate = useNavigate();
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterShift, setFilterShift] = useState('');
-  const [filterDate, setFilterDate] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterShift, setFilterShift] = useState("");
+  const [filterDate, setFilterDate] = useState("");
   const [shifts, setShifts] = useState([]);
   const [targets, setTargets] = useState([]);
   const [showReport, setShowReport] = useState(false);
   const [showFlatteningModal, setShowFlatteningModal] = useState(false);
   const [showPDFModal, setShowPDFModal] = useState(false);
   const [pdfReportData, setPdfReportData] = useState(null);
-  
+
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
-  
+
   // Report data
   const [reportData, setReportData] = useState({
-    date: '',
-    formattedDate: '',
+    date: "",
+    formattedDate: "",
     shiftGroups: {},
     totalProduction: 0,
     totalTarget: 0,
     overallEfficiency: 0,
     recordCount: 0,
     machineProduction: {},
-    itemProduction: {}
+    itemProduction: {},
   });
 
   // Stats states
@@ -66,7 +256,7 @@ const FlatteningPage = () => {
     yesterdayEfficiency: 0,
     totalProduction: 0,
     machineWiseToday: {},
-    itemWiseToday: {}
+    itemWiseToday: {},
   });
 
   // Check if supabase is connected
@@ -77,30 +267,30 @@ const FlatteningPage = () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       // Check if supabase is available
       if (!supabase) {
-        const errorMsg = 'Supabase client not initialized';
+        const errorMsg = "Supabase client not initialized";
         setError(errorMsg);
         return;
       }
-      
+
       // Fetch shifts from shifts table
       const { data: shiftsData, error: shiftsError } = await supabase
-        .from('shifts')
-        .select('*')
-        .order('start_time');
-      
+        .from("shifts")
+        .select("*")
+        .order("start_time");
+
       if (shiftsError) {
         console.error("Error fetching shifts:", shiftsError);
       }
 
       // Fetch targets from targets table
       const { data: targetsData, error: targetsError } = await supabase
-        .from('targets')
-        .select('*')
-        .eq('section', 'Flattening')
-        .eq('is_active', true);
+        .from("targets")
+        .select("*")
+        .eq("section", "Flattening")
+        .eq("is_active", true);
 
       if (targetsError) {
         console.error("Error fetching targets:", targetsError);
@@ -108,9 +298,9 @@ const FlatteningPage = () => {
 
       // Fetch records from flatteningsection table
       const { data: recordsData, error: recordsError } = await supabase
-        .from('flatteningsection')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .from("flatteningsection")
+        .select("*")
+        .order("created_at", { ascending: false });
 
       if (recordsError) {
         console.error("Error fetching records:", recordsError);
@@ -123,9 +313,8 @@ const FlatteningPage = () => {
 
       setShifts(shiftsData || []);
       setTargets(targetsData || []);
-      
     } catch (error) {
-      console.error('Error in fetchData:', error);
+      console.error("Error in fetchData:", error);
       setError(error.message);
       setRecords([]);
       calculateStats([]);
@@ -151,106 +340,121 @@ const FlatteningPage = () => {
         yesterdayEfficiency: 0,
         totalProduction: 0,
         machineWiseToday: {},
-        itemWiseToday: {}
+        itemWiseToday: {},
       });
       return;
     }
-    
-    const today = new Date().toISOString().split('T')[0];
+
+    const today = new Date().toISOString().split("T")[0];
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayStr = yesterday.toISOString().split('T')[0];
+    const yesterdayStr = yesterday.toISOString().split("T")[0];
 
-    const todayRecords = recordsData.filter(record => {
-      const recordDate = new Date(record.created_at).toISOString().split('T')[0];
+    const todayRecords = recordsData.filter((record) => {
+      const recordDate = new Date(record.created_at)
+        .toISOString()
+        .split("T")[0];
       return recordDate === today;
     });
 
-    const yesterdayRecords = recordsData.filter(record => {
-      const recordDate = new Date(record.created_at).toISOString().split('T')[0];
+    const yesterdayRecords = recordsData.filter((record) => {
+      const recordDate = new Date(record.created_at)
+        .toISOString()
+        .split("T")[0];
       return recordDate === yesterdayStr;
     });
 
-    const totalProduction = recordsData.reduce((sum, record) => 
-      sum + (parseFloat(record.production_quantity) || 0), 0
+    const totalProduction = recordsData.reduce(
+      (sum, record) => sum + (parseFloat(record.production_quantity) || 0),
+      0
     );
 
-    const totalEfficiency = recordsData.reduce((sum, record) => 
-      sum + (parseFloat(record.efficiency) || 0), 0
-    );
-    
-    const avgEfficiency = recordsData.length > 0 
-      ? totalEfficiency / recordsData.length 
-      : 0;
-
-    const yesterdayProduction = yesterdayRecords.reduce((sum, record) => 
-      sum + (parseFloat(record.production_quantity) || 0), 0
+    const totalEfficiency = recordsData.reduce(
+      (sum, record) => sum + (parseFloat(record.efficiency) || 0),
+      0
     );
 
-    const yesterdayTotalEfficiency = yesterdayRecords.reduce((sum, record) => 
-      sum + (parseFloat(record.efficiency) || 0), 0
+    const avgEfficiency =
+      recordsData.length > 0 ? totalEfficiency / recordsData.length : 0;
+
+    const yesterdayProduction = yesterdayRecords.reduce(
+      (sum, record) => sum + (parseFloat(record.production_quantity) || 0),
+      0
     );
-    
-    const yesterdayEfficiency = yesterdayRecords.length > 0 
-      ? yesterdayTotalEfficiency / yesterdayRecords.length 
-      : 0;
+
+    const yesterdayTotalEfficiency = yesterdayRecords.reduce(
+      (sum, record) => sum + (parseFloat(record.efficiency) || 0),
+      0
+    );
+
+    const yesterdayEfficiency =
+      yesterdayRecords.length > 0
+        ? yesterdayTotalEfficiency / yesterdayRecords.length
+        : 0;
 
     // Today's stats
-    const todayProduction = todayRecords.reduce((sum, record) => 
-      sum + (parseFloat(record.production_quantity) || 0), 0
+    const todayProduction = todayRecords.reduce(
+      (sum, record) => sum + (parseFloat(record.production_quantity) || 0),
+      0
     );
 
-    const todayTotalEfficiency = todayRecords.reduce((sum, record) => 
-      sum + (parseFloat(record.efficiency) || 0), 0
+    const todayTotalEfficiency = todayRecords.reduce(
+      (sum, record) => sum + (parseFloat(record.efficiency) || 0),
+      0
     );
-    
-    const todayEfficiency = todayRecords.length > 0 
-      ? todayTotalEfficiency / todayRecords.length 
-      : 0;
+
+    const todayEfficiency =
+      todayRecords.length > 0 ? todayTotalEfficiency / todayRecords.length : 0;
 
     // Machine-wise today production
     const machineWiseToday = {};
     const itemWiseToday = {};
-    
-    todayRecords.forEach(record => {
+
+    todayRecords.forEach((record) => {
       // Machine data
-      const machine = record.machine_no || record.machine_id || 'Unknown';
+      const machine = record.machine_no || record.machine_id || "Unknown";
       if (!machineWiseToday[machine]) {
         machineWiseToday[machine] = {
           production: 0,
           efficiency: 0,
-          count: 0
+          count: 0,
         };
       }
-      machineWiseToday[machine].production += parseFloat(record.production_quantity) || 0;
-      machineWiseToday[machine].efficiency += parseFloat(record.efficiency) || 0;
+      machineWiseToday[machine].production +=
+        parseFloat(record.production_quantity) || 0;
+      machineWiseToday[machine].efficiency +=
+        parseFloat(record.efficiency) || 0;
       machineWiseToday[machine].count += 1;
 
       // Item data
-      const item = record.item_name || 'Unknown';
+      const item = record.item_name || "Unknown";
       if (!itemWiseToday[item]) {
         itemWiseToday[item] = {
           production: 0,
           efficiency: 0,
-          count: 0
+          count: 0,
         };
       }
-      itemWiseToday[item].production += parseFloat(record.production_quantity) || 0;
+      itemWiseToday[item].production +=
+        parseFloat(record.production_quantity) || 0;
       itemWiseToday[item].efficiency += parseFloat(record.efficiency) || 0;
       itemWiseToday[item].count += 1;
     });
 
     // Calculate average efficiency for each machine
-    Object.keys(machineWiseToday).forEach(machine => {
+    Object.keys(machineWiseToday).forEach((machine) => {
       if (machineWiseToday[machine].count > 0) {
-        machineWiseToday[machine].efficiency = machineWiseToday[machine].efficiency / machineWiseToday[machine].count;
+        machineWiseToday[machine].efficiency =
+          machineWiseToday[machine].efficiency /
+          machineWiseToday[machine].count;
       }
     });
 
     // Calculate average efficiency for each item
-    Object.keys(itemWiseToday).forEach(item => {
+    Object.keys(itemWiseToday).forEach((item) => {
       if (itemWiseToday[item].count > 0) {
-        itemWiseToday[item].efficiency = itemWiseToday[item].efficiency / itemWiseToday[item].count;
+        itemWiseToday[item].efficiency =
+          itemWiseToday[item].efficiency / itemWiseToday[item].count;
       }
     });
 
@@ -264,22 +468,30 @@ const FlatteningPage = () => {
       yesterdayEfficiency: parseFloat(yesterdayEfficiency.toFixed(1)),
       totalProduction,
       machineWiseToday,
-      itemWiseToday
+      itemWiseToday,
     });
   };
 
   // Filter records
-  const filteredRecords = records.filter(record => {
-    const matchesSearch = 
-      (record.section_name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-      (record.machine_id?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-      (record.operator_name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-      (record.item_name?.toLowerCase() || '').includes(searchTerm.toLowerCase());
+  const filteredRecords = records.filter((record) => {
+    const matchesSearch =
+      (record.section_name?.toLowerCase() || "").includes(
+        searchTerm.toLowerCase()
+      ) ||
+      (record.machine_id?.toLowerCase() || "").includes(
+        searchTerm.toLowerCase()
+      ) ||
+      (record.operator_name?.toLowerCase() || "").includes(
+        searchTerm.toLowerCase()
+      ) ||
+      (record.item_name?.toLowerCase() || "").includes(
+        searchTerm.toLowerCase()
+      );
 
-    const recordShift = record.shift_code || record.shift || '';
+    const recordShift = record.shift_code || record.shift || "";
     const matchesShift = !filterShift || recordShift === filterShift;
-    
-    const recordDate = new Date(record.created_at).toISOString().split('T')[0];
+
+    const recordDate = new Date(record.created_at).toISOString().split("T")[0];
     const matchesDate = !filterDate || recordDate === filterDate;
 
     return matchesSearch && matchesShift && matchesDate;
@@ -288,24 +500,29 @@ const FlatteningPage = () => {
   // Pagination
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentRecords = filteredRecords.slice(indexOfFirstItem, indexOfLastItem);
+  const currentRecords = filteredRecords.slice(
+    indexOfFirstItem,
+    indexOfLastItem
+  );
   const totalPages = Math.ceil(filteredRecords.length / itemsPerPage);
 
   // Generate report
   const generateReport = (selectedDate) => {
-    const dateRecords = records.filter(record => {
-      const recordDate = new Date(record.created_at).toISOString().split('T')[0];
+    const dateRecords = records.filter((record) => {
+      const recordDate = new Date(record.created_at)
+        .toISOString()
+        .split("T")[0];
       return recordDate === selectedDate;
     });
 
     if (dateRecords.length === 0) {
       setReportData({
         date: selectedDate,
-        formattedDate: new Date(selectedDate).toLocaleDateString('en-US', {
-          weekday: 'long',
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
+        formattedDate: new Date(selectedDate).toLocaleDateString("en-US", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
         }),
         shiftGroups: {},
         totalProduction: 0,
@@ -313,7 +530,7 @@ const FlatteningPage = () => {
         overallEfficiency: 0,
         recordCount: 0,
         machineProduction: {},
-        itemProduction: {}
+        itemProduction: {},
       });
       return;
     }
@@ -324,56 +541,56 @@ const FlatteningPage = () => {
     let totalProduction = 0;
     let totalTarget = 0;
 
-    dateRecords.forEach(record => {
-      const shift = record.shift || record.shift_code || 'Unknown';
-      const machine = record.machine_no || record.machine_id || 'Unknown';
-      const item = record.item_name || 'Unknown';
+    dateRecords.forEach((record) => {
+      const shift = record.shift || record.shift_code || "Unknown";
+      const machine = record.machine_no || record.machine_id || "Unknown";
+      const item = record.item_name || "Unknown";
       const qty = parseFloat(record.production_quantity) || 0;
-      
+
       // Shift groups
       if (!shiftGroups[shift]) {
         shiftGroups[shift] = {
           production: 0,
           target: 0,
           efficiency: 0,
-          records: []
+          records: [],
         };
       }
-      
+
       shiftGroups[shift].production += qty;
       totalProduction += qty;
       shiftGroups[shift].records.push(record);
-      
+
       // Machine production
       if (!machineProduction[machine]) {
         machineProduction[machine] = {
           production: 0,
           efficiency: 0,
-          count: 0
+          count: 0,
         };
       }
       machineProduction[machine].production += qty;
-      machineProduction[machine].efficiency += parseFloat(record.efficiency) || 0;
+      machineProduction[machine].efficiency +=
+        parseFloat(record.efficiency) || 0;
       machineProduction[machine].count += 1;
-      
+
       // Item production
       if (!itemProduction[item]) {
         itemProduction[item] = {
           production: 0,
           efficiency: 0,
-          count: 0
+          count: 0,
         };
       }
       itemProduction[item].production += qty;
       itemProduction[item].efficiency += parseFloat(record.efficiency) || 0;
       itemProduction[item].count += 1;
-      
+
       // Find target
-      const targetRecord = targets.find(t => 
-        t.shift_code === shift && 
-        t.machine_id === record.machine_id
+      const targetRecord = targets.find(
+        (t) => t.shift_code === shift && t.machine_id === record.machine_id
       );
-      
+
       if (targetRecord) {
         shiftGroups[shift].target += targetRecord.target_qty;
         totalTarget += targetRecord.target_qty;
@@ -381,36 +598,39 @@ const FlatteningPage = () => {
     });
 
     // Calculate efficiency
-    Object.keys(shiftGroups).forEach(shift => {
+    Object.keys(shiftGroups).forEach((shift) => {
       const group = shiftGroups[shift];
-      group.efficiency = group.target > 0 ? (group.production / group.target) * 100 : 0;
+      group.efficiency =
+        group.target > 0 ? (group.production / group.target) * 100 : 0;
     });
 
     // Calculate average efficiency for each machine
-    Object.keys(machineProduction).forEach(machine => {
+    Object.keys(machineProduction).forEach((machine) => {
       if (machineProduction[machine].count > 0) {
-        machineProduction[machine].efficiency = machineProduction[machine].efficiency / machineProduction[machine].count;
+        machineProduction[machine].efficiency =
+          machineProduction[machine].efficiency /
+          machineProduction[machine].count;
       }
     });
 
     // Calculate average efficiency for each item
-    Object.keys(itemProduction).forEach(item => {
+    Object.keys(itemProduction).forEach((item) => {
       if (itemProduction[item].count > 0) {
-        itemProduction[item].efficiency = itemProduction[item].efficiency / itemProduction[item].count;
+        itemProduction[item].efficiency =
+          itemProduction[item].efficiency / itemProduction[item].count;
       }
     });
 
-    const overallEfficiency = totalTarget > 0 
-      ? (totalProduction / totalTarget) * 100 
-      : 0;
+    const overallEfficiency =
+      totalTarget > 0 ? (totalProduction / totalTarget) * 100 : 0;
 
     setReportData({
       date: selectedDate,
-      formattedDate: new Date(selectedDate).toLocaleDateString('en-US', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
+      formattedDate: new Date(selectedDate).toLocaleDateString("en-US", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
       }),
       shiftGroups,
       totalProduction,
@@ -418,7 +638,7 @@ const FlatteningPage = () => {
       overallEfficiency: parseFloat(overallEfficiency.toFixed(2)),
       recordCount: dateRecords.length,
       machineProduction,
-      itemProduction
+      itemProduction,
     });
   };
 
@@ -439,54 +659,71 @@ const FlatteningPage = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this record?')) return;
+    if (!window.confirm("Are you sure you want to delete this record?")) return;
 
     try {
       const { error } = await supabase
-        .from('flatteningsection')
+        .from("flatteningsection")
         .delete()
-        .eq('id', id);
+        .eq("id", id);
 
       if (error) throw error;
-      
-      alert('Record deleted successfully');
+
+      alert("Record deleted successfully");
       fetchData();
     } catch (error) {
-      console.error('Error deleting record:', error);
-      alert('Failed to delete record: ' + error.message);
+      console.error("Error deleting record:", error);
+      alert("Failed to delete record: " + error.message);
     }
   };
 
   // Export all records
   const handleExport = () => {
     if (filteredRecords.length === 0) {
-      alert('No records to export');
+      alert("No records to export");
       return;
     }
 
     const csvContent = [
-      ['ID', 'Section', 'Machine ID', 'Machine No', 'Item Name', 'Production (KG)', 'Coil Size', 'Shift', 'Operator', 'Efficiency %', 'Remarks', 'Created At'],
-      ...filteredRecords.map(record => [
+      [
+        "ID",
+        "Section",
+        "Machine ID",
+        "Machine No",
+        "Item Name",
+        "Production (KG)",
+        "Coil Size",
+        "Shift",
+        "Operator",
+        "Efficiency %",
+        "Remarks",
+        "Created At",
+      ],
+      ...filteredRecords.map((record) => [
         record.id,
-        `"${record.section_name || 'Flattening'}"`,
-        `"${record.machine_id || ''}"`,
-        `"${record.machine_no || ''}"`,
-        `"${record.item_name || ''}"`,
+        `"${record.section_name || "Flattening"}"`,
+        `"${record.machine_id || ""}"`,
+        `"${record.machine_no || ""}"`,
+        `"${record.item_name || ""}"`,
         parseFloat(record.production_quantity) || 0,
-        `"${record.coil_size || ''}"`,
-        `"${record.shift_code || record.shift || ''}"`,
-        `"${record.operator_name || ''}"`,
+        `"${record.coil_size || ""}"`,
+        `"${record.shift_code || record.shift || ""}"`,
+        `"${record.operator_name || ""}"`,
         parseFloat(record.efficiency) || 0,
-        `"${record.remarks || ''}"`,
-        `"${new Date(record.created_at).toLocaleString()}"`
-      ])
-    ].map(row => row.join(',')).join('\n');
+        `"${record.remarks || ""}"`,
+        `"${new Date(record.created_at).toLocaleString()}"`,
+      ]),
+    ]
+      .map((row) => row.join(","))
+      .join("\n");
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = `flattening-records-${new Date().toISOString().split('T')[0]}.csv`;
+    a.download = `flattening-records-${
+      new Date().toISOString().split("T")[0]
+    }.csv`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -496,38 +733,44 @@ const FlatteningPage = () => {
   // Generate PDF Report Data
   const generatePDFReportData = () => {
     if (!reportData || reportData.recordCount === 0) {
-      alert('No report data available for PDF');
+      alert("No report data available for PDF");
       return;
     }
 
     const pdfData = {
-      title: 'Flattening Section Production Report',
+      title: "Flattening Section Production Report",
       date: reportData.formattedDate,
       generatedDate: new Date().toLocaleString(),
       summary: {
         totalProduction: reportData.totalProduction.toFixed(1),
         totalTarget: reportData.totalTarget.toFixed(1),
         overallEfficiency: reportData.overallEfficiency.toFixed(1),
-        recordCount: reportData.recordCount
+        recordCount: reportData.recordCount,
       },
-      shiftWise: Object.entries(reportData.shiftGroups).map(([shift, data]) => ({
-        shift,
-        production: data.production.toFixed(1),
-        target: data.target.toFixed(1),
-        efficiency: data.efficiency.toFixed(1)
-      })),
-      machineWise: Object.entries(reportData.machineProduction).map(([machine, data]) => ({
-        machine,
-        production: data.production.toFixed(1),
-        efficiency: data.efficiency.toFixed(1),
-        count: data.count
-      })),
-      itemWise: Object.entries(reportData.itemProduction).map(([item, data]) => ({
-        item,
-        production: data.production.toFixed(1),
-        efficiency: data.efficiency.toFixed(1),
-        count: data.count
-      }))
+      shiftWise: Object.entries(reportData.shiftGroups).map(
+        ([shift, data]) => ({
+          shift,
+          production: data.production.toFixed(1),
+          target: data.target.toFixed(1),
+          efficiency: data.efficiency.toFixed(1),
+        })
+      ),
+      machineWise: Object.entries(reportData.machineProduction).map(
+        ([machine, data]) => ({
+          machine,
+          production: data.production.toFixed(1),
+          efficiency: data.efficiency.toFixed(1),
+          count: data.count,
+        })
+      ),
+      itemWise: Object.entries(reportData.itemProduction).map(
+        ([item, data]) => ({
+          item,
+          production: data.production.toFixed(1),
+          efficiency: data.efficiency.toFixed(1),
+          count: data.count,
+        })
+      ),
     };
 
     setPdfReportData(pdfData);
@@ -537,11 +780,11 @@ const FlatteningPage = () => {
   // Print report - Optimized for single page
   const handlePrintReport = () => {
     if (!reportData || reportData.recordCount === 0) {
-      alert('No report data to print');
+      alert("No report data to print");
       return;
     }
 
-    const printWindow = window.open('', '_blank');
+    const printWindow = window.open("", "_blank");
     printWindow.document.write(`
       <!DOCTYPE html>
       <html>
@@ -669,16 +912,25 @@ const FlatteningPage = () => {
         <div class="summary-grid">
           <div class="summary-item">
             <div class="summary-label">Total Production</div>
-            <div class="summary-value">${reportData.totalProduction.toFixed(1)} KG</div>
+            <div class="summary-value">${reportData.totalProduction.toFixed(
+              1
+            )} KG</div>
           </div>
           <div class="summary-item">
             <div class="summary-label">Total Target</div>
-            <div class="summary-value">${reportData.totalTarget.toFixed(1)} KG</div>
+            <div class="summary-value">${reportData.totalTarget.toFixed(
+              1
+            )} KG</div>
           </div>
           <div class="summary-item">
             <div class="summary-label">Overall Efficiency</div>
-            <div class="summary-value" style="color: ${reportData.overallEfficiency >= 90 ? '#28a745' : 
-                    reportData.overallEfficiency >= 80 ? '#ffc107' : '#dc3545'}">
+            <div class="summary-value" style="color: ${
+              reportData.overallEfficiency >= 90
+                ? "#28a745"
+                : reportData.overallEfficiency >= 80
+                ? "#ffc107"
+                : "#dc3545"
+            }">
               ${reportData.overallEfficiency.toFixed(1)}%
             </div>
           </div>
@@ -699,36 +951,52 @@ const FlatteningPage = () => {
             </tr>
           </thead>
           <tbody>
-            ${Object.entries(reportData.shiftGroups).map(([shift, data]) => `
+            ${Object.entries(reportData.shiftGroups)
+              .map(
+                ([shift, data]) => `
               <tr>
                 <td>${shift}</td>
                 <td>${data.production.toFixed(1)}</td>
                 <td>${data.target.toFixed(1)}</td>
                 <td>${data.efficiency.toFixed(1)}%</td>
               </tr>
-            `).join('')}
+            `
+              )
+              .join("")}
           </tbody>
         </table>
         
         <div class="compact-section">
           <div class="compact-box">
             <div class="compact-title">Machine-wise Production</div>
-            ${Object.entries(reportData.machineProduction).map(([machine, data]) => `
+            ${Object.entries(reportData.machineProduction)
+              .map(
+                ([machine, data]) => `
               <div class="compact-row">
                 <span>${machine}</span>
-                <span>${data.production.toFixed(1)} KG (${data.efficiency.toFixed(1)}%)</span>
+                <span>${data.production.toFixed(
+                  1
+                )} KG (${data.efficiency.toFixed(1)}%)</span>
               </div>
-            `).join('')}
+            `
+              )
+              .join("")}
           </div>
           
           <div class="compact-box">
             <div class="compact-title">Item-wise Production</div>
-            ${Object.entries(reportData.itemProduction).map(([item, data]) => `
+            ${Object.entries(reportData.itemProduction)
+              .map(
+                ([item, data]) => `
               <div class="compact-row">
                 <span>${item}</span>
-                <span>${data.production.toFixed(1)} KG (${data.efficiency.toFixed(1)}%)</span>
+                <span>${data.production.toFixed(
+                  1
+                )} KG (${data.efficiency.toFixed(1)}%)</span>
               </div>
-            `).join('')}
+            `
+              )
+              .join("")}
           </div>
         </div>
         
@@ -760,49 +1028,51 @@ const FlatteningPage = () => {
   // Export report
   const handleExportReport = () => {
     if (!reportData || reportData.recordCount === 0) {
-      alert('No report data to export');
+      alert("No report data to export");
       return;
     }
 
     const csvContent = [
-      ['Flattening Section Production Report', reportData.formattedDate],
+      ["Flattening Section Production Report", reportData.formattedDate],
       [],
-      ['Shift', 'Production (KG)', 'Target (KG)', 'Efficiency (%)'],
+      ["Shift", "Production (KG)", "Target (KG)", "Efficiency (%)"],
       ...Object.entries(reportData.shiftGroups).map(([shift, data]) => [
         shift,
         data.production.toFixed(1),
         data.target.toFixed(1),
-        data.efficiency.toFixed(1)
+        data.efficiency.toFixed(1),
       ]),
       [],
-      ['Machine-wise Production'],
-      ['Machine', 'Production (KG)', 'Efficiency (%)'],
+      ["Machine-wise Production"],
+      ["Machine", "Production (KG)", "Efficiency (%)"],
       ...Object.entries(reportData.machineProduction).map(([machine, data]) => [
         machine,
         data.production.toFixed(1),
-        data.efficiency.toFixed(1)
+        data.efficiency.toFixed(1),
       ]),
       [],
-      ['Item-wise Production'],
-      ['Item', 'Production (KG)', 'Efficiency (%)'],
+      ["Item-wise Production"],
+      ["Item", "Production (KG)", "Efficiency (%)"],
       ...Object.entries(reportData.itemProduction).map(([item, data]) => [
         item,
         data.production.toFixed(1),
-        data.efficiency.toFixed(1)
+        data.efficiency.toFixed(1),
       ]),
       [],
-      ['SUMMARY'],
-      ['Total Production (KG):', reportData.totalProduction.toFixed(1)],
-      ['Total Target (KG):', reportData.totalTarget.toFixed(1)],
-      ['Overall Efficiency (%):', reportData.overallEfficiency.toFixed(1)],
-      ['Total Records:', reportData.recordCount],
+      ["SUMMARY"],
+      ["Total Production (KG):", reportData.totalProduction.toFixed(1)],
+      ["Total Target (KG):", reportData.totalTarget.toFixed(1)],
+      ["Overall Efficiency (%):", reportData.overallEfficiency.toFixed(1)],
+      ["Total Records:", reportData.recordCount],
       [],
-      ['Generated on:', new Date().toLocaleString()]
-    ].map(row => row.join(',')).join('\n');
+      ["Generated on:", new Date().toLocaleString()],
+    ]
+      .map((row) => row.join(","))
+      .join("\n");
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
     a.download = `flattening-report-${filterDate}.csv`;
     document.body.appendChild(a);
@@ -812,15 +1082,21 @@ const FlatteningPage = () => {
   };
 
   // Get unique values for filters
-  const uniqueShiftCodes = [...new Set(
-    records
-      .map(record => record.shift_code || record.shift)
-      .filter(Boolean)
-  )].sort();
+  const uniqueShiftCodes = [
+    ...new Set(
+      records.map((record) => record.shift_code || record.shift).filter(Boolean)
+    ),
+  ].sort();
 
-  const uniqueDates = [...new Set(
-    records.map(record => new Date(record.created_at).toISOString().split('T')[0])
-  )].sort().reverse();
+  const uniqueDates = [
+    ...new Set(
+      records.map(
+        (record) => new Date(record.created_at).toISOString().split("T")[0]
+      )
+    ),
+  ]
+    .sort()
+    .reverse();
 
   // Pagination handlers
   const handleNextPage = () => {
@@ -840,238 +1116,99 @@ const FlatteningPage = () => {
     navigate(-1);
   };
 
-  // Render PDF Report Modal
-  const renderPDFModal = () => {
-    if (!pdfReportData) return null;
-
-    return (
-      <div className="modal-overlay">
-        <div className="pdf-modal-container">
-          <div className="pdf-modal-header">
-            <h2>Flattening Section Production Report - PDF Preview</h2>
-            <button className="close-pdf-btn" onClick={() => setShowPDFModal(false)}>
-              <FiX size={24} />
-            </button>
-          </div>
-          
-          <div className="pdf-content">
-            <div className="pdf-header">
-              <h1>{pdfReportData.title}</h1>
-              <div className="pdf-date">Date: {pdfReportData.date}</div>
-              <div className="pdf-generated">Generated: {pdfReportData.generatedDate}</div>
-            </div>
-            
-            <div className="pdf-summary">
-              <h3>Summary</h3>
-              <div className="pdf-summary-grid">
-                <div className="pdf-summary-item">
-                  <div className="pdf-summary-label">Total Production</div>
-                  <div className="pdf-summary-value">{pdfReportData.summary.totalProduction} KG</div>
-                </div>
-                <div className="pdf-summary-item">
-                  <div className="pdf-summary-label">Total Target</div>
-                  <div className="pdf-summary-value">{pdfReportData.summary.totalTarget} KG</div>
-                </div>
-                <div className="pdf-summary-item">
-                  <div className="pdf-summary-label">Overall Efficiency</div>
-                  <div className="pdf-summary-value">{pdfReportData.summary.overallEfficiency}%</div>
-                </div>
-                <div className="pdf-summary-item">
-                  <div className="pdf-summary-label">Total Records</div>
-                  <div className="pdf-summary-value">{pdfReportData.summary.recordCount}</div>
-                </div>
-              </div>
-            </div>
-            
-            {pdfReportData.shiftWise.length > 0 && (
-              <div className="pdf-section">
-                <h3>Shift-wise Production</h3>
-                <table className="pdf-table">
-                  <thead>
-                    <tr>
-                      <th>Shift</th>
-                      <th>Production (KG)</th>
-                      <th>Target (KG)</th>
-                      <th>Efficiency (%)</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {pdfReportData.shiftWise.map((shift, index) => (
-                      <tr key={index}>
-                        <td>{shift.shift}</td>
-                        <td>{shift.production}</td>
-                        <td>{shift.target}</td>
-                        <td>{shift.efficiency}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-            
-            {pdfReportData.machineWise.length > 0 && (
-              <div className="pdf-section">
-                <h3>Machine-wise Production</h3>
-                <table className="pdf-table">
-                  <thead>
-                    <tr>
-                      <th>Machine</th>
-                      <th>Production (KG)</th>
-                      <th>Efficiency (%)</th>
-                      <th>Records</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {pdfReportData.machineWise.map((machine, index) => (
-                      <tr key={index}>
-                        <td>{machine.machine}</td>
-                        <td>{machine.production}</td>
-                        <td>{machine.efficiency}</td>
-                        <td>{machine.count}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-            
-            {pdfReportData.itemWise.length > 0 && (
-              <div className="pdf-section">
-                <h3>Item-wise Production</h3>
-                <table className="pdf-table">
-                  <thead>
-                    <tr>
-                      <th>Item</th>
-                      <th>Production (KG)</th>
-                      <th>Efficiency (%)</th>
-                      <th>Records</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {pdfReportData.itemWise.map((item, index) => (
-                      <tr key={index}>
-                        <td>{item.item}</td>
-                        <td>{item.production}</td>
-                        <td>{item.efficiency}</td>
-                        <td>{item.count}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-            
-            <div className="pdf-footer">
-              <div className="pdf-footer-text">
-                This is a PDF preview. To generate actual PDF, install a PDF library like jsPDF or react-pdf.
-              </div>
-              <div className="pdf-modal-actions">
-                <button className="pdf-download-btn" onClick={() => {
-                  alert('PDF download functionality requires jsPDF library installation.');
-                  setShowPDFModal(false);
-                }}>
-                  <FiDownload /> Download as PDF
-                </button>
-                <button className="pdf-print-btn" onClick={() => {
-                  window.print();
-                  setShowPDFModal(false);
-                }}>
-                  <FiPrinter /> Print Report
-                </button>
-                <button className="pdf-close-btn" onClick={() => setShowPDFModal(false)}>
-                  Close Preview
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   // Stat cards with corrected class names
   const statCards = [
     {
-      id: 'today-records',
+      id: "today-records",
       title: "Today's Records",
       value: stats.todayRecords,
       icon: FiClock,
-      description: 'Records added today',
-      gradientColors: ['#10b981', '#059669'],
-      iconBg: '#10b981'
+      description: "Records added today",
+      gradientColors: ["#10b981", "#059669"],
+      iconBg: "#10b981",
     },
     {
-      id: 'today-production',
+      id: "today-production",
       title: "Today's Production",
       value: `${stats.todayProduction.toLocaleString()} KG`,
       icon: FiPackage,
-      description: 'Production today',
-      gradientColors: ['#3b82f6', '#1d4ed8'],
-      iconBg: '#3b82f6'
+      description: "Production today",
+      gradientColors: ["#3b82f6", "#1d4ed8"],
+      iconBg: "#3b82f6",
     },
     {
-      id: 'today-efficiency',
+      id: "today-efficiency",
       title: "Today's Efficiency",
       value: `${stats.todayEfficiency}%`,
       icon: FiActivity,
-      description: 'Efficiency today',
+      description: "Efficiency today",
       colorValue: true,
-      valueColor: stats.todayEfficiency >= 80 ? '#059669' :
-                  stats.todayEfficiency >= 60 ? '#d97706' : '#ef4444',
-      gradientColors: ['#f59e0b', '#d97706'],
-      iconBg: '#f59e0b'
+      valueColor:
+        stats.todayEfficiency >= 80
+          ? "#059669"
+          : stats.todayEfficiency >= 60
+          ? "#d97706"
+          : "#ef4444",
+      gradientColors: ["#f59e0b", "#d97706"],
+      iconBg: "#f59e0b",
     },
     {
-      id: 'yesterday',
-      title: 'Yesterday Summary',
+      id: "yesterday",
+      title: "Yesterday Summary",
       value: `${stats.yesterdayProduction.toLocaleString()} KG`,
       subValue: `${stats.yesterdayEfficiency}% efficiency`,
       icon: FiTrendingDown,
-      description: 'Production & Efficiency',
-      gradientColors: ['#8b5cf6', '#7c3aed'],
-      iconBg: '#8b5cf6',
-      hasSubValue: true
+      description: "Production & Efficiency",
+      gradientColors: ["#8b5cf6", "#7c3aed"],
+      iconBg: "#8b5cf6",
+      hasSubValue: true,
     },
     {
-      id: 'total-records',
-      title: 'Total Records',
+      id: "total-records",
+      title: "Total Records",
       value: stats.totalRecords,
       icon: FiDatabaseIcon,
-      description: 'All records in database',
-      gradientColors: ['#ec4899', '#be185d'],
-      iconBg: '#ec4899'
+      description: "All records in database",
+      gradientColors: ["#ec4899", "#be185d"],
+      iconBg: "#ec4899",
     },
     {
-      id: 'total-production',
-      title: 'Total Production',
+      id: "total-production",
+      title: "Total Production",
       value: `${stats.totalProduction.toLocaleString()} KG`,
       icon: FiTrendingUpIcon,
-      description: 'All time production',
-      gradientColors: ['#06b6d4', '#0891b2'],
-      iconBg: '#06b6d4'
+      description: "All time production",
+      gradientColors: ["#06b6d4", "#0891b2"],
+      iconBg: "#06b6d4",
     },
     {
-      id: 'avg-efficiency',
-      title: 'Average Efficiency',
+      id: "avg-efficiency",
+      title: "Average Efficiency",
       value: `${stats.avgEfficiency}%`,
       icon: FiPercent,
-      description: 'Average efficiency all time',
+      description: "Average efficiency all time",
       colorValue: true,
-      valueColor: stats.avgEfficiency >= 80 ? '#059669' :
-                  stats.avgEfficiency >= 60 ? '#d97706' : '#ef4444',
-      gradientColors: ['#f97316', '#ea580c'],
-      iconBg: '#f97316'
+      valueColor:
+        stats.avgEfficiency >= 80
+          ? "#059669"
+          : stats.avgEfficiency >= 60
+          ? "#d97706"
+          : "#ef4444",
+      gradientColors: ["#f97316", "#ea580c"],
+      iconBg: "#f97316",
     },
     {
-      id: 'database-status',
-      title: 'Database Status',
-      value: isSupabaseConnected ? 'Connected' : 'Offline',
+      id: "database-status",
+      title: "Database Status",
+      value: isSupabaseConnected ? "Connected" : "Offline",
       icon: isSupabaseConnected ? FiCheckCircle : FiXCircle,
-      description: 'Database connection status',
-      gradientColors: isSupabaseConnected ? ['#10b981', '#059669'] : ['#ef4444', '#dc2626'],
-      iconBg: isSupabaseConnected ? '#10b981' : '#ef4444',
-      valueColor: isSupabaseConnected ? '#059669' : '#ef4444'
-    }
+      description: "Database connection status",
+      gradientColors: isSupabaseConnected
+        ? ["#10b981", "#059669"]
+        : ["#ef4444", "#dc2626"],
+      iconBg: isSupabaseConnected ? "#10b981" : "#ef4444",
+      valueColor: isSupabaseConnected ? "#059669" : "#ef4444",
+    },
   ];
 
   // Render loading state
@@ -1094,7 +1231,8 @@ const FlatteningPage = () => {
           <div>
             <strong>Supabase Connection Issue</strong>
             <div className="alert-subtext">
-              Check your .env file for REACT_APP_SUPABASE_URL and REACT_APP_SUPABASE_ANON_KEY
+              Check your .env file for REACT_APP_SUPABASE_URL and
+              REACT_APP_SUPABASE_ANON_KEY
             </div>
           </div>
         </div>
@@ -1104,20 +1242,17 @@ const FlatteningPage = () => {
       <div className="header-section">
         <div>
           <div className="breadcrumb-nav">
-            <button
-              onClick={handleBack}
-              className="breadcrumb-btn back-btn"
-            >
+            <button onClick={handleBack} className="breadcrumb-btn back-btn">
               <FiArrowLeft size={16} /> Back
             </button>
             <button
-              onClick={() => navigate('/dashboard')}
+              onClick={() => navigate("/dashboard")}
               className="breadcrumb-btn"
             >
               <FiHome size={16} /> Dashboard
             </button>
             <button
-              onClick={() => navigate('/production')}
+              onClick={() => navigate("/production")}
               className="breadcrumb-btn secondary"
             >
               <FiGrid size={16} /> Production Sections
@@ -1130,7 +1265,11 @@ const FlatteningPage = () => {
             <div>
               <h1 className="page-title">
                 Flattening Section
-                <div className={`connection-badge ${isSupabaseConnected ? 'connected' : 'offline'}`}>
+                <div
+                  className={`connection-badge ${
+                    isSupabaseConnected ? "connected" : "offline"
+                  }`}
+                >
                   {isSupabaseConnected ? (
                     <>
                       <FiCheckCircle size={10} /> Connected
@@ -1144,7 +1283,8 @@ const FlatteningPage = () => {
               </h1>
               <p className="page-subtitle">
                 <FiDatabase size={14} />
-                Data from: flatteningsection table • Total Records: {stats.totalRecords}
+                Data from: flatteningsection table • Total Records:{" "}
+                {stats.totalRecords}
               </p>
             </div>
           </div>
@@ -1155,7 +1295,7 @@ const FlatteningPage = () => {
             onClick={() => setShowFlatteningModal(true)}
             className="primary-btn"
           >
-            <FiPlus size={20} /> New Record
+            <FiPlus size={20} /> New Flattening Entey
           </button>
 
           <button
@@ -1185,15 +1325,17 @@ const FlatteningPage = () => {
         </div>
       </div>
 
-      {/* Stats Cards - Enhanced Design */}
+      {/* Stats Cards - Enhanced Design - FIXED HEADER POSITIONING */}
       <div className="stats-section">
         <div className="section-header">
           <div className="header-icon">
             <FiBarChart2 size={24} />
           </div>
-          <div>
+          <div className="section-header-content">
             <h2>Production Overview</h2>
-            <p className="section-subtitle">Real-time statistics and performance metrics</p>
+            <p className="section-subtitle">
+              Real-time statistics and performance metrics
+            </p>
           </div>
         </div>
 
@@ -1276,9 +1418,11 @@ const FlatteningPage = () => {
           <div className="header-icon">
             <FiBarChart size={24} />
           </div>
-          <div>
+          <div className="section-header-content">
             <h2>Today's Production & Efficiency</h2>
-            <p className="section-subtitle">Real-time production data for today</p>
+            <p className="section-subtitle">
+              Real-time production data for today
+            </p>
           </div>
         </div>
 
@@ -1292,50 +1436,72 @@ const FlatteningPage = () => {
             </div>
             <div className="machine-analysis-grid">
               {Object.entries(stats.machineWiseToday).length > 0 ? (
-                Object.entries(stats.machineWiseToday).map(([machine, data]) => {
-                  const efficiencyStatus = data.efficiency >= 80 ? 'good' : data.efficiency >= 60 ? 'average' : 'poor';
-                  return (
-                    <div key={machine} className="machine-analysis-card">
-                      <div className="machine-analysis-header">
-                        <div className="machine-analysis-icon">
-                          <FiTool size={16} />
-                        </div>
-                        <div className="machine-analysis-name">{machine}</div>
-                        <div className={`machine-status status-${efficiencyStatus}`} />
-                      </div>
-                      <div className="machine-analysis-stats">
-                        <div className="production-stats">
-                          <div className={`production-value value-${efficiencyStatus}`}>
-                            {data.production.toFixed(0)}
+                Object.entries(stats.machineWiseToday).map(
+                  ([machine, data]) => {
+                    const efficiencyStatus =
+                      data.efficiency >= 80
+                        ? "good"
+                        : data.efficiency >= 60
+                        ? "average"
+                        : "poor";
+                    return (
+                      <div key={machine} className="machine-analysis-card">
+                        <div className="machine-analysis-header">
+                          <div className="machine-analysis-icon">
+                            <FiTool size={16} />
                           </div>
-                          <div className="production-label">KG Produced</div>
-                        </div>
-                        <div className="efficiency-stats">
-                          <div className={`efficiency-value value-${efficiencyStatus}`}>
-                            {data.efficiency.toFixed(1)}%
-                          </div>
-                          <div className="efficiency-label">Efficiency</div>
-                        </div>
-                      </div>
-                      <div className="machine-analysis-footer">
-                        <div className="performance-bar">
-                          <div 
-                            className="performance-fill"
-                            style={{ 
-                              width: `${Math.min(data.efficiency, 100)}%`,
-                              background: data.efficiency >= 80 ? '#10b981' : 
-                                        data.efficiency >= 60 ? '#f59e0b' : '#ef4444'
-                            }}
+                          <div className="machine-analysis-name">{machine}</div>
+                          <div
+                            className={`machine-status status-${efficiencyStatus}`}
                           />
                         </div>
-                        <div className={`performance-indicator indicator-${efficiencyStatus}`}>
-                          {efficiencyStatus === 'good' ? 'Excellent' : 
-                           efficiencyStatus === 'average' ? 'Good' : 'Needs Improvement'}
+                        <div className="machine-analysis-stats">
+                          <div className="production-stats">
+                            <div
+                              className={`production-value value-${efficiencyStatus}`}
+                            >
+                              {data.production.toFixed(0)}
+                            </div>
+                            <div className="production-label">KG Produced</div>
+                          </div>
+                          <div className="efficiency-stats">
+                            <div
+                              className={`efficiency-value value-${efficiencyStatus}`}
+                            >
+                              {data.efficiency.toFixed(1)}%
+                            </div>
+                            <div className="efficiency-label">Efficiency</div>
+                          </div>
+                        </div>
+                        <div className="machine-analysis-footer">
+                          <div className="performance-bar">
+                            <div
+                              className="performance-fill"
+                              style={{
+                                width: `${Math.min(data.efficiency, 100)}%`,
+                                background:
+                                  data.efficiency >= 80
+                                    ? "#10b981"
+                                    : data.efficiency >= 60
+                                    ? "#f59e0b"
+                                    : "#ef4444",
+                              }}
+                            />
+                          </div>
+                          <div
+                            className={`performance-indicator indicator-${efficiencyStatus}`}
+                          >
+                            {efficiencyStatus === "good"
+                              ? "Excellent"
+                              : efficiencyStatus === "average"
+                              ? "Good"
+                              : "Needs Improvement"}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })
+                    );
+                  }
+                )
               ) : (
                 <div className="no-production">
                   <FiPackage size={24} />
@@ -1355,7 +1521,12 @@ const FlatteningPage = () => {
             <div className="item-analysis-grid">
               {Object.entries(stats.itemWiseToday).length > 0 ? (
                 Object.entries(stats.itemWiseToday).map(([item, data]) => {
-                  const efficiencyStatus = data.efficiency >= 80 ? 'good' : data.efficiency >= 60 ? 'average' : 'poor';
+                  const efficiencyStatus =
+                    data.efficiency >= 80
+                      ? "good"
+                      : data.efficiency >= 60
+                      ? "average"
+                      : "poor";
                   return (
                     <div key={item} className="item-analysis-card">
                       <div className="item-analysis-header">
@@ -1363,17 +1534,23 @@ const FlatteningPage = () => {
                           <FiTag size={16} />
                         </div>
                         <div className="item-analysis-name">{item}</div>
-                        <div className={`machine-status status-${efficiencyStatus}`} />
+                        <div
+                          className={`machine-status status-${efficiencyStatus}`}
+                        />
                       </div>
                       <div className="item-analysis-stats">
                         <div className="production-stats">
-                          <div className={`production-value value-${efficiencyStatus}`}>
+                          <div
+                            className={`production-value value-${efficiencyStatus}`}
+                          >
                             {data.production.toFixed(0)}
                           </div>
                           <div className="production-label">KG Produced</div>
                         </div>
                         <div className="efficiency-stats">
-                          <div className={`efficiency-value value-${efficiencyStatus}`}>
+                          <div
+                            className={`efficiency-value value-${efficiencyStatus}`}
+                          >
                             {data.efficiency.toFixed(1)}%
                           </div>
                           <div className="efficiency-label">Efficiency</div>
@@ -1381,18 +1558,27 @@ const FlatteningPage = () => {
                       </div>
                       <div className="item-analysis-footer">
                         <div className="performance-bar">
-                          <div 
+                          <div
                             className="performance-fill"
-                            style={{ 
+                            style={{
                               width: `${Math.min(data.efficiency, 100)}%`,
-                              background: data.efficiency >= 80 ? '#10b981' : 
-                                        data.efficiency >= 60 ? '#f59e0b' : '#ef4444'
+                              background:
+                                data.efficiency >= 80
+                                  ? "#10b981"
+                                  : data.efficiency >= 60
+                                  ? "#f59e0b"
+                                  : "#ef4444",
                             }}
                           />
                         </div>
-                        <div className={`performance-indicator indicator-${efficiencyStatus}`}>
-                          {efficiencyStatus === 'good' ? 'Excellent' : 
-                           efficiencyStatus === 'average' ? 'Good' : 'Needs Improvement'}
+                        <div
+                          className={`performance-indicator indicator-${efficiencyStatus}`}
+                        >
+                          {efficiencyStatus === "good"
+                            ? "Excellent"
+                            : efficiencyStatus === "average"
+                            ? "Good"
+                            : "Needs Improvement"}
                         </div>
                       </div>
                     </div>
@@ -1415,7 +1601,7 @@ const FlatteningPage = () => {
           <FiFilter size={20} />
           <h3>Filters & Reports</h3>
         </div>
-        
+
         <div className="filter-controls">
           <div className="filter-group">
             <label className="filter-label">
@@ -1440,7 +1626,7 @@ const FlatteningPage = () => {
               className="filter-select-enhanced"
             >
               <option value="">All Shifts</option>
-              {uniqueShiftCodes.map(shiftCode => (
+              {uniqueShiftCodes.map((shiftCode) => (
                 <option key={shiftCode} value={shiftCode}>
                   {shiftCode}
                 </option>
@@ -1460,7 +1646,7 @@ const FlatteningPage = () => {
                 setShowReport(!!e.target.value);
                 setCurrentPage(1);
               }}
-              max={new Date().toISOString().split('T')[0]}
+              max={new Date().toISOString().split("T")[0]}
               className="filter-date-enhanced"
             />
           </div>
@@ -1469,7 +1655,7 @@ const FlatteningPage = () => {
             <button
               onClick={() => {
                 if (!filterDate) {
-                  alert('Please select a date first to generate report');
+                  alert("Please select a date first to generate report");
                   return;
                 }
                 setShowReport(true);
@@ -1481,9 +1667,9 @@ const FlatteningPage = () => {
 
             <button
               onClick={() => {
-                setSearchTerm('');
-                setFilterShift('');
-                setFilterDate('');
+                setSearchTerm("");
+                setFilterShift("");
+                setFilterDate("");
                 setShowReport(false);
                 setCurrentPage(1);
               }}
@@ -1499,7 +1685,7 @@ const FlatteningPage = () => {
       {showReport && reportData && (
         <div className="report-section-enhanced">
           <div className="report-bg-pattern" />
-          
+
           <div className="report-header-enhanced">
             <div className="report-title-section">
               <h2>Flattening Section Daily Report</h2>
@@ -1544,38 +1730,46 @@ const FlatteningPage = () => {
               </div>
               <div className="summary-content">
                 <div className="summary-label">Total Production</div>
-                <div className="summary-value">{reportData.totalProduction.toFixed(1)} KG</div>
+                <div className="summary-value">
+                  {reportData.totalProduction.toFixed(1)} KG
+                </div>
               </div>
             </div>
-            
+
             <div className="summary-card">
               <div className="summary-icon">
                 <FiTarget size={24} />
               </div>
               <div className="summary-content">
                 <div className="summary-label">Total Target</div>
-                <div className="summary-value">{reportData.totalTarget.toFixed(1)} KG</div>
+                <div className="summary-value">
+                  {reportData.totalTarget.toFixed(1)} KG
+                </div>
               </div>
             </div>
-            
+
             <div className="summary-card">
               <div className="summary-icon">
                 <FiActivity size={24} />
               </div>
               <div className="summary-content">
                 <div className="summary-label">Overall Efficiency</div>
-                <div 
+                <div
                   className="summary-value"
-                  style={{ 
-                    color: reportData.overallEfficiency >= 80 ? '#10b981' :
-                           reportData.overallEfficiency >= 60 ? '#f59e0b' : '#ef4444'
+                  style={{
+                    color:
+                      reportData.overallEfficiency >= 80
+                        ? "#10b981"
+                        : reportData.overallEfficiency >= 60
+                        ? "#f59e0b"
+                        : "#ef4444",
                   }}
                 >
                   {reportData.overallEfficiency.toFixed(1)}%
                 </div>
               </div>
             </div>
-            
+
             <div className="summary-card">
               <div className="summary-icon">
                 <FiDatabase size={24} />
@@ -1593,33 +1787,50 @@ const FlatteningPage = () => {
               <h3>Shift-wise Production</h3>
               <div className="shift-report-grid">
                 {Object.entries(reportData.shiftGroups).map(([shift, data]) => {
-                  const efficiencyStatus = data.efficiency >= 80 ? 'excellent' : 
-                                          data.efficiency >= 60 ? 'good' : 'poor';
+                  const efficiencyStatus =
+                    data.efficiency >= 80
+                      ? "excellent"
+                      : data.efficiency >= 60
+                      ? "good"
+                      : "poor";
                   return (
                     <div key={shift} className="shift-report-card">
                       <div className="shift-report-header">
                         <div className="shift-name">Shift {shift}</div>
-                        <div className={`shift-status indicator-${efficiencyStatus}`}>
-                          {efficiencyStatus === 'excellent' ? 'Excellent' : 
-                           efficiencyStatus === 'good' ? 'Good' : 'Needs Attention'}
+                        <div
+                          className={`shift-status indicator-${efficiencyStatus}`}
+                        >
+                          {efficiencyStatus === "excellent"
+                            ? "Excellent"
+                            : efficiencyStatus === "good"
+                            ? "Good"
+                            : "Needs Attention"}
                         </div>
                       </div>
                       <div className="shift-report-stats">
                         <div className="stat-item">
                           <div className="stat-label">Production</div>
-                          <div className="stat-value">{data.production.toFixed(1)} KG</div>
+                          <div className="stat-value">
+                            {data.production.toFixed(1)} KG
+                          </div>
                         </div>
                         <div className="stat-item">
                           <div className="stat-label">Target</div>
-                          <div className="stat-value">{data.target.toFixed(1)} KG</div>
+                          <div className="stat-value">
+                            {data.target.toFixed(1)} KG
+                          </div>
                         </div>
                         <div className="stat-item">
                           <div className="stat-label">Efficiency</div>
-                          <div 
+                          <div
                             className="stat-value"
-                            style={{ 
-                              color: data.efficiency >= 80 ? '#10b981' :
-                                     data.efficiency >= 60 ? '#f59e0b' : '#ef4444'
+                            style={{
+                              color:
+                                data.efficiency >= 80
+                                  ? "#10b981"
+                                  : data.efficiency >= 60
+                                  ? "#f59e0b"
+                                  : "#ef4444",
                             }}
                           >
                             {data.efficiency.toFixed(1)}%
@@ -1638,43 +1849,60 @@ const FlatteningPage = () => {
             <div className="report-section-block">
               <h3>Machine-wise Production</h3>
               <div className="machine-report-list">
-                {Object.entries(reportData.machineProduction).map(([machine, data]) => {
-                  const efficiencyStatus = data.efficiency >= 80 ? 'excellent' : 
-                                          data.efficiency >= 60 ? 'good' : 'poor';
-                  return (
-                    <div key={machine} className="machine-report-item">
-                      <div className="machine-report-header">
-                        <div className="machine-report-name">
-                          <FiTool size={16} />
-                          {machine}
+                {Object.entries(reportData.machineProduction).map(
+                  ([machine, data]) => {
+                    const efficiencyStatus =
+                      data.efficiency >= 80
+                        ? "excellent"
+                        : data.efficiency >= 60
+                        ? "good"
+                        : "poor";
+                    return (
+                      <div key={machine} className="machine-report-item">
+                        <div className="machine-report-header">
+                          <div className="machine-report-name">
+                            <FiTool size={16} />
+                            {machine}
+                          </div>
+                          <div
+                            className="machine-report-efficiency"
+                            style={{
+                              color:
+                                data.efficiency >= 80
+                                  ? "#10b981"
+                                  : data.efficiency >= 60
+                                  ? "#f59e0b"
+                                  : "#ef4444",
+                            }}
+                          >
+                            {data.efficiency.toFixed(1)}%
+                          </div>
                         </div>
-                        <div 
-                          className="machine-report-efficiency"
-                          style={{ 
-                            color: data.efficiency >= 80 ? '#10b981' :
-                                   data.efficiency >= 60 ? '#f59e0b' : '#ef4444'
-                          }}
-                        >
-                          {data.efficiency.toFixed(1)}%
+                        <div className="machine-report-details">
+                          <div className="detail-item">
+                            <div className="detail-label">Production:</div>
+                            <div className="detail-value">
+                              {data.production.toFixed(1)} KG
+                            </div>
+                          </div>
+                          <div className="detail-item">
+                            <div className="detail-label">Records:</div>
+                            <div className="detail-value">{data.count}</div>
+                          </div>
+                          <div
+                            className={`detail-status indicator-${efficiencyStatus}`}
+                          >
+                            {efficiencyStatus === "excellent"
+                              ? "Excellent"
+                              : efficiencyStatus === "good"
+                              ? "Good"
+                              : "Needs Attention"}
+                          </div>
                         </div>
                       </div>
-                      <div className="machine-report-details">
-                        <div className="detail-item">
-                          <div className="detail-label">Production:</div>
-                          <div className="detail-value">{data.production.toFixed(1)} KG</div>
-                        </div>
-                        <div className="detail-item">
-                          <div className="detail-label">Records:</div>
-                          <div className="detail-value">{data.count}</div>
-                        </div>
-                        <div className={`detail-status indicator-${efficiencyStatus}`}>
-                          {efficiencyStatus === 'excellent' ? 'Excellent' : 
-                           efficiencyStatus === 'good' ? 'Good' : 'Needs Attention'}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  }
+                )}
               </div>
             </div>
           )}
@@ -1684,43 +1912,60 @@ const FlatteningPage = () => {
             <div className="report-section-block">
               <h3>Item-wise Production</h3>
               <div className="machine-report-list">
-                {Object.entries(reportData.itemProduction).map(([item, data]) => {
-                  const efficiencyStatus = data.efficiency >= 80 ? 'excellent' : 
-                                          data.efficiency >= 60 ? 'good' : 'poor';
-                  return (
-                    <div key={item} className="machine-report-item">
-                      <div className="machine-report-header">
-                        <div className="machine-report-name">
-                          <FiTag size={16} />
-                          {item}
+                {Object.entries(reportData.itemProduction).map(
+                  ([item, data]) => {
+                    const efficiencyStatus =
+                      data.efficiency >= 80
+                        ? "excellent"
+                        : data.efficiency >= 60
+                        ? "good"
+                        : "poor";
+                    return (
+                      <div key={item} className="machine-report-item">
+                        <div className="machine-report-header">
+                          <div className="machine-report-name">
+                            <FiTag size={16} />
+                            {item}
+                          </div>
+                          <div
+                            className="machine-report-efficiency"
+                            style={{
+                              color:
+                                data.efficiency >= 80
+                                  ? "#10b981"
+                                  : data.efficiency >= 60
+                                  ? "#f59e0b"
+                                  : "#ef4444",
+                            }}
+                          >
+                            {data.efficiency.toFixed(1)}%
+                          </div>
                         </div>
-                        <div 
-                          className="machine-report-efficiency"
-                          style={{ 
-                            color: data.efficiency >= 80 ? '#10b981' :
-                                   data.efficiency >= 60 ? '#f59e0b' : '#ef4444'
-                          }}
-                        >
-                          {data.efficiency.toFixed(1)}%
+                        <div className="machine-report-details">
+                          <div className="detail-item">
+                            <div className="detail-label">Production:</div>
+                            <div className="detail-value">
+                              {data.production.toFixed(1)} KG
+                            </div>
+                          </div>
+                          <div className="detail-item">
+                            <div className="detail-label">Records:</div>
+                            <div className="detail-value">{data.count}</div>
+                          </div>
+                          <div
+                            className={`detail-status indicator-${efficiencyStatus}`}
+                          >
+                            {efficiencyStatus === "excellent"
+                              ? "Excellent"
+                              : efficiencyStatus === "good"
+                              ? "Good"
+                              : "Needs Attention"}
+                          </div>
                         </div>
                       </div>
-                      <div className="machine-report-details">
-                        <div className="detail-item">
-                          <div className="detail-label">Production:</div>
-                          <div className="detail-value">{data.production.toFixed(1)} KG</div>
-                        </div>
-                        <div className="detail-item">
-                          <div className="detail-label">Records:</div>
-                          <div className="detail-value">{data.count}</div>
-                        </div>
-                        <div className={`detail-status indicator-${efficiencyStatus}`}>
-                          {efficiencyStatus === 'excellent' ? 'Excellent' : 
-                           efficiencyStatus === 'good' ? 'Good' : 'Needs Attention'}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  }
+                )}
               </div>
             </div>
           )}
@@ -1760,16 +2005,22 @@ const FlatteningPage = () => {
             </div>
           </div>
           <div className="database-status">
-            <div className={`status-indicator ${isSupabaseConnected ? 'connected' : 'offline'}`} />
-            {isSupabaseConnected ? 'Database Connected' : 'Database Offline'}
+            <div
+              className={`status-indicator ${
+                isSupabaseConnected ? "connected" : "offline"
+              }`}
+            />
+            {isSupabaseConnected ? "Database Connected" : "Database Offline"}
           </div>
         </div>
 
         {loading ? (
           <div className="loading-records">
             <div className="table-spinner" />
-            <div className="loading-text">Loading records from flatteningsection...</div>
-          </div>
+            <div className="loading-text">
+              Loading records from flatteningsection...
+            </div>
+        </div>
         ) : filteredRecords.length === 0 ? (
           <div className="empty-records">
             <div className="empty-icon">
@@ -1778,9 +2029,9 @@ const FlatteningPage = () => {
             <div className="empty-content">
               <h3>No records found</h3>
               <p>
-                {searchTerm || filterDate || filterShift 
-                  ? 'No records match your search criteria. Try adjusting your filters.'
-                  : 'No production records available. Create your first record to get started.'}
+                {searchTerm || filterDate || filterShift
+                  ? "No records match your search criteria. Try adjusting your filters."
+                  : "No production records available. Create your first record to get started."}
               </p>
               <button
                 onClick={() => setShowFlatteningModal(true)}
@@ -1809,86 +2060,126 @@ const FlatteningPage = () => {
                 </thead>
                 <tbody>
                   {currentRecords.map((record, index) => {
-                    const efficiencyClass = record.efficiency >= 80 ? 'good' : 
-                                           record.efficiency >= 60 ? 'average' : 'poor';
-                    const shiftClass = ['A', 'B', 'C'].includes(record.shift_code || record.shift) 
-                      ? (record.shift_code || record.shift) 
-                      : 'default';
-                    
+                    const efficiencyClass =
+                      record.efficiency >= 80
+                        ? "good"
+                        : record.efficiency >= 70
+                        ? "average"
+                        : "poor";
+                    const shiftClass = ["A", "B", "C"].includes(
+                      record.shift_code || record.shift
+                    )
+                      ? record.shift_code || record.shift
+                      : "default";
+
                     return (
-                      <tr key={record.id} className={index % 2 === 0 ? 'even' : 'odd'}>
+                      <tr
+                        key={record.id}
+                        className={index % 2 === 0 ? "even" : "odd"}
+                      >
                         <td className="id-cell">#{record.id}</td>
+
                         <td>
                           <div className="machine-cell">
                             <div className="machine-icon">
                               <FiTool size={16} />
                             </div>
                             <div className="machine-details">
-                              <div className="machine-id">{record.machine_id || 'N/A'}</div>
-                              <div className="machine-number">Machine No: {record.machine_no || 'N/A'}</div>
+                              <div className="machine-id">
+                                {record.machine_id || "N/A"}
+                              </div>
+                              <div className="machine-number">
+                                {record.machine_no || "N/A"}
+                              </div>
                             </div>
                           </div>
                         </td>
+
                         <td>
                           <div className="item-cell">
                             <div className="item-icon">
                               <FiPackage size={16} />
                             </div>
                             <div className="item-details">
-                              <div className="item-name">{record.item_name || 'N/A'}</div>
-                              <div className="item-size">Size: {record.coil_size || 'N/A'}</div>
+                              <div className="item-name">
+                                {record.item_name || "N/A"}
+                              </div>
+                              <div className="item-size">
+                                {record.coil_size || "N/A"}
+                              </div>
                             </div>
                           </div>
                         </td>
+
                         <td className="production-cell">
-                          <div className="production-badge">
-                            <div className="production-value">
-                              {parseFloat(record.production_quantity).toLocaleString()}
+                          <div className="production-info">
+                            <div className="production-row">
+                              <span className="label">Production:</span>
+                              <span className="value">
+                                {parseFloat(
+                                  record.production_quantity
+                                ).toLocaleString()}{" "}
+                                KG
+                              </span>
                             </div>
-                            <div className="production-label">KILOGRAMS</div>
+                            <div className="production-row">
+                              <span className="label">Target:</span>
+                              <span className="value">
+                                {parseFloat(
+                                  record.target_qty || 0
+                                ).toLocaleString()}{" "}
+                                KG
+                              </span>
+                            </div>
                           </div>
                         </td>
+
                         <td>
                           <div className={`shift-badge ${shiftClass}`}>
-                            {record.shift_code || record.shift || 'N/A'}
+                            {record.shift_code || record.shift || "N/A"}
                           </div>
                         </td>
+
                         <td>
                           <div className="operator-cell">
                             <div className="operator-avatar">
-                              {record.operator_name?.charAt(0) || 'U'}
+                              {record.operator_name?.charAt(0) || "U"}
                             </div>
                             <div className="operator-details">
-                              <div className="operator-name">{record.operator_name || 'Unknown'}</div>
-                              <div className="operator-role">Operator</div>
+                              <div className="operator-name">
+                                {record.operator_name || "Unknown"}
+                              </div>
                             </div>
                           </div>
                         </td>
+
                         <td>
                           <div className={`efficiency-cell ${efficiencyClass}`}>
-                            <div className="efficiency-value">
-                              {record.efficiency ? `${parseFloat(record.efficiency).toFixed(1)}%` : 'N/A'}
-                            </div>
-                            <div className="efficiency-indicator">
-                              <FiActivity size={12} />
-                            </div>
+                            {record.efficiency
+                              ? `${parseFloat(record.efficiency).toFixed(1)}%`
+                              : "N/A"}
                           </div>
                         </td>
+
                         <td>
                           <div className="datetime-cell">
                             <div className="date-part">
-                              <FiCalendar size={12} />
-                              {new Date(record.created_at).toLocaleDateString('en-GB')}
+                              {new Date(record.created_at).toLocaleDateString(
+                                "en-GB"
+                              )}
                             </div>
                             <div className="time-part">
-                              <FiClock size={10} />
-                              {new Date(record.created_at).toLocaleTimeString([], { 
-                                hour: '2-digit', 
-                                minute: '2-digit' 
-                              })}
+                              {new Date(record.created_at).toLocaleTimeString(
+                                [],
+                                {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                }
+                              )}
                             </div>
                           </div>
                         </td>
+
                         <td className="actions-cell">
                           <div className="action-buttons">
                             <button
@@ -1925,13 +2216,18 @@ const FlatteningPage = () => {
             {totalPages > 1 && (
               <div className="pagination-section-enhanced">
                 <div className="pagination-info">
-                  Page {currentPage} of {totalPages} • Showing {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, filteredRecords.length)} of {filteredRecords.length} records
+                  Page {currentPage} of {totalPages} • Showing{" "}
+                  {indexOfFirstItem + 1}-
+                  {Math.min(indexOfLastItem, filteredRecords.length)} of{" "}
+                  {filteredRecords.length} records
                 </div>
                 <div className="pagination-controls">
                   <button
                     onClick={handlePrevPage}
                     disabled={currentPage === 1}
-                    className={`pagination-btn ${currentPage === 1 ? 'disabled' : ''}`}
+                    className={`pagination-btn ${
+                      currentPage === 1 ? "disabled" : ""
+                    }`}
                   >
                     <FiChevronLeft /> Previous
                   </button>
@@ -1947,12 +2243,14 @@ const FlatteningPage = () => {
                       } else {
                         pageNum = currentPage - 2 + i;
                       }
-                      
+
                       return (
                         <button
                           key={pageNum}
                           onClick={() => setCurrentPage(pageNum)}
-                          className={`page-number ${currentPage === pageNum ? 'active' : ''}`}
+                          className={`page-number ${
+                            currentPage === pageNum ? "active" : ""
+                          }`}
                         >
                           {pageNum}
                         </button>
@@ -1965,7 +2263,9 @@ const FlatteningPage = () => {
                   <button
                     onClick={handleNextPage}
                     disabled={currentPage === totalPages}
-                    className={`pagination-btn ${currentPage === totalPages ? 'disabled' : ''}`}
+                    className={`pagination-btn ${
+                      currentPage === totalPages ? "disabled" : ""
+                    }`}
                   >
                     Next <FiChevronRight />
                   </button>
@@ -1984,35 +2284,45 @@ const FlatteningPage = () => {
               Flattening Section • Production Management System
             </div>
             <div className="footer-subtitle">
-              Database: flatteningsection table • Last updated: {new Date().toLocaleTimeString()}
+              Database: flatteningsection table • Last updated:{" "}
+              {new Date().toLocaleTimeString()}
             </div>
           </div>
           <div className="footer-right">
-            <div className={`database-status ${isSupabaseConnected ? 'connected' : 'offline'}`}>
-              <div className={`status-dot ${isSupabaseConnected ? 'connected' : 'offline'}`} />
-              {isSupabaseConnected ? 'Supabase Database Connected' : 'Database Connection Issue'}
+            <div
+              className={`database-status ${
+                isSupabaseConnected ? "connected" : "offline"
+              }`}
+            >
+              <div
+                className={`status-dot ${
+                  isSupabaseConnected ? "connected" : "offline"
+                }`}
+              />
+              {isSupabaseConnected
+                ? "Supabase Database Connected"
+                : "Database Connection Issue"}
             </div>
             <div className="footer-stats">
-              {stats.totalRecords} total records • {stats.todayProduction} KG today • {stats.totalProduction.toLocaleString()} KG total production
+              {stats.totalRecords} total records • {stats.todayProduction} KG
+              today • {stats.totalProduction.toLocaleString()} KG total
+              production
             </div>
           </div>
         </div>
-        
+
         <div className="footer-actions">
           <button
             onClick={() => setShowFlatteningModal(true)}
             className="footer-btn add-btn"
           >
-            <FiPlus size={14} /> Add New Record
+            <FiPlus size={14} /> New Flattening Entey
           </button>
-          <button
-            onClick={fetchData}
-            className="footer-btn refresh-btn"
-          >
+          <button onClick={fetchData} className="footer-btn refresh-btn">
             <FiRefreshCw size={14} /> Refresh Data
           </button>
           <button
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate("/dashboard")}
             className="footer-btn production-btn"
           >
             <FiTrendingUp size={14} /> View Dashboard
@@ -2020,27 +2330,41 @@ const FlatteningPage = () => {
         </div>
       </div>
 
-      {/* Flattening Form Modal */}
+      {/* Flattening Form Modal - Lazy Loaded */}
       {showFlatteningModal && (
         <div className="modal-overlay">
           <div className="modal-container">
-            <FlatteningForm 
-              isModal={true}
-              onClose={() => {
-                setShowFlatteningModal(false);
-                fetchData();
-              }}
-              onSuccess={() => {
-                setShowFlatteningModal(false);
-                fetchData();
-              }}
-            />
+            <Suspense
+              fallback={
+                <div className="loading-container">
+                  <div className="loading-spinner" />
+                  <p>Loading Production Form...</p>
+                </div>
+              }
+            >
+              <FlatteningForm
+                isModal={true}
+                onClose={() => {
+                  setShowFlatteningModal(false);
+                  fetchData();
+                }}
+                onSuccess={() => {
+                  setShowFlatteningModal(false);
+                  fetchData();
+                }}
+              />
+            </Suspense>
           </div>
         </div>
       )}
 
       {/* PDF Report Modal */}
-      {showPDFModal && renderPDFModal()}
+      {showPDFModal && pdfReportData && (
+        <PDFReportModal
+          data={pdfReportData}
+          onClose={() => setShowPDFModal(false)}
+        />
+      )}
     </div>
   );
 };

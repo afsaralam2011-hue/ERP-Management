@@ -3,7 +3,9 @@ import React from 'react';
 import { 
   FiPackage, FiArrowLeft, FiFolder, 
   FiEdit, FiEye, FiFileText,
-  FiHome, FiGrid
+  FiHome, FiGrid, FiArrowUpRight,
+  FiArchive, FiColumns, FiLayers,
+  FiScissors, FiCheckSquare
 } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 
@@ -16,42 +18,48 @@ const Production = () => {
       description: 'Wire flattening and processing operations',
       path: '/production-sections/flattening',
       color: '#f59e0b',
-      components: ['FlatteningForm.jsx', 'FlatteningPage.jsx', 'FlatteningEditForm.jsx']
+      components: ['FlatteningForm.jsx', 'FlatteningPage.jsx', 'FlatteningEditForm.jsx'],
+      icon: FiPackage
     },
     { 
       name: 'Spiral Section', 
       description: 'Spiral binding production and assembly',
       path: '/production-sections/spiral',
       color: '#10b981',
-      components: ['SpiralForm.jsx', 'SpiralPage.jsx', 'SpiralEditForm.jsx']
+      components: ['SpiralForm.jsx', 'SpiralPage.jsx', 'SpiralEditForm.jsx'],
+      icon: FiColumns
     },
     { 
       name: 'PVC Coating Section', 
       description: 'PVC coating application and finishing',
       path: '/production-sections/pvc-coating',
       color: '#8b5cf6',
-      components: ['PVCCoatingForm.jsx', 'PVCCoatingPage.jsx', 'PVCCoatingEditForm.jsx']
+      components: ['PVCCoatingForm.jsx', 'PVCCoatingPage.jsx', 'PVCCoatingEditForm.jsx'],
+      icon: FiLayers
     },
     { 
       name: 'Cutting & Packing Section', 
       description: 'Final cutting, packaging and dispatch',
       path: '/production-sections/cutting-packing',
       color: '#3b82f6',
-      components: ['CuttingPackingForm.jsx', 'CuttingPackingPage.jsx', 'CuttingPackingEditForm.jsx']
+      components: ['CuttingPackingForm.jsx', 'CuttingPackingPage.jsx', 'CuttingPackingEditForm.jsx'],
+      icon: FiScissors
     },
     { 
       name: 'Finished Goods Section', 
       description: 'Finished products inventory and quality control',
       path: '/production-sections/finished-goods',
       color: '#ef4444',
-      components: ['FinishedGoodsForm.jsx', 'FinishedGoodsPage.jsx', 'FinishedGoodsEditForm.jsx']
+      components: ['FinishedGoodsForm.jsx', 'FinishedGoodsPage.jsx', 'FinishedGoodsEditForm.jsx'],
+      icon: FiCheckSquare
     },
     { 
       name: 'Raw Material Section', 
       description: 'Raw material storage and management',
       path: '/production-sections/raw-material',
       color: '#6366f1',
-      components: ['RawMaterialForm.jsx', 'RawMaterialPage.jsx', 'RawMaterialEditForm.jsx']
+      components: ['RawMaterialForm.jsx', 'RawMaterialPage.jsx', 'RawMaterialEditForm.jsx'],
+      icon: FiArchive
     },
   ];
 
@@ -139,6 +147,223 @@ const Production = () => {
         </div>
       </div>
 
+      {/* Switch Production Section Pattern (یہ نیا حصہ شامل کیا گیا ہے) */}
+      <div style={{
+        background: 'white',
+        borderRadius: '16px',
+        padding: '25px',
+        marginBottom: '30px',
+        boxShadow: '0 10px 40px rgba(0, 0, 0, 0.08)',
+        position: 'relative',
+        overflow: 'hidden',
+        border: '1px solid #e2e8f0'
+      }}>
+        {/* Background Pattern */}
+        <div style={{
+          position: 'absolute',
+          top: '0',
+          left: '0',
+          right: '0',
+          height: '100%',
+          background: 'radial-gradient(circle at 30% 30%, rgba(59, 130, 246, 0.05) 0%, transparent 70%)',
+          pointerEvents: 'none'
+        }} />
+        
+        {/* Switcher Header */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '15px',
+          marginBottom: '25px',
+          position: 'relative'
+        }}>
+          <div style={{
+            width: '50px',
+            height: '50px',
+            background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+            borderRadius: '12px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'white',
+            fontSize: '22px'
+          }}>
+            <FiGrid size={18} />
+          </div>
+          <div>
+            <div style={{ 
+              fontSize: '18px', 
+              fontWeight: '600', 
+              color: '#1e293b',
+              marginBottom: '4px'
+            }}>
+              Switch Production Section
+            </div>
+            <div style={{ 
+              fontSize: '14px', 
+              color: '#64748b' 
+            }}>
+              Click any section to switch instantly
+            </div>
+          </div>
+        </div>
+        
+        {/* Sections Grid */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+          gap: '20px',
+          marginBottom: '25px',
+          position: 'relative'
+        }}>
+          {sections.map((section) => (
+            <div
+              key={section.path}
+              onClick={() => handleSectionClick(section.path)}
+              style={{
+                background: 'white',
+                borderRadius: '12px',
+                padding: '20px',
+                cursor: 'pointer',
+                position: 'relative',
+                transition: 'all 0.3s ease',
+                border: '1px solid #e2e8f0',
+                overflow: 'hidden'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-5px)';
+                e.currentTarget.style.boxShadow = `0 15px 30px ${section.color}20`;
+                e.currentTarget.style.borderColor = section.color;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.05)';
+                e.currentTarget.style.borderColor = '#e2e8f0';
+              }}
+            >
+              {/* Card Glow Effects */}
+              <div style={{
+                position: 'absolute',
+                top: '0',
+                left: '0',
+                right: '0',
+                height: '2px',
+                background: `linear-gradient(90deg, transparent 0%, ${section.color}80 50%, transparent 100%)`,
+                opacity: '0',
+                transition: 'opacity 0.3s ease'
+              }} className="section-card-highlight" />
+              
+              <div style={{
+                position: 'absolute',
+                top: '20%',
+                right: '-20px',
+                width: '60px',
+                height: '60px',
+                background: `radial-gradient(circle, ${section.color}10 0%, transparent 70%)`,
+                opacity: '0',
+                transition: 'opacity 0.3s ease'
+              }} className="section-glow-right" />
+              
+              <div style={{
+                position: 'absolute',
+                bottom: '20%',
+                left: '-20px',
+                width: '60px',
+                height: '60px',
+                background: `radial-gradient(circle, ${section.color}10 0%, transparent 70%)`,
+                opacity: '0',
+                transition: 'opacity 0.3s ease'
+              }} className="section-glow-left" />
+              
+              {/* Card Content */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '15px',
+                position: 'relative',
+                zIndex: '1'
+              }}>
+                <div style={{
+                  width: '48px',
+                  height: '48px',
+                  background: `${section.color}15`,
+                  borderRadius: '10px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: section.color,
+                  fontSize: '20px',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}>
+                  <section.icon size={20} />
+                  <div style={{
+                    position: 'absolute',
+                    top: '0',
+                    left: '0',
+                    right: '0',
+                    bottom: '0',
+                    background: `radial-gradient(circle at center, ${section.color}20 0%, transparent 70%)`,
+                    opacity: '0',
+                    transition: 'opacity 0.3s ease'
+                  }} className="icon-glow" />
+                </div>
+                
+                <div style={{ flex: '1' }}>
+                  <div style={{ 
+                    fontSize: '16px', 
+                    fontWeight: '600', 
+                    color: '#1e293b',
+                    marginBottom: '4px'
+                  }}>
+                    {section.name}
+                  </div>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    fontSize: '12px',
+                    color: '#64748b'
+                  }}>
+                    <span>📊</span>
+                    <span>Click to open section</span>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Hover Overlay */}
+              <div style={{
+                position: 'absolute',
+                top: '0',
+                left: '0',
+                right: '0',
+                bottom: '0',
+                background: `${section.color}05`,
+                opacity: '0',
+                transition: 'opacity 0.3s ease',
+                pointerEvents: 'none'
+              }} className="section-hover-overlay" />
+            </div>
+          ))}
+        </div>
+        
+        {/* Switcher Footer */}
+        <div style={{
+          paddingTop: '20px',
+          borderTop: '1px solid #e2e8f0',
+          fontSize: '13px',
+          color: '#64748b',
+          textAlign: 'center',
+          position: 'relative',
+          zIndex: '1'
+        }}>
+          <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+            <FiArrowUpRight size={10} /> 
+            Click any card above to navigate to that production section
+          </span>
+        </div>
+      </div>
+
       {/* Information Card */}
       <div style={{
         background: 'linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%)',
@@ -168,7 +393,7 @@ const Production = () => {
         </p>
       </div>
 
-      {/* Sections Grid */}
+      {/* Sections Grid (Original Detailed Sections) */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
@@ -215,7 +440,7 @@ const Production = () => {
                 color: section.color,
                 fontSize: '22px'
               }}>
-                <FiPackage />
+                <section.icon />
               </div>
               <div>
                 <h3 style={{ 
@@ -309,7 +534,7 @@ const Production = () => {
                 color: '#64748b',
                 fontStyle: 'italic'
               }}>
-                Click to open section
+                Click to open section Afsar
               </span>
               <div style={{
                 display: 'flex',
