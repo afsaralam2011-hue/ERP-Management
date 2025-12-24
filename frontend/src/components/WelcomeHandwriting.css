@@ -1,0 +1,234 @@
+/* WelcomeHandwriting.css - 100% Complete Final Version */
+.welcome-handwriting-wrapper {
+  position: relative;
+  width: 100%;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  margin: 0 auto;
+  padding: 2px;
+}
+
+.paper-background {
+  position: relative;
+  width: 96%;
+  height: 85%;
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  border-radius: 6px;
+  padding: 15px;
+  overflow: hidden;
+  box-shadow: 
+    inset 0 2px 6px rgba(0, 0, 0, 0.3),
+    0 3px 10px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.paper-lines {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 22px,
+      rgba(255, 255, 255, 0.02) 22px,
+      rgba(255, 255, 255, 0.02) 23px
+    );
+  opacity: 0.25;
+}
+
+.continuous-loop-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+
+.text-track {
+  display: flex;
+  white-space: nowrap;
+  will-change: transform;
+  animation: marqueeScroll 20s linear infinite;
+}
+
+.loop-text {
+  font-family: 'Segoe UI', 'Roboto', 'Arial', sans-serif;
+  font-size: 1.6rem;
+  font-weight: 500;
+  color: #ffffff;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
+  letter-spacing: 0.3px;
+  padding-right: 60px;
+  display: inline-block;
+}
+
+.loop-text.duplicate {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Separator style between texts */
+.loop-text::after {
+  content: " | ";
+  color: #60a5fa;
+  opacity: 0.6;
+  margin: 0 15px;
+  font-weight: bold;
+}
+
+/* Marquee animation */
+@keyframes marqueeScroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-33.33%);
+  }
+}
+
+/* Hover effect for smoothness */
+.text-track:hover {
+  animation-play-state: paused;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .welcome-handwriting-wrapper {
+    height: 125px;
+  }
+  
+  .loop-text {
+    font-size: 1.5rem;
+    padding-right: 50px;
+  }
+}
+
+@media (max-width: 768px) {
+  .welcome-handwriting-wrapper {
+    height: 115px;
+  }
+  
+  .paper-background {
+    padding: 12px;
+  }
+  
+  .loop-text {
+    font-size: 1.3rem;
+    padding-right: 40px;
+  }
+  
+  .loop-text::after {
+    margin: 0 10px;
+  }
+  
+  @keyframes marqueeScroll {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-33.33%);
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .welcome-handwriting-wrapper {
+    height: 100px;
+  }
+  
+  .paper-background {
+    padding: 10px;
+  }
+  
+  .loop-text {
+    font-size: 1.1rem;
+    padding-right: 30px;
+  }
+  
+  .loop-text::after {
+    margin: 0 8px;
+  }
+}
+
+/* For very small screens */
+@media (max-width: 360px) {
+  .welcome-handwriting-wrapper {
+    height: 90px;
+  }
+  
+  .loop-text {
+    font-size: 1rem;
+    padding-right: 25px;
+  }
+  
+  .paper-background {
+    padding: 8px;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .loop-text {
+    color: #ffffff;
+    text-shadow: 0 0 2px #000000;
+  }
+  
+  .loop-text::after {
+    color: #3b82f6;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .text-track {
+    animation: none;
+    transform: translateX(0);
+  }
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+  .paper-background {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  .paper-lines {
+    opacity: 0.3;
+  }
+}
+/* WelcomeHandwriting.css میں یہ update کریں */
+.welcome-handwriting-wrapper {
+  position: relative;
+  width: 100%;
+  height: 80px; /* 130px سے 140px کر دیا */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: hsla(171, 97%, 25%, 0.918);
+  border-radius: 6px;
+  margin: 0 auto;
+  padding: 2px;
+}
+
+@media (max-width: 768px) {
+  .welcome-handwriting-wrapper {
+    height: 125px; /* 115px سے 125px کر دیا */
+  }
+}
+
+@media (max-width: 480px) {
+  .welcome-handwriting-wrapper {
+    height: 110px; /* 100px سے 110px کر دیا */
+  }
+}

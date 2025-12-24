@@ -1,578 +1,784 @@
 // src/pages/ProductionSections/Production.jsx
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   FiPackage, FiArrowLeft, FiFolder, 
   FiEdit, FiEye, FiFileText,
   FiHome, FiGrid, FiArrowUpRight,
   FiArchive, FiColumns, FiLayers,
-  FiScissors, FiCheckSquare
+  FiScissors, FiCheckSquare, FiTrendingUp,
+  FiBarChart2, FiCalendar, FiClock, FiFilter,
+  FiDatabase, FiPrinter, FiDownload, FiRefreshCw,
+  FiChevronLeft, FiChevronRight, FiActivity,
+  FiCpu, FiZap, FiTool, FiBox, FiTarget,
+  FiDollarSign, FiPercent, FiTrendingUp as FiTrendingUpIcon,
+  FiTrendingDown, FiUsers, FiMap, FiPieChart,
+  FiMenu, FiChevronRight as FiChevronRightIcon
 } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
+import './Production.css';
 
+// Mock data for demonstration
 const Production = () => {
   const navigate = useNavigate();
+  const [activeSection, setActiveSection] = useState('spiral');
+  const [timeRange, setTimeRange] = useState('today');
+  const [reportType, setReportType] = useState('summary');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
 
+  // Production Sections
   const sections = [
     { 
+      id: 'raw-material',
+      name: 'Raw Material Section', 
+      description: 'Raw material storage and management',
+      path: '/production-sections/raw-material',
+      color: '#06b6d4',
+      icon: FiArchive
+    },
+    { 
+      id: 'flattening',
       name: 'Flattening Section', 
       description: 'Wire flattening and processing operations',
       path: '/production-sections/flattening',
       color: '#f59e0b',
-      components: ['FlatteningForm.jsx', 'FlatteningPage.jsx', 'FlatteningEditForm.jsx'],
       icon: FiPackage
     },
     { 
+      id: 'spiral',
       name: 'Spiral Section', 
       description: 'Spiral binding production and assembly',
       path: '/production-sections/spiral',
       color: '#10b981',
-      components: ['SpiralForm.jsx', 'SpiralPage.jsx', 'SpiralEditForm.jsx'],
       icon: FiColumns
     },
     { 
+      id: 'pvc-coating',
       name: 'PVC Coating Section', 
       description: 'PVC coating application and finishing',
       path: '/production-sections/pvc-coating',
       color: '#8b5cf6',
-      components: ['PVCCoatingForm.jsx', 'PVCCoatingPage.jsx', 'PVCCoatingEditForm.jsx'],
       icon: FiLayers
     },
     { 
+      id: 'cutting-packing',
       name: 'Cutting & Packing Section', 
       description: 'Final cutting, packaging and dispatch',
       path: '/production-sections/cutting-packing',
       color: '#3b82f6',
-      components: ['CuttingPackingForm.jsx', 'CuttingPackingPage.jsx', 'CuttingPackingEditForm.jsx'],
       icon: FiScissors
     },
     { 
+      id: 'finished-goods',
       name: 'Finished Goods Section', 
       description: 'Finished products inventory and quality control',
       path: '/production-sections/finished-goods',
       color: '#ef4444',
-      components: ['FinishedGoodsForm.jsx', 'FinishedGoodsPage.jsx', 'FinishedGoodsEditForm.jsx'],
       icon: FiCheckSquare
-    },
-    { 
-      name: 'Raw Material Section', 
-      description: 'Raw material storage and management',
-      path: '/production-sections/raw-material',
-      color: '#6366f1',
-      components: ['RawMaterialForm.jsx', 'RawMaterialPage.jsx', 'RawMaterialEditForm.jsx'],
-      icon: FiArchive
     },
   ];
 
-  const handleSectionClick = (sectionPath) => {
-    navigate(sectionPath);
+  // Time ranges for reports
+  const timeRanges = [
+    { id: 'today', name: 'Today', icon: FiCalendar },
+    { id: 'yesterday', name: 'Yesterday', icon: FiCalendar },
+    { id: 'week', name: 'This Week', icon: FiCalendar },
+    { id: 'month', name: 'This Month', icon: FiCalendar },
+    { id: 'quarter', name: 'This Quarter', icon: FiCalendar },
+    { id: 'year', name: 'This Year', icon: FiCalendar },
+    { id: 'custom', name: 'Custom Range', icon: FiFilter },
+  ];
+
+  // Report types
+  const reportTypes = [
+    { id: 'summary', name: 'Summary', icon: FiBarChart2 },
+    { id: 'daily', name: 'Daily Report', icon: FiCalendar },
+    { id: 'weekly', name: 'Weekly Report', icon: FiTrendingUp },
+    { id: 'monthly', name: 'Monthly Report', icon: FiTrendingUpIcon },
+    { id: 'item-wise', name: 'Item-wise', icon: FiPackage },
+    { id: 'machine-wise', name: 'Machine-wise', icon: FiTool },
+    { id: 'operator-wise', name: 'Operator-wise', icon: FiUsers },
+    { id: 'product-wise', name: 'Product-wise', icon: FiBox },
+    { id: 'efficiency', name: 'Efficiency', icon: FiActivity },
+    { id: 'comparative', name: 'Comparative', icon: FiTrendingUp },
+  ];
+
+  // Mock data for active section
+  const [activeSectionData, setActiveSectionData] = useState({
+    summary: {
+      totalProduction: 12500,
+      totalWeight: 8500,
+      avgEfficiency: 85.5,
+      totalRecords: 245,
+      todayProduction: 1250,
+      todayWeight: 850,
+      todayEfficiency: 88.2,
+    },
+    daily: [
+      { date: '2024-01-01', production: 1250, weight: 850, efficiency: 88.2 },
+      { date: '2024-01-02', production: 1300, weight: 880, efficiency: 89.1 },
+      { date: '2024-01-03', production: 1200, weight: 820, efficiency: 87.5 },
+      { date: '2024-01-04', production: 1350, weight: 900, efficiency: 90.0 },
+      { date: '2024-01-05', production: 1280, weight: 870, efficiency: 88.8 },
+    ],
+    itemWise: [
+      { item: 'Spiral Pipe 1"', production: 3500, weight: 2400, efficiency: 89.5 },
+      { item: 'Spiral Pipe 2"', production: 4200, weight: 2900, efficiency: 87.8 },
+      { item: 'Spiral Pipe 3"', production: 2800, weight: 1900, efficiency: 86.2 },
+      { item: 'Spiral Pipe 4"', production: 2000, weight: 1300, efficiency: 84.5 },
+    ],
+    machineWise: [
+      { machine: 'Machine 1', production: 4500, efficiency: 90.2, downtime: '2h' },
+      { machine: 'Machine 2', production: 4000, efficiency: 88.5, downtime: '3h' },
+      { machine: 'Machine 3', production: 3500, efficiency: 87.1, downtime: '4h' },
+      { machine: 'Machine 4', production: 500, efficiency: 82.3, downtime: '6h' },
+    ],
+    trends: {
+      labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+      production: [1200, 1300, 1250, 1400, 1350, 1500],
+      efficiency: [85, 86, 87, 88, 89, 90],
+      weight: [800, 850, 820, 900, 870, 950],
+    },
+  });
+
+  const activeSectionObj = sections.find(s => s.id === activeSection) || sections[2];
+
+  // Handle section click
+  const handleSectionClick = (sectionId) => {
+    setActiveSection(sectionId);
+  };
+
+  // Handle navigation to detail page
+  const handleGoToDetail = () => {
+    navigate(activeSectionObj.path);
+  };
+
+  // Handle export report
+  const handleExportReport = () => {
+    const csvContent = [
+      ['Production Report', `${activeSectionObj.name} - ${timeRange}`],
+      ['Generated on:', new Date().toLocaleString()],
+      [],
+      ['Metric', 'Value'],
+      ['Total Production (M)', activeSectionData.summary.totalProduction],
+      ['Total Weight (KG)', activeSectionData.summary.totalWeight],
+      ['Average Efficiency (%)', activeSectionData.summary.avgEfficiency],
+      ['Total Records', activeSectionData.summary.totalRecords],
+      ["Today's Production", activeSectionData.summary.todayProduction],
+      ["Today's Weight", activeSectionData.summary.todayWeight],
+      ["Today's Efficiency", activeSectionData.summary.todayEfficiency],
+    ].map(row => row.join(',')).join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${activeSectionObj.id}-report-${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  };
+
+  // Handle print report
+  const handlePrintReport = () => {
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>${activeSectionObj.name} Production Report</title>
+        <style>
+          body { font-family: Arial, sans-serif; margin: 40px; }
+          .header { text-align: center; margin-bottom: 30px; }
+          .header h1 { color: #333; margin-bottom: 10px; }
+          .summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin: 30px 0; }
+          .summary-card { border: 1px solid #ddd; padding: 20px; border-radius: 8px; }
+          .summary-value { font-size: 24px; font-weight: bold; color: #333; }
+          .summary-label { font-size: 14px; color: #666; margin-top: 5px; }
+          .table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+          .table th, .table td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+          .table th { background-color: #f8f9fa; }
+          .footer { margin-top: 40px; text-align: center; color: #666; font-size: 12px; }
+          @media print { body { margin: 20px; } .no-print { display: none; } }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>${activeSectionObj.name} Production Report</h1>
+          <div>Time Range: ${timeRange} • Generated on: ${new Date().toLocaleString()}</div>
+          <div>Generated by: Afsar</div>
+        </div>
+        
+        <h3>Summary</h3>
+        <div class="summary-grid">
+          <div class="summary-card">
+            <div class="summary-value">${activeSectionData.summary.totalProduction.toLocaleString()} M</div>
+            <div class="summary-label">Total Production</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-value">${activeSectionData.summary.totalWeight.toLocaleString()} KG</div>
+            <div class="summary-label">Total Weight</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-value">${activeSectionData.summary.avgEfficiency}%</div>
+            <div class="summary-label">Average Efficiency</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-value">${activeSectionData.summary.totalRecords}</div>
+            <div class="summary-label">Total Records</div>
+          </div>
+        </div>
+        
+        ${reportType === 'item-wise' ? `
+          <h3>Item-wise Production</h3>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Item Name</th>
+                <th>Production (M)</th>
+                <th>Weight (KG)</th>
+                <th>Efficiency (%)</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${activeSectionData.itemWise.map(item => `
+                <tr>
+                  <td>${item.item}</td>
+                  <td>${item.production.toLocaleString()}</td>
+                  <td>${item.weight.toLocaleString()}</td>
+                  <td>${item.efficiency}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        ` : ''}
+        
+        ${reportType === 'machine-wise' ? `
+          <h3>Machine-wise Production</h3>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Machine</th>
+                <th>Production (M)</th>
+                <th>Efficiency (%)</th>
+                <th>Downtime</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${activeSectionData.machineWise.map(machine => `
+                <tr>
+                  <td>${machine.machine}</td>
+                  <td>${machine.production.toLocaleString()}</td>
+                  <td>${machine.efficiency}</td>
+                  <td>${machine.downtime}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        ` : ''}
+        
+        ${reportType === 'daily' ? `
+          <h3>Daily Production (Last 5 Days)</h3>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Production (M)</th>
+                <th>Weight (KG)</th>
+                <th>Efficiency (%)</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${activeSectionData.daily.map(day => `
+                <tr>
+                  <td>${day.date}</td>
+                  <td>${day.production.toLocaleString()}</td>
+                  <td>${day.weight.toLocaleString()}</td>
+                  <td>${day.efficiency}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        ` : ''}
+        
+        <div class="footer">
+          Generated on ${new Date().toLocaleString()} by Afsar<br/>
+          Production Management System
+        </div>
+        
+        <div class="no-print" style="margin-top: 20px;">
+          <button onclick="window.print()" style="padding: 10px 20px; background: #3b82f6; color: white; border: none; border-radius: 5px; cursor: pointer;">
+            Print Report
+          </button>
+          <button onclick="window.close()" style="padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer; margin-left: 10px;">
+            Close
+          </button>
+        </div>
+      </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
+
+  // Render different report types
+  const renderReportContent = () => {
+    switch (reportType) {
+      case 'summary':
+        return (
+          <div className="report-summary">
+            <div className="summary-grid">
+              <div className="summary-card" style={{ borderColor: activeSectionObj.color }}>
+                <div className="summary-icon" style={{ background: `${activeSectionObj.color}20` }}>
+                  <FiPackage style={{ color: activeSectionObj.color }} />
+                </div>
+                <div className="summary-value">
+                  {activeSectionData.summary.totalProduction.toLocaleString()} M
+                </div>
+                <div className="summary-label">Total Production</div>
+              </div>
+              
+              <div className="summary-card" style={{ borderColor: activeSectionObj.color }}>
+                <div className="summary-icon" style={{ background: `${activeSectionObj.color}20` }}>
+                  <FiTarget style={{ color: activeSectionObj.color }} />
+                </div>
+                <div className="summary-value">
+                  {activeSectionData.summary.totalWeight.toLocaleString()} KG
+                </div>
+                <div className="summary-label">Total Weight</div>
+              </div>
+              
+              <div className="summary-card" style={{ borderColor: activeSectionObj.color }}>
+                <div className="summary-icon" style={{ background: `${activeSectionObj.color}20` }}>
+                  <FiActivity style={{ color: activeSectionObj.color }} />
+                </div>
+                <div className="summary-value">
+                  {activeSectionData.summary.avgEfficiency}%
+                </div>
+                <div className="summary-label">Average Efficiency</div>
+              </div>
+              
+              <div className="summary-card" style={{ borderColor: activeSectionObj.color }}>
+                <div className="summary-icon" style={{ background: `${activeSectionObj.color}20` }}>
+                  <FiDatabase style={{ color: activeSectionObj.color }} />
+                </div>
+                <div className="summary-value">
+                  {activeSectionData.summary.totalRecords}
+                </div>
+                <div className="summary-label">Total Records</div>
+              </div>
+              
+              <div className="summary-card" style={{ borderColor: activeSectionObj.color }}>
+                <div className="summary-icon" style={{ background: `${activeSectionObj.color}20` }}>
+                  <FiTrendingUpIcon style={{ color: activeSectionObj.color }} />
+                </div>
+                <div className="summary-value">
+                  {activeSectionData.summary.todayProduction.toLocaleString()} M
+                </div>
+                <div className="summary-label">Today's Production</div>
+              </div>
+              
+              <div className="summary-card" style={{ borderColor: activeSectionObj.color }}>
+                <div className="summary-icon" style={{ background: `${activeSectionObj.color}20` }}>
+                  <FiZap style={{ color: activeSectionObj.color }} />
+                </div>
+                <div className="summary-value">
+                  {activeSectionData.summary.todayEfficiency}%
+                </div>
+                <div className="summary-label">Today's Efficiency</div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'item-wise':
+        return (
+          <div className="item-wise-report">
+            <h3>Item-wise Production Analysis</h3>
+            <div className="item-list">
+              {activeSectionData.itemWise.map((item, index) => (
+                <div key={index} className="item-card">
+                  <div className="item-header">
+                    <div className="item-icon" style={{ background: activeSectionObj.color }}>
+                      <FiPackage size={14} />
+                    </div>
+                    <div className="item-name">{item.item}</div>
+                  </div>
+                  <div className="item-stats">
+                    <div className="item-stat">
+                      <span className="stat-value">{item.production.toLocaleString()} M</span>
+                      <span className="stat-label">Production</span>
+                    </div>
+                    <div className="item-stat">
+                      <span className="stat-value">{item.weight.toLocaleString()} KG</span>
+                      <span className="stat-label">Weight</span>
+                    </div>
+                    <div className="item-stat">
+                      <span className="stat-value">{item.efficiency}%</span>
+                      <span className="stat-label">Efficiency</span>
+                    </div>
+                  </div>
+                  <div className="item-progress">
+                    <div 
+                      className="progress-bar" 
+                      style={{ 
+                        width: `${(item.production / activeSectionData.itemWise.reduce((sum, i) => sum + i.production, 0)) * 100}%`,
+                        background: activeSectionObj.color 
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+
+      case 'machine-wise':
+        return (
+          <div className="machine-wise-report">
+            <h3>Machine-wise Performance</h3>
+            <div className="machine-grid">
+              {activeSectionData.machineWise.map((machine, index) => (
+                <div key={index} className="machine-card">
+                  <div className="machine-header">
+                    <div className="machine-icon" style={{ background: activeSectionObj.color }}>
+                      <FiTool size={14} />
+                    </div>
+                    <div className="machine-name">{machine.machine}</div>
+                  </div>
+                  <div className="machine-stats">
+                    <div className="machine-stat">
+                      <div className="stat-value">{machine.production.toLocaleString()} M</div>
+                      <div className="stat-label">Production</div>
+                    </div>
+                    <div className="machine-stat">
+                      <div className="stat-value efficiency-high">{machine.efficiency}%</div>
+                      <div className="stat-label">Efficiency</div>
+                    </div>
+                    <div className="machine-stat">
+                      <div className="stat-value downtime">{machine.downtime}</div>
+                      <div className="stat-label">Downtime</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+
+      case 'daily':
+        return (
+          <div className="daily-report">
+            <h3>Daily Production Trends</h3>
+            <div className="daily-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Production (M)</th>
+                    <th>Weight (KG)</th>
+                    <th>Efficiency (%)</th>
+                    <th>Trend</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {activeSectionData.daily.map((day, index) => (
+                    <tr key={index}>
+                      <td>{day.date}</td>
+                      <td>{day.production.toLocaleString()}</td>
+                      <td>{day.weight.toLocaleString()}</td>
+                      <td>
+                        <span className="efficiency-badge" style={{ background: day.efficiency > 85 ? '#10b98120' : '#ef444420', color: day.efficiency > 85 ? '#10b981' : '#ef4444' }}>
+                          {day.efficiency}%
+                        </span>
+                      </td>
+                      <td>
+                        {index > 0 && (
+                          <span className={`trend ${day.production > activeSectionData.daily[index - 1].production ? 'up' : 'down'}`}>
+                            {day.production > activeSectionData.daily[index - 1].production ? '↗' : '↘'}
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        );
+
+      default:
+        return (
+          <div className="default-report">
+            <h3>Production Overview</h3>
+            <p>Select a report type to view detailed analysis.</p>
+          </div>
+        );
+    }
   };
 
   return (
-    <div style={{ padding: '20px' }}>
-      {/* Header */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        marginBottom: '30px',
-        flexWrap: 'wrap',
-        gap: '20px'
-      }}>
-        <div>
-          <button
-            onClick={() => navigate('/production')}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: '#64748b',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-              fontSize: '14px',
-              marginBottom: '10px'
-            }}
-          >
-            <FiArrowLeft /> Back to Production Dashboard
-          </button>
-          <h1 style={{
-            margin: '0',
-            fontSize: '32px',
-            color: '#1e293b',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '15px'
-          }}>
-            <div style={{
-              width: '60px',
-              height: '60px',
-              background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
-              borderRadius: '15px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'white'
-            }}>
-              <FiFolder size={28} />
-            </div>
-            Production Sections
-          </h1>
-          <p style={{ 
-            margin: '10px 0 0 75px', 
-            color: '#64748b',
-            fontSize: '16px'
-          }}>
-            Manage all production sections and their components
-          </p>
-        </div>
-
-        <div style={{ display: 'flex', gap: '15px' }}>
-          <button
-            onClick={() => navigate('/production')}
-            style={{
-              background: '#3b82f6',
-              color: 'white',
-              border: 'none',
-              padding: '12px 24px',
-              borderRadius: '10px',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-              fontWeight: '600'
-            }}
-          >
-            <FiHome /> Production Dashboard Afsar
-          </button>
-        </div>
+    <div className="production-dashboard-container">
+      {/* Database Status Banner */}
+      <div className="database-status-banner">
+        <FiDatabase size={16} />
+        <span>Production Database Connected • Last Updated: {new Date().toLocaleTimeString()}</span>
       </div>
 
-      {/* Switch Production Section Pattern (یہ نیا حصہ شامل کیا گیا ہے) */}
-      <div style={{
-        background: 'white',
-        borderRadius: '16px',
-        padding: '25px',
-        marginBottom: '30px',
-        boxShadow: '0 10px 40px rgba(0, 0, 0, 0.08)',
-        position: 'relative',
-        overflow: 'hidden',
-        border: '1px solid #e2e8f0'
-      }}>
-        {/* Background Pattern */}
-        <div style={{
-          position: 'absolute',
-          top: '0',
-          left: '0',
-          right: '0',
-          height: '100%',
-          background: 'radial-gradient(circle at 30% 30%, rgba(59, 130, 246, 0.05) 0%, transparent 70%)',
-          pointerEvents: 'none'
-        }} />
-        
-        {/* Switcher Header */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '15px',
-          marginBottom: '25px',
-          position: 'relative'
-        }}>
-          <div style={{
-            width: '50px',
-            height: '50px',
-            background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-            borderRadius: '12px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'white',
-            fontSize: '22px'
-          }}>
-            <FiGrid size={18} />
-          </div>
-          <div>
-            <div style={{ 
-              fontSize: '18px', 
-              fontWeight: '600', 
-              color: '#1e293b',
-              marginBottom: '4px'
-            }}>
-              Switch Production Section
+      {/* Main Layout */}
+      <div className="dashboard-layout">
+        {/* Sidebar */}
+        <div 
+          className={`sidebar ${sidebarCollapsed ? 'collapsed' : ''}`}
+          onMouseEnter={() => !sidebarCollapsed && setSidebarCollapsed(false)}
+          onMouseLeave={() => sidebarCollapsed && setSidebarCollapsed(true)}
+        >
+          <div className="sidebar-header">
+            <div className="sidebar-icon" style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)' }}>
+              <FiGrid size={20} />
             </div>
-            <div style={{ 
-              fontSize: '14px', 
-              color: '#64748b' 
-            }}>
-              Click any section to switch instantly
-            </div>
+            {!sidebarCollapsed && (
+              <>
+                <div className="sidebar-title">Production Sections</div>
+                <button 
+                  className="collapse-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSidebarCollapsed(!sidebarCollapsed);
+                  }}
+                >
+                  <FiChevronLeft size={16} />
+                </button>
+              </>
+            )}
           </div>
-        </div>
-        
-        {/* Sections Grid */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-          gap: '20px',
-          marginBottom: '25px',
-          position: 'relative'
-        }}>
-          {sections.map((section) => (
-            <div
-              key={section.path}
-              onClick={() => handleSectionClick(section.path)}
-              style={{
-                background: 'white',
-                borderRadius: '12px',
-                padding: '20px',
-                cursor: 'pointer',
-                position: 'relative',
-                transition: 'all 0.3s ease',
-                border: '1px solid #e2e8f0',
-                overflow: 'hidden'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-5px)';
-                e.currentTarget.style.boxShadow = `0 15px 30px ${section.color}20`;
-                e.currentTarget.style.borderColor = section.color;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.05)';
-                e.currentTarget.style.borderColor = '#e2e8f0';
-              }}
-            >
-              {/* Card Glow Effects */}
-              <div style={{
-                position: 'absolute',
-                top: '0',
-                left: '0',
-                right: '0',
-                height: '2px',
-                background: `linear-gradient(90deg, transparent 0%, ${section.color}80 50%, transparent 100%)`,
-                opacity: '0',
-                transition: 'opacity 0.3s ease'
-              }} className="section-card-highlight" />
-              
-              <div style={{
-                position: 'absolute',
-                top: '20%',
-                right: '-20px',
-                width: '60px',
-                height: '60px',
-                background: `radial-gradient(circle, ${section.color}10 0%, transparent 70%)`,
-                opacity: '0',
-                transition: 'opacity 0.3s ease'
-              }} className="section-glow-right" />
-              
-              <div style={{
-                position: 'absolute',
-                bottom: '20%',
-                left: '-20px',
-                width: '60px',
-                height: '60px',
-                background: `radial-gradient(circle, ${section.color}10 0%, transparent 70%)`,
-                opacity: '0',
-                transition: 'opacity 0.3s ease'
-              }} className="section-glow-left" />
-              
-              {/* Card Content */}
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '15px',
-                position: 'relative',
-                zIndex: '1'
-              }}>
-                <div style={{
-                  width: '48px',
-                  height: '48px',
-                  background: `${section.color}15`,
-                  borderRadius: '10px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: section.color,
-                  fontSize: '20px',
-                  position: 'relative',
-                  overflow: 'hidden'
-                }}>
-                  <section.icon size={20} />
-                  <div style={{
-                    position: 'absolute',
-                    top: '0',
-                    left: '0',
-                    right: '0',
-                    bottom: '0',
-                    background: `radial-gradient(circle at center, ${section.color}20 0%, transparent 70%)`,
-                    opacity: '0',
-                    transition: 'opacity 0.3s ease'
-                  }} className="icon-glow" />
+          
+          <div className="section-buttons">
+            {sections.map((section) => (
+              <button
+                key={section.id}
+                className={`section-btn ${activeSection === section.id ? 'active' : ''}`}
+                onClick={() => handleSectionClick(section.id)}
+                style={activeSection === section.id ? { 
+                  background: `${section.color}20`,
+                  borderColor: section.color,
+                  color: section.color
+                } : {}}
+                data-tooltip={section.name}
+              >
+                <div className="section-btn-icon" style={{ color: section.color }}>
+                  <section.icon size={18} />
                 </div>
-                
-                <div style={{ flex: '1' }}>
-                  <div style={{ 
-                    fontSize: '16px', 
-                    fontWeight: '600', 
-                    color: '#1e293b',
-                    marginBottom: '4px'
-                  }}>
-                    {section.name}
+                {!sidebarCollapsed && (
+                  <div className="section-btn-text">
+                    <div className="section-btn-name">{section.name}</div>
+                    <div className="section-btn-desc">{section.description}</div>
                   </div>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    fontSize: '12px',
-                    color: '#64748b'
-                  }}>
-                    <span>📊</span>
-                    <span>Click to open section</span>
-                  </div>
+                )}
+                {activeSection === section.id && !sidebarCollapsed && (
+                  <div className="active-indicator" style={{ background: section.color }} />
+                )}
+                {activeSection === section.id && sidebarCollapsed && (
+                  <div className="active-dot" style={{ background: section.color }} />
+                )}
+              </button>
+            ))}
+          </div>
+          
+          {!sidebarCollapsed && (
+            <div className="sidebar-footer">
+              <div className="user-info">
+                <div className="user-avatar">A</div>
+                <div className="user-details">
+                  <div className="user-name">Afsar</div>
+                  <div className="user-role">Production Manager</div>
                 </div>
               </div>
-              
-              {/* Hover Overlay */}
-              <div style={{
-                position: 'absolute',
-                top: '0',
-                left: '0',
-                right: '0',
-                bottom: '0',
-                background: `${section.color}05`,
-                opacity: '0',
-                transition: 'opacity 0.3s ease',
-                pointerEvents: 'none'
-              }} className="section-hover-overlay" />
             </div>
-          ))}
+          )}
         </div>
-        
-        {/* Switcher Footer */}
-        <div style={{
-          paddingTop: '20px',
-          borderTop: '1px solid #e2e8f0',
-          fontSize: '13px',
-          color: '#64748b',
-          textAlign: 'center',
-          position: 'relative',
-          zIndex: '1'
-        }}>
-          <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-            <FiArrowUpRight size={10} /> 
-            Click any card above to navigate to that production section
-          </span>
-        </div>
-      </div>
 
-      {/* Information Card */}
-      <div style={{
-        background: 'linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%)',
-        padding: '20px',
-        borderRadius: '12px',
-        marginBottom: '30px',
-        border: '1px solid #ddd6fe'
-      }}>
-        <h3 style={{ 
-          margin: '0 0 15px 0', 
-          color: '#7c3aed',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '10px'
-        }}>
-          <FiGrid /> Production Sections Overview
-        </h3>
-        <p style={{ 
-          margin: '0', 
-          color: '#57534e', 
-          lineHeight: '1.6',
-          fontSize: '15px'
-        }}>
-          This is the main dashboard for all production sections. Each section has three main components:
-          <strong> Form.jsx</strong> (Create), <strong>Page.jsx</strong> (View), and <strong>EditForm.jsx</strong> (Update).
-          Click on any section to manage its operations.
-        </p>
-      </div>
+        {/* Main Content */}
+        <div className={`main-content ${sidebarCollapsed ? 'expanded' : ''}`}>
+          {/* Header */}
+          <div className="content-header">
+            <div>
+              <div className="breadcrumb">
+                <button onClick={() => navigate('/dashboard')} className="breadcrumb-btn">
+                  <FiHome size={16} /> Dashboard
+                </button>
+                <span className="breadcrumb-separator">/</span>
+                <span className="breadcrumb-current">Production Dashboard</span>
+              </div>
+              <h1 className="page-title">
+                <div className="title-icon" style={{ background: activeSectionObj.color }}>
+                  <activeSectionObj.icon size={24} />
+                </div>
+                {activeSectionObj.name}
+                <span className="title-sub">Production Analytics & Reports</span>
+              </h1>
+            </div>
+            
+            <div className="header-actions">
+              <button onClick={handleGoToDetail} className="detail-btn" style={{ background: activeSectionObj.color }}>
+                <FiEye size={16} /> Go to Detail Page
+              </button>
+              <button onClick={handleExportReport} className="export-btn">
+                <FiDownload size={16} /> Export Report
+              </button>
+              <button onClick={handlePrintReport} className="print-btn">
+                <FiPrinter size={16} /> Print
+              </button>
+              <button 
+                className="sidebar-toggle-btn"
+                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              >
+                <FiMenu size={20} />
+              </button>
+            </div>
+          </div>
 
-      {/* Sections Grid (Original Detailed Sections) */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
-        gap: '25px'
-      }}>
-        {sections.map((section, index) => (
-          <div
-            key={index}
-            style={{
-              background: 'white',
-              borderRadius: '12px',
-              padding: '25px',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-              border: `2px solid ${section.color}20`,
-              transition: 'all 0.3s ease',
-              cursor: 'pointer'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-5px)';
-              e.currentTarget.style.boxShadow = '0 10px 25px rgba(0, 0, 0, 0.1)';
-              e.currentTarget.style.borderColor = section.color;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1)';
-              e.currentTarget.style.borderColor = `${section.color}20`;
-            }}
-            onClick={() => handleSectionClick(section.path)}
-          >
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '15px',
-              marginBottom: '20px'
-            }}>
-              <div style={{
-                width: '50px',
-                height: '50px',
-                background: `${section.color}15`,
-                borderRadius: '12px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: section.color,
-                fontSize: '22px'
-              }}>
-                <section.icon />
+          {/* Time Range Selector */}
+          <div className="time-range-selector">
+            <div className="selector-header">
+              <FiCalendar size={16} />
+              <span>Select Time Range</span>
+            </div>
+            <div className="time-buttons">
+              {timeRanges.map((range) => (
+                <button
+                  key={range.id}
+                  className={`time-btn ${timeRange === range.id ? 'active' : ''}`}
+                  onClick={() => setTimeRange(range.id)}
+                  style={timeRange === range.id ? { 
+                    background: activeSectionObj.color,
+                    borderColor: activeSectionObj.color
+                  } : {}}
+                >
+                  <range.icon size={14} />
+                  {range.name}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Report Type Selector */}
+          <div className="report-type-selector">
+            <div className="selector-header">
+              <FiBarChart2 size={16} />
+              <span>Report Type</span>
+            </div>
+            <div className="report-buttons">
+              {reportTypes.map((type) => (
+                <button
+                  key={type.id}
+                  className={`report-btn ${reportType === type.id ? 'active' : ''}`}
+                  onClick={() => setReportType(type.id)}
+                  style={reportType === type.id ? { 
+                    background: activeSectionObj.color,
+                    borderColor: activeSectionObj.color
+                  } : {}}
+                >
+                  <type.icon size={14} />
+                  {type.name}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Report Content */}
+          <div className="report-content">
+            <div className="report-header">
+              <h2>
+                {activeSectionObj.name} {reportType.charAt(0).toUpperCase() + reportType.slice(1)} Report
+                <span className="report-subtitle">• {timeRange} • Generated by: Afsar</span>
+              </h2>
+              <div className="report-meta">
+                <span className="meta-item">
+                  <FiCalendar size={12} /> {new Date().toLocaleDateString()}
+                </span>
+                <span className="meta-item">
+                  <FiClock size={12} /> {new Date().toLocaleTimeString()}
+                </span>
+                <span className="meta-item">
+                  <FiDatabase size={12} /> Total Records: {activeSectionData.summary.totalRecords}
+                </span>
+              </div>
+            </div>
+
+            <div className="report-body">
+              {renderReportContent()}
+            </div>
+          </div>
+
+          {/* Quick Stats */}
+          <div className="quick-stats">
+            <div className="stat-card quick">
+              <div className="stat-icon" style={{ background: activeSectionObj.color }}>
+                <FiTrendingUp size={20} />
               </div>
               <div>
-                <h3 style={{ 
-                  margin: '0 0 5px 0', 
-                  fontSize: '18px', 
-                  color: '#1e293b' 
-                }}>
-                  {section.name}
-                </h3>
-                <p style={{ 
-                  margin: '0', 
-                  fontSize: '14px', 
-                  color: '#64748b' 
-                }}>
-                  {section.description}
-                </p>
+                <div className="stat-value">{activeSectionData.summary.todayProduction.toLocaleString()} M</div>
+                <div className="stat-label">Today's Production</div>
               </div>
             </div>
-
-            {/* Components List */}
-            <div style={{
-              marginTop: '20px',
-              paddingTop: '20px',
-              borderTop: '1px solid #e2e8f0'
-            }}>
-              <div style={{ 
-                fontSize: '14px', 
-                color: '#64748b', 
-                marginBottom: '12px',
-                fontWeight: '600',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
-              }}>
-                <FiFileText /> Component Files:
+            
+            <div className="stat-card quick">
+              <div className="stat-icon" style={{ background: activeSectionObj.color }}>
+                <FiZap size={20} />
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {section.components.map((component, idx) => (
-                  <div
-                    key={idx}
-                    style={{
-                      background: '#f8fafc',
-                      padding: '10px 14px',
-                      borderRadius: '8px',
-                      fontSize: '13px',
-                      color: '#475569',
-                      fontFamily: 'monospace',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '10px',
-                      transition: 'all 0.2s ease'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = `${section.color}10`;
-                      e.currentTarget.style.color = section.color;
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = '#f8fafc';
-                      e.currentTarget.style.color = '#475569';
-                    }}
-                  >
-                    <div style={{
-                      width: '8px',
-                      height: '8px',
-                      background: section.color,
-                      borderRadius: '50%'
-                    }} />
-                    {component}
-                    {component.includes('Form.jsx') && (
-                      <FiEdit style={{ marginLeft: 'auto', color: '#94a3b8' }} />
-                    )}
-                    {component.includes('Page.jsx') && (
-                      <FiEye style={{ marginLeft: 'auto', color: '#94a3b8' }} />
-                    )}
-                  </div>
-                ))}
+              <div>
+                <div className="stat-value">{activeSectionData.summary.todayEfficiency}%</div>
+                <div className="stat-label">Today's Efficiency</div>
               </div>
             </div>
-
-            {/* Footer */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginTop: '20px',
-              paddingTop: '20px',
-              borderTop: '1px solid #e2e8f0'
-            }}>
-              <span style={{
-                fontSize: '13px',
-                color: '#64748b',
-                fontStyle: 'italic'
-              }}>
-                Click to open section Afsar
-              </span>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                color: section.color,
-                fontWeight: '600',
-                fontSize: '14px'
-              }}>
-                <span>Manage</span>
-                <FiArrowLeft style={{ transform: 'rotate(180deg)' }} />
+            
+            <div className="stat-card quick">
+              <div className="stat-icon" style={{ background: activeSectionObj.color }}>
+                <FiTarget size={20} />
+              </div>
+              <div>
+                <div className="stat-value">{activeSectionData.summary.todayWeight.toLocaleString()} KG</div>
+                <div className="stat-label">Today's Weight</div>
+              </div>
+            </div>
+            
+            <div className="stat-card quick">
+              <div className="stat-icon" style={{ background: activeSectionObj.color }}>
+                <FiActivity size={20} />
+              </div>
+              <div>
+                <div className="stat-value">{activeSectionData.summary.avgEfficiency}%</div>
+                <div className="stat-label">Avg Efficiency</div>
               </div>
             </div>
           </div>
-        ))}
+        </div>
       </div>
 
-      {/* Footer Note */}
-      <div style={{
-        marginTop: '40px',
-        padding: '20px',
-        background: '#f8fafc',
-        borderRadius: '12px',
-        textAlign: 'center',
-        border: '1px solid #e2e8f0'
-      }}>
-        <p style={{ margin: '0', color: '#64748b', fontSize: '14px' }}>
-          <strong>Note:</strong> This is the Production Sections dashboard. 
-          From here you can navigate to individual production sections for detailed management.
-        </p>
-        <p style={{ 
-          margin: '10px 0 0 0', 
-          color: '#475569', 
-          fontSize: '13px',
-          fontFamily: 'monospace'
-        }}>
-          File location: src/pages/ProductionSections/Production.jsx
-        </p>
+      {/* Footer */}
+      <div className="dashboard-footer">
+        <div className="footer-content">
+          <div className="footer-left">
+            <div className="footer-title">Production Analytics Dashboard</div>
+            <div className="footer-subtitle">
+              Active Section: {activeSectionObj.name} • Report Type: {reportType} • 
+              Time Range: {timeRange} • Managed by: Afsar
+            </div>
+          </div>
+          <div className="footer-right">
+            <button onClick={() => window.location.reload()} className="refresh-btn">
+              <FiRefreshCw size={14} /> Refresh Data
+            </button>
+            <div className="footer-info">
+              <span className="info-item">
+                <FiDatabase size={12} /> Database Connected
+              </span>
+              <span className="info-item">
+                <FiClock size={12} /> {new Date().toLocaleTimeString()}
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
