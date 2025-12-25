@@ -1,0 +1,52 @@
+D:\ERP-Management\
+├── frontend\
+│   ├── .env.local          <-- یہاں بنائیں
+│   ├── package.json
+│   ├── public\
+│   └── src\
+└── backend\
+
+
+src/
+  ├── components/
+  │   └── departments/
+  │       └── Production/
+  │           └── ProductionDashboard.jsx (یا .js)
+
+=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNlcnFyc3R0c2t3dXRwbmhiY3ZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ0MzMzODUsImV4cCI6MjA4MDAwOTM4NX0.zorIOTNMTevhmspNTCxaCuA5nCrrUA2hLLoowny3-rQ
+┌───────────┐ ┌───────────┐ ┌───────────┐
+│ Today's   │ │ Today's   │ │ Today's   │
+│ Records   │ │ Production│ │ Efficiency│
+│    12     │ │  1,234 KG │ │   85%     │
+└───────────┘ └───────────┘ └───────────┘
+┌───────────┐ ┌───────────┐ ┌───────────┐
+│ Yesterday │ │ Total     │ │ Total     │
+│ Summary   │ │ Records   │ │ Production│
+└───────────┘ └───────────┘ └───────────┘
+┌───────────┐ ┌───────────┐
+│ Average   │ │ Database  │
+│ Efficiency│ │ Status    │
+└───────────┘ └───────────┘
+
+
+Database Schema: public
+
+Available Tables:
+
+flatteningsection
+
+items
+
+pvcitem
+
+pvcsection
+
+shifts
+
+spiralitem
+
+spiralsection
+
+targets
+
+users

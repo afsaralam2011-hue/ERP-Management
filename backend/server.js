@@ -179,3 +179,14 @@ app.listen(PORT, () => {
   console.log(`🔐 Login: http://localhost:${PORT}/api/auth/login`);
   console.log(`👥 Users: http://localhost:${PORT}/api/users`);
 });
+// Add this before other routes
+app.get('/manifest.json', (req, res) => {
+  res.json({
+    "name": "ERP System",
+    "short_name": "ERP",
+    "start_url": "/",
+    "display": "standalone",
+    "theme_color": "#000000",
+    "background_color": "#ffffff"
+  });
+});
