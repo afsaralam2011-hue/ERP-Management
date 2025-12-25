@@ -1,6 +1,11 @@
-// src/App.jsx - COMPLETE UPDATED VERSION WITH SEPARATE FORMS
+// src/App.jsx
 import React from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 
 // Auth Pages
 import Login from "./pages/auth/Login";
@@ -25,6 +30,8 @@ import FlatteningPage from "./pages/ProductionSections/FlatteningSection/Flatten
 import FlatteningForm from "./pages/ProductionSections/FlatteningSection/FlatteningForm";
 import FlatteningEditForm from "./pages/ProductionSections/FlatteningSection/FlatteningEditForm";
 import FlatteningView from "./pages/ProductionSections/FlatteningSection/FlatteningView";
+import FlatteningMultiEntryForm from "./pages/ProductionSections/FlatteningSection/FlatteningMultiEntryForm"; 
+import FlatteningSmartForm from "./pages/ProductionSections/FlatteningSection/FlatteningSmartForm"; 
 
 // Spiral Section Pages
 import SpiralPage from "./pages/ProductionSections/SpiralSection/SpiralPage";
@@ -32,13 +39,13 @@ import SpiralForm from "./pages/ProductionSections/SpiralSection/SpiralForm";
 import SpiralEditForm from "./pages/ProductionSections/SpiralSection/SpiralEditForm";
 import SpiralView from "./pages/ProductionSections/SpiralSection/SpiralView";
 
-// Raw Material Section Pages ✅ UPDATED
-import RawMaterialPage from './pages/ProductionSections/RawMaterialSection/RawMaterialPage';
-import RawMaterialLogForm from './pages/ProductionSections/RawMaterialSection/RawMaterialLogForm'; // ✅ Main form
-import MaterialReceivedForm from './pages/ProductionSections/RawMaterialSection/MaterialReceivedForm'; // ✅ NEW: Separate form for received
-import MaterialIssueForm from './pages/ProductionSections/RawMaterialSection/MaterialIssueForm'; // ✅ NEW: Separate form for issue
-import RawMaterialEditForm from './pages/ProductionSections/RawMaterialSection/RawMaterialEditForm'; // ✅ Already exists
-import RawMaterialForm from './pages/ProductionSections/RawMaterialSection/RawMaterialForm';
+// Raw Material Section Pages 
+import RawMaterialPage from "./pages/ProductionSections/RawMaterialSection/RawMaterialPage";
+import RawMaterialLogForm from "./pages/ProductionSections/RawMaterialSection/RawMaterialLogForm"; 
+import MaterialReceivedForm from "./pages/ProductionSections/RawMaterialSection/MaterialReceivedForm"; 
+import MaterialIssueForm from "./pages/ProductionSections/RawMaterialSection/MaterialIssueForm"; 
+import RawMaterialEditForm from "./pages/ProductionSections/RawMaterialSection/RawMaterialEditForm"; 
+import RawMaterialForm from "./pages/ProductionSections/RawMaterialSection/RawMaterialForm";
 
 // PVC Coating Section Pages
 import PVCCoatingPage from "./pages/ProductionSections/PVCCoatingSection/PVCCoatingPage";
@@ -60,7 +67,7 @@ function App() {
         {/* ========== AUTH ROUTES ========== */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-
+        
         {/* ========== DASHBOARD ROUTE ========== */}
         <Route
           path="/dashboard"
@@ -73,7 +80,7 @@ function App() {
             </Layout>
           }
         />
-
+        
         {/* ========== DEPARTMENT ROUTES ========== */}
         <Route
           path="/hr"
@@ -86,7 +93,7 @@ function App() {
             </Layout>
           }
         />
-
+        
         <Route
           path="/finance"
           element={
@@ -98,7 +105,7 @@ function App() {
             </Layout>
           }
         />
-
+        
         {/* Production Department Routes */}
         <Route
           path="/dashboard/production"
@@ -111,7 +118,7 @@ function App() {
             </Layout>
           }
         />
-
+        
         {/* Legacy Production Route */}
         <Route
           path="/production"
@@ -124,6 +131,7 @@ function App() {
             </Layout>
           }
         />
+        
         <Route
           path="/sales"
           element={
@@ -135,7 +143,7 @@ function App() {
             </Layout>
           }
         />
-
+        
         <Route
           path="/it"
           element={
@@ -147,7 +155,7 @@ function App() {
             </Layout>
           }
         />
-
+        
         <Route
           path="/logistics"
           element={
@@ -159,7 +167,7 @@ function App() {
             </Layout>
           }
         />
-
+        
         {/* ========== PRODUCTION SECTIONS ROUTES ========== */}
         <Route
           path="/production-sections"
@@ -172,7 +180,7 @@ function App() {
             </Layout>
           }
         />
-
+        
         {/* Flattening Section Routes */}
         <Route
           path="/production-sections/flattening"
@@ -185,7 +193,20 @@ function App() {
             </Layout>
           }
         />
-
+        
+        {/* New Smart Entry Route */}
+        <Route
+          path="/production-sections/flattening/smart-entry"
+          element={
+            <Layout
+              title="Smart Production Entry"
+              subtitle="Shift-based production entry for all machines"
+            >
+              <FlatteningSmartForm />
+            </Layout>
+          }
+        />
+        
         <Route
           path="/production-sections/flattening/new"
           element={
@@ -197,7 +218,7 @@ function App() {
             </Layout>
           }
         />
-
+        
         <Route
           path="/production-sections/flattening/edit/:id"
           element={
@@ -209,7 +230,7 @@ function App() {
             </Layout>
           }
         />
-
+        
         <Route
           path="/production-sections/flattening/view/:id"
           element={
@@ -221,7 +242,20 @@ function App() {
             </Layout>
           }
         />
-
+        
+        {/* FLATTENING MULTI-ENTRY FORM ROUTE */}
+        <Route
+          path="/production-sections/flattening/multi-entry"
+          element={
+            <Layout
+              title="Flattening Multi-Machine Entry"
+              subtitle="Add multiple machine records in one go"
+            >
+              <FlatteningMultiEntryForm />
+            </Layout>
+          }
+        />
+        
         {/* ========== SPIRAL SECTION ROUTES ========== */}
         <Route
           path="/production-sections/spiral"
@@ -234,7 +268,7 @@ function App() {
             </Layout>
           }
         />
-
+        
         <Route
           path="/production-sections/spiral/new"
           element={
@@ -246,7 +280,7 @@ function App() {
             </Layout>
           }
         />
-
+        
         <Route
           path="/production-sections/spiral/edit/:id"
           element={
@@ -258,7 +292,7 @@ function App() {
             </Layout>
           }
         />
-
+        
         <Route
           path="/production-sections/spiral/view/:id"
           element={
@@ -270,7 +304,7 @@ function App() {
             </Layout>
           }
         />
-
+        
         {/* ========== RAW MATERIAL SECTION ROUTES ========== */}
         {/* Main Raw Material Page */}
         <Route
@@ -284,8 +318,8 @@ function App() {
             </Layout>
           }
         />
-
-        {/* ✅ NEW: Separate Material Received Form */}
+        
+        {/* Separate Material Received Form */}
         <Route
           path="/production-sections/raw-material/material-received"
           element={
@@ -297,8 +331,8 @@ function App() {
             </Layout>
           }
         />
-
-        {/* ✅ NEW: Separate Material Issue Form */}
+        
+        {/* Separate Material Issue Form */}
         <Route
           path="/production-sections/raw-material/material-issue"
           element={
@@ -310,7 +344,7 @@ function App() {
             </Layout>
           }
         />
-
+        
         {/* Old Single Form (Keep for backward compatibility) */}
         <Route
           path="/production-sections/raw-material/new-log"
@@ -323,7 +357,7 @@ function App() {
             </Layout>
           }
         />
-
+        
         {/* Old Raw Material Form */}
         <Route
           path="/production-sections/raw-material/new"
@@ -336,7 +370,7 @@ function App() {
             </Layout>
           }
         />
-
+        
         {/* Edit Form */}
         <Route
           path="/production-sections/raw-material/edit/:id"
@@ -349,7 +383,7 @@ function App() {
             </Layout>
           }
         />
-
+        
         {/* ========== PVC COATING SECTION ROUTES ========== */}
         <Route
           path="/production-sections/pvc-coating"
@@ -362,7 +396,7 @@ function App() {
             </Layout>
           }
         />
-
+        
         <Route
           path="/production-sections/pvc-coating/new"
           element={
@@ -374,7 +408,7 @@ function App() {
             </Layout>
           }
         />
-
+        
         <Route
           path="/production-sections/pvc-coating/edit/:id"
           element={
@@ -386,7 +420,7 @@ function App() {
             </Layout>
           }
         />
-
+        
         <Route
           path="/production-sections/pvc-coating/view/:id"
           element={
@@ -398,7 +432,7 @@ function App() {
             </Layout>
           }
         />
-
+        
         {/* PVC COATING MULTI-ENTRY FORM ROUTE */}
         <Route
           path="/production-sections/pvc-coating/multi-entry"
@@ -411,7 +445,7 @@ function App() {
             </Layout>
           }
         />
-
+        
         {/* ========== DAILY PRODUCTION REPORT ROUTE ========== */}
         <Route
           path="/production-reports/daily"
@@ -424,7 +458,7 @@ function App() {
             </Layout>
           }
         />
-
+        
         {/* ========== DEFAULT ROUTES ========== */}
         <Route path="/" element={<Navigate to="/login" />} />
         <Route path="*" element={<Navigate to="/dashboard" />} />

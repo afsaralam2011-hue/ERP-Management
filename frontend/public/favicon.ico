@@ -1,0 +1,6 @@
+D:\ERP-Management\frontend\public\
+├── manifest.json          <-- یہ نیا فائل بنائیں
+├── favicon.ico           <-- اگر نہیں ہے تو بنائیں
+├── index.html            <-- پہلے سے موجود
+├── robots.txt            <-- اگر نہیں ہے تو ضروری نہیں
+└── logo192.png           <-- اگر چاہیں تو (اختیاری)

@@ -1,5 +1,5 @@
 // src/pages/ProductionSections/FlatteningSection/FlatteningPage.jsx
-import React, { useState, useEffect, Suspense, lazy } from "react";
+import React, { useState, useEffect, Suspense, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FiPlus,
@@ -11,19 +11,15 @@ import {
   FiRefreshCw,
   FiPackage,
   FiCalendar,
-  FiUser,
   FiTarget,
   FiBarChart2,
   FiPrinter,
-  FiCalendar as FiCal,
   FiArrowLeft,
   FiEye,
   FiHome,
   FiTrendingUp,
   FiClock,
-  FiLayers,
   FiActivity,
-  FiArrowUpRight,
   FiAlertCircle,
   FiChevronLeft,
   FiChevronRight,
@@ -31,28 +27,15 @@ import {
   FiCheckCircle,
   FiXCircle,
   FiGrid,
-  FiSettings,
   FiX,
-  FiScissors,
-  FiCheckSquare,
-  FiCrop,
-  FiDivide,
   FiTool,
-  FiBriefcase,
-  FiBox,
-  FiArchive,
-  FiColumns,
-  FiArrowRight,
+  FiTag,
   FiBarChart,
   FiHash,
-  FiTag,
-  FiDollarSign,
   FiPercent,
-  FiGrid as FiGridIcon,
   FiTrendingDown,
-  FiTrendingUp as FiTrendingUpIcon,
-  FiDatabase as FiDatabaseIcon,
   FiFile,
+  FiZap, // ✅ ADDED: FiZap import کیا ہے
 } from "react-icons/fi";
 import { supabase } from "../../../supabaseClient";
 import FlatteningForm from "./FlatteningForm";
@@ -217,11 +200,9 @@ const FlatteningPage = () => {
   const navigate = useNavigate();
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterShift, setFilterShift] = useState("");
   const [filterDate, setFilterDate] = useState("");
-  const [shifts, setShifts] = useState([]);
   const [targets, setTargets] = useState([]);
   const [showReport, setShowReport] = useState(false);
   const [showFlatteningModal, setShowFlatteningModal] = useState(false);
@@ -262,70 +243,44 @@ const FlatteningPage = () => {
   // Check if supabase is connected
   const isSupabaseConnected = supabase && process.env.REACT_APP_SUPABASE_URL;
 
-  // Fetch data function
-  const fetchData = async () => {
+  // Fetch data function with useCallback
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      setError(null);
 
       // Check if supabase is available
       if (!supabase) {
-        const errorMsg = "Supabase client not initialized";
-        setError(errorMsg);
         return;
       }
 
-      // Fetch shifts from shifts table
-      const { data: shiftsData, error: shiftsError } = await supabase
-        .from("shifts")
-        .select("*")
-        .order("start_time");
-
-      if (shiftsError) {
-        console.error("Error fetching shifts:", shiftsError);
-      }
-
       // Fetch targets from targets table
-      const { data: targetsData, error: targetsError } = await supabase
+      const { data: targetsData } = await supabase
         .from("targets")
         .select("*")
         .eq("section", "Flattening")
         .eq("is_active", true);
 
-      if (targetsError) {
-        console.error("Error fetching targets:", targetsError);
-      }
-
       // Fetch records from flatteningsection table
-      const { data: recordsData, error: recordsError } = await supabase
+      const { data: recordsData } = await supabase
         .from("flatteningsection")
         .select("*")
         .order("created_at", { ascending: false });
 
-      if (recordsError) {
-        console.error("Error fetching records:", recordsError);
-        setRecords([]);
-        calculateStats([]);
-      } else {
-        setRecords(recordsData || []);
-        calculateStats(recordsData || []);
-      }
-
-      setShifts(shiftsData || []);
+      setRecords(recordsData || []);
+      calculateStats(recordsData || []);
       setTargets(targetsData || []);
     } catch (error) {
       console.error("Error in fetchData:", error);
-      setError(error.message);
       setRecords([]);
       calculateStats([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [fetchData]);
 
   // Calculate stats
   const calculateStats = (recordsData) => {
@@ -506,8 +461,10 @@ const FlatteningPage = () => {
   );
   const totalPages = Math.ceil(filteredRecords.length / itemsPerPage);
 
-  // Generate report
-  const generateReport = (selectedDate) => {
+  // Generate report with useCallback
+  const generateReport = useCallback((selectedDate) => {
+    if (!records || records.length === 0) return;
+
     const dateRecords = records.filter((record) => {
       const recordDate = new Date(record.created_at)
         .toISOString()
@@ -640,14 +597,61 @@ const FlatteningPage = () => {
       machineProduction,
       itemProduction,
     });
-  };
+  }, [records, targets]);
 
   // Handle report generation when date changes
   useEffect(() => {
     if (filterDate) {
       generateReport(filterDate);
     }
-  }, [filterDate, records, targets]);
+  }, [filterDate, generateReport]);
+
+  // Generate PDF Report Data
+  const generatePDFReportData = () => {
+    if (!reportData || reportData.recordCount === 0) {
+      alert("No report data available for PDF");
+      return;
+    }
+
+    const pdfData = {
+      title: "Flattening Section Production Report",
+      date: reportData.formattedDate,
+      generatedDate: new Date().toLocaleString(),
+      summary: {
+        totalProduction: reportData.totalProduction.toFixed(1),
+        totalTarget: reportData.totalTarget.toFixed(1),
+        overallEfficiency: reportData.overallEfficiency.toFixed(1),
+        recordCount: reportData.recordCount,
+      },
+      shiftWise: Object.entries(reportData.shiftGroups).map(
+        ([shift, data]) => ({
+          shift,
+          production: data.production.toFixed(1),
+          target: data.target.toFixed(1),
+          efficiency: data.efficiency.toFixed(1),
+        })
+      ),
+      machineWise: Object.entries(reportData.machineProduction).map(
+        ([machine, data]) => ({
+          machine,
+          production: data.production.toFixed(1),
+          efficiency: data.efficiency.toFixed(1),
+          count: data.count,
+        })
+      ),
+      itemWise: Object.entries(reportData.itemProduction).map(
+        ([item, data]) => ({
+          item,
+          production: data.production.toFixed(1),
+          efficiency: data.efficiency.toFixed(1),
+          count: data.count,
+        })
+      ),
+    };
+
+    setPdfReportData(pdfData);
+    setShowPDFModal(true);
+  };
 
   // Handlers
   const handleEdit = (id) => {
@@ -662,12 +666,10 @@ const FlatteningPage = () => {
     if (!window.confirm("Are you sure you want to delete this record?")) return;
 
     try {
-      const { error } = await supabase
+      await supabase
         .from("flatteningsection")
         .delete()
         .eq("id", id);
-
-      if (error) throw error;
 
       alert("Record deleted successfully");
       fetchData();
@@ -728,53 +730,6 @@ const FlatteningPage = () => {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-  };
-
-  // Generate PDF Report Data
-  const generatePDFReportData = () => {
-    if (!reportData || reportData.recordCount === 0) {
-      alert("No report data available for PDF");
-      return;
-    }
-
-    const pdfData = {
-      title: "Flattening Section Production Report",
-      date: reportData.formattedDate,
-      generatedDate: new Date().toLocaleString(),
-      summary: {
-        totalProduction: reportData.totalProduction.toFixed(1),
-        totalTarget: reportData.totalTarget.toFixed(1),
-        overallEfficiency: reportData.overallEfficiency.toFixed(1),
-        recordCount: reportData.recordCount,
-      },
-      shiftWise: Object.entries(reportData.shiftGroups).map(
-        ([shift, data]) => ({
-          shift,
-          production: data.production.toFixed(1),
-          target: data.target.toFixed(1),
-          efficiency: data.efficiency.toFixed(1),
-        })
-      ),
-      machineWise: Object.entries(reportData.machineProduction).map(
-        ([machine, data]) => ({
-          machine,
-          production: data.production.toFixed(1),
-          efficiency: data.efficiency.toFixed(1),
-          count: data.count,
-        })
-      ),
-      itemWise: Object.entries(reportData.itemProduction).map(
-        ([item, data]) => ({
-          item,
-          production: data.production.toFixed(1),
-          efficiency: data.efficiency.toFixed(1),
-          count: data.count,
-        })
-      ),
-    };
-
-    setPdfReportData(pdfData);
-    setShowPDFModal(true);
   };
 
   // Print report - Optimized for single page
@@ -1088,16 +1043,6 @@ const FlatteningPage = () => {
     ),
   ].sort();
 
-  const uniqueDates = [
-    ...new Set(
-      records.map(
-        (record) => new Date(record.created_at).toISOString().split("T")[0]
-      )
-    ),
-  ]
-    .sort()
-    .reverse();
-
   // Pagination handlers
   const handleNextPage = () => {
     if (currentPage < totalPages) {
@@ -1167,7 +1112,7 @@ const FlatteningPage = () => {
       id: "total-records",
       title: "Total Records",
       value: stats.totalRecords,
-      icon: FiDatabaseIcon,
+      icon: FiDatabase,
       description: "All records in database",
       gradientColors: ["#ec4899", "#be185d"],
       iconBg: "#ec4899",
@@ -1176,7 +1121,7 @@ const FlatteningPage = () => {
       id: "total-production",
       title: "Total Production",
       value: `${stats.totalProduction.toLocaleString()} KG`,
-      icon: FiTrendingUpIcon,
+      icon: FiTrendingUp,
       description: "All time production",
       gradientColors: ["#06b6d4", "#0891b2"],
       iconBg: "#06b6d4",
@@ -1295,8 +1240,31 @@ const FlatteningPage = () => {
             onClick={() => setShowFlatteningModal(true)}
             className="primary-btn"
           >
-            <FiPlus size={20} /> New Flattening Entey
+            <FiPlus size={20} /> New Flattening Entry
           </button>
+          
+          <div className="action-buttons">
+            <button 
+              className="btn btn-secondary"
+              onClick={() => navigate('/production-sections/flattening/new')}
+            >
+              <FiPlus /> Single Entry
+            </button>
+            
+            <button 
+              className="btn btn-primary"
+              onClick={() => navigate('/production-sections/flattening/multi-entry')}
+            >
+              <FiGrid /> Multi-Entry
+            </button>
+            
+            <button 
+              className="btn btn-tertiary"
+              onClick={() => navigate('/production-sections/flattening/smart-entry')}
+            >
+              <FiZap /> Smart Entry
+            </button>
+          </div>
 
           <button
             onClick={handleExport}
@@ -2316,7 +2284,7 @@ const FlatteningPage = () => {
             onClick={() => setShowFlatteningModal(true)}
             className="footer-btn add-btn"
           >
-            <FiPlus size={14} /> New Flattening Entey
+            <FiPlus size={14} /> New Flattening Entry
           </button>
           <button onClick={fetchData} className="footer-btn refresh-btn">
             <FiRefreshCw size={14} /> Refresh Data

@@ -1,4 +1,9 @@
-// src/pages/ProductionSections/FlatteningSection/FlatteningEditForm.jsx
+// ========================================================
+// FILE: FlatteningEditForm.jsx
+// PURPOSE: Edit Form for Flattening Section Records
+// VERSION: 100% Complete - Edit Functionality
+// ========================================================
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { 
@@ -6,7 +11,9 @@ import {
   FiUser, FiEdit2, FiClipboard, FiSettings,
   FiCheck, FiAlertCircle, FiPlus,
   FiTrash2, FiList, FiTrendingUp,
-  FiCalendar, FiClock, FiDatabase
+  FiDatabase, FiRefreshCw, FiInfo,
+  FiArrowLeft, FiArrowRight, FiSearch,
+  FiCalendar, FiClock, FiHash
 } from 'react-icons/fi';
 import { supabase } from '../../../supabaseClient';
 import './FlatteningForm.css';
@@ -14,415 +21,247 @@ import './FlatteningForm.css';
 const FlatteningEditForm = ({ onClose, isModal = true }) => {
   const navigate = useNavigate();
   const { id } = useParams(); // Get record ID from URL
-
-  const [targetData, setTargetData] = useState({
+  
+  // States
+  const [recordData, setRecordData] = useState({
+    id: '',
+    section_name: 'Flattening',
     targets_id: '',
     machine_id: '',
     machine_no: '',
     shift_code: '',
     shift_name: '',
     target_qty: 0,
-    unit: 'Kg'
+    unit: 'Kg',
+    item_code: '',
+    item_name: '',
+    coil_size: '',
+    material_type: '',
+    operator_name: '',
+    production_quantity: '',
+    efficiency: 0,
+    remarks: '',
+    created_at: '',
+    updated_at: ''
   });
 
-  const [itemsList, setItemsList] = useState([
-    { 
-      id: 1, 
-      item_code: '', 
-      item_name: '',
-      coil_size: '',
-      material_type: '',
-      production_quantity: '', 
-      unit: 'Kg',
-      efficiency: 0
-    }
-  ]);
-
-  const [operatorName, setOperatorName] = useState('');
-  const [remarks, setRemarks] = useState('');
-  const [totalProduction, setTotalProduction] = useState(0);
-  const [overallEfficiency, setOverallEfficiency] = useState(0);
-  const [validationErrors, setValidationErrors] = useState({});
-  const [fieldStatus, setFieldStatus] = useState({});
-  const [recordDate, setRecordDate] = useState('');
-  const [recordTime, setRecordTime] = useState('');
-
+  const [originalData, setOriginalData] = useState({});
   const [items, setItems] = useState([]);
   const [targets, setTargets] = useState([]);
+  const [machines, setMachines] = useState([]);
+  const [shifts, setShifts] = useState([]);
+  
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [isEditing, setIsEditing] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [validationErrors, setValidationErrors] = useState({});
+  const [fieldStatus, setFieldStatus] = useState({});
+  const [hasChanges, setHasChanges] = useState(false);
 
+  // ==================== CHECK MOBILE ====================
   useEffect(() => {
-    fetchAllData();
-    if (id) {
-      fetchRecordData();
-      setIsEditing(true);
-    }
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // ==================== FETCH DATA ====================
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError('');
+        
+        // Fetch record data if ID exists
+        if (id) {
+          const { data: record, error: recordError } = await supabase
+            .from('flatteningsection')
+            .select('*')
+            .eq('id', id)
+            .single();
+          
+          if (recordError) throw recordError;
+          
+          if (record) {
+            setRecordData(record);
+            setOriginalData(record);
+          }
+        }
+        
+        // Fetch reference data
+        const [itemsRes, targetsRes] = await Promise.all([
+          supabase.from('items').select('*').order('item_name'),
+          supabase.from('targets').select('*').order('id')
+        ]);
+        
+        if (itemsRes.error) throw itemsRes.error;
+        if (targetsRes.error) throw targetsRes.error;
+        
+        setItems(itemsRes.data || []);
+        setTargets(targetsRes.data || []);
+        
+        // Extract unique machines and shifts from targets
+        const uniqueMachines = [...new Set(targetsRes.data.map(t => t.machine_id || t.machine_no))];
+        const uniqueShifts = [...new Set(targetsRes.data.map(t => t.shift_code || t.shift_name))];
+        
+        setMachines(uniqueMachines.filter(Boolean));
+        setShifts(uniqueShifts.filter(Boolean));
+        
+      } catch (error) {
+        console.error('❌ Data fetching error:', error);
+        setError('Failed to load data: ' + error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchData();
   }, [id]);
 
-  const fetchAllData = async () => {
-    try {
-      setLoading(true);
-      const [itemsRes, targetsRes] = await Promise.all([
-        supabase.from('items').select('*').eq('is_active', true).order('item_name'),
-        supabase.from('targets').select('*').eq('is_active', true).order('targets_id')
-      ]);
+  // ==================== HANDLE CHANGES ====================
+  useEffect(() => {
+    // Check if any field has changed
+    const changed = Object.keys(recordData).some(key => 
+      recordData[key] !== originalData[key]
+    );
+    setHasChanges(changed);
+  }, [recordData, originalData]);
+
+  const handleChange = (field, value) => {
+    setRecordData(prev => {
+      const updated = { ...prev, [field]: value };
       
-      setItems(itemsRes.data || []);
-      setTargets(targetsRes.data || []);
-    } catch (error) {
-      setError('Data loading failed');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchRecordData = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('flatteningsection')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-      if (error) throw error;
-
-      if (data) {
-        // Parse date and time
-        const date = new Date(data.created_at);
-        setRecordDate(date.toLocaleDateString());
-        setRecordTime(date.toLocaleTimeString());
-
-        // Set target data
-        setTargetData({
-          targets_id: data.targets_id || '',
-          machine_id: data.machine_id || '',
-          machine_no: data.machine_no || '',
-          shift_code: data.shift_code || '',
-          shift_name: data.shift_name || '',
-          target_qty: 0, // Will be fetched from targets
-          unit: data.unit || 'Kg'
-        });
-
-        // Set items list (single item for edit)
-        setItemsList([
-          {
-            id: 1,
-            item_code: data.item_code || '',
-            item_name: data.item_name || '',
-            coil_size: data.coil_size || '',
-            material_type: data.material_type || '',
-            production_quantity: data.production_quantity || '',
-            unit: data.unit || 'Kg',
-            efficiency: data.efficiency || 0
-          }
-        ]);
-
-        setOperatorName(data.operator_name || '');
-        setRemarks(data.remarks || '');
-        setTotalProduction(parseFloat(data.production_quantity) || 0);
-        setOverallEfficiency(parseFloat(data.efficiency) || 0);
-
-        // Fetch target quantity from targets table
-        if (data.targets_id) {
-          const { data: targetData } = await supabase
-            .from('targets')
-            .select('target_qty')
-            .eq('targets_id', data.targets_id)
-            .single();
-
-          if (targetData) {
-            setTargetData(prev => ({
-              ...prev,
-              target_qty: parseFloat(targetData.target_qty) || 0
-            }));
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching record:', error);
-      setError('Failed to load record data');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Get field border class based on status
-  const getFieldClass = (fieldName, value) => {
-    if (!value || value.toString().trim() === '') {
-      return 'empty-required';
-    }
-    return 'filled-valid';
-  };
-
-  const handleTargetChange = (e) => {
-    const selectedTargetsId = e.target.value;
-    
-    const newStatus = { ...fieldStatus };
-    if (selectedTargetsId) {
-      newStatus.targets_id = 'filled-valid';
-    } else {
-      newStatus.targets_id = 'empty-required';
-    }
-    setFieldStatus(newStatus);
-
-    if (!selectedTargetsId) {
-      setTargetData({
-        targets_id: '',
-        machine_id: '',
-        machine_no: '',
-        shift_code: '',
-        shift_name: '',
-        target_qty: 0,
-        unit: 'Kg'
-      });
-      setTotalProduction(0);
-      setOverallEfficiency(0);
-      return;
-    }
-
-    const target = targets.find(t => t.targets_id === selectedTargetsId);
-    
-    if (target) {
-      const newTargetData = {
-        targets_id: target.targets_id,
-        machine_id: target.machine_id || '',
-        machine_no: target.machine_no || '',
-        shift_code: target.shift_code || '',
-        shift_name: target.shift_name || '',
-        target_qty: parseFloat(target.target_qty) || 0,
-        unit: target.uom || 'Kg'
-      };
-      
-      setTargetData(newTargetData);
-      
-      // Update items efficiency with new target
-      const updatedItems = itemsList.map(item => {
-        if (item.production_quantity) {
-          const quantityNum = parseFloat(item.production_quantity) || 0;
-          const efficiency = newTargetData.target_qty > 0 
-            ? (quantityNum / newTargetData.target_qty) * 100
-            : 0;
-          
-          return {
-            ...item,
-            efficiency: Math.min(100, parseFloat(efficiency.toFixed(2)))
-          };
-        }
-        return item;
-      });
-      
-      setItemsList(updatedItems);
-      
-      // Update overall efficiency
-      if (totalProduction > 0) {
-        const efficiency = (totalProduction / newTargetData.target_qty) * 100;
-        setOverallEfficiency(Math.min(100, parseFloat(efficiency.toFixed(2))));
-      }
-    }
-  };
-
-  const handleItemChange = (id, itemCode) => {
-    const updatedItems = itemsList.map(item => {
-      if (item.id === id) {
-        const selectedItem = items.find(i => i.item_code === itemCode);
-        if (selectedItem) {
-          const newStatus = { ...fieldStatus };
-          newStatus[`item_${id}`] = 'filled-valid';
-          setFieldStatus(newStatus);
-          
-          return {
-            ...item,
-            item_code: itemCode,
-            item_name: selectedItem.item_name || '',
-            coil_size: selectedItem.coil_size || '',
-            material_type: selectedItem.material_type || '',
-            unit: selectedItem.unit || 'Kg'
-          };
-        }
-      }
-      return item;
-    });
-    
-    setItemsList(updatedItems);
-  };
-
-  const handleQuantityChange = (id, quantity) => {
-    const quantityNum = parseFloat(quantity) || 0;
-    
-    const updatedItems = itemsList.map(item => {
-      if (item.id === id) {
-        const newStatus = { ...fieldStatus };
-        if (quantity && quantity.trim() !== '') {
-          newStatus[`quantity_${id}`] = 'filled-valid';
-        } else {
-          newStatus[`quantity_${id}`] = 'empty-required';
-        }
-        setFieldStatus(newStatus);
+      // Recalculate efficiency if target_qty or production_quantity changes
+      if (field === 'target_qty' || field === 'production_quantity') {
+        const targetQty = field === 'target_qty' ? parseFloat(value) : parseFloat(prev.target_qty);
+        const productionQty = field === 'production_quantity' ? parseFloat(value) : parseFloat(prev.production_quantity);
         
-        const efficiency = targetData.target_qty > 0 
-          ? (quantityNum / targetData.target_qty) * 100
-          : 0;
-          
-        return { 
-          ...item, 
-          production_quantity: quantity,
-          efficiency: Math.min(100, parseFloat(efficiency.toFixed(2)))
-        };
+        if (targetQty > 0 && productionQty > 0) {
+          const efficiency = (productionQty / targetQty) * 100;
+          updated.efficiency = Math.min(100, parseFloat(efficiency.toFixed(2)));
+        } else {
+          updated.efficiency = 0;
+        }
       }
-      return item;
+      
+      // Auto-fill item details when item_code changes
+      if (field === 'item_code' && value) {
+        const selectedItem = items.find(item => item.item_code === value);
+        if (selectedItem) {
+          updated.item_name = selectedItem.item_name || '';
+          updated.coil_size = selectedItem.coil_size || '';
+          updated.material_type = selectedItem.material_type || '';
+          updated.unit = selectedItem.unit || 'Kg';
+        }
+      }
+      
+      // Auto-fill target details when targets_id changes
+      if (field === 'targets_id' && value) {
+        const selectedTarget = targets.find(target => 
+          target.targets_id === value || target.id === value
+        );
+        if (selectedTarget) {
+          updated.machine_id = selectedTarget.machine_id || '';
+          updated.machine_no = selectedTarget.machine_no || '';
+          updated.shift_code = selectedTarget.shift_code || '';
+          updated.shift_name = selectedTarget.shift_name || '';
+          updated.target_qty = parseFloat(selectedTarget.target_qty || 0);
+        }
+      }
+      
+      return updated;
     });
     
-    setItemsList(updatedItems);
-    
-    const total = updatedItems.reduce((sum, item) => {
-      return sum + (parseFloat(item.production_quantity) || 0);
-    }, 0);
-    
-    setTotalProduction(total);
-    
-    if (targetData.target_qty > 0) {
-      const overallEff = (total / targetData.target_qty) * 100;
-      setOverallEfficiency(Math.min(100, parseFloat(overallEff.toFixed(2))));
-    }
-  };
-
-  const handleOperatorChange = (value) => {
+    // Update field status
     const newStatus = { ...fieldStatus };
-    if (value && value.trim() !== '') {
-      newStatus.operator_name = 'filled-valid';
+    if (value !== undefined && value !== null && value.toString().trim() !== '') {
+      newStatus[field] = 'filled-valid';
+    } else if (field === 'operator_name' || field === 'item_code' || field === 'production_quantity') {
+      newStatus[field] = 'empty-required';
     } else {
-      newStatus.operator_name = 'empty-required';
+      newStatus[field] = '';
     }
     setFieldStatus(newStatus);
-    setOperatorName(value);
   };
 
-  const handleRemarksChange = (value) => {
-    const newStatus = { ...fieldStatus };
-    if (value && value.trim() !== '') {
-      newStatus.remarks = 'filled-valid';
-    } else {
-      newStatus.remarks = '';
-    }
-    setFieldStatus(newStatus);
-    setRemarks(value);
-  };
-
+  // ==================== VALIDATION ====================
   const validateForm = () => {
     const errors = {};
     const newFieldStatus = {};
     
-    if (!targetData.targets_id) {
-      errors.targets_id = 'Target ID is required';
-      newFieldStatus.targets_id = 'empty-required';
-    } else {
-      newFieldStatus.targets_id = 'filled-valid';
-    }
+    // Required fields validation
+    const requiredFields = [
+      'targets_id',
+      'item_code', 
+      'production_quantity',
+      'operator_name'
+    ];
     
-    if (!operatorName.trim()) {
-      errors.operator_name = 'Operator name is required';
-      newFieldStatus.operator_name = 'empty-required';
-    } else {
-      newFieldStatus.operator_name = 'filled-valid';
-    }
-    
-    itemsList.forEach((item, index) => {
-      if (!item.item_code) {
-        errors[`item_${item.id}`] = `Item ${index + 1} is required`;
-        newFieldStatus[`item_${item.id}`] = 'empty-required';
+    requiredFields.forEach(field => {
+      if (!recordData[field] || recordData[field].toString().trim() === '') {
+        errors[field] = `${field.replace('_', ' ').toUpperCase()} is required`;
+        newFieldStatus[field] = 'empty-required';
       } else {
-        newFieldStatus[`item_${item.id}`] = 'filled-valid';
-      }
-      
-      if (!item.production_quantity || parseFloat(item.production_quantity) <= 0) {
-        errors[`quantity_${item.id}`] = `Valid quantity for item ${index + 1} is required`;
-        newFieldStatus[`quantity_${item.id}`] = 'empty-required';
-      } else {
-        newFieldStatus[`quantity_${item.id}`] = 'filled-valid';
+        newFieldStatus[field] = 'filled-valid';
       }
     });
-
+    
+    // Quantity validation
+    if (recordData.production_quantity) {
+      const qty = parseFloat(recordData.production_quantity);
+      if (isNaN(qty) || qty <= 0) {
+        errors.production_quantity = 'Valid quantity is required';
+        newFieldStatus.production_quantity = 'empty-required';
+      }
+    }
+    
     setFieldStatus(newFieldStatus);
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
+  // ==================== FORM SUBMISSION ====================
   const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (!validateForm()) {
-      setError('Please fill all required fields');
+      setError('Please fill all required fields correctly');
       return;
     }
-
+    
+    if (!hasChanges) {
+      setSuccess('No changes detected');
+      setTimeout(() => setSuccess(''), 2000);
+      return;
+    }
+    
     setSaving(true);
     setError('');
     setSuccess('');
-
+    
     try {
-      if (isEditing && id) {
-        // UPDATE existing record
-        const updateData = {
-          targets_id: targetData.targets_id,
-          machine_id: targetData.machine_id,
-          machine_no: targetData.machine_no,
-          item_code: itemsList[0].item_code,
-          item_name: itemsList[0].item_name,
-          coil_size: itemsList[0].coil_size,
-          material_type: itemsList[0].material_type,
-          operator_name: operatorName.trim(),
-          production_quantity: parseFloat(itemsList[0].production_quantity),
-          unit: itemsList[0].unit,
-          efficiency: itemsList[0].efficiency,
-          shift_code: targetData.shift_code,
-          shift_name: targetData.shift_name,
-          remarks: remarks?.trim() || '',
-          updated_at: new Date().toISOString()
-        };
-
-        const { error: updateError } = await supabase
-          .from('flatteningsection')
-          .update(updateData)
-          .eq('id', id);
-
-        if (updateError) throw updateError;
-
-        setSuccess('Record updated successfully!');
-      } else {
-        // CREATE new record
-        const records = itemsList.map(item => ({
-          section_name: 'Flattening',
-          targets_id: targetData.targets_id,
-          machine_id: targetData.machine_id,
-          machine_no: targetData.machine_no,
-          item_code: item.item_code,
-          item_name: item.item_name,
-          coil_size: item.coil_size,
-          material_type: item.material_type,
-          operator_name: operatorName.trim(),
-          production_quantity: parseFloat(item.production_quantity),
-          unit: item.unit,
-          efficiency: item.efficiency,
-          shift_code: targetData.shift_code,
-          shift_name: targetData.shift_name,
-          remarks: remarks?.trim() || '',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }));
-
-        const { error: insertError } = await supabase
-          .from('flatteningsection')
-          .insert(records);
-
-        if (insertError) throw insertError;
-
-        setSuccess(`${records.length} record(s) saved successfully!`);
-      }
+      const updatedRecord = {
+        ...recordData,
+        updated_at: new Date().toISOString()
+      };
+      
+      const { error: updateError } = await supabase
+        .from('flatteningsection')
+        .update(updatedRecord)
+        .eq('id', id);
+      
+      if (updateError) throw updateError;
+      
+      setSuccess('✅ Record updated successfully!');
+      setOriginalData(updatedRecord);
+      setHasChanges(false);
       
       setTimeout(() => {
         if (isModal && onClose) {
@@ -431,51 +270,83 @@ const FlatteningEditForm = ({ onClose, isModal = true }) => {
           navigate('/production-sections/flattening');
         }
       }, 1500);
-
+      
     } catch (error) {
-      console.error('Save error:', error);
-      setError(isEditing ? 'Update failed: ' : 'Save failed: ' + error.message);
+      console.error('❌ Update error:', error);
+      setError('❌ Update failed: ' + error.message);
     } finally {
       setSaving(false);
     }
   };
 
+  // ==================== RESET FORM ====================
   const handleReset = () => {
-    if (isEditing && id) {
-      fetchRecordData(); // Reset to original values
-    } else {
-      setTargetData({
-        targets_id: '',
-        machine_id: '',
-        machine_no: '',
-        shift_code: '',
-        shift_name: '',
-        target_qty: 0,
-        unit: 'Kg'
-      });
-      setItemsList([
-        { 
-          id: 1, 
-          item_code: '', 
-          item_name: '',
-          coil_size: '',
-          material_type: '',
-          production_quantity: '', 
-          unit: 'Kg',
-          efficiency: 0
-        }
-      ]);
-      setOperatorName('');
-      setRemarks('');
-      setTotalProduction(0);
-      setOverallEfficiency(0);
-      setRecordDate('');
-      setRecordTime('');
-    }
+    setRecordData(originalData);
     setValidationErrors({});
-    setFieldStatus({});
     setError('');
     setSuccess('');
+    setHasChanges(false);
+  };
+
+  // ==================== DELETE RECORD ====================
+  const handleDelete = async () => {
+    if (!window.confirm('Are you sure you want to delete this record? This action cannot be undone.')) {
+      return;
+    }
+    
+    setSaving(true);
+    setError('');
+    
+    try {
+      const { error: deleteError } = await supabase
+        .from('flatteningsection')
+        .delete()
+        .eq('id', id);
+      
+      if (deleteError) throw deleteError;
+      
+      setSuccess('🗑️ Record deleted successfully! Redirecting...');
+      
+      setTimeout(() => {
+        if (isModal && onClose) {
+          onClose();
+        } else {
+          navigate('/production-sections/flattening');
+        }
+      }, 1000);
+      
+    } catch (error) {
+      console.error('❌ Delete error:', error);
+      setError('❌ Delete failed: ' + error.message);
+      setSaving(false);
+    }
+  };
+
+  // ==================== BACK NAVIGATION ====================
+  const handleBackClick = () => {
+    navigate('/production-sections/flattening');
+  };
+
+  // ==================== UI HELPERS ====================
+  const getEfficiencyColor = (efficiency) => {
+    if (efficiency >= 90) return '#27ae60';
+    if (efficiency >= 80) return '#f39c12';
+    if (efficiency >= 70) return '#e67e22';
+    return '#e74c3c';
+  };
+
+  const getEfficiencyStatus = (efficiency) => {
+    if (efficiency >= 90) return 'Excellent';
+    if (efficiency >= 80) return 'Good';
+    if (efficiency >= 70) return 'Average';
+    return 'Below Target';
+  };
+
+  const getFieldClass = (fieldName, value) => {
+    if (!value || value.toString().trim() === '') {
+      return 'empty-required';
+    }
+    return 'filled-valid';
   };
 
   const handleClose = () => {
@@ -486,40 +357,59 @@ const FlatteningEditForm = ({ onClose, isModal = true }) => {
     }
   };
 
+  // ==================== LOADING STATE ====================
   if (loading) {
     return (
       <div className="flattening-modal-overlay" onClick={handleClose}>
         <div className="flattening-modal-container" onClick={(e) => e.stopPropagation()}>
           <div className="loading-container">
             <div className="loading-spinner"></div>
-            <p>{isEditing ? 'Loading Record...' : 'Loading Form...'}</p>
+            <p>Loading Edit Form...</p>
+            <div className="loading-details">
+              <p>🔄 Loading record ID: {id}</p>
+              <p>📊 Fetching reference data...</p>
+            </div>
           </div>
         </div>
       </div>
     );
   }
 
+  // ==================== MAIN RENDER ====================
   return (
     <div className="flattening-modal-overlay" onClick={handleClose}>
       <div className="flattening-modal-container" onClick={(e) => e.stopPropagation()}>
         
+        {/* HEADER */}
         <div className="modal-header">
           <div className="header-content">
-            <div className="header-icon">
-              {isEditing ? <FiEdit2 /> : <FiPackage />}
+            <div className="header-icon edit-icon">
+              <FiEdit2 />
             </div>
             <div className="header-text">
-              <h1>{isEditing ? 'EDIT FLATTENING RECORD' : 'NEW FLATTENING PRODUCTION'}</h1>
+              <h1>EDIT FLATTENING PRODUCTION</h1>
               <p>
-                <FiDatabase /> {isEditing ? 'Editing existing record' : 'Create new production entry'}
+                <FiHash /> Record ID: {id} | 
+                <FiCalendar /> Created: {new Date(recordData.created_at).toLocaleDateString()} |
+                {hasChanges && <span className="unsaved-changes"> • UNSAVED CHANGES</span>}
               </p>
             </div>
           </div>
-          <button className="close-button" onClick={handleClose}>
-            <FiX />
-          </button>
+          <div className="header-actions">
+            <button 
+              className="back-button"
+              onClick={handleBackClick}
+              title="Back to Flattening Section"
+            >
+              <FiArrowLeft /> {!isMobile && 'BACK TO LIST'}
+            </button>
+            <button className="close-button" onClick={handleClose}>
+              <FiX />
+            </button>
+          </div>
         </div>
 
+        {/* MESSAGES */}
         {success && (
           <div className="message success">
             <FiCheck /> {success}
@@ -532,228 +422,249 @@ const FlatteningEditForm = ({ onClose, isModal = true }) => {
           </div>
         )}
 
-        {/* Record Info Section for Edit Mode */}
-        {isEditing && (recordDate || recordTime) && (
+        {/* FORM */}
+        <form onSubmit={handleSubmit}>
+          
+          {/* RECORD INFO SECTION */}
           <div className="record-info-section">
-            <div className="record-info-grid">
-              <div className="record-info-item">
-                <FiCalendar /> Record Date: <span>{recordDate}</span>
+            <div className="section-title">
+              <FiInfo /> RECORD INFORMATION
+            </div>
+            <div className="info-grid">
+              <div className="info-item">
+                <span className="info-label">Record ID:</span>
+                <span className="info-value">{id}</span>
               </div>
-              <div className="record-info-item">
-                <FiClock /> Record Time: <span>{recordTime}</span>
+              <div className="info-item">
+                <span className="info-label">Created:</span>
+                <span className="info-value">
+                  {new Date(recordData.created_at).toLocaleString()}
+                </span>
               </div>
-              <div className="record-info-item">
-                <FiDatabase /> Record ID: <span>#{id}</span>
+              <div className="info-item">
+                <span className="info-label">Last Updated:</span>
+                <span className="info-value">
+                  {recordData.updated_at ? 
+                    new Date(recordData.updated_at).toLocaleString() : 
+                    'Never'
+                  }
+                </span>
+              </div>
+              <div className="info-item">
+                <span className="info-label">Status:</span>
+                <span className={`info-value ${hasChanges ? 'status-unsaved' : 'status-saved'}`}>
+                  {hasChanges ? 'Unsaved Changes' : 'Saved'}
+                </span>
               </div>
             </div>
           </div>
-        )}
 
-        <form onSubmit={handleSubmit}>
-          
+          {/* TARGET & MACHINE SECTION */}
           <div className="target-section">
             <div className="section-title">
               <FiTarget /> TARGET & MACHINE DETAILS
             </div>
-            <div className="target-grid">
-              
+            
+            <div className={`target-grid ${isMobile ? 'mobile-grid' : ''}`}>
+              {/* Target Selection */}
               <div className="selection-box">
                 <label className="selection-label required">
                   <FiTarget /> TARGET ID
                 </label>
                 <select
-                  value={targetData.targets_id}
-                  onChange={handleTargetChange}
-                  className={`form-select ${fieldStatus.targets_id || getFieldClass('targets_id', targetData.targets_id)}`}
+                  value={recordData.targets_id}
+                  onChange={(e) => handleChange('targets_id', e.target.value)}
+                  className={`form-select ${fieldStatus.targets_id || getFieldClass('targets_id', recordData.targets_id)}`}
                 >
                   <option value="">-- SELECT TARGET --</option>
-                  {targets.map(target => (
-                    <option key={target.targets_id} value={target.targets_id}>
-                      {target.targets_id}
-                    </option>
-                  ))}
+                  {targets.map(target => {
+                    const displayId = target.targets_id || target.id;
+                    const displayName = target.target_name || '';
+                    return (
+                      <option key={displayId} value={displayId}>
+                        {displayId} {displayName ? `- ${displayName}` : ''}
+                      </option>
+                    );
+                  })}
                 </select>
                 {validationErrors.targets_id && (
                   <span className="error-text">{validationErrors.targets_id}</span>
                 )}
               </div>
 
+              {/* Machine ID */}
               <div className="selection-box">
                 <label className="selection-label">MACHINE ID</label>
                 <input
                   type="text"
-                  value={targetData.machine_id}
-                  readOnly
-                  className="selection-input readonly"
+                  value={recordData.machine_id}
+                  onChange={(e) => handleChange('machine_id', e.target.value)}
+                  className="selection-input"
                 />
               </div>
 
+              {/* Machine No */}
               <div className="selection-box">
                 <label className="selection-label">MACHINE NO</label>
                 <input
                   type="text"
-                  value={targetData.machine_no}
-                  readOnly
-                  className="selection-input readonly"
+                  value={recordData.machine_no}
+                  onChange={(e) => handleChange('machine_no', e.target.value)}
+                  className="selection-input"
                 />
               </div>
 
+              {/* Shift */}
               <div className="selection-box">
-                <label className="selection-label">SHIFT CODE</label>
-                <input
-                  type="text"
-                  value={targetData.shift_code}
-                  readOnly
-                  className="selection-input readonly"
-                />
-              </div>
-
-              <div className="selection-box target-qty-box">
-                <label className="selection-label">TARGET QTY & UNIT</label>
-                <div className="target-qty-value">
-                  {targetData.target_qty.toFixed(2)} {targetData.unit}
+                <label className="selection-label">SHIFT</label>
+                <div className="shift-input-group">
+                  <input
+                    type="text"
+                    value={recordData.shift_code}
+                    onChange={(e) => handleChange('shift_code', e.target.value)}
+                    className="shift-code-input"
+                    placeholder="Code"
+                  />
+                  <input
+                    type="text"
+                    value={recordData.shift_name}
+                    onChange={(e) => handleChange('shift_name', e.target.value)}
+                    className="shift-name-input"
+                    placeholder="Name"
+                  />
                 </div>
               </div>
 
+              {/* Target Quantity */}
+              <div className="selection-box target-qty-box">
+                <label className="selection-label">TARGET QTY</label>
+                <div className="target-qty-input-group">
+                  <input
+                    type="number"
+                    value={recordData.target_qty}
+                    onChange={(e) => handleChange('target_qty', parseFloat(e.target.value) || 0)}
+                    step="0.01"
+                    min="0"
+                    className="target-qty-input"
+                  />
+                  <span className="unit-label">{recordData.unit}</span>
+                </div>
+              </div>
+
+              {/* Efficiency Display */}
               <div className="selection-box efficiency-box">
                 <label className="selection-label">
                   <FiTrendingUp /> EFFICIENCY
                 </label>
-                <div className="efficiency-value">
-                  {overallEfficiency.toFixed(1)}%
+                <div 
+                  className="efficiency-value"
+                  style={{ color: getEfficiencyColor(recordData.efficiency) }}
+                >
+                  {recordData.efficiency.toFixed(1)}%
+                </div>
+                <div className="efficiency-label">
+                  {getEfficiencyStatus(recordData.efficiency)}
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="items-section">
-            <div className="items-header">
-              <div className="section-title-secondary">
-                <FiList /> ITEMS PRODUCTION
-              </div>
-              {!isEditing && (
-                <button
-                  type="button"
-                  onClick={addItemRow}
-                  className="add-item-btn"
-                >
-                  <FiPlus /> ADD ITEM
-                </button>
-              )}
+          {/* ITEM DETAILS SECTION */}
+          <div className="item-details-section">
+            <div className="section-title">
+              <FiPackage /> ITEM DETAILS
             </div>
+            
+            <div className={`item-grid ${isMobile ? 'mobile-grid' : ''}`}>
+              {/* Item Code */}
+              <div className="form-group">
+                <label className="form-label required">
+                  <FiPackage /> ITEM CODE
+                </label>
+                <select
+                  value={recordData.item_code}
+                  onChange={(e) => handleChange('item_code', e.target.value)}
+                  className={`form-select ${fieldStatus.item_code || getFieldClass('item_code', recordData.item_code)}`}
+                >
+                  <option value="">-- SELECT ITEM --</option>
+                  {items.map(item => (
+                    <option key={item.item_code} value={item.item_code}>
+                      {item.item_code} - {item.item_name}
+                    </option>
+                  ))}
+                </select>
+                {validationErrors.item_code && (
+                  <span className="error-text">{validationErrors.item_code}</span>
+                )}
+              </div>
 
-            <table className="items-table">
-              <thead>
-                <tr>
-                  <th>ITEM CODE</th>
-                  <th>ITEM NAME</th>
-                  <th>COIL SIZE</th>
-                  <th>MATERIAL TYPE</th>
-                  <th>QUANTITY</th>
-                  <th>UNIT</th>
-                  <th>EFFICIENCY</th>
-                  {!isEditing && <th>ACTION</th>}
-                </tr>
-              </thead>
-              <tbody>
-                {itemsList.map((item, index) => (
-                  <tr key={item.id}>
-                    <td>
-                      <select
-                        value={item.item_code}
-                        onChange={(e) => handleItemChange(item.id, e.target.value)}
-                        className={`item-select ${fieldStatus[`item_${item.id}`] || getFieldClass('item_code', item.item_code)}`}
-                      >
-                        <option value="">-- SELECT ITEM --</option>
-                        {items.map(itm => (
-                          <option key={itm.id} value={itm.item_code}>
-                            {itm.item_code} - {itm.item_name}
-                          </option>
-                        ))}
-                      </select>
-                      {validationErrors[`item_${item.id}`] && (
-                        <div className="error-text">{validationErrors[`item_${item.id}`]}</div>
-                      )}
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        value={item.item_name}
-                        readOnly
-                        className="item-input readonly"
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        value={item.coil_size}
-                        readOnly
-                        className="item-input readonly"
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        value={item.material_type}
-                        readOnly
-                        className="item-input readonly"
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="number"
-                        value={item.production_quantity}
-                        onChange={(e) => handleQuantityChange(item.id, e.target.value)}
-                        step="0.01"
-                        min="0"
-                        className={`item-input quantity-input ${fieldStatus[`quantity_${item.id}`] || getFieldClass('quantity', item.production_quantity)}`}
-                        placeholder="0.00"
-                      />
-                      {validationErrors[`quantity_${item.id}`] && (
-                        <div className="error-text">{validationErrors[`quantity_${item.id}`]}</div>
-                      )}
-                    </td>
-                    <td className="unit-cell">
-                      {item.unit}
-                    </td>
-                    <td className="efficiency-cell" style={{
-                      color: item.efficiency >= 90 ? '#27ae60' : 
-                             item.efficiency >= 80 ? '#f39c12' : 
-                             item.efficiency >= 70 ? '#f39c12' : '#e74c3c',
-                    }}>
-                      {item.efficiency.toFixed(1)}%
-                    </td>
-                    {!isEditing && (
-                      <td style={{ textAlign: 'center' }}>
-                        {itemsList.length > 1 && (
-                          <button
-                            type="button"
-                            onClick={() => removeItemRow(item.id)}
-                            className="remove-item-btn"
-                            title="Remove Item"
-                          >
-                            <FiTrash2 />
-                          </button>
-                        )}
-                      </td>
-                    )}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+              {/* Item Name */}
+              <div className="form-group">
+                <label className="form-label">ITEM NAME</label>
+                <input
+                  type="text"
+                  value={recordData.item_name}
+                  onChange={(e) => handleChange('item_name', e.target.value)}
+                  className="form-input"
+                />
+              </div>
+
+              {/* Coil Size */}
+              <div className="form-group">
+                <label className="form-label">COIL SIZE</label>
+                <input
+                  type="text"
+                  value={recordData.coil_size}
+                  onChange={(e) => handleChange('coil_size', e.target.value)}
+                  className="form-input"
+                />
+              </div>
+
+              {/* Material Type */}
+              <div className="form-group">
+                <label className="form-label">MATERIAL TYPE</label>
+                <input
+                  type="text"
+                  value={recordData.material_type}
+                  onChange={(e) => handleChange('material_type', e.target.value)}
+                  className="form-input"
+                />
+              </div>
+
+              {/* Production Quantity */}
+              <div className="form-group">
+                <label className="form-label required">PRODUCTION QTY</label>
+                <div className="quantity-input-group">
+                  <input
+                    type="number"
+                    value={recordData.production_quantity}
+                    onChange={(e) => handleChange('production_quantity', e.target.value)}
+                    step="0.01"
+                    min="0"
+                    className={`form-input ${fieldStatus.production_quantity || getFieldClass('production_quantity', recordData.production_quantity)}`}
+                  />
+                  <span className="unit-label">{recordData.unit}</span>
+                </div>
+                {validationErrors.production_quantity && (
+                  <span className="error-text">{validationErrors.production_quantity}</span>
+                )}
+              </div>
+            </div>
           </div>
 
+          {/* OPERATOR & REMARKS */}
           <div className="bottom-section">
-            <div className="operator-row">
+            <div className={`operator-row ${isMobile ? 'mobile-operator' : ''}`}>
+              {/* Operator Name */}
               <div className="form-group">
-                <label className="form-label required" style={{ color: '#2ecc71' }}>
+                <label className="form-label required">
                   <FiUser /> OPERATOR NAME
                 </label>
                 <input
                   type="text"
-                  value={operatorName}
-                  onChange={(e) => handleOperatorChange(e.target.value)}
-                  className={`item-input ${fieldStatus.operator_name || getFieldClass('operator_name', operatorName)}`}
+                  value={recordData.operator_name}
+                  onChange={(e) => handleChange('operator_name', e.target.value)}
+                  className={`form-input ${fieldStatus.operator_name || getFieldClass('operator_name', recordData.operator_name)}`}
                   placeholder="Enter operator name"
                 />
                 {validationErrors.operator_name && (
@@ -761,67 +672,120 @@ const FlatteningEditForm = ({ onClose, isModal = true }) => {
                 )}
               </div>
               
-              <div className="form-group">
-                <label className="form-label" style={{ color: '#3498db' }}>
+              {/* Remarks */}
+              <div className="form-group remarks-group">
+                <label className="form-label">
                   <FiClipboard /> REMARKS
                 </label>
                 <textarea
-                  value={remarks}
-                  onChange={(e) => handleRemarksChange(e.target.value)}
-                  className={`form-textarea ${fieldStatus.remarks || ''}`}
+                  value={recordData.remarks}
+                  onChange={(e) => handleChange('remarks', e.target.value)}
+                  className="form-textarea"
                   placeholder="Enter any additional notes or remarks..."
-                  rows="3"
+                  rows={isMobile ? "2" : "3"}
                 />
               </div>
             </div>
           </div>
 
+          {/* FORM ACTIONS */}
           <div className="actions-section">
-            <div className="total-info">
-              TOTAL PRODUCTION: <span>{totalProduction.toFixed(2)} {targetData.unit}</span>
+            <div className="change-indicator">
+              {hasChanges ? (
+                <div className="changes-detected">
+                  <FiAlertCircle /> UNSAVED CHANGES DETECTED
+                </div>
+              ) : (
+                <div className="no-changes">
+                  <FiCheck /> NO CHANGES DETECTED
+                </div>
+              )}
             </div>
             
-            <div className="action-buttons">
+            <div className={`action-buttons ${isMobile ? 'mobile-buttons' : ''}`}>
+              {/* DELETE BUTTON */}
+              <button
+                type="button"
+                onClick={handleDelete}
+                className="btn btn-delete"
+                disabled={saving}
+              >
+                <FiTrash2 /> {!isMobile && 'DELETE'}
+              </button>
+              
+              {/* RESET BUTTON */}
               <button
                 type="button"
                 onClick={handleReset}
                 className="btn btn-reset"
+                disabled={!hasChanges || saving}
               >
-                <FiSettings /> {isEditing ? 'RESET' : 'CLEAR'}
+                <FiRefreshCw /> {!isMobile && 'RESET'}
               </button>
               
+              {/* CANCEL BUTTON */}
               <button
                 type="button"
                 onClick={handleClose}
                 className="btn btn-cancel"
+                disabled={saving}
               >
-                <FiX /> CANCEL
+                <FiX /> {!isMobile && 'CANCEL'}
               </button>
               
+              {/* SAVE BUTTON */}
               <button
                 type="submit"
-                disabled={saving}
+                disabled={!hasChanges || saving}
                 className="btn btn-submit"
               >
                 {saving ? (
                   <>
-                    <div className="loading-spinner" style={{ 
-                      width: '16px', 
-                      height: '16px', 
-                      borderWidth: '2px',
-                      margin: '0'
-                    }}></div>
-                    {isEditing ? 'UPDATING...' : 'SAVING...'}
+                    <div className="btn-spinner"></div>
+                    {!isMobile && 'SAVING...'}
                   </>
                 ) : (
                   <>
-                    <FiSave /> {isEditing ? 'UPDATE RECORD' : `SAVE (${itemsList.length} ITEM${itemsList.length > 1 ? 'S' : ''})`}
+                    <FiSave /> {!isMobile && 'SAVE CHANGES'}
                   </>
                 )}
               </button>
             </div>
           </div>
         </form>
+
+        {/* DEBUG INFO */}
+        <div className="database-info debug-info">
+          <div className="info-header">
+            <FiDatabase /> DATABASE INFORMATION
+          </div>
+          <div className="info-grid">
+            <div className="info-item">
+              <div className="info-title">RECORD ID</div>
+              <div className="info-value">{id}</div>
+              <div className="info-desc">Editing this record</div>
+            </div>
+            <div className="info-item">
+              <div className="info-title">ITEMS</div>
+              <div className="info-value">{items.length}</div>
+              <div className="info-desc">Available items</div>
+            </div>
+            <div className="info-item">
+              <div className="info-title">TARGETS</div>
+              <div className="info-value">{targets.length}</div>
+              <div className="info-desc">Available targets</div>
+            </div>
+            <div className="info-item">
+              <div className="info-title">CHANGES</div>
+              <div className="info-value">
+                <span style={{ color: hasChanges ? '#f39c12' : '#27ae60' }}>
+                  {hasChanges ? 'YES' : 'NO'}
+                </span>
+              </div>
+              <div className="info-desc">Unsaved changes</div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

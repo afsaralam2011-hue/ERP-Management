@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react"; // ✅ FIXED: Removed unused useEffect import
 import { useNavigate, Link } from "react-router-dom";
 import { 
   FiUser, 

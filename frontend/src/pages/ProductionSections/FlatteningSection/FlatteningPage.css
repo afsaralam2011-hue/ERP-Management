@@ -50,6 +50,413 @@
   color: var(--text-primary);
 }
 
+/* ============================ */
+/*  MOBILE RESPONSIVE STYLES  */
+/* ============================ */
+
+/* Tablet Devices (768px to 1024px) */
+@media screen and (max-width: 1024px) {
+  .flattening-container {
+    padding: 15px;
+  }
+  
+  .header-section {
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .header-actions {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  
+  .stats-grid-enhanced {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .production-analysis-container {
+    grid-template-columns: 1fr;
+  }
+  
+  .table-container-enhanced {
+    overflow-x: auto;
+  }
+  
+  .production-table-enhanced {
+    min-width: 800px;
+  }
+  
+  .filter-controls {
+    grid-template-columns: 1fr;
+  }
+  
+  .filter-group {
+    flex: 1 1 100%;
+  }
+  
+  .report-summary-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Mobile Devices (480px to 768px) */
+@media screen and (max-width: 768px) {
+  .flattening-container {
+    padding: 10px;
+  }
+  
+  /* Header Adjustments */
+  .header-section {
+    padding: 16px;
+  }
+  
+  .page-title {
+    font-size: 1.5rem;
+  }
+  
+  .title-icon {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .header-actions {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+  
+  .primary-btn, .export-btn, .refresh-btn {
+    width: 100%;
+    justify-content: center;
+    margin-bottom: 8px;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+    width: 100%;
+    gap: 8px;
+  }
+  
+  .btn.btn-secondary, .btn.btn-primary {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  /* Stats Section */
+  .stats-section {
+    padding: 16px;
+  }
+  
+  .stats-grid-enhanced {
+    grid-template-columns: 1fr;
+  }
+  
+  .stat-card-enhanced {
+    padding: 15px;
+  }
+  
+  /* Production Analysis */
+  .today-production-section {
+    padding: 16px;
+  }
+  
+  .machine-analysis-grid,
+  .item-analysis-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  /* Filters Section */
+  .filters-section-enhanced {
+    padding: 16px;
+  }
+  
+  .filter-group {
+    flex: 1 1 100%;
+  }
+  
+  .filter-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  /* Report Section */
+  .report-section-enhanced {
+    padding: 16px;
+  }
+  
+  .report-header-enhanced {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .report-actions-enhanced {
+    flex-direction: column;
+    width: 100%;
+    gap: 10px;
+  }
+  
+  .print-btn-enhanced,
+  .export-report-btn-enhanced,
+  .close-report-btn-enhanced {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .report-summary-cards {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .summary-card {
+    padding: 15px;
+  }
+  
+  .shift-report-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  /* Records Table */
+  .records-table-section-enhanced {
+    padding: 16px;
+  }
+  
+  .table-header-section {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .table-stats {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .table-stats .stat-item {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .view-btn, .edit-btn, .delete-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  /* Pagination */
+  .pagination-section-enhanced {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .pagination-controls {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .page-numbers {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  /* Footer */
+  .page-footer-enhanced {
+    padding: 16px;
+  }
+  
+  .footer-content {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .footer-right {
+    text-align: left;
+  }
+  
+  .footer-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .footer-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  /* Breadcrumb Navigation */
+  .breadcrumb-nav {
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+  
+  /* Modal Improvements */
+  .modal-container {
+    width: 95%;
+    margin: 10px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+}
+
+/* Small Mobile Devices (below 480px) */
+@media screen and (max-width: 480px) {
+  .flattening-container {
+    padding: 8px;
+  }
+  
+  /* Mobile-specific styles for better touch experience */
+  .btn, button {
+    min-height: 44px; /* Better touch target */
+    padding: 12px 16px;
+    font-size: 14px;
+  }
+  
+  .filter-input-enhanced,
+  .filter-select-enhanced,
+  .filter-date-enhanced {
+    height: 44px;
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+  
+  /* Form inputs for mobile */
+  .form-input,
+  .form-select,
+  .form-textarea {
+    font-size: 16px;
+    min-height: 44px;
+  }
+  
+  /* Hide less important elements on small screens */
+  .page-subtitle {
+    display: none;
+  }
+  
+  .connection-badge {
+    margin-left: 8px;
+    font-size: 10px;
+    padding: 3px 6px;
+  }
+  
+  /* Adjust spacing */
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .header-icon {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .section-header h2 {
+    font-size: 1.3rem;
+  }
+  
+  /* Production table adjustments for mobile */
+  .production-info {
+    padding: 6px 8px;
+  }
+  
+  .production-row .label {
+    font-size: 11px;
+  }
+  
+  .production-row .value {
+    font-size: 13px;
+  }
+  
+  /* Machine and item analysis cards */
+  .machine-analysis-card,
+  .item-analysis-card {
+    padding: 12px;
+  }
+  
+  /* Report section adjustments */
+  .report-title-section h2 {
+    font-size: 1.4rem;
+  }
+  
+  .machine-report-item {
+    padding: 12px;
+  }
+  
+  /* PDF Modal on mobile */
+  .pdf-modal-container {
+    width: 98%;
+    margin: 5px;
+    max-height: 95vh;
+  }
+  
+  .pdf-content {
+    padding: 15px;
+  }
+  
+  .pdf-header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .pdf-modal-actions {
+    flex-direction: column;
+  }
+  
+  .pdf-download-btn,
+  .pdf-print-btn,
+  .pdf-close-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Extra Small Devices (below 360px) */
+@media screen and (max-width: 360px) {
+  .flattening-container {
+    padding: 5px;
+  }
+  
+  .header-section,
+  .stats-section,
+  .today-production-section,
+  .filters-section-enhanced,
+  .report-section-enhanced,
+  .records-table-section-enhanced,
+  .page-footer-enhanced {
+    padding: 12px;
+    border-radius: 10px;
+  }
+  
+  .page-title {
+    font-size: 1.2rem;
+  }
+  
+  .stat-value-enhanced {
+    font-size: 24px;
+  }
+  
+  .summary-value {
+    font-size: 20px;
+  }
+  
+  /* Hide icons in table on very small screens */
+  .machine-icon,
+  .item-icon,
+  .operator-avatar {
+    display: none;
+  }
+  
+  .machine-details,
+  .item-details,
+  .operator-details {
+    margin-left: 0;
+  }
+}
+
+/* ============================ */
+/*  EXISTING BASE STYLES BELOW */
+/* ============================ */
+
 /* Database Alert */
 .database-alert {
   background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
@@ -2412,199 +2819,5 @@
   }
   to {
     opacity: 1;
-  }
-}
-
-/* Responsive Design */
-@media (max-width: 1400px) {
-  .stats-grid-enhanced {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  
-  .report-summary-cards {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  
-  .pdf-summary-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 1200px) {
-  .production-analysis-container {
-    grid-template-columns: 1fr;
-  }
-  
-  .filter-controls {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 1024px) {
-  .header-section {
-    flex-direction: column;
-    gap: 20px;
-  }
-  
-  .header-actions {
-    width: 100%;
-    justify-content: flex-start;
-  }
-  
-  .machine-analysis-grid,
-  .item-analysis-grid {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  }
-  
-  .shift-report-grid {
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  }
-}
-
-@media (max-width: 768px) {
-  .flattening-container {
-    padding: 16px;
-  }
-  
-  .header-section,
-  .stats-section,
-  .today-production-section,
-  .filters-section-enhanced,
-  .report-section-enhanced,
-  .records-table-section-enhanced,
-  .page-footer-enhanced {
-    padding: 20px;
-    border-radius: var(--border-radius);
-  }
-  
-  .page-title {
-    font-size: 24px;
-    line-height: 1.2;
-  }
-  
-  .page-subtitle {
-    font-size: 13px;
-    line-height: 1.2;
-  }
-  
-  .stats-grid-enhanced {
-    grid-template-columns: 1fr;
-  }
-  
-  .filter-controls {
-    grid-template-columns: 1fr;
-  }
-  
-  .filter-actions {
-    flex-direction: column;
-  }
-  
-  .report-header-enhanced {
-    flex-direction: column;
-    gap: 20px;
-  }
-  
-  .report-actions-enhanced {
-    flex-wrap: wrap;
-    justify-content: center;
-    width: 100%;
-  }
-  
-  .table-header-section {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-  }
-  
-  .table-stats {
-    flex-direction: column;
-    gap: 12px;
-  }
-  
-  .footer-content {
-    flex-direction: column;
-    gap: 20px;
-  }
-  
-  .footer-right {
-    text-align: left;
-  }
-  
-  .footer-actions {
-    flex-direction: column;
-  }
-  
-  .pdf-modal-container {
-    width: 95%;
-    margin: 10px;
-  }
-  
-  .pdf-modal-header {
-    padding: 15px 20px;
-    flex-direction: column;
-    gap: 10px;
-    text-align: center;
-  }
-  
-  .pdf-content {
-    padding: 20px;
-  }
-  
-  .pdf-header h1 {
-    font-size: 22px;
-    line-height: 1.2;
-  }
-  
-  .pdf-modal-actions {
-    flex-direction: column;
-  }
-  
-  .pdf-download-btn,
-  .pdf-print-btn,
-  .pdf-close-btn {
-    width: 100%;
-    justify-content: center;
-  }
-}
-
-@media (max-width: 480px) {
-  .page-subtitle {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-  
-  .header-actions {
-    flex-direction: column;
-  }
-  
-  .primary-btn,
-  .export-btn,
-  .refresh-btn {
-    width: 100%;
-    justify-content: center;
-  }
-  
-  .report-summary-cards {
-    grid-template-columns: 1fr;
-  }
-  
-  .pagination-section-enhanced {
-    flex-direction: column;
-    gap: 20px;
-    align-items: stretch;
-  }
-  
-  .pagination-controls {
-    flex-direction: column;
-    gap: 12px;
-  }
-  
-  .page-numbers {
-    justify-content: center;
-  }
-  
-  .pdf-summary-grid {
-    grid-template-columns: 1fr;
   }
 }
