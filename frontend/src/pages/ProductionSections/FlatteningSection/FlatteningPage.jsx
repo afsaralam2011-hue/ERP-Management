@@ -36,6 +36,8 @@ import {
   FiTrendingDown,
   FiFile,
   FiZap,
+  FiChevronUp,
+  FiChevronDown,
 } from "react-icons/fi";
 import { supabase } from "../../../supabaseClient";
 import FlatteningForm from "./FlatteningForm";
@@ -479,6 +481,18 @@ const FlatteningPage = () => {
   const [showPrintModal, setShowPrintModal] = useState(false);
   const [pdfReportData, setPdfReportData] = useState(null);
 
+  // ✅ YEH DO NAYE STATES ADD KARNE HAI - LINE 63-64 KE BAAD
+  const [showStats, setShowStats] = useState(() => {
+    // Local storage se state load karenge, default false
+    const saved = localStorage.getItem("flattening_showStats");
+    return saved ? JSON.parse(saved) : false;
+  });
+  
+  const [showTodayProduction, setShowTodayProduction] = useState(() => {
+    const saved = localStorage.getItem("flattening_showTodayProduction");
+    return saved ? JSON.parse(saved) : false;
+  });
+
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
@@ -608,6 +622,24 @@ const FlatteningPage = () => {
       valueColor: isSupabaseConnected ? "#059669" : "#ef4444",
     },
   ];
+
+  // ✅ State save karne ka function
+  const saveToggleState = (key, value) => {
+    localStorage.setItem(`flattening_${key}`, JSON.stringify(value));
+  };
+
+  // ✅ Toggle handlers
+  const toggleStats = () => {
+    const newValue = !showStats;
+    setShowStats(newValue);
+    saveToggleState("showStats", newValue);
+  };
+
+  const toggleTodayProduction = () => {
+    const newValue = !showTodayProduction;
+    setShowTodayProduction(newValue);
+    saveToggleState("showTodayProduction", newValue);
+  };
 
   // Fetch data function with useCallback
   const fetchData = useCallback(async () => {
@@ -1402,50 +1434,177 @@ const FlatteningPage = () => {
               </>
             )}
           </button>
+
+          {/* ✅ STATS TOGGLE BUTTON - LINE 248 KE BAAD */}
+          <button
+            onClick={toggleStats}
+            className="btn btn-tertiary"
+            title={showStats ? "Hide Statistics" : "Show Statistics"}
+          >
+            {showStats ? (
+              <>
+                <FiChevronUp size={16} /> Hide Stats
+              </>
+            ) : (
+              <>
+                <FiChevronDown size={16} /> Show Stats
+              </>
+            )}
+          </button>
+
+          {/* ✅ TODAY'S PRODUCTION TOGGLE BUTTON */}
+          <button
+            onClick={toggleTodayProduction}
+            className="btn btn-tertiary"
+            title={showTodayProduction ? "Hide Today's Production" : "Show Today's Production"}
+          >
+            {showTodayProduction ? (
+              <>
+                <FiChevronUp size={16} /> Hide Today's
+              </>
+            ) : (
+              <>
+                <FiChevronDown size={16} /> Show Today's
+              </>
+            )}
+          </button>
         </div>
       </div>
 
-      {/* Stats Cards - COMPACT DESIGN */}
-      <div className="stats-section">
-        <div className="stats-grid-enhanced">
-          {statCards.map((card) => (
-            <EnhancedStatCard
-              key={card.id}
-              card={card}
-              stats={stats}
-              isSupabaseConnected={isSupabaseConnected}
-            />
-          ))}
-        </div>
-      </div>
-
-      {/* Today's Production & Efficiency Section */}
-      <div className="today-production-section fade-in-up">
-        <div className="section-header">
-          <div className="header-icon">
-            <FiBarChart size={28} />
-          </div>
-          <div className="section-header-content">
-            <h2>Today's Production & Efficiency</h2>
-            <p className="section-subtitle">
-              Real-time production data for today
-            </p>
+      {/* ✅ Stats Cards - TOGGLE BASED ON STATE - LINE 260 */}
+      {showStats && (
+        <div className="stats-section fade-in-up">
+          <div className="stats-grid-enhanced">
+            {statCards.map((card) => (
+              <EnhancedStatCard
+                key={card.id}
+                card={card}
+                stats={stats}
+                isSupabaseConnected={isSupabaseConnected}
+              />
+            ))}
           </div>
         </div>
+      )}
 
-        <div className="production-analysis-container">
-          {/* Machine-wise Production */}
-          <div className="machine-analysis">
-            <div className="analysis-header">
-              <h3>Machine-wise Production</h3>
-              <div className="analysis-summary">
-                {Object.keys(stats.machineWiseToday).length} Machines Active
+      {/* ✅ Today's Production & Efficiency Section - TOGGLE BASED ON STATE - LINE 275 */}
+      {showTodayProduction && (
+        <div className="today-production-section fade-in-up">
+          <div className="section-header">
+            <div className="header-icon">
+              <FiBarChart size={28} />
+            </div>
+            <div className="section-header-content">
+              <h2>Today's Production & Efficiency</h2>
+              <p className="section-subtitle">
+                Real-time production data for today
+              </p>
+            </div>
+          </div>
+
+          <div className="production-analysis-container">
+            {/* Machine-wise Production */}
+            <div className="machine-analysis">
+              <div className="analysis-header">
+                <h3>Machine-wise Production</h3>
+                <div className="analysis-summary">
+                  {Object.keys(stats.machineWiseToday).length} Machines Active
+                </div>
+              </div>
+              <div className="machine-analysis-grid">
+                {Object.entries(stats.machineWiseToday).length > 0 ? (
+                  Object.entries(stats.machineWiseToday).map(
+                    ([machine, data]) => {
+                      const efficiencyStatus =
+                        data.efficiency >= 80
+                          ? "good"
+                          : data.efficiency >= 60
+                          ? "average"
+                          : "poor";
+                      return (
+                        <div key={machine} className="machine-analysis-card">
+                          <div className="machine-analysis-header">
+                            <div className="machine-analysis-icon">
+                              <FiTool size={16} />
+                            </div>
+                            <div className="machine-analysis-name">
+                              {machine}
+                            </div>
+                            <div
+                              className={`machine-status status-${efficiencyStatus}`}
+                            />
+                          </div>
+                          <div className="machine-analysis-stats">
+                            <div className="production-stats">
+                              <div
+                                className={`production-value value-${efficiencyStatus}`}
+                              >
+                                {data.production.toFixed(0)}
+                              </div>
+                              <div className="production-label">
+                                KG Produced
+                              </div>
+                            </div>
+                            <div className="efficiency-stats">
+                              <div
+                                className={`efficiency-value value-${efficiencyStatus}`}
+                              >
+                                {data.efficiency.toFixed(1)}%
+                              </div>
+                              <div className="efficiency-label">
+                                Efficiency
+                              </div>
+                            </div>
+                          </div>
+                          <div className="machine-analysis-footer">
+                            <div className="performance-bar">
+                              <div
+                                className="performance-fill"
+                                style={{
+                                  width: `${Math.min(data.efficiency, 100)}%`,
+                                  background:
+                                    data.efficiency >= 80
+                                      ? "#10b981"
+                                      : data.efficiency >= 60
+                                      ? "#f59e0b"
+                                      : "#ef4444",
+                                }}
+                              />
+                            </div>
+                            <div
+                              className={`performance-indicator indicator-${efficiencyStatus}`}
+                            >
+                              {efficiencyStatus === "good"
+                                ? "Excellent"
+                                : efficiencyStatus === "average"
+                                ? "Good"
+                                : "Needs Improvement"}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    }
+                  )
+                ) : (
+                  <div className="no-production">
+                    <FiTool size={24} />
+                    <div>No machine production recorded today</div>
+                  </div>
+                )}
               </div>
             </div>
-            <div className="machine-analysis-grid">
-              {Object.entries(stats.machineWiseToday).length > 0 ? (
-                Object.entries(stats.machineWiseToday).map(
-                  ([machine, data]) => {
+
+            {/* Item-wise Production */}
+            <div className="item-analysis">
+              <div className="analysis-header">
+                <h3>Item-wise Production</h3>
+                <div className="analysis-summary">
+                  {Object.keys(stats.itemWiseToday).length} Items Produced
+                </div>
+              </div>
+              <div className="item-analysis-grid">
+                {Object.entries(stats.itemWiseToday).length > 0 ? (
+                  Object.entries(stats.itemWiseToday).map(([item, data]) => {
                     const efficiencyStatus =
                       data.efficiency >= 80
                         ? "good"
@@ -1453,17 +1612,17 @@ const FlatteningPage = () => {
                         ? "average"
                         : "poor";
                     return (
-                      <div key={machine} className="machine-analysis-card">
-                        <div className="machine-analysis-header">
-                          <div className="machine-analysis-icon">
-                            <FiTool size={16} />
+                      <div key={item} className="item-analysis-card">
+                        <div className="item-analysis-header">
+                          <div className="item-analysis-icon">
+                            <FiTag size={16} />
                           </div>
-                          <div className="machine-analysis-name">{machine}</div>
+                          <div className="item-analysis-name">{item}</div>
                           <div
                             className={`machine-status status-${efficiencyStatus}`}
                           />
                         </div>
-                        <div className="machine-analysis-stats">
+                        <div className="item-analysis-stats">
                           <div className="production-stats">
                             <div
                               className={`production-value value-${efficiencyStatus}`}
@@ -1481,7 +1640,7 @@ const FlatteningPage = () => {
                             <div className="efficiency-label">Efficiency</div>
                           </div>
                         </div>
-                        <div className="machine-analysis-footer">
+                        <div className="item-analysis-footer">
                           <div className="performance-bar">
                             <div
                               className="performance-fill"
@@ -1508,180 +1667,99 @@ const FlatteningPage = () => {
                         </div>
                       </div>
                     );
-                  }
-                )
-              ) : (
-                <div className="no-production">
-                  <FiTool size={24} />
-                  <div>No machine production recorded today</div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Item-wise Production */}
-          <div className="item-analysis">
-            <div className="analysis-header">
-              <h3>Item-wise Production</h3>
-              <div className="analysis-summary">
-                {Object.keys(stats.itemWiseToday).length} Items Produced
+                  })
+                ) : (
+                  <div className="no-production">
+                    <FiTag size={24} />
+                    <div>No items recorded today</div>
+                  </div>
+                )}
               </div>
             </div>
-            <div className="item-analysis-grid">
-              {Object.entries(stats.itemWiseToday).length > 0 ? (
-                Object.entries(stats.itemWiseToday).map(([item, data]) => {
-                  const efficiencyStatus =
-                    data.efficiency >= 80
-                      ? "good"
-                      : data.efficiency >= 60
-                      ? "average"
-                      : "poor";
-                  return (
-                    <div key={item} className="item-analysis-card">
-                      <div className="item-analysis-header">
-                        <div className="item-analysis-icon">
-                          <FiTag size={16} />
-                        </div>
-                        <div className="item-analysis-name">{item}</div>
-                        <div
-                          className={`machine-status status-${efficiencyStatus}`}
-                        />
-                      </div>
-                      <div className="item-analysis-stats">
-                        <div className="production-stats">
-                          <div
-                            className={`production-value value-${efficiencyStatus}`}
-                          >
-                            {data.production.toFixed(0)}
-                          </div>
-                          <div className="production-label">KG Produced</div>
-                        </div>
-                        <div className="efficiency-stats">
-                          <div
-                            className={`efficiency-value value-${efficiencyStatus}`}
-                          >
-                            {data.efficiency.toFixed(1)}%
-                          </div>
-                          <div className="efficiency-label">Efficiency</div>
-                        </div>
-                      </div>
-                      <div className="item-analysis-footer">
-                        <div className="performance-bar">
-                          <div
-                            className="performance-fill"
-                            style={{
-                              width: `${Math.min(data.efficiency, 100)}%`,
-                              background:
-                                data.efficiency >= 80
-                                  ? "#10b981"
-                                  : data.efficiency >= 60
-                                  ? "#f59e0b"
-                                  : "#ef4444",
-                            }}
-                          />
-                        </div>
-                        <div
-                          className={`performance-indicator indicator-${efficiencyStatus}`}
-                        >
-                          {efficiencyStatus === "good"
-                            ? "Excellent"
-                            : efficiencyStatus === "average"
-                            ? "Good"
-                            : "Needs Improvement"}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })
-              ) : (
-                <div className="no-production">
-                  <FiTag size={24} />
-                  <div>No items recorded today</div>
-                </div>
-              )}
-            </div>
-          </div>
 
-          {/* Shift-wise Production */}
-          <div className="shift-analysis">
-            <div className="analysis-header">
-              <h3>Shift-wise Production</h3>
-              <div className="analysis-summary">
-                {Object.keys(stats.shiftWiseToday).length} Shifts Active
+            {/* Shift-wise Production */}
+            <div className="shift-analysis">
+              <div className="analysis-header">
+                <h3>Shift-wise Production</h3>
+                <div className="analysis-summary">
+                  {Object.keys(stats.shiftWiseToday).length} Shifts Active
+                </div>
               </div>
-            </div>
-            <div className="shift-analysis-grid">
-              {Object.entries(stats.shiftWiseToday).length > 0 ? (
-                Object.entries(stats.shiftWiseToday).map(([shift, data]) => {
-                  const efficiencyStatus =
-                    data.efficiency >= 80
-                      ? "good"
-                      : data.efficiency >= 60
-                      ? "average"
-                      : "poor";
-                  return (
-                    <div key={shift} className="shift-analysis-card">
-                      <div className="shift-analysis-header">
-                        <div className="shift-analysis-icon">
-                          <FiClock size={16} />
-                        </div>
-                        <div className="shift-analysis-name">Shift {shift}</div>
-                        <div
-                          className={`machine-status status-${efficiencyStatus}`}
-                        />
-                      </div>
-                      <div className="shift-analysis-stats">
-                        <div className="production-stats">
-                          <div
-                            className={`production-value value-${efficiencyStatus}`}
-                          >
-                            {data.production.toFixed(0)}
+              <div className="shift-analysis-grid">
+                {Object.entries(stats.shiftWiseToday).length > 0 ? (
+                  Object.entries(stats.shiftWiseToday).map(([shift, data]) => {
+                    const efficiencyStatus =
+                      data.efficiency >= 80
+                        ? "good"
+                        : data.efficiency >= 60
+                        ? "average"
+                        : "poor";
+                    return (
+                      <div key={shift} className="shift-analysis-card">
+                        <div className="shift-analysis-header">
+                          <div className="shift-analysis-icon">
+                            <FiClock size={16} />
                           </div>
-                          <div className="production-label">KG Produced</div>
-                        </div>
-                        <div className="efficiency-stats">
-                          <div
-                            className={`efficiency-value value-${efficiencyStatus}`}
-                          >
-                            {data.efficiency.toFixed(1)}%
+                          <div className="shift-analysis-name">
+                            Shift {shift}
                           </div>
-                          <div className="efficiency-label">Efficiency</div>
-                        </div>
-                      </div>
-                      <div className="shift-analysis-footer">
-                        <div className="performance-bar">
                           <div
-                            className="performance-fill"
-                            style={{
-                              width: `${Math.min(data.efficiency, 100)}%`,
-                              background:
-                                data.efficiency >= 80
-                                  ? "#10b981"
-                                  : data.efficiency >= 60
-                                  ? "#f59e0b"
-                                  : "#ef4444",
-                            }}
+                            className={`machine-status status-${efficiencyStatus}`}
                           />
                         </div>
-                        <div
-                          className={`performance-indicator indicator-${efficiencyStatus}`}
-                        >
-                          {data.count} records
+                        <div className="shift-analysis-stats">
+                          <div className="production-stats">
+                            <div
+                              className={`production-value value-${efficiencyStatus}`}
+                            >
+                              {data.production.toFixed(0)}
+                            </div>
+                            <div className="production-label">KG Produced</div>
+                          </div>
+                          <div className="efficiency-stats">
+                            <div
+                              className={`efficiency-value value-${efficiencyStatus}`}
+                            >
+                              {data.efficiency.toFixed(1)}%
+                            </div>
+                            <div className="efficiency-label">Efficiency</div>
+                          </div>
+                        </div>
+                        <div className="shift-analysis-footer">
+                          <div className="performance-bar">
+                            <div
+                              className="performance-fill"
+                              style={{
+                                width: `${Math.min(data.efficiency, 100)}%`,
+                                background:
+                                  data.efficiency >= 80
+                                    ? "#10b981"
+                                    : data.efficiency >= 60
+                                    ? "#f59e0b"
+                                    : "#ef4444",
+                              }}
+                            />
+                          </div>
+                          <div
+                            className={`performance-indicator indicator-${efficiencyStatus}`}
+                          >
+                            {data.count} records
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })
-              ) : (
-                <div className="no-production">
-                  <FiClock size={24} />
-                  <div>No shift data available</div>
-                </div>
-              )}
+                    );
+                  })
+                ) : (
+                  <div className="no-production">
+                    <FiClock size={24} />
+                    <div>No shift data available</div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Filters Section */}
       <div className="filters-section-enhanced slide-in-right">
