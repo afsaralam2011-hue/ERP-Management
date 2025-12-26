@@ -58,7 +58,7 @@ import PVCCoatingMultiEntryForm from "./pages/ProductionSections/PVCCoatingSecti
 import DailyProductionReport from "./pages/ProductionReports/DailyProductionReport";
 
 // Layout
-import Layout from "./components/common/Layout";
+import Layout from './components/common/Layout';
 
 function App() {
   return (

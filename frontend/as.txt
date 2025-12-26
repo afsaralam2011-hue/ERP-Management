@@ -50,3 +50,19 @@ spiralsection
 targets
 
 users
+
+
+اب دیکھیں کہ کون سا بارڈر رنگ نظر آ رہا ہے:
+
+ریڈ: Layout باہر
+
+نیلا: Main content
+
+ہرا: Page content
+
+اورنج: Header
+
+جامنی: Navigation/Sidebar
+
+مجھے بتائیں کہ کون سا رنگ نظر آ رہا ہے؟ میں وہی بارڈر ہٹانے کا کوڈ دوں گا۔
+

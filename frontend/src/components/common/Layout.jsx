@@ -1,7 +1,7 @@
 // src/components/common/Layout.jsx
 import React from 'react';
 import Header from './Header';
-import Sidebar from './Sidebar';
+import Navigation from './Navigation';
 
 const Layout = ({ 
   children, 
@@ -17,31 +17,39 @@ const Layout = ({
       overflow: 'hidden',
       width: '100vw',
       boxSizing: 'border-box',
-      fontFamily: "'Segoe UI', 'Roboto', sans-serif"
+      fontFamily: "'Segoe UI', 'Roboto', sans-serif",
+      border: 'none',
+      margin: 0,
+      padding: 0
     }}>
-      {/* Sidebar - صرف دکھائیں اگر showSidebar true ہو */}
-      {showSidebar && <Sidebar />}
+      {/* یہاں Navigation.jsx استعمال ہو رہا ہے */}
+      {showSidebar && <Navigation />}
 
-      {/* Main content */}
       <div style={{
         flex: 1,
         display: 'flex',
         flexDirection: 'column',
         minWidth: 0,
         width: '100%',
-        background: '#f1f5f9'
+        background: '#f1f5f9',
+        border: 'none',
+        margin: 0,
+        padding: 0,
+        overflow: 'hidden'
       }}>
-        {/* Header - صرف دکھائیں اگر showHeader true ہو */}
         {showHeader && (
           <Header title={title} subtitle={subtitle} />
         )}
         
-        {/* Page content */}
         <main style={{
           flex: 1,
           overflow: 'auto',
-          padding: '32px',
-          position: 'relative'
+          padding: '20px',
+          position: 'relative',
+          border: 'none',
+          margin: 0,
+          width: '100%',
+          height: '100%'
         }}>
           {children}
         </main>

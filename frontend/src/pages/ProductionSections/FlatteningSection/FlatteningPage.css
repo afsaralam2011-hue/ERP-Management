@@ -1576,3 +1576,510 @@
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(59, 130, 246, 0.7);
 }
+/* ===== STATS SECTION - ALL CARDS IN SINGLE ROW ===== */
+.stats-section {
+  margin: 20px;
+  overflow-x: auto;
+}
+
+.stats-grid-enhanced {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 16px;
+  min-width: max-content;
+  padding-bottom: 15px;
+}
+
+.stat-card-enhanced {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.8) 100%);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  min-height: 140px;
+  min-width: 250px;
+  flex: 0 0 auto;
+}
+
+/* Mobile responsive - still single row but with scroll */
+@media (max-width: 768px) {
+  .stats-grid-enhanced {
+    gap: 12px;
+  }
+  
+  .stat-card-enhanced {
+    min-width: 230px;
+    padding: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .stat-card-enhanced {
+    min-width: 200px;
+    padding: 14px;
+  }
+  
+  .stat-value-enhanced {
+    font-size: 28px;
+  }
+}
+/* FlatteningPage.css - Complete Fixed Version */
+
+/* ===== BASE RESET - NO GAPS ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.flattening-container {
+  min-height: 100vh;
+  background: #000000 !important; /* Pure black background */
+  color: #f8fafc;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* ===== ANIMATED BACKGROUND ===== */
+.flattening-container::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.05) 0%, transparent 40%),
+    radial-gradient(circle at 90% 80%, rgba(139, 92, 246, 0.05) 0%, transparent 40%),
+    radial-gradient(circle at 50% 50%, rgba(34, 197, 94, 0.03) 0%, transparent 60%);
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* ===== HEADER SECTION - FIXED POSITION ===== */
+.header-section {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.95) 100%);
+  border-bottom: 1px solid rgba(59, 130, 246, 0.3);
+  padding: 15px 20px !important;
+  margin: 0 !important;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.5);
+}
+
+/* Fix breadcrumb gap */
+.breadcrumb-nav {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px !important;
+  flex-wrap: wrap;
+}
+
+/* Fix title section gap */
+.title-section {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 15px !important;
+}
+
+/* Fix page title spacing */
+.page-title {
+  font-size: 26px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Fix connection badge color mismatch */
+.connection-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(59, 130, 246, 0.1) !important; /* Changed from green to blue */
+  border: 1px solid rgba(59, 130, 246, 0.3) !important;
+  color: #60a5fa !important; /* Changed from green to blue */
+}
+
+.connection-badge.offline {
+  background: rgba(239, 68, 68, 0.1) !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+  color: #ef4444 !important;
+}
+
+/* ===== STATS SECTION - SINGLE ROW ===== */
+.stats-section {
+  padding: 20px;
+  margin: 0 !important;
+  background: transparent;
+}
+
+.stats-grid-enhanced {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 15px;
+  overflow-x: auto;
+  padding: 10px 5px;
+  scrollbar-width: thin;
+}
+
+.stats-grid-enhanced::-webkit-scrollbar {
+  height: 6px;
+}
+
+.stats-grid-enhanced::-webkit-scrollbar-track {
+  background: rgba(30, 41, 59, 0.3);
+  border-radius: 3px;
+}
+
+.stats-grid-enhanced::-webkit-scrollbar-thumb {
+  background: rgba(59, 130, 246, 0.5);
+  border-radius: 3px;
+}
+
+.stat-card-enhanced {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.9) 100%);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 12px;
+  padding: 18px;
+  transition: all 0.3s ease;
+  min-width: 260px;
+  flex: 0 0 auto;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* ===== FILTERS SECTION - CALENDAR ICON FIX ===== */
+.filters-section-enhanced {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.9) 100%);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 12px;
+  padding: 20px;
+  margin: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Fix calendar input icon */
+.filter-date-enhanced {
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: #f8fafc;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+/* Calendar icon visibility */
+.filter-date-enhanced::-webkit-calendar-picker-indicator {
+  filter: invert(0.8);
+  cursor: pointer;
+  padding: 5px;
+  background-size: 18px;
+  background-position: center;
+}
+
+.filter-date-enhanced::-moz-calendar-picker-indicator {
+  filter: invert(0.8);
+  cursor: pointer;
+}
+
+/* ===== ALL SECTIONS - REMOVE MARGIN GAPS ===== */
+.today-production-section,
+.filters-section-enhanced,
+.records-table-section-enhanced,
+.page-footer-enhanced {
+  margin: 20px !important;
+  padding: 20px;
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.9) 100%);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* ===== PDF & PRINT MODAL STYLES ===== */
+.pdf-modal-container {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.95) 100%);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 12px;
+  padding: 25px;
+  max-width: 900px;
+  width: 95%;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+.pdf-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.pdf-modal-header h2 {
+  font-size: 22px;
+  font-weight: 700;
+  color: #f8fafc;
+  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+.close-pdf-btn {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.close-pdf-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  transform: rotate(90deg);
+}
+
+.pdf-content {
+  padding: 15px 0;
+}
+
+.pdf-header h1 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #f8fafc;
+  margin-bottom: 10px;
+}
+
+.pdf-date, .pdf-generated {
+  font-size: 14px;
+  color: #94a3b8;
+  margin-bottom: 5px;
+}
+
+.pdf-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  margin: 20px 0;
+}
+
+.pdf-summary-item {
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 10px;
+  padding: 15px;
+  text-align: center;
+}
+
+.pdf-summary-label {
+  font-size: 14px;
+  color: #94a3b8;
+  margin-bottom: 8px;
+}
+
+.pdf-summary-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.pdf-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 15px 0;
+  background: rgba(15, 23, 42, 0.8);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.pdf-table th {
+  background: rgba(30, 41, 59, 0.9);
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+  color: #60a5fa;
+  border-bottom: 2px solid rgba(59, 130, 246, 0.3);
+}
+
+.pdf-table td {
+  padding: 12px;
+  border-bottom: 1px solid rgba(59, 130, 246, 0.1);
+}
+
+.pdf-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.pdf-modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.pdf-download-btn,
+.pdf-print-btn,
+.pdf-close-btn {
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+  font-size: 14px;
+}
+
+.pdf-download-btn {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+}
+
+.pdf-print-btn {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+}
+
+.pdf-close-btn {
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  color: #60a5fa;
+}
+
+.pdf-download-btn:hover,
+.pdf-print-btn:hover,
+.pdf-close-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* ===== EXPORT BUTTONS STYLES ===== */
+.export-btn-group {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.export-excel-btn,
+.export-pdf-btn,
+.print-report-btn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+  font-size: 14px;
+}
+
+.export-excel-btn {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  color: white;
+}
+
+.export-pdf-btn {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+}
+
+.print-report-btn {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  color: white;
+}
+
+/* ===== RESPONSIVE FIXES ===== */
+@media (max-width: 768px) {
+  .header-section {
+    padding: 12px 15px !important;
+  }
+  
+  .page-title {
+    font-size: 22px;
+  }
+  
+  .stats-grid-enhanced {
+    gap: 12px;
+    padding: 8px 3px;
+  }
+  
+  .stat-card-enhanced {
+    min-width: 220px;
+    padding: 15px;
+  }
+  
+  .pdf-modal-container {
+    padding: 15px;
+    width: 98%;
+  }
+  
+  .pdf-modal-actions {
+    flex-direction: column;
+  }
+  
+  .export-btn-group {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-title {
+    font-size: 20px;
+  }
+  
+  .stat-card-enhanced {
+    min-width: 200px;
+    padding: 12px;
+  }
+  
+  .stat-value-enhanced {
+    font-size: 24px;
+  }
+}
+
+/* ===== SCROLLBAR STYLING ===== */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.5);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(59, 130, 246, 0.5);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(59, 130, 246, 0.7);
+}

@@ -1302,10 +1302,23 @@ const FlatteningPage = () => {
     }
   };
 
-  // Back button handler
+  // Handle back button - go to /production
   const handleBack = () => {
-    navigate(-1);
+    navigate("/production"); // یہاں اپنی production page کا route دیں
   };
+
+  // Breadcrumb میں
+  <div className="breadcrumb-nav">
+    <button onClick={handleBack} className="breadcrumb-btn back-btn">
+      <FiArrowLeft size={14} /> Back to Production
+    </button>
+    <button
+      onClick={() => navigate("/dashboard")}
+      className="breadcrumb-btn secondary"
+    >
+      <FiHome size={14} /> Dashboard
+    </button>
+  </div>;
 
   // Render loading state
   if (loading && records.length === 0) {
@@ -1362,8 +1375,9 @@ const FlatteningPage = () => {
               <FiPackage size={28} />
             </div>
             <div>
+              // آپ کے FlatteningPage.jsx میں
               <h1 className="page-title">
-                Flattening Section
+                Flattening Section Production
                 <div
                   className={`connection-badge ${
                     isSupabaseConnected ? "connected" : "offline"
@@ -1455,25 +1469,25 @@ const FlatteningPage = () => {
       {/* Stats Cards - Enhanced Design - WITHOUT "Production Overview" TITLE */}
       {/* Stats Cards - Enhanced Design - WITHOUT TITLE AND SUBTITLE */}
       {/* Stats Cards - Enhanced Design - WITHOUT HEADER TITLE AND SUBTITLE */}
+      {/* Stats Cards - ALL IN SINGLE ROW */}
       <div className="stats-section">
-        {/* Header section with icon but NO title and subtitle */}
-        <div className="section-header">
-         {/*<div className="header-icon"/>}
-            <FiBarChart2 size={1}>
-          <div>
-          {/* Title and subtitle REMOVED - Empty div */}
-          <div className="section-header-content">
-            {/* Empty - No title, no subtitle */}
-          </div>
-        </div>
-
-        <div className="stats-grid-enhanced">
+        <div
+          className="stats-grid-enhanced"
+          style={{
+            display: "flex",
+            flexWrap: "nowrap",
+            gap: "16px",
+            overflowX: "auto",
+            paddingBottom: "10px",
+          }}
+        >
           {statCards.map((card) => (
             <EnhancedStatCard
               key={card.id}
               card={card}
               stats={stats}
               isSupabaseConnected={isSupabaseConnected}
+              style={{ minWidth: "250px", flex: "0 0 auto" }}
             />
           ))}
         </div>
@@ -2373,7 +2387,6 @@ const FlatteningPage = () => {
             </div>
           </div>
         </div>
-
         <div className="footer-actions">
           <button
             onClick={() => setShowFlatteningModal(true)}
@@ -2389,6 +2402,57 @@ const FlatteningPage = () => {
             className="footer-btn production-btn"
           >
             <FiTrendingUp size={14} /> View Dashboard
+          </button>
+        </div>
+        // Header section کو compact بنانے کے لیے
+        <div
+          className="header-section"
+          style={{ padding: "12px 20px", margin: "0" }}
+        >
+          {/* ... باقی کوڈ ... */}
+        </div>
+        // Stats cards کو single row میں
+        <div className="stats-section">
+          <div className="stats-grid-enhanced">
+            {statCards.map((card) => (
+              <EnhancedStatCard
+                key={card.id}
+                card={card}
+                stats={stats}
+                isSupabaseConnected={isSupabaseConnected}
+              />
+            ))}
+          </div>
+        </div>
+        // Calendar input میں icon کو visible کرنے کے لیے
+        <input
+          type="date"
+          value={filterDate}
+          onChange={(e) => {
+            setFilterDate(e.target.value);
+            setShowReport(!!e.target.value);
+            setCurrentPage(1);
+          }}
+          max={new Date().toISOString().split("T")[0]}
+          className="filter-date-enhanced"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2360a5fa' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM2 2a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1H2z'/%3E%3Cpath d='M2.5 4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5H3a.5.5 0 0 1-.5-.5V4z'/%3E%3C/svg%3E")`,
+            backgroundRepeat: "no-repeat",
+            backgroundPosition: "right 10px center",
+            backgroundSize: "16px",
+            paddingRight: "35px",
+          }}
+        />
+        // Export buttons کو شامل کرنے کے لیے
+        <div className="export-btn-group">
+          <button onClick={handleExport} className="export-excel-btn">
+            <FiDownload /> Export Excel
+          </button>
+          <button onClick={generatePDFReportData} className="export-pdf-btn">
+            <FiFile /> Export PDF
+          </button>
+          <button onClick={handlePrintReport} className="print-report-btn">
+            <FiPrinter /> Print Report
           </button>
         </div>
       </div>
