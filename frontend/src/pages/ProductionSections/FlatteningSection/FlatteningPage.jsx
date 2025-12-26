@@ -47,12 +47,10 @@ const FloatingParticles = () => {
     const particlesContainer = document.querySelector(".particles-container");
     if (!particlesContainer) return;
 
-    // Create particles
     for (let i = 0; i < 30; i++) {
       const particle = document.createElement("div");
       particle.classList.add("particle");
 
-      // Random size and position
       const size = Math.random() * 4 + 1;
       const x = Math.random() * 100;
       const y = Math.random() * 100;
@@ -110,7 +108,7 @@ const EnhancedStatCard = ({ card, stats, isSupabaseConnected }) => {
       <div className="stat-card-header">
         <div className="stat-icon-wrapper">
           <div className="stat-icon-enhanced">
-            <card.icon size={20} />
+            <card.icon size={16} />
           </div>
           <div className="stat-title-wrapper">
             <div className="stat-title-enhanced">{card.title}</div>
@@ -186,7 +184,7 @@ const PDFReportModal = ({ data, onClose }) => {
 
   return (
     <div className="modal-overlay">
-      <div className="modal-container">
+      <div className="pdf-modal-container">
         <div className="pdf-modal-header">
           <h2>Flattening Section Production Report - PDF Preview</h2>
           <button className="close-pdf-btn" onClick={onClose}>
@@ -309,38 +307,158 @@ const PDFReportModal = ({ data, onClose }) => {
             </div>
           )}
 
-          <div className="pdf-footer">
-            <div className="pdf-footer-text">
-              This is a PDF preview. To generate actual PDF, install a PDF
-              library like jsPDF or react-pdf.
+          <div className="pdf-modal-actions">
+            <button
+              className="pdf-download-btn"
+              onClick={() => {
+                alert(
+                  "PDF download functionality requires jsPDF library installation."
+                );
+                onClose();
+              }}
+            >
+              <FiDownload /> Download as PDF
+            </button>
+            <button
+              className="pdf-print-btn"
+              onClick={() => {
+                window.print();
+                onClose();
+              }}
+            >
+              <FiPrinter /> Print Report
+            </button>
+            <button className="pdf-close-btn" onClick={onClose}>
+              Close Preview
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Print Report Component
+const PrintReport = ({ data }) => {
+  return (
+    <div className="print-report-container">
+      <div className="print-header">
+        <h1>Flattening Section Production Report</h1>
+        <div className="print-date">{data.date}</div>
+        <div className="print-generated">Generated: {data.generatedDate}</div>
+      </div>
+
+      <div className="print-summary">
+        <h2>Summary</h2>
+        <div className="print-summary-grid">
+          <div className="print-summary-item">
+            <div className="print-summary-label">Total Production</div>
+            <div className="print-summary-value">
+              {data.summary.totalProduction} KG
             </div>
-            <div className="pdf-modal-actions">
-              <button
-                className="pdf-download-btn"
-                onClick={() => {
-                  alert(
-                    "PDF download functionality requires jsPDF library installation."
-                  );
-                  onClose();
-                }}
-              >
-                <FiDownload /> Download as PDF
-              </button>
-              <button
-                className="pdf-print-btn"
-                onClick={() => {
-                  window.print();
-                  onClose();
-                }}
-              >
-                <FiPrinter /> Print Report
-              </button>
-              <button className="pdf-close-btn" onClick={onClose}>
-                Close Preview
-              </button>
+          </div>
+          <div className="print-summary-item">
+            <div className="print-summary-label">Total Target</div>
+            <div className="print-summary-value">
+              {data.summary.totalTarget} KG
+            </div>
+          </div>
+          <div className="print-summary-item">
+            <div className="print-summary-label">Overall Efficiency</div>
+            <div className="print-summary-value">
+              {data.summary.overallEfficiency}%
+            </div>
+          </div>
+          <div className="print-summary-item">
+            <div className="print-summary-label">Total Records</div>
+            <div className="print-summary-value">
+              {data.summary.recordCount}
             </div>
           </div>
         </div>
+      </div>
+
+      {data.shiftWise.length > 0 && (
+        <div className="print-section">
+          <h2>Shift-wise Production</h2>
+          <table className="print-table">
+            <thead>
+              <tr>
+                <th>Shift</th>
+                <th>Production (KG)</th>
+                <th>Target (KG)</th>
+                <th>Efficiency (%)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.shiftWise.map((shift, index) => (
+                <tr key={index}>
+                  <td>{shift.shift}</td>
+                  <td>{shift.production}</td>
+                  <td>{shift.target}</td>
+                  <td>{shift.efficiency}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {data.machineWise.length > 0 && (
+        <div className="print-section">
+          <h2>Machine-wise Production</h2>
+          <table className="print-table">
+            <thead>
+              <tr>
+                <th>Machine</th>
+                <th>Production (KG)</th>
+                <th>Efficiency (%)</th>
+                <th>Records</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.machineWise.map((machine, index) => (
+                <tr key={index}>
+                  <td>{machine.machine}</td>
+                  <td>{machine.production}</td>
+                  <td>{machine.efficiency}</td>
+                  <td>{machine.count}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {data.itemWise.length > 0 && (
+        <div className="print-section">
+          <h2>Item-wise Production</h2>
+          <table className="print-table">
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>Production (KG)</th>
+                <th>Efficiency (%)</th>
+                <th>Records</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.itemWise.map((item, index) => (
+                <tr key={index}>
+                  <td>{item.item}</td>
+                  <td>{item.production}</td>
+                  <td>{item.efficiency}</td>
+                  <td>{item.count}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <div className="print-footer">
+        <p>Flattening Section - Production Management System</p>
+        <p>Report generated on {new Date().toLocaleString()}</p>
       </div>
     </div>
   );
@@ -358,6 +476,7 @@ const FlatteningPage = () => {
   const [showReport, setShowReport] = useState(false);
   const [showFlatteningModal, setShowFlatteningModal] = useState(false);
   const [showPDFModal, setShowPDFModal] = useState(false);
+  const [showPrintModal, setShowPrintModal] = useState(false);
   const [pdfReportData, setPdfReportData] = useState(null);
 
   // Pagination states
@@ -389,6 +508,7 @@ const FlatteningPage = () => {
     totalProduction: 0,
     machineWiseToday: {},
     itemWiseToday: {},
+    shiftWiseToday: {},
   });
 
   // Check if supabase is connected
@@ -542,6 +662,7 @@ const FlatteningPage = () => {
         totalProduction: 0,
         machineWiseToday: {},
         itemWiseToday: {},
+        shiftWiseToday: {},
       });
       return;
     }
@@ -610,6 +731,7 @@ const FlatteningPage = () => {
     // Machine-wise today production
     const machineWiseToday = {};
     const itemWiseToday = {};
+    const shiftWiseToday = {};
 
     todayRecords.forEach((record) => {
       // Machine data
@@ -640,6 +762,20 @@ const FlatteningPage = () => {
         parseFloat(record.production_quantity) || 0;
       itemWiseToday[item].efficiency += parseFloat(record.efficiency) || 0;
       itemWiseToday[item].count += 1;
+
+      // Shift data
+      const shift = record.shift_code || record.shift || "Unknown";
+      if (!shiftWiseToday[shift]) {
+        shiftWiseToday[shift] = {
+          production: 0,
+          efficiency: 0,
+          count: 0,
+        };
+      }
+      shiftWiseToday[shift].production +=
+        parseFloat(record.production_quantity) || 0;
+      shiftWiseToday[shift].efficiency += parseFloat(record.efficiency) || 0;
+      shiftWiseToday[shift].count += 1;
     });
 
     // Calculate average efficiency for each machine
@@ -659,6 +795,14 @@ const FlatteningPage = () => {
       }
     });
 
+    // Calculate average efficiency for each shift
+    Object.keys(shiftWiseToday).forEach((shift) => {
+      if (shiftWiseToday[shift].count > 0) {
+        shiftWiseToday[shift].efficiency =
+          shiftWiseToday[shift].efficiency / shiftWiseToday[shift].count;
+      }
+    });
+
     setStats({
       totalRecords: recordsData.length,
       todayRecords: todayRecords.length,
@@ -670,6 +814,7 @@ const FlatteningPage = () => {
       totalProduction,
       machineWiseToday,
       itemWiseToday,
+      shiftWiseToday,
     });
   };
 
@@ -902,6 +1047,53 @@ const FlatteningPage = () => {
     setShowPDFModal(true);
   };
 
+  // Generate Print Report Data
+  const generatePrintReport = () => {
+    if (!reportData || reportData.recordCount === 0) {
+      alert("No report data to print");
+      return;
+    }
+
+    const printData = {
+      title: "Flattening Section Production Report",
+      date: reportData.formattedDate,
+      generatedDate: new Date().toLocaleString(),
+      summary: {
+        totalProduction: reportData.totalProduction.toFixed(1),
+        totalTarget: reportData.totalTarget.toFixed(1),
+        overallEfficiency: reportData.overallEfficiency.toFixed(1),
+        recordCount: reportData.recordCount,
+      },
+      shiftWise: Object.entries(reportData.shiftGroups).map(
+        ([shift, data]) => ({
+          shift,
+          production: data.production.toFixed(1),
+          target: data.target.toFixed(1),
+          efficiency: data.efficiency.toFixed(1),
+        })
+      ),
+      machineWise: Object.entries(reportData.machineProduction).map(
+        ([machine, data]) => ({
+          machine,
+          production: data.production.toFixed(1),
+          efficiency: data.efficiency.toFixed(1),
+          count: data.count,
+        })
+      ),
+      itemWise: Object.entries(reportData.itemProduction).map(
+        ([item, data]) => ({
+          item,
+          production: data.production.toFixed(1),
+          efficiency: data.efficiency.toFixed(1),
+          count: data.count,
+        })
+      ),
+    };
+
+    setPdfReportData(printData);
+    setShowPrintModal(true);
+  };
+
   // Handlers
   const handleEdit = (id) => {
     navigate(`/production-sections/flattening/edit/${id}`);
@@ -978,252 +1170,14 @@ const FlatteningPage = () => {
     URL.revokeObjectURL(url);
   };
 
-  // Print report - Optimized for single page
+  // Print report function
   const handlePrintReport = () => {
     if (!reportData || reportData.recordCount === 0) {
       alert("No report data to print");
       return;
     }
 
-    const printWindow = window.open("", "_blank");
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Flattening Report - ${reportData.formattedDate}</title>
-        <style>
-          body { 
-            font-family: Arial, sans-serif; 
-            margin: 10px;
-            font-size: 9px;
-            line-height: 1.2;
-          }
-          
-          .header { 
-            text-align: center; 
-            margin-bottom: 8px; 
-            padding-bottom: 5px;
-            border-bottom: 1px solid #ccc;
-          }
-          
-          .header h1 { 
-            margin: 0 0 3px 0;
-            font-size: 12px;
-            color: #333;
-          }
-          
-          .header .date { 
-            color: #666; 
-            font-size: 9px;
-          }
-          
-          .summary-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 5px;
-            margin: 8px 0;
-          }
-          
-          .summary-item {
-            padding: 4px;
-            border: 1px solid #ddd;
-            border-radius: 3px;
-            text-align: center;
-          }
-          
-          .summary-label {
-            font-size: 7px;
-            color: #666;
-            margin-bottom: 1px;
-          }
-          
-          .summary-value {
-            font-size: 10px;
-            font-weight: bold;
-          }
-          
-          .table { 
-            width: 100%; 
-            border-collapse: collapse; 
-            margin: 6px 0;
-            font-size: 8px;
-          }
-          
-          .table th, .table td { 
-            border: 1px solid #ddd; 
-            padding: 3px; 
-            text-align: left; 
-          }
-          
-          .table th { 
-            background-color: #f5f5f5;
-            font-weight: bold;
-          }
-          
-          .compact-section {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            margin: 8px 0;
-          }
-          
-          .compact-box {
-            border: 1px solid #eee;
-            padding: 4px;
-            border-radius: 3px;
-          }
-          
-          .compact-title {
-            font-size: 8px;
-            font-weight: bold;
-            margin-bottom: 3px;
-            color: #333;
-          }
-          
-          .compact-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 1px 0;
-            font-size: 7px;
-          }
-          
-          .footer { 
-            margin-top: 10px; 
-            text-align: center; 
-            color: #666; 
-            font-size: 7px;
-            padding-top: 5px;
-            border-top: 1px solid #ddd;
-          }
-          
-          @media print {
-            body { 
-              margin: 5mm;
-            }
-            .no-print { display: none; }
-          }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <h1>Flattening Section Production Report</h1>
-          <div class="date">${reportData.formattedDate}</div>
-        </div>
-        
-        <div class="summary-grid">
-          <div class="summary-item">
-            <div class="summary-label">Total Production</div>
-            <div class="summary-value">${reportData.totalProduction.toFixed(
-              1
-            )} KG</div>
-          </div>
-          <div class="summary-item">
-            <div class="summary-label">Total Target</div>
-            <div class="summary-value">${reportData.totalTarget.toFixed(
-              1
-            )} KG</div>
-          </div>
-          <div class="summary-item">
-            <div class="summary-label">Overall Efficiency</div>
-            <div class="summary-value" style="color: ${
-              reportData.overallEfficiency >= 90
-                ? "#28a745"
-                : reportData.overallEfficiency >= 80
-                ? "#ffc107"
-                : "#dc3545"
-            }">
-              ${reportData.overallEfficiency.toFixed(1)}%
-            </div>
-          </div>
-          <div class="summary-item">
-            <div class="summary-label">Total Records</div>
-            <div class="summary-value">${reportData.recordCount}</div>
-          </div>
-        </div>
-        
-        <h3 style="margin: 6px 0 3px 0; font-size: 9px;">Shift-wise Production:</h3>
-        <table class="table">
-          <thead>
-            <tr>
-              <th>Shift</th>
-              <th>Production (KG)</th>
-              <th>Target (KG)</th>
-              <th>Efficiency</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${Object.entries(reportData.shiftGroups)
-              .map(
-                ([shift, data]) => `
-              <tr>
-                <td>${shift}</td>
-                <td>${data.production.toFixed(1)}</td>
-                <td>${data.target.toFixed(1)}</td>
-                <td>${data.efficiency.toFixed(1)}%</td>
-              </tr>
-            `
-              )
-              .join("")}
-          </tbody>
-        </table>
-        
-        <div class="compact-section">
-          <div class="compact-box">
-            <div class="compact-title">Machine-wise Production</div>
-            ${Object.entries(reportData.machineProduction)
-              .map(
-                ([machine, data]) => `
-              <div class="compact-row">
-                <span>${machine}</span>
-                <span>${data.production.toFixed(
-                  1
-                )} KG (${data.efficiency.toFixed(1)}%)</span>
-              </div>
-            `
-              )
-              .join("")}
-          </div>
-          
-          <div class="compact-box">
-            <div class="compact-title">Item-wise Production</div>
-            ${Object.entries(reportData.itemProduction)
-              .map(
-                ([item, data]) => `
-              <div class="compact-row">
-                <span>${item}</span>
-                <span>${data.production.toFixed(
-                  1
-                )} KG (${data.efficiency.toFixed(1)}%)</span>
-              </div>
-            `
-              )
-              .join("")}
-          </div>
-        </div>
-        
-        <div class="footer">
-          Generated on ${new Date().toLocaleString()}<br/>
-          Flattening Section - Production Management System
-        </div>
-        
-        <div class="no-print" style="margin-top: 8px; text-align: center;">
-          <button onclick="window.print()" style="padding: 4px 8px; background: #007bff; color: white; border: none; border-radius: 2px; cursor: pointer; font-size: 8px;">
-            Print Report
-          </button>
-          <button onclick="window.close()" style="padding: 4px 8px; background: #6c757d; color: white; border: none; border-radius: 2px; cursor: pointer; margin-left: 4px; font-size: 8px;">
-            Close
-          </button>
-        </div>
-        
-        <script>
-          window.onload = function() {
-            window.print();
-          }
-        </script>
-      </body>
-      </html>
-    `);
-    printWindow.document.close();
+    generatePrintReport();
   };
 
   // Export report
@@ -1304,21 +1258,8 @@ const FlatteningPage = () => {
 
   // Handle back button - go to /production
   const handleBack = () => {
-    navigate("/production"); // یہاں اپنی production page کا route دیں
+    navigate("/production");
   };
-
-  // Breadcrumb میں
-  <div className="breadcrumb-nav">
-    <button onClick={handleBack} className="breadcrumb-btn back-btn">
-      <FiArrowLeft size={14} /> Back to Production
-    </button>
-    <button
-      onClick={() => navigate("/dashboard")}
-      className="breadcrumb-btn secondary"
-    >
-      <FiHome size={14} /> Dashboard
-    </button>
-  </div>;
 
   // Render loading state
   if (loading && records.length === 0) {
@@ -1375,7 +1316,6 @@ const FlatteningPage = () => {
               <FiPackage size={28} />
             </div>
             <div>
-              // آپ کے FlatteningPage.jsx میں
               <h1 className="page-title">
                 Flattening Section Production
                 <div
@@ -1413,14 +1353,14 @@ const FlatteningPage = () => {
 
           <div className="action-buttons">
             <button
-              className="btn btn-secondary"
+              className="btn btn-secondary btn-border"
               onClick={() => navigate("/production-sections/flattening/new")}
             >
               <FiPlus /> Single Entry
             </button>
 
             <button
-              className="btn btn-primary"
+              className="btn btn-secondary btn-border"
               onClick={() =>
                 navigate("/production-sections/flattening/multi-entry")
               }
@@ -1429,7 +1369,7 @@ const FlatteningPage = () => {
             </button>
 
             <button
-              className="btn btn-tertiary"
+              className="btn btn-secondary btn-border"
               onClick={() =>
                 navigate("/production-sections/flattening/smart-entry")
               }
@@ -1465,38 +1405,25 @@ const FlatteningPage = () => {
         </div>
       </div>
 
-      {/* Stats Cards - Enhanced Design */}
-      {/* Stats Cards - Enhanced Design - WITHOUT "Production Overview" TITLE */}
-      {/* Stats Cards - Enhanced Design - WITHOUT TITLE AND SUBTITLE */}
-      {/* Stats Cards - Enhanced Design - WITHOUT HEADER TITLE AND SUBTITLE */}
-      {/* Stats Cards - ALL IN SINGLE ROW */}
+      {/* Stats Cards - COMPACT DESIGN */}
       <div className="stats-section">
-        <div
-          className="stats-grid-enhanced"
-          style={{
-            display: "flex",
-            flexWrap: "nowrap",
-            gap: "16px",
-            overflowX: "auto",
-            paddingBottom: "10px",
-          }}
-        >
+        <div className="stats-grid-enhanced">
           {statCards.map((card) => (
             <EnhancedStatCard
               key={card.id}
               card={card}
               stats={stats}
               isSupabaseConnected={isSupabaseConnected}
-              style={{ minWidth: "250px", flex: "0 0 auto" }}
             />
           ))}
         </div>
       </div>
+
       {/* Today's Production & Efficiency Section */}
       <div className="today-production-section fade-in-up">
         <div className="section-header">
           <div className="header-icon">
-            <FiBarChart size={24} />
+            <FiBarChart size={28} />
           </div>
           <div className="section-header-content">
             <h2>Today's Production & Efficiency</h2>
@@ -1507,6 +1434,7 @@ const FlatteningPage = () => {
         </div>
 
         <div className="production-analysis-container">
+          {/* Machine-wise Production */}
           <div className="machine-analysis">
             <div className="analysis-header">
               <h3>Machine-wise Production</h3>
@@ -1584,13 +1512,14 @@ const FlatteningPage = () => {
                 )
               ) : (
                 <div className="no-production">
-                  <FiPackage size={24} />
-                  <div>No production recorded today</div>
+                  <FiTool size={24} />
+                  <div>No machine production recorded today</div>
                 </div>
               )}
             </div>
           </div>
 
+          {/* Item-wise Production */}
           <div className="item-analysis">
             <div className="analysis-header">
               <h3>Item-wise Production</h3>
@@ -1666,8 +1595,87 @@ const FlatteningPage = () => {
                 })
               ) : (
                 <div className="no-production">
-                  <FiPackage size={24} />
+                  <FiTag size={24} />
                   <div>No items recorded today</div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Shift-wise Production */}
+          <div className="shift-analysis">
+            <div className="analysis-header">
+              <h3>Shift-wise Production</h3>
+              <div className="analysis-summary">
+                {Object.keys(stats.shiftWiseToday).length} Shifts Active
+              </div>
+            </div>
+            <div className="shift-analysis-grid">
+              {Object.entries(stats.shiftWiseToday).length > 0 ? (
+                Object.entries(stats.shiftWiseToday).map(([shift, data]) => {
+                  const efficiencyStatus =
+                    data.efficiency >= 80
+                      ? "good"
+                      : data.efficiency >= 60
+                      ? "average"
+                      : "poor";
+                  return (
+                    <div key={shift} className="shift-analysis-card">
+                      <div className="shift-analysis-header">
+                        <div className="shift-analysis-icon">
+                          <FiClock size={16} />
+                        </div>
+                        <div className="shift-analysis-name">Shift {shift}</div>
+                        <div
+                          className={`machine-status status-${efficiencyStatus}`}
+                        />
+                      </div>
+                      <div className="shift-analysis-stats">
+                        <div className="production-stats">
+                          <div
+                            className={`production-value value-${efficiencyStatus}`}
+                          >
+                            {data.production.toFixed(0)}
+                          </div>
+                          <div className="production-label">KG Produced</div>
+                        </div>
+                        <div className="efficiency-stats">
+                          <div
+                            className={`efficiency-value value-${efficiencyStatus}`}
+                          >
+                            {data.efficiency.toFixed(1)}%
+                          </div>
+                          <div className="efficiency-label">Efficiency</div>
+                        </div>
+                      </div>
+                      <div className="shift-analysis-footer">
+                        <div className="performance-bar">
+                          <div
+                            className="performance-fill"
+                            style={{
+                              width: `${Math.min(data.efficiency, 100)}%`,
+                              background:
+                                data.efficiency >= 80
+                                  ? "#10b981"
+                                  : data.efficiency >= 60
+                                  ? "#f59e0b"
+                                  : "#ef4444",
+                            }}
+                          />
+                        </div>
+                        <div
+                          className={`performance-indicator indicator-${efficiencyStatus}`}
+                        >
+                          {data.count} records
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="no-production">
+                  <FiClock size={24} />
+                  <div>No shift data available</div>
                 </div>
               )}
             </div>
@@ -2404,57 +2412,6 @@ const FlatteningPage = () => {
             <FiTrendingUp size={14} /> View Dashboard
           </button>
         </div>
-        // Header section کو compact بنانے کے لیے
-        <div
-          className="header-section"
-          style={{ padding: "12px 20px", margin: "0" }}
-        >
-          {/* ... باقی کوڈ ... */}
-        </div>
-        // Stats cards کو single row میں
-        <div className="stats-section">
-          <div className="stats-grid-enhanced">
-            {statCards.map((card) => (
-              <EnhancedStatCard
-                key={card.id}
-                card={card}
-                stats={stats}
-                isSupabaseConnected={isSupabaseConnected}
-              />
-            ))}
-          </div>
-        </div>
-        // Calendar input میں icon کو visible کرنے کے لیے
-        <input
-          type="date"
-          value={filterDate}
-          onChange={(e) => {
-            setFilterDate(e.target.value);
-            setShowReport(!!e.target.value);
-            setCurrentPage(1);
-          }}
-          max={new Date().toISOString().split("T")[0]}
-          className="filter-date-enhanced"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2360a5fa' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM2 2a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1H2z'/%3E%3Cpath d='M2.5 4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5H3a.5.5 0 0 1-.5-.5V4z'/%3E%3C/svg%3E")`,
-            backgroundRepeat: "no-repeat",
-            backgroundPosition: "right 10px center",
-            backgroundSize: "16px",
-            paddingRight: "35px",
-          }}
-        />
-        // Export buttons کو شامل کرنے کے لیے
-        <div className="export-btn-group">
-          <button onClick={handleExport} className="export-excel-btn">
-            <FiDownload /> Export Excel
-          </button>
-          <button onClick={generatePDFReportData} className="export-pdf-btn">
-            <FiFile /> Export PDF
-          </button>
-          <button onClick={handlePrintReport} className="print-report-btn">
-            <FiPrinter /> Print Report
-          </button>
-        </div>
       </div>
 
       {/* Flattening Form Modal */}
@@ -2482,6 +2439,29 @@ const FlatteningPage = () => {
           data={pdfReportData}
           onClose={() => setShowPDFModal(false)}
         />
+      )}
+
+      {/* Print Report Modal */}
+      {showPrintModal && pdfReportData && (
+        <div className="modal-overlay">
+          <div className="print-modal-container">
+            <PrintReport data={pdfReportData} />
+            <div className="print-modal-actions">
+              <button
+                className="print-modal-print-btn"
+                onClick={() => window.print()}
+              >
+                <FiPrinter /> Print Now
+              </button>
+              <button
+                className="print-modal-close-btn"
+                onClick={() => setShowPrintModal(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

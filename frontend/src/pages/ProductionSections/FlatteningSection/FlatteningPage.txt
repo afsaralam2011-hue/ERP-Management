@@ -1,5 +1,5 @@
 // src/pages/ProductionSections/FlatteningSection/FlatteningPage.jsx
-import React, { useState, useEffect, Suspense, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FiPlus,
@@ -35,13 +35,152 @@ import {
   FiPercent,
   FiTrendingDown,
   FiFile,
-  FiZap, // ✅ ADDED: FiZap import کیا ہے
+  FiZap,
 } from "react-icons/fi";
 import { supabase } from "../../../supabaseClient";
 import FlatteningForm from "./FlatteningForm";
 import "./FlatteningPage.css";
 
-// PDF Report Modal Component (Inline definition)
+// Floating Particles Component
+const FloatingParticles = () => {
+  useEffect(() => {
+    const particlesContainer = document.querySelector(".particles-container");
+    if (!particlesContainer) return;
+
+    // Create particles
+    for (let i = 0; i < 30; i++) {
+      const particle = document.createElement("div");
+      particle.classList.add("particle");
+
+      // Random size and position
+      const size = Math.random() * 4 + 1;
+      const x = Math.random() * 100;
+      const y = Math.random() * 100;
+      const duration = Math.random() * 20 + 10;
+
+      particle.style.width = `${size}px`;
+      particle.style.height = `${size}px`;
+      particle.style.left = `${x}vw`;
+      particle.style.top = `${y}vh`;
+      particle.style.animationDuration = `${duration}s`;
+      particle.style.opacity = Math.random() * 0.5 + 0.1;
+
+      particlesContainer.appendChild(particle);
+    }
+
+    return () => {
+      particlesContainer.innerHTML = "";
+    };
+  }, []);
+
+  return <div className="particles-container" />;
+};
+
+// Enhanced Stat Card Component
+const EnhancedStatCard = ({ card, stats, isSupabaseConnected }) => {
+  const cardColors = {
+    "today-records": { color: "#10b981", rgb: "16, 185, 129" },
+    "today-production": { color: "#3b82f6", rgb: "59, 130, 246" },
+    "today-efficiency": { color: "#f59e0b", rgb: "245, 158, 11" },
+    yesterday: { color: "#8b5cf6", rgb: "139, 92, 246" },
+    "total-records": { color: "#ec4899", rgb: "236, 72, 153" },
+    "total-production": { color: "#06b6d4", rgb: "6, 182, 212" },
+    "avg-efficiency": { color: "#f97316", rgb: "249, 115, 22" },
+    "database-status": {
+      color: isSupabaseConnected ? "#10b981" : "#ef4444",
+      rgb: isSupabaseConnected ? "16, 185, 129" : "239, 68, 68",
+    },
+  };
+
+  const currentColor = cardColors[card.id] || {
+    color: "#3b82f6",
+    rgb: "59, 130, 246",
+  };
+
+  return (
+    <div
+      key={card.id}
+      className="stat-card-enhanced slide-in-left"
+      style={{
+        "--card-color": currentColor.color,
+        "--card-color-rgb": currentColor.rgb,
+        animationDelay: `${card.id.charCodeAt(0) * 0.1}s`,
+      }}
+    >
+      <div className="stat-card-header">
+        <div className="stat-icon-wrapper">
+          <div className="stat-icon-enhanced">
+            <card.icon size={20} />
+          </div>
+          <div className="stat-title-wrapper">
+            <div className="stat-title-enhanced">{card.title}</div>
+            {card.hasSubValue && (
+              <div className="stat-subvalue">{card.subValue}</div>
+            )}
+          </div>
+        </div>
+        <div className="stat-trend">
+          {card.id === "today-efficiency" && (
+            <div
+              className={`trend-${
+                stats.todayEfficiency >= 80
+                  ? "excellent"
+                  : stats.todayEfficiency >= 60
+                  ? "good"
+                  : "poor"
+              }`}
+            >
+              {stats.todayEfficiency >= 80
+                ? "Excellent"
+                : stats.todayEfficiency >= 60
+                ? "Good"
+                : "Needs Attention"}
+            </div>
+          )}
+          {card.id === "database-status" && (
+            <div
+              className={`indicator-${
+                isSupabaseConnected ? "achieved" : "not-achieved"
+              }`}
+            >
+              {isSupabaseConnected ? "Connected" : "Offline"}
+            </div>
+          )}
+        </div>
+      </div>
+      <div className="stat-card-body">
+        <div
+          className="stat-value-enhanced"
+          style={{ color: card.valueColor || currentColor.color }}
+        >
+          {card.value}
+        </div>
+      </div>
+      <div className="stat-card-footer">
+        <div className="stat-description">{card.description}</div>
+        {card.id === "today-efficiency" && (
+          <div
+            className={`indicator-${
+              stats.todayEfficiency >= 80
+                ? "excellent"
+                : stats.todayEfficiency >= 60
+                ? "good"
+                : "poor"
+            }`}
+          >
+            {stats.todayEfficiency >= 80
+              ? "Excellent"
+              : stats.todayEfficiency >= 60
+              ? "Good"
+              : "Poor"}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// PDF Report Modal Component
 const PDFReportModal = ({ data, onClose }) => {
   if (!data) return null;
 
@@ -67,19 +206,27 @@ const PDFReportModal = ({ data, onClose }) => {
             <div className="pdf-summary-grid">
               <div className="pdf-summary-item">
                 <div className="pdf-summary-label">Total Production</div>
-                <div className="pdf-summary-value">{data.summary.totalProduction} KG</div>
+                <div className="pdf-summary-value">
+                  {data.summary.totalProduction} KG
+                </div>
               </div>
               <div className="pdf-summary-item">
                 <div className="pdf-summary-label">Total Target</div>
-                <div className="pdf-summary-value">{data.summary.totalTarget} KG</div>
+                <div className="pdf-summary-value">
+                  {data.summary.totalTarget} KG
+                </div>
               </div>
               <div className="pdf-summary-item">
                 <div className="pdf-summary-label">Overall Efficiency</div>
-                <div className="pdf-summary-value">{data.summary.overallEfficiency}%</div>
+                <div className="pdf-summary-value">
+                  {data.summary.overallEfficiency}%
+                </div>
               </div>
               <div className="pdf-summary-item">
                 <div className="pdf-summary-label">Total Records</div>
-                <div className="pdf-summary-value">{data.summary.recordCount}</div>
+                <div className="pdf-summary-value">
+                  {data.summary.recordCount}
+                </div>
               </div>
             </div>
           </div>
@@ -162,33 +309,30 @@ const PDFReportModal = ({ data, onClose }) => {
             </div>
           )}
 
-          <div className="pdf-footer">
-            <div className="pdf-footer-text">
-              This is a PDF preview. To generate actual PDF, install a PDF library like jsPDF or react-pdf.
-            </div>
-            <div className="pdf-modal-actions">
-              <button
-                className="pdf-download-btn"
-                onClick={() => {
-                  alert("PDF download functionality requires jsPDF library installation.");
-                  onClose();
-                }}
-              >
-                <FiDownload /> Download as PDF
-              </button>
-              <button
-                className="pdf-print-btn"
-                onClick={() => {
-                  window.print();
-                  onClose();
-                }}
-              >
-                <FiPrinter /> Print Report
-              </button>
-              <button className="pdf-close-btn" onClick={onClose}>
-                Close Preview
-              </button>
-            </div>
+          <div className="pdf-modal-actions">
+            <button
+              className="pdf-download-btn"
+              onClick={() => {
+                alert(
+                  "PDF download functionality requires jsPDF library installation."
+                );
+                onClose();
+              }}
+            >
+              <FiDownload /> Download as PDF
+            </button>
+            <button
+              className="pdf-print-btn"
+              onClick={() => {
+                window.print();
+                onClose();
+              }}
+            >
+              <FiPrinter /> Print Report
+            </button>
+            <button className="pdf-close-btn" onClick={onClose}>
+              Close Preview
+            </button>
           </div>
         </div>
       </div>
@@ -196,6 +340,7 @@ const PDFReportModal = ({ data, onClose }) => {
   );
 };
 
+// Main FlatteningPage Component
 const FlatteningPage = () => {
   const navigate = useNavigate();
   const [records, setRecords] = useState([]);
@@ -242,6 +387,101 @@ const FlatteningPage = () => {
 
   // Check if supabase is connected
   const isSupabaseConnected = supabase && process.env.REACT_APP_SUPABASE_URL;
+
+  // Stat cards
+  const statCards = [
+    {
+      id: "today-records",
+      title: "Today's Records",
+      value: stats.todayRecords,
+      icon: FiClock,
+      description: "Records added today",
+      gradientColors: ["#10b981", "#059669"],
+      iconBg: "#10b981",
+    },
+    {
+      id: "today-production",
+      title: "Today's Production",
+      value: `${stats.todayProduction.toLocaleString()} KG`,
+      icon: FiPackage,
+      description: "Production today",
+      gradientColors: ["#3b82f6", "#1d4ed8"],
+      iconBg: "#3b82f6",
+    },
+    {
+      id: "today-efficiency",
+      title: "Today's Efficiency",
+      value: `${stats.todayEfficiency}%`,
+      icon: FiActivity,
+      description: "Efficiency today",
+      colorValue: true,
+      valueColor:
+        stats.todayEfficiency >= 80
+          ? "#059669"
+          : stats.todayEfficiency >= 60
+          ? "#d97706"
+          : "#ef4444",
+      gradientColors: ["#f59e0b", "#d97706"],
+      iconBg: "#f59e0b",
+    },
+    {
+      id: "yesterday",
+      title: "Yesterday Summary",
+      value: `${stats.yesterdayProduction.toLocaleString()} KG`,
+      subValue: `${stats.yesterdayEfficiency}% efficiency`,
+      icon: FiTrendingDown,
+      description: "Production & Efficiency",
+      gradientColors: ["#8b5cf6", "#7c3aed"],
+      iconBg: "#8b5cf6",
+      hasSubValue: true,
+    },
+    {
+      id: "total-records",
+      title: "Total Records",
+      value: stats.totalRecords,
+      icon: FiDatabase,
+      description: "All records in database",
+      gradientColors: ["#ec4899", "#be185d"],
+      iconBg: "#ec4899",
+    },
+    {
+      id: "total-production",
+      title: "Total Production",
+      value: `${stats.totalProduction.toLocaleString()} KG`,
+      icon: FiTrendingUp,
+      description: "All time production",
+      gradientColors: ["#06b6d4", "#0891b2"],
+      iconBg: "#06b6d4",
+    },
+    {
+      id: "avg-efficiency",
+      title: "Average Efficiency",
+      value: `${stats.avgEfficiency}%`,
+      icon: FiPercent,
+      description: "Average efficiency all time",
+      colorValue: true,
+      valueColor:
+        stats.avgEfficiency >= 80
+          ? "#059669"
+          : stats.avgEfficiency >= 60
+          ? "#d97706"
+          : "#ef4444",
+      gradientColors: ["#f97316", "#ea580c"],
+      iconBg: "#f97316",
+    },
+    {
+      id: "database-status",
+      title: "Database Status",
+      value: isSupabaseConnected ? "Connected" : "Offline",
+      icon: isSupabaseConnected ? FiCheckCircle : FiXCircle,
+      description: "Database connection status",
+      gradientColors: isSupabaseConnected
+        ? ["#10b981", "#059669"]
+        : ["#ef4444", "#dc2626"],
+      iconBg: isSupabaseConnected ? "#10b981" : "#ef4444",
+      valueColor: isSupabaseConnected ? "#059669" : "#ef4444",
+    },
+  ];
 
   // Fetch data function with useCallback
   const fetchData = useCallback(async () => {
@@ -462,17 +702,126 @@ const FlatteningPage = () => {
   const totalPages = Math.ceil(filteredRecords.length / itemsPerPage);
 
   // Generate report with useCallback
-  const generateReport = useCallback((selectedDate) => {
-    if (!records || records.length === 0) return;
+  const generateReport = useCallback(
+    (selectedDate) => {
+      if (!records || records.length === 0) return;
 
-    const dateRecords = records.filter((record) => {
-      const recordDate = new Date(record.created_at)
-        .toISOString()
-        .split("T")[0];
-      return recordDate === selectedDate;
-    });
+      const dateRecords = records.filter((record) => {
+        const recordDate = new Date(record.created_at)
+          .toISOString()
+          .split("T")[0];
+        return recordDate === selectedDate;
+      });
 
-    if (dateRecords.length === 0) {
+      if (dateRecords.length === 0) {
+        setReportData({
+          date: selectedDate,
+          formattedDate: new Date(selectedDate).toLocaleDateString("en-US", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          }),
+          shiftGroups: {},
+          totalProduction: 0,
+          totalTarget: 0,
+          overallEfficiency: 0,
+          recordCount: 0,
+          machineProduction: {},
+          itemProduction: {},
+        });
+        return;
+      }
+
+      const shiftGroups = {};
+      const machineProduction = {};
+      const itemProduction = {};
+      let totalProduction = 0;
+      let totalTarget = 0;
+
+      dateRecords.forEach((record) => {
+        const shift = record.shift || record.shift_code || "Unknown";
+        const machine = record.machine_no || record.machine_id || "Unknown";
+        const item = record.item_name || "Unknown";
+        const qty = parseFloat(record.production_quantity) || 0;
+
+        // Shift groups
+        if (!shiftGroups[shift]) {
+          shiftGroups[shift] = {
+            production: 0,
+            target: 0,
+            efficiency: 0,
+            records: [],
+          };
+        }
+
+        shiftGroups[shift].production += qty;
+        totalProduction += qty;
+        shiftGroups[shift].records.push(record);
+
+        // Machine production
+        if (!machineProduction[machine]) {
+          machineProduction[machine] = {
+            production: 0,
+            efficiency: 0,
+            count: 0,
+          };
+        }
+        machineProduction[machine].production += qty;
+        machineProduction[machine].efficiency +=
+          parseFloat(record.efficiency) || 0;
+        machineProduction[machine].count += 1;
+
+        // Item production
+        if (!itemProduction[item]) {
+          itemProduction[item] = {
+            production: 0,
+            efficiency: 0,
+            count: 0,
+          };
+        }
+        itemProduction[item].production += qty;
+        itemProduction[item].efficiency += parseFloat(record.efficiency) || 0;
+        itemProduction[item].count += 1;
+
+        // Find target
+        const targetRecord = targets.find(
+          (t) => t.shift_code === shift && t.machine_id === record.machine_id
+        );
+
+        if (targetRecord) {
+          shiftGroups[shift].target += targetRecord.target_qty;
+          totalTarget += targetRecord.target_qty;
+        }
+      });
+
+      // Calculate efficiency
+      Object.keys(shiftGroups).forEach((shift) => {
+        const group = shiftGroups[shift];
+        group.efficiency =
+          group.target > 0 ? (group.production / group.target) * 100 : 0;
+      });
+
+      // Calculate average efficiency for each machine
+      Object.keys(machineProduction).forEach((machine) => {
+        if (machineProduction[machine].count > 0) {
+          machineProduction[machine].efficiency =
+            machineProduction[machine].efficiency /
+            machineProduction[machine].count;
+        }
+      });
+
+      // Calculate average efficiency for each item
+      Object.keys(itemProduction).forEach((item) => {
+        if (itemProduction[item].count > 0) {
+          itemProduction[item].efficiency =
+            itemProduction[item].efficiency / itemProduction[item].count;
+        }
+      });
+
+      const overallEfficiency =
+        totalTarget > 0 ? (totalProduction / totalTarget) * 100 : 0;
+
       setReportData({
         date: selectedDate,
         formattedDate: new Date(selectedDate).toLocaleDateString("en-US", {
@@ -481,123 +830,17 @@ const FlatteningPage = () => {
           month: "long",
           day: "numeric",
         }),
-        shiftGroups: {},
-        totalProduction: 0,
-        totalTarget: 0,
-        overallEfficiency: 0,
-        recordCount: 0,
-        machineProduction: {},
-        itemProduction: {},
+        shiftGroups,
+        totalProduction,
+        totalTarget,
+        overallEfficiency: parseFloat(overallEfficiency.toFixed(2)),
+        recordCount: dateRecords.length,
+        machineProduction,
+        itemProduction,
       });
-      return;
-    }
-
-    const shiftGroups = {};
-    const machineProduction = {};
-    const itemProduction = {};
-    let totalProduction = 0;
-    let totalTarget = 0;
-
-    dateRecords.forEach((record) => {
-      const shift = record.shift || record.shift_code || "Unknown";
-      const machine = record.machine_no || record.machine_id || "Unknown";
-      const item = record.item_name || "Unknown";
-      const qty = parseFloat(record.production_quantity) || 0;
-
-      // Shift groups
-      if (!shiftGroups[shift]) {
-        shiftGroups[shift] = {
-          production: 0,
-          target: 0,
-          efficiency: 0,
-          records: [],
-        };
-      }
-
-      shiftGroups[shift].production += qty;
-      totalProduction += qty;
-      shiftGroups[shift].records.push(record);
-
-      // Machine production
-      if (!machineProduction[machine]) {
-        machineProduction[machine] = {
-          production: 0,
-          efficiency: 0,
-          count: 0,
-        };
-      }
-      machineProduction[machine].production += qty;
-      machineProduction[machine].efficiency +=
-        parseFloat(record.efficiency) || 0;
-      machineProduction[machine].count += 1;
-
-      // Item production
-      if (!itemProduction[item]) {
-        itemProduction[item] = {
-          production: 0,
-          efficiency: 0,
-          count: 0,
-        };
-      }
-      itemProduction[item].production += qty;
-      itemProduction[item].efficiency += parseFloat(record.efficiency) || 0;
-      itemProduction[item].count += 1;
-
-      // Find target
-      const targetRecord = targets.find(
-        (t) => t.shift_code === shift && t.machine_id === record.machine_id
-      );
-
-      if (targetRecord) {
-        shiftGroups[shift].target += targetRecord.target_qty;
-        totalTarget += targetRecord.target_qty;
-      }
-    });
-
-    // Calculate efficiency
-    Object.keys(shiftGroups).forEach((shift) => {
-      const group = shiftGroups[shift];
-      group.efficiency =
-        group.target > 0 ? (group.production / group.target) * 100 : 0;
-    });
-
-    // Calculate average efficiency for each machine
-    Object.keys(machineProduction).forEach((machine) => {
-      if (machineProduction[machine].count > 0) {
-        machineProduction[machine].efficiency =
-          machineProduction[machine].efficiency /
-          machineProduction[machine].count;
-      }
-    });
-
-    // Calculate average efficiency for each item
-    Object.keys(itemProduction).forEach((item) => {
-      if (itemProduction[item].count > 0) {
-        itemProduction[item].efficiency =
-          itemProduction[item].efficiency / itemProduction[item].count;
-      }
-    });
-
-    const overallEfficiency =
-      totalTarget > 0 ? (totalProduction / totalTarget) * 100 : 0;
-
-    setReportData({
-      date: selectedDate,
-      formattedDate: new Date(selectedDate).toLocaleDateString("en-US", {
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      }),
-      shiftGroups,
-      totalProduction,
-      totalTarget,
-      overallEfficiency: parseFloat(overallEfficiency.toFixed(2)),
-      recordCount: dateRecords.length,
-      machineProduction,
-      itemProduction,
-    });
-  }, [records, targets]);
+    },
+    [records, targets]
+  );
 
   // Handle report generation when date changes
   useEffect(() => {
@@ -666,10 +909,7 @@ const FlatteningPage = () => {
     if (!window.confirm("Are you sure you want to delete this record?")) return;
 
     try {
-      await supabase
-        .from("flatteningsection")
-        .delete()
-        .eq("id", id);
+      await supabase.from("flatteningsection").delete().eq("id", id);
 
       alert("Record deleted successfully");
       fetchData();
@@ -1056,105 +1296,10 @@ const FlatteningPage = () => {
     }
   };
 
-  // Back button handler
+  // Handle back button - go to /production
   const handleBack = () => {
-    navigate(-1);
+    navigate("/production");
   };
-
-  // Stat cards with corrected class names
-  const statCards = [
-    {
-      id: "today-records",
-      title: "Today's Records",
-      value: stats.todayRecords,
-      icon: FiClock,
-      description: "Records added today",
-      gradientColors: ["#10b981", "#059669"],
-      iconBg: "#10b981",
-    },
-    {
-      id: "today-production",
-      title: "Today's Production",
-      value: `${stats.todayProduction.toLocaleString()} KG`,
-      icon: FiPackage,
-      description: "Production today",
-      gradientColors: ["#3b82f6", "#1d4ed8"],
-      iconBg: "#3b82f6",
-    },
-    {
-      id: "today-efficiency",
-      title: "Today's Efficiency",
-      value: `${stats.todayEfficiency}%`,
-      icon: FiActivity,
-      description: "Efficiency today",
-      colorValue: true,
-      valueColor:
-        stats.todayEfficiency >= 80
-          ? "#059669"
-          : stats.todayEfficiency >= 60
-          ? "#d97706"
-          : "#ef4444",
-      gradientColors: ["#f59e0b", "#d97706"],
-      iconBg: "#f59e0b",
-    },
-    {
-      id: "yesterday",
-      title: "Yesterday Summary",
-      value: `${stats.yesterdayProduction.toLocaleString()} KG`,
-      subValue: `${stats.yesterdayEfficiency}% efficiency`,
-      icon: FiTrendingDown,
-      description: "Production & Efficiency",
-      gradientColors: ["#8b5cf6", "#7c3aed"],
-      iconBg: "#8b5cf6",
-      hasSubValue: true,
-    },
-    {
-      id: "total-records",
-      title: "Total Records",
-      value: stats.totalRecords,
-      icon: FiDatabase,
-      description: "All records in database",
-      gradientColors: ["#ec4899", "#be185d"],
-      iconBg: "#ec4899",
-    },
-    {
-      id: "total-production",
-      title: "Total Production",
-      value: `${stats.totalProduction.toLocaleString()} KG`,
-      icon: FiTrendingUp,
-      description: "All time production",
-      gradientColors: ["#06b6d4", "#0891b2"],
-      iconBg: "#06b6d4",
-    },
-    {
-      id: "avg-efficiency",
-      title: "Average Efficiency",
-      value: `${stats.avgEfficiency}%`,
-      icon: FiPercent,
-      description: "Average efficiency all time",
-      colorValue: true,
-      valueColor:
-        stats.avgEfficiency >= 80
-          ? "#059669"
-          : stats.avgEfficiency >= 60
-          ? "#d97706"
-          : "#ef4444",
-      gradientColors: ["#f97316", "#ea580c"],
-      iconBg: "#f97316",
-    },
-    {
-      id: "database-status",
-      title: "Database Status",
-      value: isSupabaseConnected ? "Connected" : "Offline",
-      icon: isSupabaseConnected ? FiCheckCircle : FiXCircle,
-      description: "Database connection status",
-      gradientColors: isSupabaseConnected
-        ? ["#10b981", "#059669"]
-        : ["#ef4444", "#dc2626"],
-      iconBg: isSupabaseConnected ? "#10b981" : "#ef4444",
-      valueColor: isSupabaseConnected ? "#059669" : "#ef4444",
-    },
-  ];
 
   // Render loading state
   if (loading && records.length === 0) {
@@ -1169,9 +1314,12 @@ const FlatteningPage = () => {
 
   return (
     <div className="flattening-container">
+      {/* Floating Particles Background */}
+      <FloatingParticles />
+
       {/* Database Status Banner */}
       {!isSupabaseConnected && (
-        <div className="database-alert">
+        <div className="database-alert slide-in-left">
           <FiAlertCircle size={20} />
           <div>
             <strong>Supabase Connection Issue</strong>
@@ -1184,7 +1332,7 @@ const FlatteningPage = () => {
       )}
 
       {/* Header Section */}
-      <div className="header-section">
+      <div className="header-section fade-in-up">
         <div>
           <div className="breadcrumb-nav">
             <button onClick={handleBack} className="breadcrumb-btn back-btn">
@@ -1209,7 +1357,7 @@ const FlatteningPage = () => {
             </div>
             <div>
               <h1 className="page-title">
-                Flattening Section
+                Flattening Section Production
                 <div
                   className={`connection-badge ${
                     isSupabaseConnected ? "connected" : "offline"
@@ -1238,29 +1386,33 @@ const FlatteningPage = () => {
         <div className="header-actions">
           <button
             onClick={() => setShowFlatteningModal(true)}
-            className="primary-btn"
+            className="btn btn-primary"
           >
             <FiPlus size={20} /> New Flattening Entry
           </button>
-          
+
           <div className="action-buttons">
-            <button 
+            <button
               className="btn btn-secondary"
-              onClick={() => navigate('/production-sections/flattening/new')}
+              onClick={() => navigate("/production-sections/flattening/new")}
             >
               <FiPlus /> Single Entry
             </button>
-            
-            <button 
+
+            <button
               className="btn btn-primary"
-              onClick={() => navigate('/production-sections/flattening/multi-entry')}
+              onClick={() =>
+                navigate("/production-sections/flattening/multi-entry")
+              }
             >
               <FiGrid /> Multi-Entry
             </button>
-            
-            <button 
+
+            <button
               className="btn btn-tertiary"
-              onClick={() => navigate('/production-sections/flattening/smart-entry')}
+              onClick={() =>
+                navigate("/production-sections/flattening/smart-entry")
+              }
             >
               <FiZap /> Smart Entry
             </button>
@@ -1269,7 +1421,7 @@ const FlatteningPage = () => {
           <button
             onClick={handleExport}
             disabled={records.length === 0}
-            className="export-btn"
+            className="btn btn-secondary"
           >
             <FiDownload /> Export CSV
           </button>
@@ -1277,7 +1429,7 @@ const FlatteningPage = () => {
           <button
             onClick={fetchData}
             disabled={loading}
-            className="refresh-btn"
+            className="btn btn-secondary"
           >
             {loading ? (
               <>
@@ -1293,95 +1445,22 @@ const FlatteningPage = () => {
         </div>
       </div>
 
-      {/* Stats Cards - Enhanced Design - FIXED HEADER POSITIONING */}
+      {/* Stats Cards - ALL IN SINGLE ROW */}
       <div className="stats-section">
-        <div className="section-header">
-          <div className="header-icon">
-            <FiBarChart2 size={24} />
-          </div>
-          <div className="section-header-content">
-            <h2>Production Overview</h2>
-            <p className="section-subtitle">
-              Real-time statistics and performance metrics
-            </p>
-          </div>
-        </div>
-
         <div className="stats-grid-enhanced">
-          {statCards.map((card, index) => {
-            const cardColors = {
-              'today-records': { color: '#10b981', rgb: '16, 185, 129' },
-              'today-production': { color: '#3b82f6', rgb: '59, 130, 246' },
-              'today-efficiency': { color: '#f59e0b', rgb: '245, 158, 11' },
-              'yesterday': { color: '#8b5cf6', rgb: '139, 92, 246' },
-              'total-records': { color: '#ec4899', rgb: '236, 72, 153' },
-              'total-production': { color: '#06b6d4', rgb: '6, 182, 212' },
-              'avg-efficiency': { color: '#f97316', rgb: '249, 115, 22' },
-              'database-status': { 
-                color: isSupabaseConnected ? '#10b981' : '#ef4444', 
-                rgb: isSupabaseConnected ? '16, 185, 129' : '239, 68, 68' 
-              }
-            };
-
-            const currentColor = cardColors[card.id] || { color: '#3b82f6', rgb: '59, 130, 246' };
-
-            return (
-              <div 
-                key={card.id} 
-                className="stat-card-enhanced"
-                style={{ '--card-color': currentColor.color, '--card-color-rgb': currentColor.rgb }}
-              >
-                <div className="stat-card-header">
-                  <div className="stat-icon-wrapper">
-                    <div className="stat-icon-enhanced">
-                      <card.icon size={20} />
-                    </div>
-                    <div className="stat-title-wrapper">
-                      <div className="stat-title-enhanced">{card.title}</div>
-                      {card.hasSubValue && (
-                        <div className="stat-subvalue">{card.subValue}</div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="stat-trend">
-                    {card.id === 'today-efficiency' && (
-                      <div className={`trend-${stats.todayEfficiency >= 80 ? 'excellent' : stats.todayEfficiency >= 60 ? 'good' : 'poor'}`}>
-                        {stats.todayEfficiency >= 80 ? 'Excellent' : stats.todayEfficiency >= 60 ? 'Good' : 'Needs Attention'}
-                      </div>
-                    )}
-                    {card.id === 'database-status' && (
-                      <div className={`indicator-${isSupabaseConnected ? 'achieved' : 'not-achieved'}`}>
-                        {isSupabaseConnected ? 'Connected' : 'Offline'}
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className="stat-card-body">
-                  <div 
-                    className="stat-value-enhanced"
-                    style={{ color: card.valueColor || currentColor.color }}
-                  >
-                    {card.value}
-                  </div>
-                </div>
-                <div className="stat-card-footer">
-                  <div className="stat-description">
-                    {card.description}
-                  </div>
-                  {card.id === 'today-efficiency' && (
-                    <div className={`indicator-${stats.todayEfficiency >= 80 ? 'excellent' : stats.todayEfficiency >= 60 ? 'good' : 'poor'}`}>
-                      {stats.todayEfficiency >= 80 ? 'Excellent' : stats.todayEfficiency >= 60 ? 'Good' : 'Poor'}
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+          {statCards.map((card) => (
+            <EnhancedStatCard
+              key={card.id}
+              card={card}
+              stats={stats}
+              isSupabaseConnected={isSupabaseConnected}
+            />
+          ))}
         </div>
       </div>
 
       {/* Today's Production & Efficiency Section */}
-      <div className="today-production-section">
+      <div className="today-production-section fade-in-up">
         <div className="section-header">
           <div className="header-icon">
             <FiBarChart size={24} />
@@ -1564,7 +1643,7 @@ const FlatteningPage = () => {
       </div>
 
       {/* Filters Section */}
-      <div className="filters-section-enhanced">
+      <div className="filters-section-enhanced slide-in-right">
         <div className="filter-section-header">
           <FiFilter size={20} />
           <h3>Filters & Reports</h3>
@@ -1651,7 +1730,7 @@ const FlatteningPage = () => {
 
       {/* Report Section */}
       {showReport && reportData && (
-        <div className="report-section-enhanced">
+        <div className="report-section-enhanced fade-in-up">
           <div className="report-bg-pattern" />
 
           <div className="report-header-enhanced">
@@ -1665,25 +1744,22 @@ const FlatteningPage = () => {
             <div className="report-actions-enhanced">
               <button
                 onClick={generatePDFReportData}
-                className="export-report-btn-enhanced"
+                className="btn btn-primary"
               >
                 <FiFile size={16} /> View PDF Report
               </button>
-              <button
-                onClick={handlePrintReport}
-                className="print-btn-enhanced"
-              >
+              <button onClick={handlePrintReport} className="btn btn-secondary">
                 <FiPrinter /> Print Report
               </button>
               <button
                 onClick={handleExportReport}
-                className="export-report-btn-enhanced"
+                className="btn btn-secondary"
               >
                 <FiDownload /> Export CSV
               </button>
               <button
                 onClick={() => setShowReport(false)}
-                className="close-report-btn-enhanced"
+                className="btn btn-secondary"
               >
                 Close
               </button>
@@ -1953,7 +2029,7 @@ const FlatteningPage = () => {
       )}
 
       {/* Records Table */}
-      <div className="records-table-section-enhanced">
+      <div className="records-table-section-enhanced slide-in-left">
         <div className="table-header-section">
           <div className="table-header-left">
             <h2>Production Records</h2>
@@ -1988,7 +2064,7 @@ const FlatteningPage = () => {
             <div className="loading-text">
               Loading records from flatteningsection...
             </div>
-        </div>
+          </div>
         ) : filteredRecords.length === 0 ? (
           <div className="empty-records">
             <div className="empty-icon">
@@ -2003,7 +2079,7 @@ const FlatteningPage = () => {
               </p>
               <button
                 onClick={() => setShowFlatteningModal(true)}
-                className="create-first-btn"
+                className="btn btn-primary"
               >
                 <FiPlus /> Create First Record
               </button>
@@ -2245,7 +2321,7 @@ const FlatteningPage = () => {
       </div>
 
       {/* Footer */}
-      <div className="page-footer-enhanced">
+      <div className="page-footer-enhanced fade-in-up">
         <div className="footer-content">
           <div className="footer-left">
             <div className="footer-title">
@@ -2278,7 +2354,6 @@ const FlatteningPage = () => {
             </div>
           </div>
         </div>
-
         <div className="footer-actions">
           <button
             onClick={() => setShowFlatteningModal(true)}
@@ -2298,30 +2373,21 @@ const FlatteningPage = () => {
         </div>
       </div>
 
-      {/* Flattening Form Modal - Lazy Loaded */}
+      {/* Flattening Form Modal */}
       {showFlatteningModal && (
         <div className="modal-overlay">
           <div className="modal-container">
-            <Suspense
-              fallback={
-                <div className="loading-container">
-                  <div className="loading-spinner" />
-                  <p>Loading Production Form...</p>
-                </div>
-              }
-            >
-              <FlatteningForm
-                isModal={true}
-                onClose={() => {
-                  setShowFlatteningModal(false);
-                  fetchData();
-                }}
-                onSuccess={() => {
-                  setShowFlatteningModal(false);
-                  fetchData();
-                }}
-              />
-            </Suspense>
+            <FlatteningForm
+              isModal={true}
+              onClose={() => {
+                setShowFlatteningModal(false);
+                fetchData();
+              }}
+              onSuccess={() => {
+                setShowFlatteningModal(false);
+                fetchData();
+              }}
+            />
           </div>
         </div>
       )}
