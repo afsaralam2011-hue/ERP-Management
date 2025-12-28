@@ -1,4 +1,4 @@
-// src/App.jsx
+// src/App.jsx - UPDATED VERSION
 import React from "react";
 import {
   BrowserRouter as Router,
@@ -38,6 +38,7 @@ import SpiralPage from "./pages/ProductionSections/SpiralSection/SpiralPage";
 import SpiralForm from "./pages/ProductionSections/SpiralSection/SpiralForm";
 import SpiralEditForm from "./pages/ProductionSections/SpiralSection/SpiralEditForm";
 import SpiralView from "./pages/ProductionSections/SpiralSection/SpiralView";
+import SpiralSmartForm from "./pages/ProductionSections/SpiralSection/SpiralSmartForm"; // NEW IMPORT
 
 // Raw Material Section Pages 
 import RawMaterialPage from "./pages/ProductionSections/RawMaterialSection/RawMaterialPage";
@@ -194,7 +195,7 @@ function App() {
           }
         />
         
-        {/* New Smart Entry Route */}
+        {/* Flattening Smart Entry Route */}
         <Route
           path="/production-sections/flattening/smart-entry"
           element={
@@ -265,6 +266,19 @@ function App() {
               subtitle="Spiral binding production management"
             >
               <SpiralPage />
+            </Layout>
+          }
+        />
+        
+        {/* NEW: Spiral Smart Entry Route */}
+        <Route
+          path="/production-sections/spiral/smart-entry"
+          element={
+            <Layout
+              title="Smart Production Entry - Spiral"
+              subtitle="Shift-based production entry for spiral machines"
+            >
+              <SpiralSmartForm />
             </Layout>
           }
         />

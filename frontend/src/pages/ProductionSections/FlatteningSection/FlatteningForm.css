@@ -1277,4 +1277,93 @@ form {
      -webkit-print-color-adjust: exact;
      print-color-adjust: exact; /* معیاری پراپرٹی شامل کریں */
   }
+  /* Machine Change Button Styles */
+.machine-no-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.machine-change-btn {
+  position: absolute;
+  right: 8px;
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  padding: 6px;
+  cursor: pointer;
+  color: #495057;
+  transition: all 0.2s;
+}
+
+.machine-change-btn:hover {
+  background: #e9ecef;
+  color: #007bff;
+  border-color: #007bff;
+}
+
+.machine-change-popup {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 1000;
+  margin-top: 8px;
+  padding: 16px;
+}
+
+.popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.popup-header h3 {
+  margin: 0;
+  color: #343a40;
+  font-size: 18px;
+}
+
+.close-popup {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #6c757d;
+  font-size: 18px;
+  padding: 4px;
+}
+
+.close-popup:hover {
+  color: #dc3545;
+}
+
+.machine-options {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.machine-option {
+  padding: 12px;
+  background: #f8f9fa;
+  border: 2px solid #dee2e6;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: center;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.machine-option:hover {
+  background: #007bff;
+  color: white;
+  border-color: #007bff;
+}
 }

@@ -172,7 +172,7 @@ const Navigation = () => {
         { path: '/production-sections/pvc-coating', label: 'PVC Coating', icon: <FiPackage /> },
         { path: '/production-sections/raw-material', label: 'Raw Material', icon: <FiTool /> },
         { path: '/production-reports/daily', label: 'Daily Reports', icon: <FiActivity /> },
-        { path: '/production-sections/flattening/smart-entry', label: 'Smart Entry', icon: <FiClipboard /> }
+        { path: '/production-sections/flattening/smart-entry', label: 'Flattening Entry', icon: <FiClipboard /> }
       ]
     },
     sales: {
