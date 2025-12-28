@@ -1,7 +1,7 @@
 // ========================================================
 // FILE: SpiralSmartForm.jsx
 // PURPOSE: Smart Production Entry for Spiral Section
-// VERSION: 1.1 - Professional Dark Theme with Header Navigation
+// VERSION: 1.2 - Fixed Efficiency Formula & Improved Summary Layout
 // ========================================================
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
@@ -10,7 +10,8 @@ import {
   FiSave, FiClock, FiCheck, FiAlertCircle, FiPlus,
   FiTrash2, FiTrendingUp, FiRefreshCw, FiArrowLeft, 
   FiCpu, FiPackage, FiUser, FiEdit3, FiChevronRight,
-  FiChevronLeft, FiDownload, FiArrowUp, FiArrowDown
+  FiChevronLeft, FiDownload, FiArrowUp, FiArrowDown,
+  FiTarget, FiBarChart2
 } from 'react-icons/fi';
 import { supabase } from '../../../supabaseClient';
 import './SpiralSmartForm.css';
@@ -297,11 +298,13 @@ const SpiralSmartForm = () => {
             newItem.weight = (qty * perMeterWt).toFixed(2);
           }
 
-          // Calculate efficiency when weight changes
-          if (field === 'weight' || field === 'production_quantity' || field === 'per_meter_wt') {
-            const weight = parseFloat(newItem.weight) || 0;
+          // ✅ **FIXED: Calculate efficiency based on PRODUCTION QUANTITY, not weight**
+          if (field === 'production_quantity') {
+            const productionQty = parseFloat(newItem.production_quantity) || 0;
             const targetQty = machine.target_qty || 0;
-            const efficiency = targetQty > 0 ? (weight / targetQty) * 100 : 0;
+            
+            // Efficiency = (Production Quantity / Target Quantity) * 100
+            const efficiency = targetQty > 0 ? (productionQty / targetQty) * 100 : 0;
             newItem.efficiency = parseFloat(efficiency.toFixed(1));
           }
 
@@ -379,21 +382,38 @@ const SpiralSmartForm = () => {
     }, 0);
   }, [machineData]);
 
-  // Calculate machine efficiency based on TOTAL weight vs machine target
+  // ✅ **FIXED: Calculate machine efficiency based on TOTAL PRODUCTION QUANTITY**
+  const calculateMachineProductionTotal = useCallback((machineNo) => {
+    const machine = machineData[machineNo];
+    if (!machine || !machine.items) return 0;
+
+    return machine.items.reduce((total, item) => {
+      return total + (parseFloat(item.production_quantity) || 0);
+    }, 0);
+  }, [machineData]);
+
+  // ✅ **FIXED: Machine efficiency based on production quantity**
   const calculateMachineEfficiency = useCallback((machineNo) => {
     const machine = machineData[machineNo];
     if (!machine || machine.target_qty === 0) return 0;
 
-    const totalWeight = calculateMachineTotal(machineNo);
-    const machineEfficiency = (totalWeight / machine.target_qty) * 100;
+    const totalProduction = calculateMachineProductionTotal(machineNo);
+    const machineEfficiency = (totalProduction / machine.target_qty) * 100;
     return parseFloat(machineEfficiency.toFixed(1));
-  }, [machineData, calculateMachineTotal]);
+  }, [machineData, calculateMachineProductionTotal]);
 
   const sectionTotal = useMemo(() => {
     return Object.keys(machineData).reduce((total, machineNo) => {
       return total + calculateMachineTotal(machineNo);
     }, 0);
   }, [machineData, calculateMachineTotal]);
+
+  // ✅ **FIXED: Calculate total production quantity for section**
+  const sectionProductionTotal = useMemo(() => {
+    return Object.keys(machineData).reduce((total, machineNo) => {
+      return total + calculateMachineProductionTotal(machineNo);
+    }, 0);
+  }, [machineData, calculateMachineProductionTotal]);
 
   const totalItems = useMemo(() => {
     return Object.keys(machineData).reduce((total, machineNo) => {
@@ -415,14 +435,14 @@ const SpiralSmartForm = () => {
       }, 0);
   }, [selectedShift, normalizedTargets]);
 
-  // ==================== CALCULATE TOTAL EFFICIENCY ====================
+  // ✅ **FIXED: Calculate total efficiency based on PRODUCTION QUANTITY**
   const totalEfficiency = useMemo(() => {
     if (totalTarget === 0) return 0;
     
-    const totalWeight = sectionTotal;
-    const totalEfficiencyValue = (totalWeight / totalTarget) * 100;
+    const totalProduction = sectionProductionTotal;
+    const totalEfficiencyValue = (totalProduction / totalTarget) * 100;
     return parseFloat(totalEfficiencyValue.toFixed(1));
-  }, [sectionTotal, totalTarget]);
+  }, [sectionProductionTotal, totalTarget]);
 
   // ==================== GET EFFICIENCY STATUS ====================
   const getEfficiencyStatus = (efficiency) => {
@@ -547,6 +567,11 @@ const SpiralSmartForm = () => {
           if (item.item_code && item.production_quantity) {
             const selectedItem = items.find(i => i.item_code === item.item_code);
 
+            // ✅ **FIXED: Calculate efficiency correctly**
+            const productionQty = parseFloat(item.production_quantity) || 0;
+            const targetQty = machine.target_qty || 0;
+            const itemEfficiency = targetQty > 0 ? (productionQty / targetQty) * 100 : 0;
+
             allRecords.push({
               section_name: CURRENT_SECTION,
               machine_id: machine.machine_id,
@@ -562,7 +587,7 @@ const SpiralSmartForm = () => {
               per_meter_wt: parseFloat(item.per_meter_wt) || 0,
               weight: parseFloat(item.weight) || 0,
               unit: item.unit || 'Kg',
-              efficiency: item.efficiency || 0,
+              efficiency: parseFloat(itemEfficiency.toFixed(1)),
               users_name: machine.users_name || machine.operator_name.trim(),
               shift_code: machine.shift_code,
               shift_name: machine.shift_name,
@@ -826,10 +851,6 @@ const SpiralSmartForm = () => {
                   <span className="stat-label">Items</span>
                   <span className="stat-value">{totalItems}</span>
                 </div>
-                <div className="stat-item">
-                  <span className="stat-label">Total Target</span>
-                  <span className="stat-value">{totalTarget.toFixed(2)} Kg</span>
-                </div>
               </div>
             )}
           </div>
@@ -847,65 +868,67 @@ const SpiralSmartForm = () => {
                   </span>
                 </div>
                 
-                {/* OVERALL SUMMARY - INLINE */}
+                {/* ✅ **FIXED: ALL SUMMARY BOXES IN ONE LINE - 4 BOXES** */}
                 {machinesForCurrentShift.length > 0 && (
-                  <div className="inline-summary">
-                    <div className="summary-row">
-                      <div className="summary-col">
-                        <div className="summary-card-inline">
-                          <div className="summary-icon">
-                            <FiTrendingUp />
-                          </div>
-                          <div className="summary-content">
-                            <span className="summary-label">Total Target</span>
-                            <span className="summary-value">{totalTarget.toFixed(2)} Kg</span>
-                          </div>
-                        </div>
+                  <div className="single-line-summary">
+                    {/* Box 1: Total Target */}
+                    <div className="summary-box">
+                      <div className="summary-box-icon" style={{ backgroundColor: 'rgba(255, 107, 107, 0.1)' }}>
+                        <FiTarget style={{ color: '#ff6b6b' }} />
                       </div>
-                      
-                      <div className="summary-col">
-                        <div className="summary-card-inline">
-                          <div className="summary-icon">
-                            <FiPackage />
-                          </div>
-                          <div className="summary-content">
-                            <span className="summary-label">Total Weight</span>
-                            <span className="summary-value">{sectionTotal.toFixed(2)} Kg</span>
-                          </div>
-                        </div>
+                      <div className="summary-box-content">
+                        <span className="summary-box-label">Total Target</span>
+                        <span className="summary-box-value">{totalTarget.toFixed(2)} Kg</span>
                       </div>
-                      
-                      <div className="summary-col">
-                        <div className="summary-card-inline">
-                          <div className="summary-icon">
-                            <FiTrendingUp />
-                          </div>
-                          <div className="summary-content">
-                            <span className="summary-label">Total Efficiency</span>
-                            <div className="efficiency-display-inline">
+                    </div>
+                    
+                    {/* Box 2: Total Production */}
+                    <div className="summary-box">
+                      <div className="summary-box-icon" style={{ backgroundColor: 'rgba(76, 201, 240, 0.1)' }}>
+                        <FiPackage style={{ color: '#4cc9f0' }} />
+                      </div>
+                      <div className="summary-box-content">
+                        <span className="summary-box-label">Total Production</span>
+                        <span className="summary-box-value">{sectionProductionTotal.toFixed(2)}</span>
+                      </div>
+                    </div>
+                    
+                    {/* Box 3: Total Weight */}
+                    <div className="summary-box">
+                      <div className="summary-box-icon" style={{ backgroundColor: 'rgba(255, 204, 0, 0.1)' }}>
+                        <FiTrendingUp style={{ color: '#ffcc00' }} />
+                      </div>
+                      <div className="summary-box-content">
+                        <span className="summary-box-label">Total Weight</span>
+                        <span className="summary-box-value">{sectionTotal.toFixed(2)} Kg</span>
+                      </div>
+                    </div>
+                    
+                    {/* Box 4: Total Efficiency */}
+                    <div className="summary-box">
+                      <div className="summary-box-icon" style={{ backgroundColor: 'rgba(0, 255, 136, 0.1)' }}>
+                        <FiBarChart2 style={{ color: getEfficiencyColor(totalEfficiency) }} />
+                      </div>
+                      <div className="summary-box-content">
+                        <span className="summary-box-label">Total Efficiency</span>
+                        <div className="summary-box-value-container">
+                          <span 
+                            className="summary-box-value"
+                            style={{ color: getEfficiencyColor(totalEfficiency) }}
+                          >
+                            {totalEfficiency}%
+                          </span>
+                          {(() => {
+                            const status = getEfficiencyStatus(totalEfficiency);
+                            return (
                               <span 
-                                className="efficiency-value-inline"
-                                style={{ color: getEfficiencyColor(totalEfficiency) }}
+                                className="summary-box-status"
+                                style={{ color: status.color }}
                               >
-                                {totalEfficiency}%
+                                {status.icon} {status.text}
                               </span>
-                              {(() => {
-                                const status = getEfficiencyStatus(totalEfficiency);
-                                return (
-                                  <div className="efficiency-status-inline">
-                                    {status.icon && (
-                                      <span className="efficiency-icon-inline" style={{ color: status.color }}>
-                                        {status.icon}
-                                      </span>
-                                    )}
-                                    <span className="efficiency-text-inline" style={{ color: status.color }}>
-                                      {status.text}
-                                    </span>
-                                  </div>
-                                );
-                              })()}
-                            </div>
-                          </div>
+                            );
+                          })()}
                         </div>
                       </div>
                     </div>
@@ -921,6 +944,7 @@ const SpiralSmartForm = () => {
                   const data = machineData[machineNo] || {};
                   const target = getTargetForMachine(machineNo, selectedShift);
                   const totalWeight = calculateMachineTotal(machineNo);
+                  const totalProduction = calculateMachineProductionTotal(machineNo);
                   const machineEfficiency = calculateMachineEfficiency(machineNo);
                   
                   return (
@@ -942,9 +966,12 @@ const SpiralSmartForm = () => {
                               </span>
                               {target && (
                                 <span className="meta-item target">
-                                  <FiTrendingUp /> Target: {target.target_qty || 0} {target.uom || 'Kg'}
+                                  <FiTarget /> Target: {target.target_qty || 0} {target.uom || 'Kg'}
                                 </span>
                               )}
+                              <span className="meta-item production">
+                                <FiPackage /> Production: {totalProduction.toFixed(2)}
+                              </span>
                             </div>
                           </div>
                         </div>
@@ -963,7 +990,7 @@ const SpiralSmartForm = () => {
                                   color: getEfficiencyColor(machineEfficiency),
                                   borderColor: getEfficiencyColor(machineEfficiency) + '40'
                                 }}
-                                title={`Machine Efficiency: ${machineEfficiency}%`}
+                                title={`Machine Efficiency: ${machineEfficiency}% (Based on production)`}
                               >
                                 {machineEfficiency}%
                               </div>
@@ -1107,7 +1134,7 @@ const SpiralSmartForm = () => {
                                       color: getEfficiencyColor(item.efficiency),
                                       borderColor: getEfficiencyColor(item.efficiency) + '40'
                                     }}
-                                    title={`Item Efficiency: ${item.efficiency}% (Based on machine target)`}
+                                    title={`Item Efficiency: ${item.efficiency}% (Production: ${item.production_quantity} / Target: ${data.target_qty || 0})`}
                                   >
                                     {item.efficiency}%
                                   </div>
