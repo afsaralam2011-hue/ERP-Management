@@ -1,4 +1,4 @@
-// src/App.jsx - COMPLETE VERSION WITH INVENTORY ROUTE
+// src/App.jsx - COMPLETE VERSION WITH ALL ROUTES
 import React from "react";
 import {
   BrowserRouter as Router,
@@ -54,6 +54,7 @@ import PVCCoatingForm from "./pages/ProductionSections/PVCCoatingSection/PVCCoat
 import PVCCoatingEditForm from "./pages/ProductionSections/PVCCoatingSection/PVCCoatingEditForm";
 import PVCCoatingView from "./pages/ProductionSections/PVCCoatingSection/PVCCoatingView";
 import PVCCoatingMultiEntryForm from "./pages/ProductionSections/PVCCoatingSection/PVCCoatingMultiEntryForm";
+import PVCSmartForm from "./pages/ProductionSections/PVCCoatingSection/PVCSmartForm";
 
 // Daily Production Report
 import DailyProductionReport from "./pages/ProductionReports/DailyProductionReport";
@@ -200,7 +201,6 @@ function App() {
         
         {/* ✅ **NEW: Flattening Inventory Report Route** */}
         <Route path="/flattening-inventory" element={<FlatteningInventoryReport />} />
-      
         
         {/* Flattening Smart Entry Route */}
         <Route
@@ -408,6 +408,19 @@ function App() {
               subtitle="PVC coating process and production management"
             >
               <PVCCoatingPage />
+            </Layout>
+          }
+        />
+        
+        {/* ✅ PVC COATING SMART FORM ROUTE - ADDED */}
+        <Route
+          path="/production-sections/pvc-coating/smart-form"
+          element={
+            <Layout
+              title="Smart Production Entry - PVC"
+              subtitle="Shift-based production entry for PVC coating"
+            >
+              <PVCSmartForm />
             </Layout>
           }
         />
