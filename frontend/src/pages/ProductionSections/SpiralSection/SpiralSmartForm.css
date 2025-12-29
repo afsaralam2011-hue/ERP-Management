@@ -644,3 +644,147 @@
     gap: 5px !important;
   }
 }
+/* ==================== HEADER ACTIONS ROW ==================== */
+.header-actions-row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 15px !important;
+  flex-wrap: wrap !important;
+}
+
+/* مشین نیویگیشن سٹائل */
+.navy-machine-nav {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  background: rgba(15, 52, 96, 0.8) !important;
+  border: 1px solid #1d4ed8 !important;
+  border-radius: 8px !important;
+  padding: 6px 10px !important;
+  min-width: 220px !important;
+}
+
+.navy-nav-info {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  flex-grow: 1 !important;
+}
+
+.navy-nav-current {
+  color: #dbeafe !important;
+  font-size: 0.9rem !important;
+  font-weight: 600 !important;
+}
+
+.navy-nav-counter {
+  color: #93c5fd !important;
+  font-size: 0.8rem !important;
+}
+
+.navy-nav-btn {
+  background: #1e40af !important;
+  color: white !important;
+  border: 1px solid #2563eb !important;
+  width: 32px !important;
+  height: 32px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 6px !important;
+  padding: 0 !important;
+}
+
+.navy-nav-btn:hover:not(:disabled) {
+  background: #2563eb !important;
+}
+
+.navy-nav-btn:disabled {
+  background: #374151 !important;
+  color: #9ca3af !important;
+  cursor: not-allowed !important;
+  opacity: 0.5 !important;
+}
+
+/* بیک بٹن سٹائل */
+.navy-back-btn {
+  background: #1e3a8a !important;
+  color: white !important;
+  border: 1px solid #2563eb !important;
+  padding: 8px 16px !important;
+  border-radius: 8px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  font-weight: 500 !important;
+  white-space: nowrap !important;
+}
+
+.navy-back-btn:hover {
+  background: #2563eb !important;
+}
+
+/* Draft badge */
+.navy-draft-badge {
+  background: rgba(37, 99, 235, 0.2) !important;
+  border: 1px solid #3b82f6 !important;
+  color: #60a5fa !important;
+  padding: 6px 12px !important;
+  border-radius: 20px !important;
+  font-size: 0.85rem !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  white-space: nowrap !important;
+}
+
+/* ریسپانسیو ڈیزائن */
+@media (max-width: 992px) {
+  .header-actions-row {
+    gap: 10px !important;
+  }
+  
+  .navy-machine-nav {
+    min-width: 200px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .header-actions-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+  
+  .navy-machine-nav {
+    width: 100% !important;
+    justify-content: space-between !important;
+  }
+  
+  .navy-back-btn {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+}
+/* مشین نیویگیشن اور بیک بٹن ایک لائن میں */
+.final-header-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 15px !important;
+  flex-wrap: wrap !important;
+}
+
+.navy-machine-nav {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  order: 1 !important; /* پہلے آئے */
+}
+
+.navy-back-btn {
+  order: 2 !important; /* دوسرا آئے */
+}
+
+.navy-draft-badge {
+  order: 3 !important; /* تیسرا آئے */
+}
