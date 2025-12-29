@@ -38,6 +38,7 @@ import {
   FiZap,
   FiChevronUp,
   FiChevronDown,
+  FiBook, // ✅ نیا آئیکن اضافہ کیا (Inventory Ledger کے لیے)
 } from "react-icons/fi";
 import { supabase } from "../../../supabaseClient";
 import FlatteningForm from "./FlatteningForm";
@@ -487,7 +488,7 @@ const FlatteningPage = () => {
     const saved = localStorage.getItem("flattening_showStats");
     return saved ? JSON.parse(saved) : false;
   });
-  
+
   const [showTodayProduction, setShowTodayProduction] = useState(() => {
     const saved = localStorage.getItem("flattening_showTodayProduction");
     return saved ? JSON.parse(saved) : false;
@@ -1323,7 +1324,7 @@ const FlatteningPage = () => {
         </div>
       )}
 
-      {/* Header Section */}
+      {/* ✅ Header Section - نئے بٹن یہاں شامل ہوئے ہیں */}
       <div className="header-section fade-in-up">
         <div>
           <div className="breadcrumb-nav">
@@ -1435,7 +1436,48 @@ const FlatteningPage = () => {
             )}
           </button>
 
-          {/* ✅ STATS TOGGLE BUTTON - LINE 248 KE BAAD */}
+          {/* ✅ نیا بٹن: INVENTORY REPORT BUTTON - ہرا رنگ */}
+          <button
+            onClick={() => navigate("/flattening-inventory")}
+            className="btn btn-secondary"
+            style={{
+              background: "#4CAF50",
+              color: "white",
+              border: "none",
+              padding: "10px 20px",
+              borderRadius: "6px",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              fontWeight: "600",
+            }}
+          >
+            <FiBarChart2 size={16} /> Inventory Report
+          </button>
+
+          {/* ✅ نیا بٹن: INVENTORY LEDGER BUTTON - گہرا نیلا رنگ، بائیں طرف سرخ بارڈر */}
+          <button
+            onClick={() => navigate("/flattening-ledger")}
+            className="btn btn-secondary"
+            style={{
+              background: "#2c3e50",
+              color: "white",
+              border: "none",
+              padding: "10px 20px",
+              borderRadius: "6px",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              fontWeight: "600",
+              borderLeft: "3px solid #c0392b",
+            }}
+          >
+            <FiBook size={16} /> Inventory Ledger
+          </button>
+
+          {/* ✅ STATS TOGGLE BUTTON */}
           <button
             onClick={toggleStats}
             className="btn btn-tertiary"
@@ -1456,7 +1498,11 @@ const FlatteningPage = () => {
           <button
             onClick={toggleTodayProduction}
             className="btn btn-tertiary"
-            title={showTodayProduction ? "Hide Today's Production" : "Show Today's Production"}
+            title={
+              showTodayProduction
+                ? "Hide Today's Production"
+                : "Show Today's Production"
+            }
           >
             {showTodayProduction ? (
               <>
@@ -1551,9 +1597,7 @@ const FlatteningPage = () => {
                               >
                                 {data.efficiency.toFixed(1)}%
                               </div>
-                              <div className="efficiency-label">
-                                Efficiency
-                              </div>
+                              <div className="efficiency-label">Efficiency</div>
                             </div>
                           </div>
                           <div className="machine-analysis-footer">

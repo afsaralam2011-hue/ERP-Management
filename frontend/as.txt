@@ -13,6 +13,16 @@ src/
   │       └── Production/
   │           └── ProductionDashboard.jsx (یا .js)
 
+src/
+├── pages/
+│   └── ProductionSections/
+│       ├── InventoryDashboard.jsx          ✅ یہاں رکھیں
+│       ├── inventoryTracker.js             ✅ یہاں رکھیں
+│       └── alertSystem.js                  ✅ یہاں رکھیں
+
+
+
+
 =eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNlcnFyc3R0c2t3dXRwbmhiY3ZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ0MzMzODUsImV4cCI6MjA4MDAwOTM4NX0.zorIOTNMTevhmspNTCxaCuA5nCrrUA2hLLoowny3-rQ
 ┌───────────┐ ┌───────────┐ ┌───────────┐
 │ Today's   │ │ Today's   │ │ Today's   │

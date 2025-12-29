@@ -1,4 +1,4 @@
-// src/App.jsx - UPDATED VERSION
+// src/App.jsx - COMPLETE VERSION WITH INVENTORY ROUTE
 import React from "react";
 import {
   BrowserRouter as Router,
@@ -38,7 +38,7 @@ import SpiralPage from "./pages/ProductionSections/SpiralSection/SpiralPage";
 import SpiralForm from "./pages/ProductionSections/SpiralSection/SpiralForm";
 import SpiralEditForm from "./pages/ProductionSections/SpiralSection/SpiralEditForm";
 import SpiralView from "./pages/ProductionSections/SpiralSection/SpiralView";
-import SpiralSmartForm from "./pages/ProductionSections/SpiralSection/SpiralSmartForm"; // NEW IMPORT
+import SpiralSmartForm from "./pages/ProductionSections/SpiralSection/SpiralSmartForm";
 
 // Raw Material Section Pages 
 import RawMaterialPage from "./pages/ProductionSections/RawMaterialSection/RawMaterialPage";
@@ -57,6 +57,9 @@ import PVCCoatingMultiEntryForm from "./pages/ProductionSections/PVCCoatingSecti
 
 // Daily Production Report
 import DailyProductionReport from "./pages/ProductionReports/DailyProductionReport";
+
+// ✅ **NEW IMPORT: Flattening Inventory Report**
+import FlatteningInventoryReport from './components/FlatteningInventoryReport';
 
 // Layout
 import Layout from './components/common/Layout';
@@ -195,6 +198,10 @@ function App() {
           }
         />
         
+        {/* ✅ **NEW: Flattening Inventory Report Route** */}
+        <Route path="/flattening-inventory" element={<FlatteningInventoryReport />} />
+      
+        
         {/* Flattening Smart Entry Route */}
         <Route
           path="/production-sections/flattening/smart-entry"
@@ -270,7 +277,7 @@ function App() {
           }
         />
         
-        {/* NEW: Spiral Smart Entry Route */}
+        {/* Spiral Smart Entry Route */}
         <Route
           path="/production-sections/spiral/smart-entry"
           element={
@@ -320,7 +327,6 @@ function App() {
         />
         
         {/* ========== RAW MATERIAL SECTION ROUTES ========== */}
-        {/* Main Raw Material Page */}
         <Route
           path="/production-sections/raw-material"
           element={
@@ -333,7 +339,6 @@ function App() {
           }
         />
         
-        {/* Separate Material Received Form */}
         <Route
           path="/production-sections/raw-material/material-received"
           element={
@@ -346,7 +351,6 @@ function App() {
           }
         />
         
-        {/* Separate Material Issue Form */}
         <Route
           path="/production-sections/raw-material/material-issue"
           element={
@@ -359,7 +363,6 @@ function App() {
           }
         />
         
-        {/* Old Single Form (Keep for backward compatibility) */}
         <Route
           path="/production-sections/raw-material/new-log"
           element={
@@ -372,7 +375,6 @@ function App() {
           }
         />
         
-        {/* Old Raw Material Form */}
         <Route
           path="/production-sections/raw-material/new"
           element={
@@ -385,7 +387,6 @@ function App() {
           }
         />
         
-        {/* Edit Form */}
         <Route
           path="/production-sections/raw-material/edit/:id"
           element={

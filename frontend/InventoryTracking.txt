@@ -1,0 +1,45 @@
+src/
+├── pages/
+│   ├── InventoryTracking.jsx          # **مین پیج - یہ ہے**
+│   └── reports/
+│       ├── DailyInventory.jsx         # **میرے نے ابھی نہیں دیا**
+│       └── SectionComparison.jsx      # **میرے نے ابھی نہیں دیا**
+└── services/
+    └── inventoryService.js            # **سروس فائل - یہ پہلے دی**
+
+
+
+
+
+
+ npm install recharts
+
+    ✅ خلاصہ:
+فائل	میں دیا؟	آپ کو بنانا ہے؟	تفصیل
+src/pages/InventoryTracking.jsx	✅ ہاں	❌ نہیں	مین انوینٹری ٹریکنگ پیج
+src/services/inventoryService.js	✅ ہاں	❌ نہیں	تمام سپابیس فنکشنز
+src/pages/InventoryTracking.css	✅ ہاں	❌ نہیں	CSS سٹائلز
+src/components/MaterialBalanceReport.jsx	❌ نہیں	✅ ہاں	بیلنس رپورٹ کمپوننٹ
+src/components/InventoryAlerts.jsx	❌ نہیں	✅ ہاں	الرٹس کمپوننٹ
+src/components/charts/MaterialFlowChart.jsx	❌ نہیں	✅ ہاں	چارٹ کمپوننٹ
+
+
+
+src/
+├── components/
+│   ├── InventoryDashboard.jsx         # ✅ یہ فائل بنائیں
+│   ├── InventoryDashboard.css         # ✅ یہ فائل بنائیں
+│   ├── MaterialBalanceReport.jsx      # ✅ پہلے دی
+│   ├── MaterialBalanceReport.css      # ✅ پہلے دی
+│   ├── InventoryAlerts.jsx            # ✅ پہلے دی
+│   ├── InventoryAlerts.css            # ✅ پہلے دی
+│   └── charts/
+│       ├── MaterialFlowChart.jsx      # ✅ پہلے دی
+│       ├── MaterialFlowChart.css      # ✅ پہلے دی
+│       ├── InventoryTrendChart.jsx    # ✅ پہلے دی
+│       └── InventoryTrendChart.css    # ✅ پہلے دی
+├── pages/
+│   ├── InventoryTracking.jsx          # ✅ پہلے دی
+│   └── InventoryTracking.css          # ✅ پہلے دی
+└── services/
+    └── inventoryService.js            # ✅ پہلے دی

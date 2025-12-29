@@ -418,7 +418,7 @@ const ProductionDashboard = () => {
             }}>
               <FiPackage size={28} />
             </div>
-            Production Dashboard
+            Production Dashboard 1
           </h1>
           <p style={{ 
             margin: "10px 0 0 75px", 

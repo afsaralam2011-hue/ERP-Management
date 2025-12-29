@@ -1,0 +1,723 @@
+/* FlatteningInventoryReport.css */
+
+/* ===== Overlay & Container ===== */
+.report-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.85);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  padding: 20px;
+}
+
+.report-popup-container {
+  background: white;
+  border-radius: 12px;
+  width: 95%;
+  max-width: 1400px;
+  max-height: 90vh;
+  overflow: hidden;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+}
+
+/* ===== Header ===== */
+.popup-header {
+  padding: 20px 30px;
+  background: linear-gradient(135deg, #1a2980 0%, #26d0ce 100%);
+  color: white;
+  position: relative;
+}
+
+.popup-header h1 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.subtitle {
+  margin: 5px 0 0;
+  font-size: 16px;
+  opacity: 0.9;
+}
+
+.popup-close-btn {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.3s ease;
+}
+
+.popup-close-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* ===== Summary Section - چھوٹی لائن میں ===== */
+.summary-section {
+  padding: 15px 30px;
+  background: #f8f9fa;
+  border-bottom: 2px solid #e2e8f0;
+  display: flex;
+  gap: 30px;
+  flex-wrap: wrap;
+}
+
+.summary-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.summary-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.dot-available { 
+  background-color: #28a745; 
+}
+
+.dot-deficit { 
+  background-color: #dc3545; 
+}
+
+.summary-label {
+  font-weight: 500;
+}
+
+.summary-value {
+  font-weight: bold;
+  font-size: 16px;
+}
+
+/* ===== Toolbar ===== */
+.toolbar {
+  display: flex;
+  gap: 10px;
+  padding: 15px 30px;
+  background: #f1f5f9;
+  border-bottom: 2px solid #e2e8f0;
+  flex-wrap: wrap;
+}
+
+.toolbar-btn {
+  padding: 10px 20px;
+  border-radius: 6px;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: opacity 0.3s ease;
+  font-size: 14px;
+}
+
+.toolbar-btn:hover {
+  opacity: 0.9;
+}
+
+.btn-refresh { background: #0ea5e9; }
+.btn-whatsapp { background: #25D366; }
+.btn-pdf { background: #dc3545; }
+.btn-print { background: #8b5cf6; }
+.btn-close { background: #666; }
+
+/* ===== Content Area ===== */
+.popup-content {
+  padding: 30px;
+  max-height: calc(90vh - 300px);
+  overflow: auto;
+}
+
+/* ===== Loading ===== */
+.loading-container {
+  text-align: center;
+  padding: 50px;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid #f3f3f3;
+  border-top: 5px solid #0ea5e9;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px;
+}
+
+.loading-container h3 {
+  margin: 0;
+  color: #666;
+}
+
+/* ===== Table ===== */
+.table-responsive {
+  overflow-x: auto;
+}
+
+.inventory-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.inventory-table thead {
+  background: #1a2980;
+}
+
+.inventory-table th {
+  padding: 12px;
+  text-align: center;
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.inventory-table td {
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+  font-size: 14px;
+}
+
+.row-available {
+  background-color: #f8fff9;
+}
+
+.row-deficit {
+  background-color: #fff8f8;
+}
+
+.inventory-table tbody tr:hover {
+  background: #f8fafc;
+}
+
+/* ===== Status Badges ===== */
+.status-badge {
+  padding: 5px 12px;
+  border-radius: 15px;
+  font-size: 12px;
+  font-weight: bold;
+  display: inline-block;
+}
+
+.status-available {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.status-deficit {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+/* ===== Action Buttons ===== */
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.action-btn {
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+}
+
+.action-btn:hover {
+  transform: scale(1.1);
+}
+
+.btn-message {
+  background: #f59e0b !important;
+  color: white !important;
+  font-size: 14px;
+}
+
+.btn-whatsapp-item {
+  background: white !important;
+  color: #25D366 !important;
+  border: 1px solid #ddd !important;
+  font-size: 16px;
+}
+
+/* ===== Animations ===== */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+  .report-popup-overlay {
+    padding: 10px;
+  }
+  
+  .summary-section {
+    gap: 15px;
+    padding: 15px;
+  }
+  
+  .toolbar {
+    padding: 10px;
+    justify-content: center;
+  }
+  
+  .toolbar-btn {
+    flex: 1;
+    min-width: 140px;
+    justify-content: center;
+  }
+  
+  .popup-content {
+    padding: 15px;
+  }
+  
+  .inventory-table {
+    display: block;
+    overflow-x: auto;
+  }
+  
+  .inventory-table th,
+  .inventory-table td {
+    min-width: 120px;
+  }
+}
+/* FlatteningInventoryReport.css */
+
+/* ===== Overlay & Container ===== */
+.report-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.85);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  padding: 20px;
+}
+
+.report-popup-container {
+  background: white;
+  border-radius: 12px;
+  width: 95%;
+  max-width: 1400px;
+  max-height: 90vh;
+  overflow: hidden;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+}
+
+/* ===== Header ===== */
+.popup-header {
+  padding: 20px 30px;
+  background: linear-gradient(135deg, #1a2980 0%, #26d0ce 100%);
+  color: white;
+  position: relative;
+}
+
+.popup-header h1 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.subtitle {
+  margin: 5px 0 0;
+  font-size: 16px;
+  opacity: 0.9;
+}
+
+.popup-close-btn {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.3s ease;
+}
+
+.popup-close-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* ===== Simple Summary Line - سادہ لائن ===== */
+.simple-summary-line {
+  padding: 12px 30px;
+  background: #f8f9fa;
+  border-bottom: 2px solid #e2e8f0;
+  display: flex;
+  gap: 30px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.summary-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.summary-item.highlight {
+  margin-left: auto;
+  padding: 8px 16px;
+  background: #28a745;
+  color: white;
+  border-radius: 6px;
+  font-weight: bold;
+}
+
+.summary-item.highlight .summary-label,
+.summary-item.highlight .summary-value {
+  color: white;
+}
+
+.summary-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.dot-available { 
+  background-color: #28a745; 
+}
+
+.dot-deficit { 
+  background-color: #dc3545; 
+}
+
+.summary-label {
+  font-weight: 500;
+  color: #666;
+}
+
+.summary-value {
+  font-weight: bold;
+  color: #333;
+}
+
+/* ===== باقی CSS وہی رہے گا ===== */
+
+/* ===== باقی تمام CSS پہلے جیسی رکھیں ===== */
+
+/* ===== Print Styles for PDF ===== */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  
+  .report-popup-overlay,
+  .report-popup-overlay * {
+    visibility: visible;
+  }
+  
+  .report-popup-overlay {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: auto;
+    background: white;
+    padding: 0;
+  }
+  
+  .report-popup-container {
+    box-shadow: none;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .popup-close-btn,
+  .toolbar,
+  .action-buttons,
+  .btn-close {
+    display: none !important;
+  }
+  
+  .popup-content {
+    max-height: none;
+    overflow: visible;
+    padding: 0;
+  }
+  
+  .inventory-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .inventory-table th,
+  .inventory-table td {
+    padding: 8px;
+    border: 1px solid #000;
+    font-size: 12px;
+  }
+  
+  .simple-summary-line {
+    display: none;
+  }
+}
+/* FlatteningInventoryReport.css */
+
+/* ===== Overlay & Container ===== */
+.report-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.85);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  padding: 20px;
+}
+
+.report-popup-container {
+  background: white;
+  border-radius: 12px;
+  width: 95%;
+  max-width: 1400px;
+  max-height: 90vh;
+  overflow: hidden;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+}
+
+/* ===== Header ===== */
+.popup-header {
+  padding: 20px 30px;
+  background: linear-gradient(135deg, #1a2980 0%, #26d0ce 100%);
+  color: white;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header-content {
+  text-align: center;
+}
+
+.popup-header h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.subtitle {
+  margin: 5px 0 0;
+  font-size: 16px;
+  opacity: 0.9;
+}
+
+.popup-close-btn {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.3s ease;
+}
+
+.popup-close-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* ===== Simple Summary Line ===== */
+.simple-summary-line {
+  padding: 15px 30px;
+  background: linear-gradient(to right, #f8f9fa, #e9ecef);
+  border-bottom: 2px solid #dee2e6;
+  display: flex;
+  gap: 30px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.summary-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  border: 1px solid #e2e8f0;
+}
+
+.summary-item.highlight {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+  border: none;
+  box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+}
+
+.summary-item.highlight .summary-label,
+.summary-item.highlight .summary-value {
+  color: white;
+  font-weight: 600;
+}
+
+.summary-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.dot-available { 
+  background-color: #28a745; 
+  box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.2);
+}
+
+.dot-deficit { 
+  background-color: #dc3545; 
+  box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.2);
+}
+
+.summary-label {
+  font-weight: 500;
+  color: #495057;
+  font-size: 14px;
+}
+
+.summary-value {
+  font-weight: 700;
+  color: #212529;
+  font-size: 16px;
+}
+
+/* ===== باقی CSS وہی رکھیں جو پہلے تھی ===== */
+
+/* ===== Status Badge میں اپ ڈاؤن ایڈ ===== */
+.status-available {
+  background: linear-gradient(135deg, #d4edda, #c3e6cb);
+  color: #155724;
+  border: 1px solid #b1dfbb;
+}
+
+.status-deficit {
+  background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+  color: #721c24;
+  border: 1px solid #f1b0b7;
+}
+
+/* ===== Action Buttons ===== */
+.action-btn {
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  background: white;
+  border: 2px solid #e2e8f0;
+  color: #4a5568;
+}
+
+.action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.btn-message:hover {
+  background: #f59e0b;
+  color: white;
+  border-color: #f59e0b;
+}
+
+.btn-whatsapp-item:hover {
+  background: #25D366;
+  color: white;
+  border-color: #25D366;
+}
+
+/* ===== Print Styles ===== */
+@media print {
+  .report-popup-overlay {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: auto;
+    background: white;
+    padding: 0;
+  }
+  
+  .report-popup-container {
+    box-shadow: none;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    border-radius: 0;
+  }
+  
+  .popup-close-btn,
+  .toolbar,
+  .action-buttons,
+  .btn-close {
+    display: none !important;
+  }
+  
+  .popup-content {
+    padding: 20px !important;
+    max-height: none !important;
+  }
+  
+  .inventory-table th,
+  .inventory-table td {
+    padding: 8px !important;
+    font-size: 11px !important;
+  }
+  
+  .simple-summary-line {
+    display: none !important;
+  }
+}
