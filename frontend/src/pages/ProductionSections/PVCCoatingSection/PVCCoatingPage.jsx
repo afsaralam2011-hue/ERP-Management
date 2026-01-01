@@ -1,4 +1,4 @@
-// src/pages/ProductionSections/PVCcoatingSection/PVCcoatingPage.jsx
+/// src/pages/ProductionSections/PVCcoatingSection/PVCcoatingPage.jsx
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -17,9 +17,7 @@ import {
   FiHome,
   FiTrendingUp,
   FiClock,
-  FiLayers,
   FiActivity,
-  FiArrowUpRight,
   FiAlertCircle,
   FiChevronLeft,
   FiChevronRight,
@@ -28,9 +26,6 @@ import {
   FiXCircle,
   FiGrid,
   FiX,
-  FiScissors,
-  FiCheckSquare,
-  FiColumns,
   FiEye,
   FiCpu,
   FiBox,
@@ -821,52 +816,6 @@ const PVCcoatingPage = () => {
     }
   };
 
-  // Production Sections for switcher
-  const productionSections = [
-    {
-      id: "raw-material",
-      name: "Raw Material Section",
-      icon: FiDatabaseIcon,
-      path: "/production-sections/raw-material",
-      color: "#06b6d4",
-    },
-    {
-      id: "flattening",
-      name: "Flattening Section",
-      icon: FiPackage,
-      path: "/production-sections/flattening",
-      color: "#10b981",
-    },
-    {
-      id: "spiral",
-      name: "Spiral Section",
-      icon: FiColumns,
-      path: "/production-sections/spiral",
-      color: "#3b82f6",
-    },
-    {
-      id: "pvc-coating",
-      name: "PVC Coating Section",
-      icon: FiLayers,
-      path: "/production-sections/pvc-coating",
-      color: "#8b5cf6",
-    },
-    {
-      id: "cutting-packing",
-      name: "Cutting & Packing Section",
-      icon: FiScissors,
-      path: "/production-sections/cutting-packing",
-      color: "#f59e0b",
-    },
-    {
-      id: "finished-goods",
-      name: "Finished Goods Section",
-      icon: FiCheckSquare,
-      path: "/production-sections/finished-goods",
-      color: "#ec4899",
-    },
-  ];
-
   // Stats cards
   const statCards = [
     {
@@ -1075,92 +1024,6 @@ const PVCcoatingPage = () => {
               </>
             )}
           </button>
-        </div>
-      </div>
-
-      {/* Production Section Switcher */}
-      <div className="section-switcher-card">
-        <div
-          className="bg-pattern"
-          style={{
-            background:
-              "radial-gradient(circle at 30% 30%, rgba(139, 92, 246, 0.05) 0%, transparent 70%)",
-          }}
-        />
-
-        <div className="switcher-header">
-          <div
-            className="switcher-icon"
-            style={{
-              background: "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)",
-            }}
-          >
-            <FiGrid size={18} />
-          </div>
-          <div>
-            Switch Production Section
-            <div className="switcher-subtitle">
-              Click any section to switch instantly
-            </div>
-          </div>
-        </div>
-
-        <div className="sections-grid">
-          {productionSections.map((section) => (
-            <div
-              key={section.id}
-              className="section-card-wrapper"
-              onClick={() => navigate(section.path)}
-            >
-              <div
-                className={`section-card ${
-                  section.id === "pvc-coating" ? "active" : ""
-                }`}
-              >
-                <div
-                  className="section-card-highlight"
-                  style={{
-                    background:
-                      section.id === "pvc-coating"
-                        ? "linear-gradient(90deg, #8b5cf6, #7c3aed)"
-                        : "transparent",
-                  }}
-                />
-                <div className="section-glow-right" />
-                <div className="section-glow-left" />
-                <div
-                  className="section-icon-container"
-                  style={{
-                    background:
-                      section.id === "pvc-coating"
-                        ? "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)"
-                        : "linear-gradient(135deg, #6b7280 0%, #4b5563 100%)",
-                  }}
-                >
-                  <section.icon size={22} />
-                  <div className="icon-glow" />
-                </div>
-                <div className="section-text-content">
-                  <div className="section-name">{section.name}</div>
-                  <div className="section-hint">
-                    <span>📊</span>
-                    <span>Click to open section</span>
-                  </div>
-                </div>
-                <div className="section-hover-overlay" />
-              </div>
-              {section.id !== "pvc-coating" && (
-                <div className="section-bottom-shadow" />
-              )}
-            </div>
-          ))}
-        </div>
-
-        <div className="switcher-footer">
-          <span>
-            <FiArrowUpRight size={10} /> Click any card above to navigate to
-            that production section
-          </span>
         </div>
       </div>
 

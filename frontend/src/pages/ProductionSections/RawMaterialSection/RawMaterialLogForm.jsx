@@ -1,12 +1,12 @@
 // ========================================================
-// FILE: RawMaterialLogForm.jsx - FIXED VERSION
+// FILE: RawMaterialLogForm.jsx 
 // ========================================================
 
 import React, { useState, useEffect } from 'react';
 import { 
   FiSave, FiX, FiPackage, FiBox, FiRefreshCw,
-  FiUser, FiClipboard, FiSettings, FiCheck, 
-  FiAlertCircle, FiDatabase, FiTool, FiFileText
+  FiClipboard, FiSettings, FiCheck, 
+  FiAlertCircle, FiTool
 } from 'react-icons/fi';
 import { supabase } from '../../../supabaseClient';
 
@@ -14,7 +14,7 @@ const RawMaterialLogForm = ({ onClose, editData, isModal = true }) => {
   // ========================================================
   // STATE - SIMPLIFIED
   // ========================================================
-  const [formData, setFormData] = useState({
+  const initialFormState = {
     gate_pass: '',
     transaction_type: 'receive',
     wire_size: '1.20mm',
@@ -27,8 +27,9 @@ const RawMaterialLogForm = ({ onClose, editData, isModal = true }) => {
     received_by: '',
     issued_by: '',
     returned_by: ''
-  });
+  };
 
+  const [formData, setFormData] = useState(initialFormState);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -40,7 +41,6 @@ const RawMaterialLogForm = ({ onClose, editData, isModal = true }) => {
     if (editData) {
       setFormData(editData);
     } else {
-      // Auto-generate gate pass on load
       generateGatePass();
     }
   }, [editData]);
@@ -60,7 +60,27 @@ const RawMaterialLogForm = ({ onClose, editData, isModal = true }) => {
   };
 
   // ========================================================
-  // HANDLE INPUT CHANGE - SIMPLE
+  // COMPLETE RESET FORM FUNCTION - IMPROVED
+  // ========================================================
+  const resetForm = () => {
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+    const newGatePass = `GP-${year}${month}${day}-${random}`;
+    
+    setFormData({
+      ...initialFormState,
+      gate_pass: newGatePass,
+      transaction_type: formData.transaction_type
+    });
+    setError('');
+    setSuccess('');
+  };
+
+  // ========================================================
+  // HANDLE INPUT CHANGE
   // ========================================================
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -68,16 +88,16 @@ const RawMaterialLogForm = ({ onClose, editData, isModal = true }) => {
   };
 
   // ========================================================
-  // VALIDATION - SIMPLE
+  // VALIDATION
   // ========================================================
   const validateForm = () => {
     if (!formData.gate_pass.trim()) {
-      setError('گیٹ پاس نمبر درج کریں');
+      setError('Please enter gate pass number');
       return false;
     }
     
     if (!formData.weight || parseFloat(formData.weight) <= 0) {
-      setError('وزن درج کریں (0 سے زیادہ)');
+      setError('Please enter weight (greater than 0)');
       return false;
     }
     
@@ -86,7 +106,7 @@ const RawMaterialLogForm = ({ onClose, editData, isModal = true }) => {
                        formData.transaction_type === 'issue' ? 'issued_by' : 'returned_by';
     
     if (!formData[personField]?.trim()) {
-      setError('ذمہ دار شخص کا نام درج کریں');
+      setError('Please enter responsible person name');
       return false;
     }
     
@@ -94,7 +114,7 @@ const RawMaterialLogForm = ({ onClose, editData, isModal = true }) => {
   };
 
   // ========================================================
-  // SAVE TO DATABASE - SIMPLE
+  // SAVE TO DATABASE - FIXED VERSION
   // ========================================================
   const saveToDatabase = async () => {
     try {
@@ -128,15 +148,31 @@ const RawMaterialLogForm = ({ onClose, editData, isModal = true }) => {
       
       if (insertError) throw insertError;
       
-      setSuccess('ڈیٹا محفوظ ہو گیا!');
+      setSuccess('Data saved successfully!');
       
+      // Reset form after successful save
       setTimeout(() => {
-        if (onClose) onClose();
+        const currentTransactionType = formData.transaction_type;
+        
+        const date = new Date();
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+        const newGatePass = `GP-${year}${month}${day}-${random}`;
+        
+        setFormData({
+          ...initialFormState,
+          gate_pass: newGatePass,
+          transaction_type: currentTransactionType
+        });
+        
+        setSuccess('');
       }, 1500);
       
     } catch (error) {
       console.error('Save error:', error);
-      setError('محفوظ کرنے میں خرابی: ' + error.message);
+      setError('Save error: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -156,26 +192,23 @@ const RawMaterialLogForm = ({ onClose, editData, isModal = true }) => {
   };
 
   // ========================================================
-  // RESET FORM
+  // HANDLE CLOSE - FIXED FUNCTION
   // ========================================================
-  const handleReset = () => {
-    setFormData({
-      gate_pass: '',
-      transaction_type: 'receive',
-      wire_size: '1.20mm',
-      category: 'B4',
-      shape: 'coil_form',
-      weight: '',
-      remarks: '',
-      department: 'Production',
-      reference_no: '',
-      received_by: '',
-      issued_by: '',
-      returned_by: ''
-    });
-    setError('');
-    setSuccess('');
-    generateGatePass();
+  const handleClose = () => {
+    console.log('Closing form...');
+    if (onClose) {
+      onClose();
+    }
+  };
+
+  // ========================================================
+  // HANDLE CANCEL - SEPARATE FUNCTION
+  // ========================================================
+  const handleCancel = () => {
+    resetForm();
+    if (onClose) {
+      onClose();
+    }
   };
 
   // ========================================================
@@ -187,9 +220,14 @@ const RawMaterialLogForm = ({ onClose, editData, isModal = true }) => {
   const departments = ['Production', 'Warehouse', 'Flattening', 'Spiral', 'PVC Coating', 'Cutting & Packing'];
 
   // ========================================================
-  // SIMPLE CSS STYLES (Add to your CSS file or style tag)
+  // CSS STYLES
   // ========================================================
   const styles = `
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
     .simple-form-modal {
       position: fixed;
       top: 0;
@@ -214,7 +252,7 @@ const RawMaterialLogForm = ({ onClose, editData, isModal = true }) => {
     }
     
     .simple-form-header {
-      background: #1e40af;
+      background: #3498db;
       color: white;
       padding: 15px 20px;
       display: flex;
@@ -229,12 +267,22 @@ const RawMaterialLogForm = ({ onClose, editData, isModal = true }) => {
       margin: 0;
     }
     
-    .simple-form-close {
+    .simple-form-close-btn {
       background: none;
       border: none;
       color: white;
       font-size: 20px;
       cursor: pointer;
+      padding: 5px;
+      border-radius: 4px;
+      transition: background 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .simple-form-close-btn:hover {
+      background: rgba(255,255,255,0.2);
     }
     
     .simple-form-content {
@@ -260,6 +308,12 @@ const RawMaterialLogForm = ({ onClose, editData, isModal = true }) => {
       border-radius: 5px;
       font-size: 14px;
       box-sizing: border-box;
+      transition: border 0.3s;
+    }
+    
+    .simple-form-input:focus {
+      border-color: #3498db;
+      outline: none;
     }
     
     .simple-form-select {
@@ -269,6 +323,12 @@ const RawMaterialLogForm = ({ onClose, editData, isModal = true }) => {
       border-radius: 5px;
       font-size: 14px;
       background: white;
+      transition: border 0.3s;
+    }
+    
+    .simple-form-select:focus {
+      border-color: #3498db;
+      outline: none;
     }
     
     .simple-form-row {
@@ -299,21 +359,39 @@ const RawMaterialLogForm = ({ onClose, editData, isModal = true }) => {
       align-items: center;
       gap: 8px;
       font-weight: 500;
+      transition: all 0.3s;
+    }
+    
+    .simple-form-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
     }
     
     .simple-form-btn-primary {
-      background: #1e40af;
+      background: #2ecc71;
       color: white;
+    }
+    
+    .simple-form-btn-primary:hover:not(:disabled) {
+      background: #27ae60;
     }
     
     .simple-form-btn-secondary {
-      background: #6b7280;
+      background: #34495e;
       color: white;
     }
     
+    .simple-form-btn-secondary:hover {
+      background: #2c3e50;
+    }
+    
     .simple-form-btn-danger {
-      background: #dc2626;
+      background: #e74c3c;
       color: white;
+    }
+    
+    .simple-form-btn-danger:hover {
+      background: #c0392b;
     }
     
     .simple-message {
@@ -356,11 +434,19 @@ const RawMaterialLogForm = ({ onClose, editData, isModal = true }) => {
       align-items: center;
       gap: 5px;
       font-size: 13px;
+      transition: all 0.3s;
+    }
+    
+    .transaction-btn-simple:hover {
+      border-color: #3498db;
+      background: #f0f8ff;
     }
     
     .transaction-btn-simple.active {
-      border-color: #1e40af;
-      background: #eff6ff;
+      border-color: #3498db;
+      background: #e6f7ff;
+      color: #3498db;
+      font-weight: 600;
     }
     
     @media (max-width: 768px) {
@@ -382,15 +468,20 @@ const RawMaterialLogForm = ({ onClose, editData, isModal = true }) => {
   return (
     <>
       <style>{styles}</style>
-      <div className="simple-form-modal" onClick={onClose}>
-        <div className="simple-form-container" onClick={(e) => e.stopPropagation()}>
+      <div className="simple-form-modal">
+        <div className="simple-form-container">
           
           {/* HEADER */}
           <div className="simple-form-header">
             <h2 className="simple-form-title">
-              خام مال کی انٹری
+              Raw Material Entry Form
             </h2>
-            <button className="simple-form-close" onClick={onClose}>
+            <button 
+              className="simple-form-close-btn" 
+              onClick={handleClose}
+              aria-label="Close"
+              type="button"
+            >
               <FiX />
             </button>
           </div>
@@ -414,7 +505,7 @@ const RawMaterialLogForm = ({ onClose, editData, isModal = true }) => {
               
               {/* TRANSACTION TYPE */}
               <div className="simple-form-group">
-                <label className="simple-form-label">ٹرانزیکشن کی قسم</label>
+                <label className="simple-form-label">Transaction Type</label>
                 <div className="transaction-type-container">
                   <button
                     type="button"
@@ -422,7 +513,7 @@ const RawMaterialLogForm = ({ onClose, editData, isModal = true }) => {
                     onClick={() => setFormData({...formData, transaction_type: 'receive'})}
                   >
                     <FiPackage size={20} />
-                    وصولی
+                    Receive
                   </button>
                   
                   <button
@@ -431,7 +522,7 @@ const RawMaterialLogForm = ({ onClose, editData, isModal = true }) => {
                     onClick={() => setFormData({...formData, transaction_type: 'issue'})}
                   >
                     <FiBox size={20} />
-                    جاری
+                    Issue
                   </button>
                   
                   <button
@@ -440,7 +531,7 @@ const RawMaterialLogForm = ({ onClose, editData, isModal = true }) => {
                     onClick={() => setFormData({...formData, transaction_type: 'return'})}
                   >
                     <FiPackage size={20} />
-                    واپسی
+                    Return
                   </button>
                 </div>
               </div>
@@ -448,7 +539,7 @@ const RawMaterialLogForm = ({ onClose, editData, isModal = true }) => {
               {/* GATE PASS & REFERENCE */}
               <div className="simple-form-row">
                 <div className="simple-form-group">
-                  <label className="simple-form-label">گیٹ پاس نمبر *</label>
+                  <label className="simple-form-label">Gate Pass Number *</label>
                   <div style={{ display: 'flex', gap: '10px' }}>
                     <input
                       type="text"
@@ -465,13 +556,13 @@ const RawMaterialLogForm = ({ onClose, editData, isModal = true }) => {
                       className="simple-form-btn simple-form-btn-secondary"
                       style={{ whiteSpace: 'nowrap' }}
                     >
-                      <FiRefreshCw /> نیا نمبر
+                      <FiRefreshCw /> New Number
                     </button>
                   </div>
                 </div>
                 
                 <div className="simple-form-group">
-                  <label className="simple-form-label">ریفرینس نمبر</label>
+                  <label className="simple-form-label">Reference Number</label>
                   <input
                     type="text"
                     name="reference_no"
@@ -486,12 +577,12 @@ const RawMaterialLogForm = ({ onClose, editData, isModal = true }) => {
               {/* MATERIAL DETAILS */}
               <div className="simple-form-group">
                 <h4 style={{ marginBottom: '15px', color: '#1e293b' }}>
-                  <FiTool /> مال کی تفصیلات
+                  <FiTool /> Material Details
                 </h4>
                 
                 <div className="simple-form-row">
                   <div className="simple-form-group">
-                    <label className="simple-form-label">تار کا سائز *</label>
+                    <label className="simple-form-label">Wire Size *</label>
                     <select
                       name="wire_size"
                       value={formData.wire_size}
@@ -506,7 +597,7 @@ const RawMaterialLogForm = ({ onClose, editData, isModal = true }) => {
                   </div>
                   
                   <div className="simple-form-group">
-                    <label className="simple-form-label">قسم *</label>
+                    <label className="simple-form-label">Category *</label>
                     <select
                       name="category"
                       value={formData.category}
@@ -523,7 +614,7 @@ const RawMaterialLogForm = ({ onClose, editData, isModal = true }) => {
                 
                 <div className="simple-form-row">
                   <div className="simple-form-group">
-                    <label className="simple-form-label">شکل *</label>
+                    <label className="simple-form-label">Shape *</label>
                     <select
                       name="shape"
                       value={formData.shape}
@@ -540,7 +631,7 @@ const RawMaterialLogForm = ({ onClose, editData, isModal = true }) => {
                   </div>
                   
                   <div className="simple-form-group">
-                    <label className="simple-form-label">وزن (KG) *</label>
+                    <label className="simple-form-label">Weight (KG) *</label>
                     <input
                       type="number"
                       name="weight"
@@ -559,7 +650,7 @@ const RawMaterialLogForm = ({ onClose, editData, isModal = true }) => {
               {/* DEPARTMENT & PERSON */}
               <div className="simple-form-row">
                 <div className="simple-form-group">
-                  <label className="simple-form-label">محکمہ</label>
+                  <label className="simple-form-label">Department</label>
                   <select
                     name="department"
                     value={formData.department}
@@ -574,8 +665,8 @@ const RawMaterialLogForm = ({ onClose, editData, isModal = true }) => {
                 
                 <div className="simple-form-group">
                   <label className="simple-form-label">
-                    {formData.transaction_type === 'receive' ? 'وصول کنندہ' : 
-                     formData.transaction_type === 'issue' ? 'جاری کنندہ' : 'واپس کنندہ'} *
+                    {formData.transaction_type === 'receive' ? 'Received By' : 
+                     formData.transaction_type === 'issue' ? 'Issued By' : 'Returned By'} *
                   </label>
                   <input
                     type="text"
@@ -585,7 +676,7 @@ const RawMaterialLogForm = ({ onClose, editData, isModal = true }) => {
                           formData.transaction_type === 'issue' ? formData.issued_by : formData.returned_by}
                     onChange={handleChange}
                     className="simple-form-input"
-                    placeholder="نام درج کریں"
+                    placeholder="Enter name"
                     required
                   />
                 </div>
@@ -594,14 +685,14 @@ const RawMaterialLogForm = ({ onClose, editData, isModal = true }) => {
               {/* REMARKS */}
               <div className="simple-form-group">
                 <label className="simple-form-label">
-                  <FiClipboard /> ریمارکس
+                  <FiClipboard /> Remarks
                 </label>
                 <textarea
                   name="remarks"
                   value={formData.remarks}
                   onChange={handleChange}
                   className="simple-form-input"
-                  placeholder="اضافی معلومات..."
+                  placeholder="Additional information..."
                   rows="3"
                   style={{ resize: 'vertical' }}
                 />
@@ -611,19 +702,19 @@ const RawMaterialLogForm = ({ onClose, editData, isModal = true }) => {
               <div className="simple-form-actions">
                 <button
                   type="button"
-                  onClick={handleReset}
+                  onClick={resetForm}
                   className="simple-form-btn simple-form-btn-secondary"
                 >
-                  <FiSettings /> صاف کریں
+                  <FiSettings /> Reset Form
                 </button>
                 
                 <div style={{ display: 'flex', gap: '10px' }}>
                   <button
                     type="button"
-                    onClick={onClose}
+                    onClick={handleCancel}
                     className="simple-form-btn simple-form-btn-danger"
                   >
-                    <FiX /> منسوخ
+                    <FiX /> Cancel
                   </button>
                   
                   <button
@@ -641,11 +732,11 @@ const RawMaterialLogForm = ({ onClose, editData, isModal = true }) => {
                           borderRadius: '50%',
                           animation: 'spin 1s linear infinite'
                         }}></div>
-                        محفوظ ہو رہا ہے...
+                        Saving...
                       </>
                     ) : (
                       <>
-                        <FiSave /> محفوظ کریں
+                        <FiSave /> Save Record
                       </>
                     )}
                   </button>

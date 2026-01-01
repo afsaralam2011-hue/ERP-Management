@@ -7,11 +7,10 @@ import {
   FiTarget,
   FiBarChart2,
   FiPieChart,
-  FiClock,
-  FiCheckCircle,
+ 
   FiAlertCircle,
   FiDownload,
-  FiFilter,
+ 
   FiRefreshCw
 } from 'react-icons/fi';
 
@@ -44,7 +43,7 @@ const EfficiencyAnalytics = ({ data, loading, error }) => {
     ],
     
     sections: [
-      { name: 'Flattening', efficiency: 92.5, trend: '+2.1%' },
+      { name: 'Flattening', efficiency: 80.5, trend: '+2.1%' },
       { name: 'Spiral', efficiency: 88.7, trend: '+1.2%' },
       { name: 'PVC Coating', efficiency: 85.3, trend: '-0.5%' },
       { name: 'Cutting', efficiency: 95.1, trend: '+3.2%' },

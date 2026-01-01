@@ -4,7 +4,7 @@ import {
   FiBarChart2,
   FiPieChart,
   FiTrendingUp,
-  FiFilter,
+  
   FiDownload,
   FiRefreshCw,
   FiMaximize2,
@@ -23,7 +23,7 @@ const ProductionCharts = ({
   const defaultData = {
     productionByDay: [
       { day: 'Mon', production: 2850, target: 3000 },
-      { day: 'Tue', production: 3200, target: 3000 },
+      { day: 'Tue', production: 3500, target: 3000 },
       { day: 'Wed', production: 2750, target: 3000 },
       { day: 'Thu', production: 3100, target: 3000 },
       { day: 'Fri', production: 2950, target: 3000 },

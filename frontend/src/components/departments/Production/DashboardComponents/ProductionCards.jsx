@@ -224,7 +224,7 @@ const ProductionCards = ({
               top: '-12px',
               right: '20px',
               background: card.color,
-              color: 'white',
+              color: '#ffffff',
               padding: '4px 12px',
               borderRadius: '20px',
               fontSize: '12px',

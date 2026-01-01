@@ -1,8 +1,8 @@
 // src/pages/departments/ITPage.jsx
 import React, { useState } from "react";
 import { 
-  FiCpu, FiServer, FiWifi, FiAlertTriangle,
-  FiShield, FiDatabase, FiDownload
+  FiCpu,  FiWifi, FiAlertTriangle,
+  FiShield
 } from "react-icons/fi";
 
 const ITPage = () => {

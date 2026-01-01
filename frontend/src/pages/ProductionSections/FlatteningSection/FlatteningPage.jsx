@@ -1381,7 +1381,7 @@ const FlatteningPage = () => {
             onClick={() => setShowFlatteningModal(true)}
             className="btn btn-primary"
           >
-            <FiPlus size={20} /> New Flattening Entry
+            <FiPlus size={20} /> Flattening Entry
           </button>
 
           <div className="action-buttons">
@@ -2522,7 +2522,7 @@ const FlatteningPage = () => {
             onClick={() => setShowFlatteningModal(true)}
             className="footer-btn add-btn"
           >
-            <FiPlus size={14} /> New Flattening Entry
+            <FiPlus size={14} /> New Flattening Entry Afsar
           </button>
           <button onClick={fetchData} className="footer-btn refresh-btn">
             <FiRefreshCw size={14} /> Refresh Data

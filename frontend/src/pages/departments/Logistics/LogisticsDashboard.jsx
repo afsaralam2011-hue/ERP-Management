@@ -1,8 +1,8 @@
 // src/pages/departments/LogisticsPage.jsx
 import React, { useState } from "react";
 import { 
-  FiTruck, FiPackage, FiClock, FiMapPin,
-  FiCheckCircle, FiAlertCircle, FiDownload
+  FiTruck, FiPackage, FiClock, 
+  FiAlertCircle
 } from "react-icons/fi";
 
 const LogisticsPage = () => {

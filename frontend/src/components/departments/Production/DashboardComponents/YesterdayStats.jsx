@@ -9,7 +9,7 @@ import {
   FiClock,
   FiActivity,
   FiTarget,
-  FiArrowRight,
+  
   FiExternalLink
 } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';

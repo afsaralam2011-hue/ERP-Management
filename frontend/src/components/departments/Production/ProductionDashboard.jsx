@@ -4,9 +4,11 @@ import {
   FiPackage, FiFolder, FiArrowRight, FiHome,
   FiSettings, FiFilter, FiRefreshCw, FiDownload,
   FiBarChart2, FiTrendingUp, FiCalendar, FiActivity,
-  FiCheckCircle, FiClock, FiTarget
+  FiCheckCircle, FiClock, FiTarget,
+  FiGrid, FiArrowUpRight, FiLayers, FiScissors, FiCheckSquare, FiColumns,
+  FiDatabase as FiDatabaseIcon
 } from "react-icons/fi";
-import { useNavigate, Link } from "react-router-dom"; // Link شامل کیا
+import { useNavigate, Link } from "react-router-dom";
 
 // Import new dashboard components
 import ProductionCards from "./DashboardComponents/ProductionCards";
@@ -21,6 +23,52 @@ const ProductionDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState(new Date());
   const navigate = useNavigate();
+
+  // Production Sections for switcher
+  const productionSections = [
+    {
+      id: "raw-material",
+      name: "Raw Material Section",
+      icon: FiDatabaseIcon,
+      path: "/production-sections/raw-material",
+      color: "#06b6d4",
+    },
+    {
+      id: "flattening",
+      name: "Flattening Section",
+      icon: FiPackage,
+      path: "/production-sections/flattening",
+      color: "#10b981",
+    },
+    {
+      id: "spiral",
+      name: "Spiral Section",
+      icon: FiColumns,
+      path: "/production-sections/spiral",
+      color: "#3b82f6",
+    },
+    {
+      id: "pvc-coating",
+      name: "PVC Coating Section",
+      icon: FiLayers,
+      path: "/production-sections/pvc-coating",
+      color: "#8b5cf6",
+    },
+    {
+      id: "cutting-packing",
+      name: "Cutting & Packing Section",
+      icon: FiScissors,
+      path: "/production-sections/cutting-packing",
+      color: "#f59e0b",
+    },
+    {
+      id: "finished-goods",
+      name: "Finished Goods Section",
+      icon: FiCheckSquare,
+      path: "/production-sections/finished-goods",
+      color: "#ec4899",
+    },
+  ];
 
   // Simulate data fetching
   useEffect(() => {
@@ -569,6 +617,196 @@ const ProductionDashboard = () => {
         </div>
       </div>
 
+      {/* Production Section Switcher */}
+      <div className="section-switcher-card" style={{
+        background: 'white',
+        borderRadius: '12px',
+        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+        border: '1px solid #e2e8f0',
+        padding: '25px',
+        marginBottom: '25px',
+        position: 'relative',
+        overflow: 'hidden'
+      }}>
+        <div
+          className="bg-pattern"
+          style={{
+            background: "radial-gradient(circle at 30% 30%, rgba(139, 92, 246, 0.05) 0%, transparent 70%)",
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 0
+          }}
+        />
+
+        <div className="switcher-header" style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '15px',
+          marginBottom: '20px',
+          position: 'relative',
+          zIndex: 1
+        }}>
+          <div
+            className="switcher-icon"
+            style={{
+              background: "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)",
+              width: '45px',
+              height: '45px',
+              borderRadius: '12px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'white',
+              flexShrink: 0
+            }}
+          >
+            <FiGrid size={18} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ 
+              fontSize: '20px', 
+              fontWeight: '600', 
+              color: '#1e293b',
+              marginBottom: '4px'
+            }}>
+              Switch Production Section
+            </div>
+            <div className="switcher-subtitle" style={{
+              fontSize: '14px',
+              color: '#64748b'
+            }}>
+              Click any section to switch instantly
+            </div>
+          </div>
+        </div>
+
+        <div className="sections-grid" style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+          gap: '15px',
+          position: 'relative',
+          zIndex: 1
+        }}>
+          {productionSections.map((section) => (
+            <div
+              key={section.id}
+              className="section-card-wrapper"
+              onClick={() => navigate(section.path)}
+              style={{
+                cursor: 'pointer',
+                position: 'relative'
+              }}
+            >
+              <div
+                className={`section-card ${section.id === "pvc-coating" ? "active" : ""}`}
+                style={{
+                  background: 'white',
+                  borderRadius: '10px',
+                  padding: '20px',
+                  border: `2px solid ${section.id === "pvc-coating" ? section.color : '#e2e8f0'}`,
+                  position: 'relative',
+                  overflow: 'hidden',
+                  transition: 'all 0.3s ease',
+                  height: '100%'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-3px)';
+                  e.currentTarget.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+              >
+                <div
+                  className="section-card-highlight"
+                  style={{
+                    background: section.id === "pvc-coating"
+                      ? "linear-gradient(90deg, #8b5cf6, #7c3aed)"
+                      : "transparent",
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: '4px'
+                  }}
+                />
+                <div
+                  className="section-icon-container"
+                  style={{
+                    background: section.id === "pvc-coating"
+                      ? "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)"
+                      : "linear-gradient(135deg, #6b7280 0%, #4b5563 100%)",
+                    width: '50px',
+                    height: '50px',
+                    borderRadius: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'white',
+                    marginBottom: '15px',
+                    position: 'relative'
+                  }}
+                >
+                  <section.icon size={22} />
+                </div>
+                <div className="section-text-content">
+                  <div className="section-name" style={{
+                    fontSize: '16px',
+                    fontWeight: '600',
+                    color: '#1e293b',
+                    marginBottom: '8px'
+                  }}>
+                    {section.name}
+                  </div>
+                  <div className="section-hint" style={{
+                    fontSize: '13px',
+                    color: '#64748b',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px'
+                  }}>
+                    <span>📊</span>
+                    <span>Click to open section</span>
+                  </div>
+                </div>
+              </div>
+              {section.id !== "pvc-coating" && (
+                <div className="section-bottom-shadow" style={{
+                  position: 'absolute',
+                  bottom: '-4px',
+                  left: '10%',
+                  right: '10%',
+                  height: '8px',
+                  background: 'rgba(0, 0, 0, 0.05)',
+                  borderRadius: '50%',
+                  zIndex: -1
+                }} />
+              )}
+            </div>
+          ))}
+        </div>
+
+        <div className="switcher-footer" style={{
+          marginTop: '20px',
+          paddingTop: '15px',
+          borderTop: '1px solid #e2e8f0',
+          fontSize: '13px',
+          color: '#64748b',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+          position: 'relative',
+          zIndex: 1
+        }}>
+          <FiArrowUpRight size={10} />
+          <span>Click any card above to navigate to that production section</span>
+        </div>
+      </div>
+
       {/* Tab Navigation */}
       <div style={{
         display: 'flex',
@@ -766,10 +1004,10 @@ const ProductionDashboard = () => {
                 alignItems: "center",
                 gap: "12px"
               }}>
-                <FiActivity style={{ color: "#10b981" }} />
+                <FiActivity style={{ color: "rgba(185, 86, 16, 1)" }} />
                 Production Lines Status
               </h2>
-              <p style={{ margin: "0", color: "#64748b", fontSize: "15px" }}>
+              <p style={{ margin: "0", color: "#8b7164ff", fontSize: "15px" }}>
                 6 active production lines • Real-time monitoring
               </p>
             </div>
@@ -792,11 +1030,11 @@ const ProductionDashboard = () => {
                   transition: "all 0.2s ease"
                 }}
                 onMouseEnter={(e) => {
-                  e.target.style.background = "#2563eb";
+                  e.target.style.background = "rgba(245, 6, 6, 1)";
                   e.target.style.transform = "translateY(-2px)";
                 }}
                 onMouseLeave={(e) => {
-                  e.target.style.background = "#3b82f6";
+                  e.target.style.background = "rgba(19, 55, 213, 1)";
                   e.target.style.transform = "translateY(0)";
                 }}
               >
@@ -1008,7 +1246,7 @@ const ProductionDashboard = () => {
 
       {/* Daily Production Report Card */}
       <div style={{
-        background: "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)",
+        background: "linear-gradient(135deg, #f16363ff 0%, #4f46e5 100%)",
         padding: "25px",
         borderRadius: "12px",
         border: "2px solid #4f46e5",

@@ -70,7 +70,7 @@ const CuttingPackingCard = ({ data }) => {
       <div className="card-metrics">
         <div className="metric-row">
           <div className="metric-item">
-            <div className="metric-label">Daily Target</div>
+            <div className="metric-label">Daily Target Daily Target Daily Target Daily Target</div>
             <div className="metric-value">
               {formatNumber(cardData.dailyTarget)} units
             </div>

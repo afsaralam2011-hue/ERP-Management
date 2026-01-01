@@ -1,4 +1,4 @@
-// src/App.jsx - COMPLETE VERSION WITH ALL ROUTES
+// src/App.jsx - UPDATED VERSION WITH EXISTING FILES
 import React from "react";
 import {
   BrowserRouter as Router,
@@ -7,40 +7,41 @@ import {
   Navigate,
 } from "react-router-dom";
 
-// Auth Pages
+// ========== AUTH PAGES ==========
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 
-// Dashboard
+// ========== MAIN DASHBOARD ==========
 import Dashboard from "./pages/dashboard/Dashboard";
 
-// Department Dashboards
+// ========== DEPARTMENT DASHBOARDS ==========
 import HRDashboard from "./pages/departments/HR/HRDashboard";
 import FinanceDashboard from "./pages/departments/Finance/FinanceDashboard";
-import ProductionDashboard from "./components/departments/Production/ProductionDashboard";
 import SalesDashboard from "./pages/departments/Sales/SalesDashboard";
 import ITDashboard from "./pages/departments/IT/ITDashboard";
 import LogisticsDashboard from "./pages/departments/Logistics/LogisticsDashboard";
 
-// Production Sections
+// ========== PRODUCTION DEPARTMENT ==========
+import ProductionDashboard from "./components/departments/Production/ProductionDashboard";
+
+// ========== PRODUCTION SECTIONS ==========
 import ProductionSections from "./pages/ProductionSections/Production";
 
-// Flattening Section Pages
+// ========== FLATTENING SECTION ==========
 import FlatteningPage from "./pages/ProductionSections/FlatteningSection/FlatteningPage";
 import FlatteningForm from "./pages/ProductionSections/FlatteningSection/FlatteningForm";
 import FlatteningEditForm from "./pages/ProductionSections/FlatteningSection/FlatteningEditForm";
 import FlatteningView from "./pages/ProductionSections/FlatteningSection/FlatteningView";
-import FlatteningMultiEntryForm from "./pages/ProductionSections/FlatteningSection/FlatteningMultiEntryForm"; 
-import FlatteningSmartForm from "./pages/ProductionSections/FlatteningSection/FlatteningSmartForm"; 
+import FlatteningSmartForm from "./pages/ProductionSections/FlatteningSection/FlatteningSmartForm";
 
-// Spiral Section Pages
+// ========== SPIRAL SECTION ==========
 import SpiralPage from "./pages/ProductionSections/SpiralSection/SpiralPage";
 import SpiralForm from "./pages/ProductionSections/SpiralSection/SpiralForm";
 import SpiralEditForm from "./pages/ProductionSections/SpiralSection/SpiralEditForm";
 import SpiralView from "./pages/ProductionSections/SpiralSection/SpiralView";
 import SpiralSmartForm from "./pages/ProductionSections/SpiralSection/SpiralSmartForm";
 
-// Raw Material Section Pages 
+// ========== RAW MATERIAL SECTION ==========
 import RawMaterialPage from "./pages/ProductionSections/RawMaterialSection/RawMaterialPage";
 import RawMaterialLogForm from "./pages/ProductionSections/RawMaterialSection/RawMaterialLogForm"; 
 import MaterialReceivedForm from "./pages/ProductionSections/RawMaterialSection/MaterialReceivedForm"; 
@@ -48,21 +49,21 @@ import MaterialIssueForm from "./pages/ProductionSections/RawMaterialSection/Mat
 import RawMaterialEditForm from "./pages/ProductionSections/RawMaterialSection/RawMaterialEditForm"; 
 import RawMaterialForm from "./pages/ProductionSections/RawMaterialSection/RawMaterialForm";
 
-// PVC Coating Section Pages
+// ========== PVC COATING SECTION ==========
 import PVCCoatingPage from "./pages/ProductionSections/PVCCoatingSection/PVCCoatingPage";
 import PVCCoatingForm from "./pages/ProductionSections/PVCCoatingSection/PVCCoatingForm";
 import PVCCoatingEditForm from "./pages/ProductionSections/PVCCoatingSection/PVCCoatingEditForm";
 import PVCCoatingView from "./pages/ProductionSections/PVCCoatingSection/PVCCoatingView";
-import PVCCoatingMultiEntryForm from "./pages/ProductionSections/PVCCoatingSection/PVCCoatingMultiEntryForm";
 import PVCSmartForm from "./pages/ProductionSections/PVCCoatingSection/PVCSmartForm";
 
-// Daily Production Report
+// ========== DAILY PRODUCTION REPORT ==========
 import DailyProductionReport from "./pages/ProductionReports/DailyProductionReport";
 
-// ✅ **NEW IMPORT: Flattening Inventory Report**
+// ========== INVENTORY REPORTS ==========
 import FlatteningInventoryReport from './components/FlatteningInventoryReport';
+import FlatteningInventoryLedger from './components/FlatteningInventoryLedger';
 
-// Layout
+// ========== LAYOUT ==========
 import Layout from './components/common/Layout';
 
 function App() {
@@ -73,7 +74,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         
-        {/* ========== DASHBOARD ROUTE ========== */}
+        {/* ========== MAIN DASHBOARD ROUTE ========== */}
         <Route
           path="/dashboard"
           element={
@@ -87,6 +88,7 @@ function App() {
         />
         
         {/* ========== DEPARTMENT ROUTES ========== */}
+        {/* HR Department */}
         <Route
           path="/hr"
           element={
@@ -99,6 +101,7 @@ function App() {
           }
         />
         
+        {/* Finance Department */}
         <Route
           path="/finance"
           element={
@@ -111,7 +114,47 @@ function App() {
           }
         />
         
-        {/* Production Department Routes */}
+        {/* Sales Department */}
+        <Route
+          path="/sales"
+          element={
+            <Layout
+              title="Sales Department"
+              subtitle="Sales strategies, customer relations, and revenue generation"
+            >
+              <SalesDashboard />
+            </Layout>
+          }
+        />
+        
+        {/* IT Department */}
+        <Route
+          path="/it"
+          element={
+            <Layout
+              title="IT Department"
+              subtitle="IT infrastructure, software development, and technical support"
+            >
+              <ITDashboard />
+            </Layout>
+          }
+        />
+        
+        {/* Logistics Department */}
+        <Route
+          path="/logistics"
+          element={
+            <Layout
+              title="Logistics Department"
+              subtitle="Supply chain management, transportation, and distribution"
+            >
+              <LogisticsDashboard />
+            </Layout>
+          }
+        />
+        
+        {/* ========== PRODUCTION DEPARTMENT ROUTES ========== */}
+        {/* Main Production Dashboard */}
         <Route
           path="/dashboard/production"
           element={
@@ -137,43 +180,77 @@ function App() {
           }
         />
         
+        {/* ========== PRODUCTION SUB-DEPARTMENT ROUTES ========== */}
+        {/* NOTE: These will be added when you create the dashboard files */}
+        {/* For now, redirect to existing pages */}
+        
+        {/* Flattening Department - Redirect to Flattening Page */}
         <Route
-          path="/sales"
+          path="/production/flattening"
           element={
             <Layout
-              title="Sales Department"
-              subtitle="Sales strategies, customer relations, and revenue generation"
+              title="Flattening Department"
+              subtitle="Wire flattening process management"
             >
-              <SalesDashboard />
+              <FlatteningPage />
             </Layout>
           }
         />
         
+        {/* Plating Department - Redirect to Production Dashboard (temporary) */}
         <Route
-          path="/it"
+          path="/production/plating"
           element={
             <Layout
-              title="IT Department"
-              subtitle="IT infrastructure, software development, and technical support"
+              title="Plating Department"
+              subtitle="Electroplating process management"
             >
-              <ITDashboard />
+              <ProductionDashboard />
             </Layout>
           }
         />
         
+        {/* PVC Department - Redirect to PVC Coating Page */}
         <Route
-          path="/logistics"
+          path="/production/pvc"
           element={
             <Layout
-              title="Logistics Department"
-              subtitle="Supply chain management, transportation, and distribution"
+              title="PVC Coating Department"
+              subtitle="PVC coating process management"
             >
-              <LogisticsDashboard />
+              <PVCCoatingPage />
+            </Layout>
+          }
+        />
+        
+        {/* Cutting Department - Redirect to Production Dashboard (temporary) */}
+        <Route
+          path="/production/cutting"
+          element={
+            <Layout
+              title="Cutting Department"
+              subtitle="Wire cutting process management"
+            >
+              <ProductionDashboard />
+            </Layout>
+          }
+        />
+        
+        {/* Raw Material Department - Redirect to Raw Material Page */}
+        <Route
+          path="/production/raw-material"
+          element={
+            <Layout
+              title="Raw Material Department"
+              subtitle="Raw material stock, usage, and inventory management"
+            >
+              <RawMaterialPage />
             </Layout>
           }
         />
         
         {/* ========== PRODUCTION SECTIONS ROUTES ========== */}
+        {/* Production Sections Overview */}
         <Route
           path="/production-sections"
           element={
@@ -186,7 +263,7 @@ function App() {
           }
         />
         
-        {/* Flattening Section Routes */}
+        {/* Flattening Section Pages */}
         <Route
           path="/production-sections/flattening"
           element={
@@ -199,10 +276,7 @@ function App() {
           }
         />
         
-        {/* ✅ **NEW: Flattening Inventory Report Route** */}
-        <Route path="/flattening-inventory" element={<FlatteningInventoryReport />} />
-        
-        {/* Flattening Smart Entry Route */}
+        {/* Flattening Smart Entry */}
         <Route
           path="/production-sections/flattening/smart-entry"
           element={
@@ -251,20 +325,7 @@ function App() {
           }
         />
         
-        {/* FLATTENING MULTI-ENTRY FORM ROUTE */}
-        <Route
-          path="/production-sections/flattening/multi-entry"
-          element={
-            <Layout
-              title="Flattening Multi-Machine Entry"
-              subtitle="Add multiple machine records in one go"
-            >
-              <FlatteningMultiEntryForm />
-            </Layout>
-          }
-        />
-        
-        {/* ========== SPIRAL SECTION ROUTES ========== */}
+        {/* Spiral Section Pages */}
         <Route
           path="/production-sections/spiral"
           element={
@@ -277,7 +338,7 @@ function App() {
           }
         />
         
-        {/* Spiral Smart Entry Route */}
+        {/* Spiral Smart Entry */}
         <Route
           path="/production-sections/spiral/smart-entry"
           element={
@@ -326,7 +387,7 @@ function App() {
           }
         />
         
-        {/* ========== RAW MATERIAL SECTION ROUTES ========== */}
+        {/* Raw Material Section Pages */}
         <Route
           path="/production-sections/raw-material"
           element={
@@ -339,6 +400,7 @@ function App() {
           }
         />
         
+        {/* Material Received Form */}
         <Route
           path="/production-sections/raw-material/material-received"
           element={
@@ -351,6 +413,7 @@ function App() {
           }
         />
         
+        {/* Material Issue Form */}
         <Route
           path="/production-sections/raw-material/material-issue"
           element={
@@ -363,6 +426,7 @@ function App() {
           }
         />
         
+        {/* Raw Material Log Form */}
         <Route
           path="/production-sections/raw-material/new-log"
           element={
@@ -399,7 +463,7 @@ function App() {
           }
         />
         
-        {/* ========== PVC COATING SECTION ROUTES ========== */}
+        {/* PVC Coating Section Pages */}
         <Route
           path="/production-sections/pvc-coating"
           element={
@@ -412,7 +476,7 @@ function App() {
           }
         />
         
-        {/* ✅ PVC COATING SMART FORM ROUTE - ADDED */}
+        {/* PVC Smart Entry */}
         <Route
           path="/production-sections/pvc-coating/smart-form"
           element={
@@ -461,20 +525,7 @@ function App() {
           }
         />
         
-        {/* PVC COATING MULTI-ENTRY FORM ROUTE */}
-        <Route
-          path="/production-sections/pvc-coating/multi-entry"
-          element={
-            <Layout
-              title="PVC Coating Multi-Entry Form"
-              subtitle="Add multiple PVC coating records in one go"
-            >
-              <PVCCoatingMultiEntryForm />
-            </Layout>
-          }
-        />
-        
-        {/* ========== DAILY PRODUCTION REPORT ROUTE ========== */}
+        {/* ========== DAILY PRODUCTION REPORT ========== */}
         <Route
           path="/production-reports/daily"
           element={
@@ -485,6 +536,33 @@ function App() {
               <DailyProductionReport />
             </Layout>
           }
+        />
+        
+        {/* ========== INVENTORY REPORTS ========== */}
+        {/* Flattening Inventory Report */}
+        <Route 
+          path="/flattening-inventory" 
+          element={
+            <Layout
+              title="Flattening Inventory Report"
+              subtitle="Complete inventory analysis for flattening section"
+            >
+              <FlatteningInventoryReport />
+            </Layout>
+          } 
+        />
+        
+        {/* Flattening Inventory Ledger */}
+        <Route 
+          path="/flattening-ledger" 
+          element={
+            <Layout
+              title="Flattening Inventory Ledger"
+              subtitle="Complete inventory tracking for flattening section"
+            >
+              <FlatteningInventoryLedger />
+            </Layout>
+          } 
         />
         
         {/* ========== DEFAULT ROUTES ========== */}

@@ -4,6 +4,8 @@
   "private": true,
   "proxy": "http://localhost:5000",
   "dependencies": {
+    "@fortawesome/free-solid-svg-icons": "^7.1.0",
+    "@fortawesome/react-fontawesome": "^3.1.1",
     "@supabase/supabase-js": "^2.87.2",
     "axios": "^1.13.2",
     "html2pdf.js": "^0.12.1",
@@ -16,17 +18,31 @@
     "react-scripts": "^5.0.1",
     "recharts": "^3.6.0"
   },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "eslint-plugin-react-hooks": "^4.6.2"
+  },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "vercel-build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "dev:all": "concurrently \"npm start\" \"cd ../backend && npm run dev\""
   },
   "eslintConfig": {
     "extends": [
-      "react-app"
-    ]
+      "react-app",
+      "react-app/jest"
+    ],
+    "plugins": [
+      "react-hooks"
+    ],
+    "rules": {
+      "unicode-bom": "off",
+      "react-hooks/rules-of-hooks": "error",
+      "react-hooks/exhaustive-deps": "warn"
+    }
   },
   "browserslist": {
     "production": [

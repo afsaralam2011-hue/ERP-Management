@@ -164,7 +164,7 @@ const Dashboard = () => {
               </div>
               <div className="header-logo-text">
                 <h1>Pakistan Wire Industries</h1>
-                <p>Enterprise Resource Planning System</p>
+                <p>Enterprise Resource Planning System Afsar</p>
               </div>
             </div>
           </div>

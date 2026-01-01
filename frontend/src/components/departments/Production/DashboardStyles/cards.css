@@ -7,7 +7,7 @@ src/components/departments/Production/DashboardStyles/cards.css
 
 /* ============ BASE CARD STYLES ============ */
 .section-card {
-  background: white;
+  background: #590303;
   border-radius: 12px;
   padding: 20px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);

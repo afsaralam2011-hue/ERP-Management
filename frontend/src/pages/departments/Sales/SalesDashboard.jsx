@@ -1,8 +1,8 @@
 // src/pages/departments/SalesPage.jsx
 import React, { useState } from "react";
 import { 
-  FiTrendingUp, FiDollarSign, FiTarget, FiUsers,
-  FiShoppingCart, FiBarChart2, FiDownload
+   FiDollarSign, FiTarget, FiUsers,
+  FiShoppingCart
 } from "react-icons/fi";
 
 const SalesPage = () => {

@@ -1,20 +1,19 @@
 // src/pages/ProductionSections/RawMaterialSection/RawMaterialPage.jsx
-// COMPLETE FINAL VERSION WITH PROPER ROUTING AND MODAL SIZE
+// CORRECTED VERSION - ONLY FIXING WHAT'S BROKEN
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  FiPlus, FiEdit, FiTrash2, FiSearch, FiFilter, 
-  FiDownload, FiRefreshCw, FiPackage, FiCalendar, 
-  FiUser, FiBarChart2, FiPrinter, FiArrowLeft, 
-  FiEye, FiHome, FiClock, FiDatabase, FiCheckCircle,
-  FiXCircle, FiGrid, FiX, FiBriefcase, FiBox, 
-  FiArchive, FiArrowRight, FiTrendingUp, FiTrendingDown,
-  FiTruck, FiShoppingCart, FiTag, FiLayers, FiTool,
-  FiCheck, FiAlertCircle, FiDollarSign
+  FiPlus, FiEdit, FiTrash2, FiDownload, FiRefreshCw, 
+  FiPackage, FiCalendar, FiArrowLeft, FiEye, FiHome, 
+  FiDatabase, FiTrendingUp, FiTrendingDown, FiDollarSign,
+  FiTag, FiSearch, FiFilter,FiArrowRight, FiX // Added missing imports
 } from 'react-icons/fi';
 import RawMaterialLogForm from './RawMaterialLogForm';
 import './RawMaterialPage.css';
+
+// آپ کے موجودہ supabase client کا راستہ - یہ وہی ہونا چاہیے جو باقی فائلوں میں ہے
+import { supabase } from '../../../supabaseClient'; // اصل راستہ درست کیا
 
 const RawMaterialPage = () => {
   const navigate = useNavigate();
@@ -28,104 +27,30 @@ const RawMaterialPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  // Mock data - Replace with your API
-  const mockData = [
-    {
-      id: 1,
-      gate_pass: 'GP-2024-001',
-      transaction_type: 'material received',
-      wire_size: '1.20mm',
-      category: 'B4',
-      shape: 'coil form',
-      kg_wt: 1250.50,
-      remarks: 'Received from ABC Steel Mills',
-      reason: 'Monthly stock replenishment',
-      department: 'Warehouse',
-      reference_no: 'PO-2024-001',
-      received_by: 'John Doe',
-      status: 'active',
-      created_at: '2024-01-15T10:30:00Z'
-    },
-    {
-      id: 2,
-      gate_pass: 'GP-2024-002',
-      transaction_type: 'material issue',
-      wire_size: '1.50mm',
-      category: 'B6',
-      shape: 'bobbins form',
-      kg_wt: 500.00,
-      remarks: 'Issued to Production Floor',
-      reason: 'Production Order #1234',
-      department: 'Production',
-      reference_no: 'JOB-2024-001',
-      issued_by: 'Jane Smith',
-      status: 'completed',
-      created_at: '2024-01-15T14:45:00Z'
-    },
-    {
-      id: 3,
-      gate_pass: 'GP-2024-003',
-      transaction_type: 'material received',
-      wire_size: '2.00mm',
-      category: 'B8',
-      shape: 'sheet form',
-      kg_wt: 800.75,
-      remarks: 'New supplier delivery',
-      reason: 'Stock replenishment',
-      department: 'Warehouse',
-      received_by: 'Robert Brown',
-      status: 'active',
-      created_at: '2024-01-16T09:15:00Z'
-    },
-    {
-      id: 4,
-      gate_pass: 'GP-2024-004',
-      transaction_type: 'material issue',
-      wire_size: '1.20mm',
-      category: 'B4',
-      shape: 'coil form',
-      kg_wt: 350.25,
-      remarks: 'Issued for maintenance',
-      reason: 'Machine repair work',
-      department: 'Maintenance',
-      issued_by: 'Mike Wilson',
-      status: 'completed',
-      created_at: '2024-01-16T14:20:00Z'
-    },
-    {
-      id: 5,
-      gate_pass: 'GP-2024-005',
-      transaction_type: 'material received',
-      wire_size: '3.00mm',
-      category: 'B10',
-      shape: 'rod form',
-      kg_wt: 1200.00,
-      remarks: 'Bulk order received',
-      reason: 'Project XYZ requirements',
-      department: 'Warehouse',
-      received_by: 'Sarah Johnson',
-      status: 'active',
-      created_at: '2024-01-17T11:45:00Z'
-    }
-  ];
+  // Fetch data from database - SIMPLE VERSION
+  const fetchDataFromDatabase = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('raw_material_log')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-  // Fetch data
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        // Using mock data
-        setTimeout(() => {
-          setRecords(mockData);
-          setLoading(false);
-        }, 800);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-        setLoading(false);
+      if (error) {
+        console.error('Database error:', error);
+        return;
       }
-    };
-    
-    fetchData();
+
+      setRecords(data || []);
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDataFromDatabase();
   }, []);
 
   // Filter records
@@ -161,9 +86,18 @@ const RawMaterialPage = () => {
     setShowForm(true);
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this record?')) {
-      setRecords(prev => prev.filter(record => record.id !== id));
+      try {
+        await supabase
+          .from('raw_material_log')
+          .delete()
+          .eq('id', id);
+        
+        setRecords(prev => prev.filter(record => record.id !== id));
+      } catch (error) {
+        console.error('Delete error:', error);
+      }
     }
   };
 
@@ -174,14 +108,14 @@ const RawMaterialPage = () => {
     }
 
     const csvContent = [
-      ['Gate Pass', 'Transaction Type', 'Wire Size', 'Category', 'Shape', 'Weight (KG)', 'Department', 'Reference No', 'Status', 'Created Date'],
+      ['Gate Pass', 'Transaction Type', 'Wire Size', 'Category', 'Shape', 'Weight (KG)', 'Department', 'Reference No', 'Status', 'Date'],
       ...filteredRecords.map(record => [
         record.gate_pass,
         record.transaction_type,
         record.wire_size,
         record.category,
         record.shape,
-        record.kg_wt,
+        record.weight, // یہ آپ کے ٹیبل میں ہے weight یا kg_wt؟
         record.department,
         record.reference_no,
         record.status,
@@ -198,24 +132,21 @@ const RawMaterialPage = () => {
   };
 
   const refreshData = () => {
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-    }, 500);
+    fetchDataFromDatabase();
   };
 
-  // Stats
+  // Stats - یہاں weight یا kg_wt دیکھیں
   const stats = {
     totalRecords: records.length,
     todayRecords: records.filter(r => {
       const today = new Date().toISOString().split('T')[0];
       return new Date(r.created_at).toISOString().split('T')[0] === today;
     }).length,
-    totalWeight: records.reduce((sum, r) => sum + (r.kg_wt || 0), 0).toFixed(2),
+    totalWeight: records.reduce((sum, r) => sum + (r.weight || r.kg_wt || 0), 0).toFixed(2), // دونوں چیک کریں
     receivedCount: records.filter(r => r.transaction_type === 'material received').length,
     issuedCount: records.filter(r => r.transaction_type === 'material issue').length,
     activeRecords: records.filter(r => r.status === 'active').length,
-    totalValue: (records.reduce((sum, r) => sum + (r.kg_wt || 0), 0) * 150).toFixed(2)
+    totalValue: (records.reduce((sum, r) => sum + (r.weight || r.kg_wt || 0), 0) * 150).toFixed(2)
   };
 
   const handleCloseForm = () => {
@@ -225,12 +156,10 @@ const RawMaterialPage = () => {
 
   const handleFormSubmit = (formData) => {
     if (editingRecord) {
-      // Update existing record
       setRecords(prev => prev.map(r => 
         r.id === editingRecord.id ? { ...r, ...formData } : r
       ));
     } else {
-      // Add new record
       const newRecord = {
         id: records.length + 1,
         ...formData,
@@ -438,7 +367,8 @@ const RawMaterialPage = () => {
                     <td>{record.shape}</td>
                     <td>
                       <div className="weight-cell">
-                        <strong>{record.kg_wt}</strong> KG
+                        {/* یہ دیکھیں آپ کے ٹیبل میں کون سا فیلڈ ہے */}
+                        <strong>{record.weight || record.kg_wt}</strong> KG
                       </div>
                     </td>
                     <td>{record.department || '-'}</td>
@@ -542,7 +472,7 @@ const RawMaterialPage = () => {
         </div>
       </div>
 
-      {/* Form Modal - NOW FULL SCREEN */}
+      {/* Form Modal */}
       {showForm && (
         <div className="modal-fullscreen">
           <RawMaterialLogForm

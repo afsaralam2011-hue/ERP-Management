@@ -1,31 +1,94 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../supabaseClient';
-import { FiDownload, FiPrinter, FiRefreshCw, FiX, FiMessageSquare, FiArrowLeft } from 'react-icons/fi';
+import { FiDownload, FiPrinter, FiRefreshCw, FiX, FiMessageSquare, FiArrowLeft, FiCheck, FiCheckSquare, FiSquare } from 'react-icons/fi';
 import { FaWhatsapp } from 'react-icons/fa';
+import './FlatteningInventoryReport.css';
 
 const FlatteningInventoryReportPopup = ({ onClose }) => {
+  console.log('Report Popup rendered, onClose prop:', onClose);
+  
   const [inventoryData, setInventoryData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [itemMessages, setItemMessages] = useState({});
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [dateFilterType, setDateFilterType] = useState('specific');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [selectedItems, setSelectedItems] = useState({});
+  const [selectAll, setSelectAll] = useState(false);
+  const [showDateRange, setShowDateRange] = useState(false);
 
-  useEffect(() => {
-    fetchInventoryData();
-  }, []);
+  // ✅ بٹنز کو کام کرنے کے لیے event handlers
+  const handleClose = () => {
+    console.log('handleClose called');
+    if (onClose && typeof onClose === 'function') {
+      console.log('Calling onClose()');
+      onClose();
+    } else {
+      console.error('onClose is not a function:', onClose);
+    }
+  };
 
-  const fetchInventoryData = async () => {
+  const handleBack = () => {
+    console.log('handleBack called');
+    handleClose();
+  };
+
+  const handleOverlayClick = (e) => {
+    console.log('Overlay clicked');
+    if (e.target === e.currentTarget) {
+      handleClose();
+    }
+  };
+
+  const handlePopupClick = (e) => {
+    console.log('Popup clicked, stopping propagation');
+    e.stopPropagation();
+  };
+
+  // ✅ useCallback کے ساتھ fetchInventoryData
+  const fetchInventoryData = useCallback(async () => {
     try {
       setLoading(true);
       
-      const { data: flatteningData } = await supabase
+      let flatteningQuery = supabase
         .from('flatteningsection')
-        .select('item_code, item_name, production_quantity, created_at')
-        .order('created_at', { ascending: false });
-
-      const { data: spiralData } = await supabase
+        .select('item_code, item_name, production_quantity, created_at');
+      
+      let spiralQuery = supabase
         .from('spiralsection')
-        .select('item_code, weight, created_at')
-        .order('created_at', { ascending: false });
+        .select('item_code, weight, created_at');
 
+      // تاریخ فلٹرنگ
+      if (dateFilterType === 'specific' && selectedDate) {
+        const startOfDay = new Date(selectedDate + 'T00:00:00').toISOString();
+        const endOfDay = new Date(selectedDate + 'T23:59:59').toISOString();
+        
+        flatteningQuery = flatteningQuery
+          .lte('created_at', endOfDay)
+          .gte('created_at', startOfDay);
+        
+        spiralQuery = spiralQuery
+          .lte('created_at', endOfDay)
+          .gte('created_at', startOfDay);
+      } 
+      else if (dateFilterType === 'range' && startDate && endDate) {
+        const start = new Date(startDate + 'T00:00:00').toISOString();
+        const end = new Date(endDate + 'T23:59:59').toISOString();
+        
+        flatteningQuery = flatteningQuery
+          .lte('created_at', end)
+          .gte('created_at', start);
+        
+        spiralQuery = spiralQuery
+          .lte('created_at', end)
+          .gte('created_at', start);
+      }
+
+      const { data: flatteningData } = await flatteningQuery.order('created_at', { ascending: false });
+      const { data: spiralData } = await spiralQuery.order('created_at', { ascending: false });
+
+      // ڈیٹا پروسیسنگ
       const flatteningSummary = {};
       flatteningData?.forEach(item => {
         const key = item.item_code;
@@ -87,15 +150,54 @@ const FlatteningInventoryReportPopup = ({ onClose }) => {
       });
       
       setInventoryData(inventory);
+      
+      // سب آئٹمز کو ڈیفالٹ میں selected کر لیں
+      const initialSelected = {};
+      inventory.forEach(item => {
+        initialSelected[item.item_code] = true;
+      });
+      setSelectedItems(initialSelected);
+      setSelectAll(true);
 
     } catch (error) {
       console.error('Error:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedDate, dateFilterType, startDate, endDate]);
 
-  const calculateTotals = () => {
+  // ✅ useEffect with fetchInventoryData in dependencies
+  useEffect(() => {
+    fetchInventoryData();
+  }, [fetchInventoryData]);
+
+  // ✅ آئٹم سلیکشن کا ہینڈلر
+  const handleItemSelect = useCallback((itemCode) => {
+    setSelectedItems(prev => ({
+      ...prev,
+      [itemCode]: !prev[itemCode]
+    }));
+  }, []);
+
+  // ✅ سب سلیکٹ/ڈی سلیکٹ
+  const handleSelectAll = useCallback(() => {
+    const newSelectAll = !selectAll;
+    setSelectAll(newSelectAll);
+    
+    const newSelectedItems = {};
+    inventoryData.forEach(item => {
+      newSelectedItems[item.item_code] = newSelectAll;
+    });
+    setSelectedItems(newSelectedItems);
+  }, [selectAll, inventoryData]);
+
+  // ✅ منتخب آئٹمز کی تعداد
+  const getSelectedCount = useCallback(() => {
+    return Object.values(selectedItems).filter(Boolean).length;
+  }, [selectedItems]);
+
+  // ✅ ٹوٹلز کا حساب
+  const calculateTotals = useCallback(() => {
     let totalAvailable = 0;
     let totalItems = inventoryData.length;
     let availableItems = 0;
@@ -116,11 +218,11 @@ const FlatteningInventoryReportPopup = ({ onClose }) => {
       availableItems,
       deficitItems
     };
-  };
+  }, [inventoryData]);
 
   const totals = calculateTotals();
 
-  const formatDate = (dateString) => {
+  const formatDate = useCallback((dateString) => {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
@@ -128,9 +230,10 @@ const FlatteningInventoryReportPopup = ({ onClose }) => {
       month: 'short',
       year: 'numeric'
     });
-  };
+  }, []);
 
-  const editItemMessage = (itemCode) => {
+  // ✅ ایک آئٹم کا میسج ایڈٹ
+  const editItemMessage = useCallback((itemCode) => {
     const currentMessage = itemMessages[itemCode] || '';
     const newMessage = prompt(`Enter message for ${itemCode}:`, currentMessage);
     
@@ -140,9 +243,40 @@ const FlatteningInventoryReportPopup = ({ onClose }) => {
         [itemCode]: newMessage
       }));
     }
-  };
+  }, [itemMessages]);
 
-  const sendItemWhatsApp = (item) => {
+  // ✅ تاریخ فلٹر اپلائی کرنا
+  const applyDateFilter = useCallback(() => {
+    fetchInventoryData();
+  }, [fetchInventoryData]);
+
+  // ✅ آج کی تاریخ پر سیٹ کرنا
+  const setToToday = useCallback(() => {
+    setSelectedDate(new Date().toISOString().split('T')[0]);
+    setDateFilterType('specific');
+    setShowDateRange(false);
+    setTimeout(() => fetchInventoryData(), 100);
+  }, [fetchInventoryData]);
+
+  // ✅ سارے ڈیٹا (بغیر فلٹر)
+  const showAllData = useCallback(() => {
+    setSelectedDate('');
+    setStartDate('');
+    setEndDate('');
+    setDateFilterType('all');
+    setShowDateRange(false);
+    setTimeout(() => fetchInventoryData(), 100);
+  }, [fetchInventoryData]);
+
+  // ✅ منتخب آئٹمز بھیجیں
+  const sendSelectedWhatsApp = useCallback(() => {
+    const selectedItemsData = inventoryData.filter(item => selectedItems[item.item_code]);
+    
+    if (selectedItemsData.length === 0) {
+      alert('Please select at least one item!');
+      return;
+    }
+
     const date = new Date();
     const formattedDate = date.toLocaleDateString('en-US', { 
       month: 'short', 
@@ -154,48 +288,20 @@ const FlatteningInventoryReportPopup = ({ onClose }) => {
     message += `*Flattening Inventory Report*\n`;
     message += `===========================\n`;
     message += `Date: ${formattedDate}\n`;
-    message += `===========================\n\n`;
     
-    const itemMsg = itemMessages[item.item_code];
-    if (itemMsg && itemMsg.trim()) {
-      message += `Message: ${itemMsg}\n\n`;
+    // تاریخ فلٹر کا ڈیٹیلز
+    if (dateFilterType === 'specific' && selectedDate) {
+      message += `Report For: ${selectedDate}\n`;
+    } else if (dateFilterType === 'range' && startDate && endDate) {
+      message += `Report From: ${startDate} To ${endDate}\n`;
     }
     
-    message += `Item Code: ${item.item_code}\n`;
-    message += `Item Name: ${item.item_name}\n`;
-    message += `Flattening: ${Math.round(item.flattening_qty)} KG\n`;
-    message += `Spiral: ${Math.round(item.spiral_qty)} KG\n`;
-    message += `Balance: ${item.balance} KG\n`;
-    message += `Status: ${item.status}\n`;
-    message += `Last Updated: ${formatDate(item.last_updated)}`;
-    
-    const encodedMessage = encodeURIComponent(message);
-    window.open(`https://wa.me/?text=${encodedMessage}`, '_blank');
-  };
-
-  const sendAllWhatsApp = () => {
-    const date = new Date();
-    const formattedDate = date.toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: '2-digit', 
-      year: 'numeric' 
-    });
-    
-    let message = `*CONTROL CABLE DIVISION*\n`;
-    message += `*Flattening Inventory Report*\n`;
-    message += `===========================\n`;
-    message += `Date: ${formattedDate}\n`;
+    message += `Selected Items: ${selectedItemsData.length}\n`;
     message += `===========================\n\n`;
     
-    message += `*SUMMARY:*\n`;
-    message += `Total Items: ${totals.totalItems}\n`;
-    message += `Available: ${totals.availableItems}\n`;
-    message += `Deficit: ${totals.deficitItems}\n`;
-    message += `Total Available: ${totals.totalAvailable} KG\n\n`;
+    message += `*SELECTED ITEMS LIST:*\n\n`;
     
-    message += `*ITEMS LIST:*\n\n`;
-    
-    inventoryData.forEach((item, index) => {
+    selectedItemsData.forEach((item, index) => {
       const itemMsg = itemMessages[item.item_code];
       message += `${index + 1}. ${item.item_code}\n`;
       message += `   ${item.item_name}\n`;
@@ -212,565 +318,305 @@ const FlatteningInventoryReportPopup = ({ onClose }) => {
     
     const encodedMessage = encodeURIComponent(message);
     window.open(`https://wa.me/?text=${encodedMessage}`, '_blank');
-  };
+  }, [inventoryData, selectedItems, itemMessages, selectedDate, dateFilterType, startDate, endDate, formatDate]);
 
-  const downloadPDF = () => {
-    try {
-      const element = document.getElementById('inventory-table');
-      const opt = {
-        margin: 0.5,
-        filename: `flattening-inventory-${new Date().toISOString().split('T')[0]}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { 
-          scale: 2,
-          useCORS: true,
-          logging: false
-        },
-        jsPDF: { 
-          unit: 'in', 
-          format: 'letter', 
-          orientation: 'landscape' 
-        }
-      };
-      
-      if (window.html2pdf) {
-        window.html2pdf()
-          .set(opt)
-          .from(element)
-          .save();
-      } else {
-        window.print();
-      }
-      
-    } catch (error) {
-      console.error('PDF Error:', error);
-      window.print();
-    }
-  };
-
-  // ✅ کام کرنے والے کلوز فنکشن
-  const handleClose = () => {
-    console.log('Close button clicked - working');
-    if (onClose && typeof onClose === 'function') {
-      console.log('Calling onClose() function');
-      onClose();
-    } else {
-      console.error('onClose is not a function or not provided');
-    }
-  };
-
-  // ✅ بیک بٹن کے لیے فنکشن
-  const handleBack = () => {
-    console.log('Back button clicked - working');
-    handleClose();
-  };
-
-  // ✅ اوورلے پر کلک
-  const handleOverlayClick = (e) => {
-    console.log('Overlay clicked');
-    if (e.target === e.currentTarget) {
-      handleClose();
-    }
-  };
-
-  // ✅ پاپ اپ پر کلک روکنے کے لیے
-  const handlePopupClick = (e) => {
-    e.stopPropagation();
-  };
+  // ✅ ایک آئٹم کا WhatsApp
+  const sendItemWhatsApp = useCallback((item) => {
+    const itemMessage = itemMessages[item.item_code] || '';
+    let message = `*CONTROL CABLE DIVISION*\n*Flattening Inventory Report*\n\n`;
+    message += `Item: ${item.item_code}\n`;
+    message += `Name: ${item.item_name}\n`;
+    message += `Flattening: ${Math.round(item.flattening_qty)} KG\n`;
+    message += `Spiral: ${Math.round(item.spiral_qty)} KG\n`;
+    message += `Balance: ${item.balance} KG\n`;
+    message += `Status: ${item.status}\n`;
+    message += `Last Updated: ${formatDate(item.last_updated)}\n`;
+    if (itemMessage) message += `Message: ${itemMessage}\n`;
+    const encoded = encodeURIComponent(message);
+    window.open(`https://wa.me/?text=${encoded}`, '_blank');
+  }, [itemMessages, formatDate]);
 
   return (
-    <div 
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0,0,0,0.85)',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        zIndex: 9999,
-        padding: '10px'
-      }}
-      onClick={handleOverlayClick}
-    >
-      <div 
-        style={{
-          backgroundColor: 'white',
-          borderRadius: '8px',
-          width: '98%',
-          maxWidth: '1400px',
-          maxHeight: '95vh',
-          overflow: 'hidden',
-          boxShadow: '0 10px 30px rgba(0,0,0,0.3)'
-        }}
-        onClick={handlePopupClick}
-      >
-        {/* ✅ ہیڈر - واپس لایا */}
-        <div style={{
-          padding: '12px 20px',
-          background: 'linear-gradient(135deg, #1a2980 0%, #26d0ce 100%)',
-          color: 'white',
-          position: 'relative',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center'
-        }}>
-          {/* ✅ بیک بٹن - کام کرے گا */}
+    <div className="report-popup-overlay" onClick={handleOverlayClick}>
+      <div className="report-popup-container" onClick={handlePopupClick}>
+        {/* Header */}
+        <div className="popup-header">
           <button 
-            onClick={handleBack}
-            style={{
-              background: 'rgba(255,255,255,0.2)',
-              color: 'white',
-              border: 'none',
-              width: '36px',
-              height: '36px',
-              borderRadius: '50%',
-              cursor: 'pointer',
-              fontSize: '18px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0
-            }}
+            className="popup-back-btn" 
+            onClick={handleBack} 
             title="Back"
           >
             <FiArrowLeft />
           </button>
           
-          {/* ✅ ہیڈنگ سنٹر میں */}
-          <div style={{ 
-            textAlign: 'center',
-            flex: 1,
-            margin: '0 15px'
-          }}>
-            <h1 style={{ 
-              margin: 0, 
-              fontSize: '20px', 
-              fontWeight: 'bold',
-              letterSpacing: '0.5px'
-            }}>
-              CONTROL CABLE DIVISION
-            </h1>
-            <p style={{ 
-              margin: '4px 0 0 0', 
-              fontSize: '14px',
-              opacity: 0.9
-            }}>
-              Flattening Inventory Report
-            </p>
+          <div className="header-content">
+            <h1>CONTROL CABLE DIVISION</h1>
+            <p className="subtitle">Flattening Inventory Report</p>
           </div>
           
-          {/* ✅ کلوز بٹن - کام کرے گا */}
           <button 
-            onClick={handleClose}
-            style={{
-              background: 'rgba(255,255,255,0.2)',
-              color: 'white',
-              border: 'none',
-              width: '36px',
-              height: '36px',
-              borderRadius: '50%',
-              cursor: 'pointer',
-              fontSize: '20px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0
-            }}
+            className="popup-close-btn" 
+            onClick={handleClose} 
             title="Close"
           >
             <FiX />
           </button>
         </div>
 
-        {/* ✅ سمری سیکشن - ہیڈنگ کے نیچے */}
-        <div style={{
-          padding: '10px 20px',
-          backgroundColor: '#f8f9fa',
-          borderBottom: '1px solid #e2e8f0',
-          display: 'flex',
-          gap: '15px',
-          flexWrap: 'wrap',
-          justifyContent: 'center',
-          fontSize: '13px'
-        }}>
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '6px'
-          }}>
-            <span style={{ fontWeight: '600', color: '#495057' }}>Total Items:</span>
-            <span style={{ fontWeight: 'bold', color: '#212529' }}>{totals.totalItems}</span>
-          </div>
-          
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '6px'
-          }}>
-            <div style={{
-              width: '8px',
-              height: '8px',
-              borderRadius: '50%',
-              backgroundColor: '#28a745'
-            }}></div>
-            <span style={{ fontWeight: '600', color: '#495057' }}>Available:</span>
-            <span style={{ fontWeight: 'bold', color: '#212529' }}>{totals.availableItems}</span>
-          </div>
-          
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '6px'
-          }}>
-            <div style={{
-              width: '8px',
-              height: '8px',
-              borderRadius: '50%',
-              backgroundColor: '#dc3545'
-            }}></div>
-            <span style={{ fontWeight: '600', color: '#495057' }}>Deficit:</span>
-            <span style={{ fontWeight: 'bold', color: '#212529' }}>{totals.deficitItems}</span>
-          </div>
-          
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '6px',
-            padding: '4px 12px',
-            backgroundColor: '#28a745',
-            borderRadius: '4px',
-            marginLeft: '10px'
-          }}>
-            <span style={{ fontWeight: '600', color: 'white' }}>Total Available:</span>
-            <span style={{ fontWeight: 'bold', color: 'white' }}>
-              {totals.totalAvailable} KG
-            </span>
+        {/* Date Filter Section */}
+        <div className="date-filter-section">
+          <div className="date-filter-row">
+            <div className="filter-options">
+              <button 
+                className={`filter-btn ${dateFilterType === 'specific' ? 'active' : ''}`}
+                onClick={() => {
+                  setDateFilterType('specific');
+                  setShowDateRange(false);
+                }}
+              >
+                Specific Date
+              </button>
+              <button 
+                className={`filter-btn ${dateFilterType === 'range' ? 'active' : ''}`}
+                onClick={() => {
+                  setDateFilterType('range');
+                  setShowDateRange(true);
+                }}
+              >
+                Date Range
+              </button>
+              <button 
+                className={`filter-btn ${dateFilterType === 'all' ? 'active' : ''}`}
+                onClick={showAllData}
+              >
+                All Data
+              </button>
+            </div>
+
+            <div className="date-inputs">
+              {dateFilterType === 'specific' && (
+                <div className="date-input-group">
+                  <label style={{ color: '#1a202c' }}>Select Date:</label>
+                  <input
+                    type="date"
+                    value={selectedDate}
+                    onChange={(e) => setSelectedDate(e.target.value)}
+                    className="date-input"
+                  />
+                  <button className="today-btn" onClick={setToToday}>
+                    Today
+                  </button>
+                </div>
+              )}
+
+              {showDateRange && (
+                <div className="date-range-group">
+                  <div className="date-input-group">
+                    <label style={{ color: '#1a202c' }}>From:</label>
+                    <input
+                      type="date"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      className="date-input"
+                    />
+                  </div>
+                  <div className="date-input-group">
+                    <label style={{ color: '#1a202c' }}>To:</label>
+                    <input
+                      type="date"
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                      className="date-input"
+                    />
+                  </div>
+                </div>
+              )}
+
+              <button className="apply-filter-btn" onClick={applyDateFilter}>
+                Apply Filter
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* ٹولبار */}
-        <div style={{
-          display: 'flex',
-          gap: '8px',
-          padding: '10px 20px',
-          backgroundColor: '#f1f5f9',
-          borderBottom: '1px solid #e2e8f0',
-          flexWrap: 'wrap',
-          justifyContent: 'center'
-        }}>
-          <button onClick={fetchInventoryData} style={{
-            padding: '8px 15px',
-            borderRadius: '4px',
-            border: 'none',
-            background: '#0ea5e9',
-            color: 'white',
-            cursor: 'pointer',
-            fontWeight: '600',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            fontSize: '13px'
-          }}>
-            <FiRefreshCw size={14} /> Refresh
+        {/* Summary Section */}
+        <div className="summary-section">
+          <div className="summary-item">
+            <div className="summary-dot dot-total"></div>
+            <span className="summary-label" style={{ color: '#1a202c' }}>Total Items:</span>
+            <span className="summary-value">{totals.totalItems}</span>
+          </div>
+          
+          <div className="summary-item">
+            <div className="summary-dot dot-available"></div>
+            <span className="summary-label" style={{ color: '#1a202c' }}>Available:</span>
+            <span className="summary-value">{totals.availableItems}</span>
+          </div>
+          
+          <div className="summary-item">
+            <div className="summary-dot dot-deficit"></div>
+            <span className="summary-label" style={{ color: '#1a202c' }}>Deficit:</span>
+            <span className="summary-value">{totals.deficitItems}</span>
+          </div>
+          
+          <div className="summary-item highlight">
+            <span className="summary-label">Total Available:</span>
+            <span className="summary-value">{totals.totalAvailable} KG</span>
+          </div>
+
+          <div className="summary-item selection-count">
+            <span className="summary-label">Selected:</span>
+            <span className="summary-value">{getSelectedCount()} items</span>
+          </div>
+        </div>
+
+        {/* Toolbar */}
+        <div className="toolbar">
+          <button onClick={fetchInventoryData} className="toolbar-btn btn-refresh">
+            <FiRefreshCw size={16} /> Refresh
           </button>
           
-          <button onClick={sendAllWhatsApp} style={{
-            padding: '8px 15px',
-            borderRadius: '4px',
-            border: 'none',
-            background: '#25D366',
-            color: 'white',
-            cursor: 'pointer',
-            fontWeight: '600',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            fontSize: '13px'
-          }}>
-            <FaWhatsapp size={14} /> WhatsApp All
+          <button onClick={sendSelectedWhatsApp} className="toolbar-btn btn-whatsapp">
+            <FaWhatsapp size={16} /> WhatsApp Selected ({getSelectedCount()})
           </button>
           
-          <button onClick={downloadPDF} style={{
-            padding: '8px 15px',
-            borderRadius: '4px',
-            border: 'none',
-            background: '#dc3545',
-            color: 'white',
-            cursor: 'pointer',
-            fontWeight: '600',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            fontSize: '13px'
-          }}>
-            <FiDownload size={14} /> Download PDF
+          <button onClick={() => {
+            const allSelected = {};
+            inventoryData.forEach(item => {
+              allSelected[item.item_code] = true;
+            });
+            setSelectedItems(allSelected);
+            setSelectAll(true);
+            sendSelectedWhatsApp();
+          }} className="toolbar-btn btn-whatsapp-all">
+            <FaWhatsapp size={16} /> WhatsApp All
           </button>
           
-          <button onClick={() => window.print()} style={{
-            padding: '8px 15px',
-            borderRadius: '4px',
-            border: 'none',
-            background: '#8b5cf6',
-            color: 'white',
-            cursor: 'pointer',
-            fontWeight: '600',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            fontSize: '13px'
-          }}>
-            <FiPrinter size={14} /> Print
+          <div className="selection-toolbar">
+            <button onClick={handleSelectAll} className="select-all-btn">
+              {selectAll ? <FiCheckSquare size={18} /> : <FiSquare size={18} />}
+              {selectAll ? ' Deselect All' : ' Select All'}
+            </button>
+          </div>
+          
+          <button onClick={() => {
+            const element = document.getElementById('inventory-table');
+            const opt = {
+              margin: 0.5,
+              filename: `flattening-inventory-${new Date().toISOString().split('T')[0]}.pdf`,
+              image: { type: 'jpeg', quality: 0.98 },
+              html2canvas: { scale: 2 },
+              jsPDF: { unit: 'in', format: 'letter', orientation: 'landscape' }
+            };
+            
+            if (window.html2pdf) {
+              window.html2pdf().set(opt).from(element).save();
+            } else {
+              window.print();
+            }
+          }} className="toolbar-btn btn-pdf">
+            <FiDownload size={16} /> Download PDF
+          </button>
+          
+          <button onClick={() => window.print()} className="toolbar-btn btn-print">
+            <FiPrinter size={16} /> Print
           </button>
         </div>
 
-        {/* مواد */}
-        <div style={{
-          padding: '15px',
-          maxHeight: 'calc(95vh - 200px)',
-          overflow: 'auto'
-        }}>
+        {/* Content */}
+        <div className="popup-content">
           {loading ? (
-            <div style={{ textAlign: 'center', padding: '40px' }}>
-              <div style={{
-                width: '40px',
-                height: '40px',
-                border: '4px solid #f3f3f3',
-                borderTop: '4px solid #0ea5e9',
-                borderRadius: '50%',
-                animation: 'spin 1s linear infinite',
-                margin: '0 auto 15px'
-              }}></div>
-              <h3 style={{ color: '#666', fontSize: '16px' }}>Loading Inventory...</h3>
+            <div className="loading-container">
+              <div className="spinner"></div>
+              <h3 style={{ color: '#1a202c' }}>Loading Inventory...</h3>
             </div>
           ) : (
             <>
-              <table 
-                id="inventory-table" 
-                style={{
-                  width: '100%',
-                  borderCollapse: 'collapse',
-                  fontSize: '12px'
-                }}
-              >
-                <thead>
-                  <tr style={{ 
-                    background: '#1a2980', 
-                    color: 'white',
-                    position: 'sticky',
-                    top: 0,
-                    zIndex: 10
-                  }}>
-                    <th style={{ 
-                      padding: '8px', 
-                      textAlign: 'center', 
-                      fontWeight: '600',
-                      fontSize: '11px'
-                    }}>Sr#</th>
-                    <th style={{ 
-                      padding: '8px', 
-                      textAlign: 'left', 
-                      fontWeight: '600',
-                      fontSize: '11px'
-                    }}>Item Code</th>
-                    <th style={{ 
-                      padding: '8px', 
-                      textAlign: 'left', 
-                      fontWeight: '600',
-                      fontSize: '11px'
-                    }}>Item Name</th>
-                    <th style={{ 
-                      padding: '8px', 
-                      textAlign: 'center', 
-                      fontWeight: '600',
-                      fontSize: '11px'
-                    }}>Flattening (KG)</th>
-                    <th style={{ 
-                      padding: '8px', 
-                      textAlign: 'center', 
-                      fontWeight: '600',
-                      fontSize: '11px'
-                    }}>Spiral (KG)</th>
-                    <th style={{ 
-                      padding: '8px', 
-                      textAlign: 'center', 
-                      fontWeight: '600',
-                      fontSize: '11px'
-                    }}>Balance (KG)</th>
-                    <th style={{ 
-                      padding: '8px', 
-                      textAlign: 'center', 
-                      fontWeight: '600',
-                      fontSize: '11px'
-                    }}>Status</th>
-                    <th style={{ 
-                      padding: '8px', 
-                      textAlign: 'center', 
-                      fontWeight: '600',
-                      fontSize: '11px'
-                    }}>Last Updated</th>
-                    <th style={{ 
-                      padding: '8px', 
-                      textAlign: 'left', 
-                      fontWeight: '600',
-                      fontSize: '11px'
-                    }}>Message</th>
-                    <th style={{ 
-                      padding: '8px', 
-                      textAlign: 'center', 
-                      fontWeight: '600',
-                      fontSize: '11px'
-                    }}>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {inventoryData.map((item, index) => {
-                    const message = itemMessages[item.item_code] || '';
-                    return (
-                      <tr key={item.id} style={{ 
-                        borderBottom: '1px solid #e2e8f0',
-                        backgroundColor: item.status === 'Available' ? '#f8fff9' : '#fff8f8',
-                        fontSize: '12px'
-                      }}>
-                        <td style={{ 
-                          padding: '8px', 
-                          textAlign: 'center', 
-                          fontWeight: 'bold',
-                          color: '#212529',
-                          fontSize: '12px'
-                        }}>
-                          {index + 1}
-                        </td>
-                        <td style={{ 
-                          padding: '8px', 
-                          fontWeight: 'bold',
-                          color: '#212529',
-                          fontSize: '12px'
-                        }}>
-                          {item.item_code}
-                        </td>
-                        <td style={{ 
-                          padding: '8px',
-                          color: '#212529',
-                          fontSize: '12px'
-                        }}>
-                          {item.item_name}
-                        </td>
-                        <td style={{ 
-                          padding: '8px', 
-                          textAlign: 'center', 
-                          color: '#28a745', 
-                          fontWeight: 'bold',
-                          fontSize: '12px'
-                        }}>
-                          {Math.round(item.flattening_qty)}
-                        </td>
-                        <td style={{ 
-                          padding: '8px', 
-                          textAlign: 'center', 
-                          color: '#dc3545', 
-                          fontWeight: 'bold',
-                          fontSize: '12px'
-                        }}>
-                          {Math.round(item.spiral_qty)}
-                        </td>
-                        <td style={{ 
-                          padding: '8px', 
-                          textAlign: 'center', 
-                          color: item.balance >= 0 ? '#28a745' : '#dc3545', 
-                          fontWeight: 'bold', 
-                          fontSize: '12px' 
-                        }}>
-                          {item.balance}
-                        </td>
-                        <td style={{ padding: '8px', textAlign: 'center' }}>
-                          <span style={{
-                            padding: '4px 8px',
-                            borderRadius: '12px',
-                            fontSize: '10px',
-                            fontWeight: 'bold',
-                            backgroundColor: item.status === 'Available' ? '#d4edda' : '#f8d7da',
-                            color: item.status === 'Available' ? '#155724' : '#721c24',
-                            display: 'inline-block',
-                            border: '1px solid #c3e6cb'
-                          }}>
-                            {item.status}
-                          </span>
-                        </td>
-                        <td style={{ 
-                          padding: '8px', 
-                          textAlign: 'center',
-                          color: '#212529',
-                          fontSize: '11px'
-                        }}>
-                          {formatDate(item.last_updated)}
-                        </td>
-                        <td style={{ 
-                          padding: '8px', 
-                          maxWidth: '200px', 
-                          wordWrap: 'break-word',
-                          color: '#212529',
-                          fontSize: '12px'
-                        }}>
-                          {message || '-'}
-                        </td>
-                        <td style={{ padding: '8px', textAlign: 'center' }}>
-                          <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
-                            <button onClick={() => editItemMessage(item.item_code)} style={{
-                              background: 'white',
-                              color: '#f59e0b',
-                              border: '1px solid #f59e0b',
-                              width: '30px',
-                              height: '30px',
-                              borderRadius: '4px',
-                              cursor: 'pointer',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              fontSize: '14px'
-                            }} title="Edit Message">
-                              <FiMessageSquare />
+              <div className="table-responsive">
+                <table id="inventory-table" className="inventory-table">
+                  <thead>
+                    <tr>
+                      <th style={{ width: '40px' }}>
+                        <button 
+                          onClick={handleSelectAll}
+                          className="checkbox-header"
+                        >
+                          {selectAll ? <FiCheckSquare size={20} /> : <FiSquare size={20} />}
+                        </button>
+                      </th>
+                      <th style={{ width: '50px' }}>Sr#</th>
+                      <th style={{ width: '120px' }}>Item Code</th>
+                      <th>Item Name</th>
+                      <th style={{ width: '120px' }}>Flattening (KG)</th>
+                      <th style={{ width: '120px' }}>Spiral (KG)</th>
+                      <th style={{ width: '120px' }}>Balance (KG)</th>
+                      <th style={{ width: '100px' }}>Status</th>
+                      <th style={{ width: '120px' }}>Last Updated</th>
+                      <th style={{ width: '200px' }}>Message</th>
+                      <th style={{ width: '100px' }}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {inventoryData.map((item, index) => {
+                      const message = itemMessages[item.item_code] || '';
+                      const isSelected = selectedItems[item.item_code] || false;
+                      
+                      return (
+                        <tr key={item.id} className={item.status === 'Available' ? 'row-available' : 'row-deficit'}>
+                          <td style={{ textAlign: 'center' }}>
+                            <button 
+                              onClick={() => handleItemSelect(item.item_code)}
+                              className={`item-checkbox ${isSelected ? 'selected' : ''}`}
+                            >
+                              {isSelected ? <FiCheck size={18} /> : <FiSquare size={18} />}
                             </button>
-                            <button onClick={() => sendItemWhatsApp(item)} style={{
-                              background: 'white',
-                              color: '#25D366',
-                              border: '1px solid #25D366',
-                              width: '30px',
-                              height: '30px',
-                              borderRadius: '4px',
-                              cursor: 'pointer',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              fontSize: '16px'
-                            }} title="Send on WhatsApp">
-                              <FaWhatsapp />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                          </td>
+                          <td className="text-center" style={{ color: '#1a202c' }}>{index + 1}</td>
+                          <td className="text-bold" style={{ color: '#1a202c' }}>{item.item_code}</td>
+                          <td style={{ color: '#1a202c' }}>{item.item_name}</td>
+                          <td className="text-center text-green">{Math.round(item.flattening_qty)}</td>
+                          <td className="text-center text-red">{Math.round(item.spiral_qty)}</td>
+                          <td className={`text-center ${item.balance >= 0 ? 'text-green' : 'text-red'}`}>
+                            {item.balance}
+                          </td>
+                          <td className="text-center">
+                            <span className={`status-badge ${item.status === 'Available' ? 'status-available' : 'status-deficit'}`}>
+                              {item.status}
+                            </span>
+                          </td>
+                          <td className="text-center" style={{ color: '#1a202c' }}>
+                            {formatDate(item.last_updated)}
+                          </td>
+                          <td className="message-cell" style={{ color: '#1a202c' }}>
+                            {message || '-'}
+                          </td>
+                          <td className="text-center">
+                            <div className="action-buttons">
+                              <button 
+                                onClick={() => editItemMessage(item.item_code)} 
+                                className="action-btn btn-message"
+                                title="Edit Message"
+                              >
+                                <FiMessageSquare size={16} />
+                              </button>
+                              <button 
+                                onClick={() => sendItemWhatsApp(item)}
+                                className="action-btn btn-whatsapp-item"
+                                title="Send on WhatsApp"
+                              >
+                                <FaWhatsapp size={18} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
 
-              {/* ✅ کلوز رپورٹ بٹن - کام کرے گا */}
-              <div style={{ textAlign: 'center', marginTop: '20px' }}>
-                <button 
-                  onClick={handleClose}
-                  style={{
-                    padding: '8px 30px',
-                    background: '#666',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontWeight: '600',
-                    fontSize: '14px'
-                  }}
-                >
+              <div className="popup-footer">
+                <button onClick={handleClose} className="btn-close-report">
                   Close Report
                 </button>
               </div>
@@ -778,12 +624,6 @@ const FlatteningInventoryReportPopup = ({ onClose }) => {
           )}
         </div>
       </div>
-      <style>{`
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      `}</style>
     </div>
   );
 };

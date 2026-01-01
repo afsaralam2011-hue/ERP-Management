@@ -129,7 +129,7 @@ const FlatteningCard = ({ data }) => {
         )}
         <div className="downtime-item">
           <Clock className="downtime-icon" size={16} />
-          <span className="downtime-text">Downtime: {cardData.downtime}</span>
+          <span className="downtime-text">Downtime Afsar: {cardData.downtime}</span>
         </div>
       </div>
 
