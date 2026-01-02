@@ -34,6 +34,12 @@ import {
   FiEyeOff,
   FiLayers,
   FiTarget,
+  FiMessageSquare,
+  FiShare2,
+  FiFileText,
+  FiSun,
+  FiMoon,
+  FiUser,
 } from "react-icons/fi";
 import { supabase } from "../../../supabaseClient";
 import "./SpiralPage.css";
@@ -46,6 +52,13 @@ const SpiralPage = () => {
   const [filterType, setFilterType] = useState("");
   const [filterDate, setFilterDate] = useState("");
   const [showReport, setShowReport] = useState(false);
+  
+  // WhatsApp states
+  const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
+  const [whatsAppNumber, setWhatsAppNumber] = useState("");
+  const [whatsAppMessage, setWhatsAppMessage] = useState("");
+  const [sendingWhatsApp, setSendingWhatsApp] = useState(false);
+  const [whatsAppMessageType, setWhatsAppMessageType] = useState("report");
 
   // New state for toggle buttons
   const [showDashboard, setShowDashboard] = useState(false);
@@ -63,10 +76,14 @@ const SpiralPage = () => {
     wireWise: {},
     machineWise: {},
     shiftWise: {},
+    dayShiftData: {},
+    nightShiftData: {},
     totalProduction: 0,
     totalWeight: 0,
     avgEfficiency: 0,
     recordCount: 0,
+    dayShiftCount: 0,
+    nightShiftCount: 0,
   });
 
   // Stats states
@@ -102,17 +119,15 @@ const SpiralPage = () => {
   // Check if supabase is connected
   const isSupabaseConnected = supabase && process.env.REACT_APP_SUPABASE_URL;
 
-  // Fetch data function - wrapped in useCallback
+  // Fetch data function
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
 
-      // Check if supabase is available
       if (!supabase) {
         throw new Error("Supabase client not initialized");
       }
 
-      // Fetch records from spiralsection table
       const { data: recordsData, error: recordsError } = await supabase
         .from("spiralsection")
         .select("*")
@@ -352,7 +367,15 @@ const SpiralPage = () => {
   );
   const totalPages = Math.ceil(filteredRecords.length / itemsPerPage);
 
-  // Generate report - wrapped in useCallback
+  // Helper function to extract machine number for sorting
+  const extractMachineNumber = (machineNo) => {
+    if (!machineNo) return 0;
+    
+    const match = machineNo.toString().match(/\d+/);
+    return match ? parseInt(match[0], 10) : 0;
+  };
+
+  // Generate report
   const generateReport = useCallback(
     (selectedDate) => {
       const dateRecords = records.filter((record) => {
@@ -375,10 +398,14 @@ const SpiralPage = () => {
           wireWise: {},
           machineWise: {},
           shiftWise: {},
+          dayShiftData: {},
+          nightShiftData: {},
           totalProduction: 0,
           totalWeight: 0,
           avgEfficiency: 0,
           recordCount: 0,
+          dayShiftCount: 0,
+          nightShiftCount: 0,
         });
         return;
       }
@@ -387,15 +414,37 @@ const SpiralPage = () => {
       const wireWise = {};
       const machineWise = {};
       const shiftWise = {};
+      const dayShiftData = {
+        production: 0,
+        weight: 0,
+        efficiency: 0,
+        count: 0,
+        items: {},
+        machines: {},
+        machineOperators: {},
+      };
+      const nightShiftData = {
+        production: 0,
+        weight: 0,
+        efficiency: 0,
+        count: 0,
+        items: {},
+        machines: {},
+        machineOperators: {},
+      };
+      
       let totalProduction = 0;
       let totalWeight = 0;
       let totalEfficiency = 0;
+      let dayShiftCount = 0;
+      let nightShiftCount = 0;
 
       dateRecords.forEach((record) => {
         const item = record.item_name || "Unknown";
         const wire = record.wire_size || "Unknown";
-        const machine = record.machine_no || "Unknown";
+        const machine = extractMachineNumber(record.machine_no); // Extract machine number
         const shift = record.shift_name || "Unknown";
+        const operator = record.operator_name || "Unknown";
         const production = parseFloat(record.production_quantity) || 0;
         const weight = parseFloat(record.weight) || 0;
         const efficiency = parseFloat(record.efficiency) || 0;
@@ -429,18 +478,24 @@ const SpiralPage = () => {
         wireWise[wire].count += 1;
 
         // Machine wise
-        if (!machineWise[machine]) {
-          machineWise[machine] = {
+        const machineKey = `SP # ${machine}`;
+        if (!machineWise[machineKey]) {
+          machineWise[machineKey] = {
             production: 0,
             weight: 0,
             efficiency: 0,
             count: 0,
+            operator: operator,
+            machineNumber: machine,
           };
+        } else {
+          // Keep the most frequent operator for this machine
+          machineWise[machineKey].operator = operator;
         }
-        machineWise[machine].production += production;
-        machineWise[machine].weight += weight;
-        machineWise[machine].efficiency += efficiency;
-        machineWise[machine].count += 1;
+        machineWise[machineKey].production += production;
+        machineWise[machineKey].weight += weight;
+        machineWise[machineKey].efficiency += efficiency;
+        machineWise[machineKey].count += 1;
 
         // Shift wise
         if (!shiftWise[shift]) {
@@ -456,6 +511,92 @@ const SpiralPage = () => {
         shiftWise[shift].efficiency += efficiency;
         shiftWise[shift].count += 1;
 
+        // Day/Night Shift wise
+        const isDayShift = shift.toLowerCase().includes('day') || 
+                          shift.toLowerCase().includes('morning') ||
+                          shift === "Day Shift" ||
+                          shift === "Morning Shift";
+        
+        const isNightShift = shift.toLowerCase().includes('night') || 
+                            shift.toLowerCase().includes('evening') ||
+                            shift === "Night Shift" ||
+                            shift === "Evening Shift";
+
+        if (isDayShift) {
+          dayShiftCount++;
+          dayShiftData.production += production;
+          dayShiftData.weight += weight;
+          dayShiftData.efficiency += efficiency;
+          dayShiftData.count++;
+          
+          // Day shift items
+          if (!dayShiftData.items[item]) {
+            dayShiftData.items[item] = {
+              production: 0,
+              weight: 0,
+              count: 0,
+            };
+          }
+          dayShiftData.items[item].production += production;
+          dayShiftData.items[item].weight += weight;
+          dayShiftData.items[item].count++;
+          
+          // Day shift machines
+          const dayMachineKey = `SP # ${machine}`;
+          if (!dayShiftData.machines[dayMachineKey]) {
+            dayShiftData.machines[dayMachineKey] = {
+              production: 0,
+              weight: 0,
+              efficiency: 0,
+              count: 0,
+              operator: operator,
+              machineNumber: machine,
+            };
+          }
+          dayShiftData.machines[dayMachineKey].production += production;
+          dayShiftData.machines[dayMachineKey].weight += weight;
+          dayShiftData.machines[dayMachineKey].efficiency += efficiency;
+          dayShiftData.machines[dayMachineKey].count++;
+          dayShiftData.machines[dayMachineKey].operator = operator;
+          
+        } else if (isNightShift) {
+          nightShiftCount++;
+          nightShiftData.production += production;
+          nightShiftData.weight += weight;
+          nightShiftData.efficiency += efficiency;
+          nightShiftData.count++;
+          
+          // Night shift items
+          if (!nightShiftData.items[item]) {
+            nightShiftData.items[item] = {
+              production: 0,
+              weight: 0,
+              count: 0,
+            };
+          }
+          nightShiftData.items[item].production += production;
+          nightShiftData.items[item].weight += weight;
+          nightShiftData.items[item].count++;
+          
+          // Night shift machines
+          const nightMachineKey = `SP # ${machine}`;
+          if (!nightShiftData.machines[nightMachineKey]) {
+            nightShiftData.machines[nightMachineKey] = {
+              production: 0,
+              weight: 0,
+              efficiency: 0,
+              count: 0,
+              operator: operator,
+              machineNumber: machine,
+            };
+          }
+          nightShiftData.machines[nightMachineKey].production += production;
+          nightShiftData.machines[nightMachineKey].weight += weight;
+          nightShiftData.machines[nightMachineKey].efficiency += efficiency;
+          nightShiftData.machines[nightMachineKey].count++;
+          nightShiftData.machines[nightMachineKey].operator = operator;
+        }
+
         totalProduction += production;
         totalWeight += weight;
         totalEfficiency += efficiency;
@@ -463,6 +604,9 @@ const SpiralPage = () => {
 
       const avgEfficiency =
         dateRecords.length > 0 ? totalEfficiency / dateRecords.length : 0;
+      
+      const dayShiftAvgEfficiency = dayShiftData.count > 0 ? dayShiftData.efficiency / dayShiftData.count : 0;
+      const nightShiftAvgEfficiency = nightShiftData.count > 0 ? nightShiftData.efficiency / nightShiftData.count : 0;
 
       setReportData({
         date: selectedDate,
@@ -476,10 +620,20 @@ const SpiralPage = () => {
         wireWise,
         machineWise,
         shiftWise,
+        dayShiftData: {
+          ...dayShiftData,
+          avgEfficiency: dayShiftAvgEfficiency,
+        },
+        nightShiftData: {
+          ...nightShiftData,
+          avgEfficiency: nightShiftAvgEfficiency,
+        },
         totalProduction,
         totalWeight,
         avgEfficiency,
         recordCount: dateRecords.length,
+        dayShiftCount,
+        nightShiftCount,
       });
     },
     [records]
@@ -491,6 +645,437 @@ const SpiralPage = () => {
       generateReport(filterDate);
     }
   }, [filterDate, generateReport]);
+
+  // WhatsApp کے لیے رپورٹ ڈیٹا تیار کرنا - آپ کے فارمیٹ کے مطابق
+  const prepareWhatsAppReport = (type = "report") => {
+    if (!reportData || reportData.recordCount === 0) {
+      return "No report data available.";
+    }
+
+    if (type === "custom") {
+      return whatsAppMessage;
+    }
+
+    let message = `📊 *Spiral Section Production Report*\n`;
+    message += `📅 Date: ${reportData.formattedDate}\n`;
+    message += `👤 Generated by: Afsar\n\n`;
+    
+    // Overall Summary - NO DECIMAL POINTS
+    message += `📈 *Overall Summary:*\n`;
+    message += `• Total Production: ${Math.round(reportData.totalProduction)} M\n`;
+    message += `• Total Weight: ${Math.round(reportData.totalWeight)} KG\n`;
+    message += `• Average Efficiency: ${Math.round(reportData.avgEfficiency)}%\n`;
+    message += `• Total Records: ${reportData.recordCount}\n\n`;
+    
+    // Shift-wise Summary
+    message += `🕒 *Shift-wise Summary:*\n\n`;
+    
+    // Day Shift
+    if (reportData.dayShiftCount > 0) {
+      message += `☀️ *Day Shift:*\n`;
+      message += `• Production: ${Math.round(reportData.dayShiftData.production)} M\n`;
+      message += `• Weight: ${Math.round(reportData.dayShiftData.weight)} KG\n`;
+      message += `• Avg Efficiency: ${Math.round(reportData.dayShiftData.avgEfficiency)}%\n`;
+      message += `• Records: ${reportData.dayShiftCount}\n\n`;
+    }
+    
+    // Night Shift
+    if (reportData.nightShiftCount > 0) {
+      message += `🌙 *Night Shift:*\n`;
+      message += `• Production: ${Math.round(reportData.nightShiftData.production)} M\n`;
+      message += `• Weight: ${Math.round(reportData.nightShiftData.weight)} KG\n`;
+      message += `• Avg Efficiency: ${Math.round(reportData.nightShiftData.avgEfficiency)}%\n`;
+      message += `• Records: ${reportData.nightShiftCount}\n\n`;
+    }
+    
+    // Item-wise Summary - NO DECIMAL POINTS
+    if (Object.keys(reportData.itemWise).length > 0) {
+      message += `📋 *Item-wise Summary:*\n`;
+      Object.entries(reportData.itemWise).forEach(([item, data], index) => {
+        message += `${index + 1}. ${item}: ${Math.round(data.production)} M, ${Math.round(data.weight)} KG\n`;
+      });
+      message += `\n`;
+    }
+    
+    // Machine-wise Summary - Day Shift (SORTED BY MACHINE NUMBER 1-14)
+    if (Object.keys(reportData.dayShiftData.machines).length > 0) {
+      message += `🏭 *Machine-wise Summary - Day Shift:*\n`;
+      
+      // Create sorted machine list (1 to 14)
+      const allDayMachines = Array.from({ length: 14 }, (_, i) => {
+        const machineKey = `SP # ${i + 1}`;
+        return reportData.dayShiftData.machines[machineKey] || {
+          production: 0,
+          efficiency: 0,
+          operator: "Operator Absent",
+          machineNumber: i + 1,
+          count: 0
+        };
+      });
+      
+      allDayMachines.forEach((data, index) => {
+        const machineNum = index + 1;
+        const efficiency = data.count > 0 ? Math.round(data.efficiency / data.count) : 0;
+        const operator = data.operator || "Operator Absent";
+        message += `${machineNum}. SP # ${machineNum}: ${Math.round(data.production)} M, ${efficiency}% | ${operator}\n`;
+      });
+      message += `\n`;
+    }
+    
+    // Machine-wise Summary - Night Shift (SORTED BY MACHINE NUMBER 1-14)
+    if (Object.keys(reportData.nightShiftData.machines).length > 0) {
+      message += `🏭 *Machine-wise Summary - Night Shift:*\n`;
+      
+      // Create sorted machine list (1 to 14)
+      const allNightMachines = Array.from({ length: 14 }, (_, i) => {
+        const machineKey = `SP # ${i + 1}`;
+        return reportData.nightShiftData.machines[machineKey] || {
+          production: 0,
+          efficiency: 0,
+          operator: "Operator Absent",
+          machineNumber: i + 1,
+          count: 0
+        };
+      });
+      
+      allNightMachines.forEach((data, index) => {
+        const machineNum = index + 1;
+        const efficiency = data.count > 0 ? Math.round(data.efficiency / data.count) : 0;
+        const operator = data.operator || "Operator Absent";
+        message += `${machineNum}. SP # ${machineNum}: ${Math.round(data.production)} M, ${efficiency}% | ${operator}\n`;
+      });
+      message += `\n`;
+    }
+    
+    // Report Summary
+    message += `📝 *Report Summary:*\n`;
+    message += `• Target Production: ${Math.round(reportData.totalProduction * 1.2)} M\n`;
+    message += `• Target Efficiency: 85%\n\n`;
+    
+    message += `✅ Generated via Spiral Section Management System`;
+    
+    return message;
+  };
+
+  // WhatsApp پر میسج بھیجنے کا فنکشن
+  const sendReportViaWhatsApp = () => {
+    if (!whatsAppNumber) {
+      alert('Please enter WhatsApp number');
+      return;
+    }
+
+    setSendingWhatsApp(true);
+    
+    const message = prepareWhatsAppReport(whatsAppMessageType);
+    const formattedNumber = whatsAppNumber.replace(/[^0-9]/g, '');
+    
+    // WhatsApp API URL
+    const whatsappUrl = `https://wa.me/${formattedNumber}?text=${encodeURIComponent(message)}`;
+    
+    // WhatsApp ونڈو کھولنا
+    window.open(whatsappUrl, '_blank');
+    
+    setTimeout(() => {
+      setSendingWhatsApp(false);
+      setShowWhatsAppModal(false);
+      setWhatsAppNumber('');
+      setWhatsAppMessage('');
+    }, 1000);
+  };
+
+  // Generate PDF
+  const generatePDF = () => {
+    if (!reportData || reportData.recordCount === 0) {
+      alert("No report data to generate PDF");
+      return;
+    }
+    
+    const printWindow = window.open("", "_blank");
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Spiral Section Production Report - ${reportData.formattedDate}</title>
+        <style>
+          body { font-family: Arial, sans-serif; margin: 40px; }
+          .header { text-align: center; margin-bottom: 30px; }
+          .header h1 { color: #333; margin-bottom: 10px; }
+          .table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+          .table th, .table td { border: 1px solid #ddd; padding: 8px; }
+          .table th { background-color: #f8f9fa; }
+          .summary { margin: 20px 0; padding: 15px; background: #f8f9fa; }
+          .shift-section { margin: 20px 0; padding: 15px; border-left: 4px solid #3b82f6; }
+          .day-shift { border-left-color: #f59e0b; }
+          .night-shift { border-left-color: #1e40af; }
+          @media print {
+            body { margin: 20px; }
+            .no-print { display: none; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>Spiral Section Production Report</h1>
+          <div>Date: ${reportData.formattedDate}</div>
+          <div>Generated by: Afsar</div>
+        </div>
+        
+        <div class="shift-section day-shift">
+          <h3>Day Shift Summary</h3>
+          <p>Production: ${Math.round(reportData.dayShiftData.production)} M</p>
+          <p>Weight: ${Math.round(reportData.dayShiftData.weight)} KG</p>
+          <p>Average Efficiency: ${Math.round(reportData.dayShiftData.avgEfficiency)}%</p>
+          <p>Records: ${reportData.dayShiftCount}</p>
+        </div>
+        
+        <div class="shift-section night-shift">
+          <h3>Night Shift Summary</h3>
+          <p>Production: ${Math.round(reportData.nightShiftData.production)} M</p>
+          <p>Weight: ${Math.round(reportData.nightShiftData.weight)} KG</p>
+          <p>Average Efficiency: ${Math.round(reportData.nightShiftData.avgEfficiency)}%</p>
+          <p>Records: ${reportData.nightShiftCount}</p>
+        </div>
+        
+        <div class="summary">
+          <h3>Summary:</h3>
+          <p>Total Production: ${Math.round(reportData.totalProduction)} M</p>
+          <p>Total Weight: ${Math.round(reportData.totalWeight)} KG</p>
+          <p>Average Efficiency: ${Math.round(reportData.avgEfficiency)}%</p>
+          <p>Total Records: ${reportData.recordCount}</p>
+        </div>
+        <div class="no-print" style="margin-top: 20px;">
+          <button onclick="window.print()" style="padding: 10px 20px; background: #3b82f6; color: white; border: none; border-radius: 5px; cursor: pointer;">
+            Print PDF
+          </button>
+          <button onclick="window.close()" style="padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer; margin-left: 10px;">
+            Close
+          </button>
+        </div>
+      </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
+
+  // WhatsApp Modal Component
+  const WhatsAppModal = () => (
+    <div className="modal-overlay" onClick={() => setShowWhatsAppModal(false)} style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 9999
+    }}>
+      <div className="modal-container" onClick={(e) => e.stopPropagation()} style={{
+        background: 'white',
+        borderRadius: '8px',
+        padding: '20px',
+        width: '90%',
+        maxWidth: '500px',
+        maxHeight: '80vh',
+        overflow: 'auto'
+      }}>
+        <div className="modal-header" style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '20px',
+          borderBottom: '1px solid #e0e0e0',
+          paddingBottom: '15px'
+        }}>
+          <h2 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <FiMessageSquare color="#25D366" /> Send Report via WhatsApp
+          </h2>
+          <button 
+            onClick={() => setShowWhatsAppModal(false)}
+            style={{
+              background: 'none',
+              border: 'none',
+              fontSize: '24px',
+              cursor: 'pointer',
+              color: '#666'
+            }}
+          >
+            &times;
+          </button>
+        </div>
+        
+        <div className="modal-body">
+          <div className="form-group" style={{ marginBottom: '15px' }}>
+            <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
+              <FiMessageSquare style={{ marginRight: '5px' }} /> WhatsApp Number
+              <span style={{ color: '#ff4444', marginLeft: '4px' }}>*</span>
+            </label>
+            <input
+              type="tel"
+              value={whatsAppNumber}
+              onChange={(e) => setWhatsAppNumber(e.target.value)}
+              placeholder="923001234567 (with country code)"
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                border: '1px solid #ddd',
+                borderRadius: '4px',
+                fontSize: '14px'
+              }}
+              required
+            />
+            <small style={{ color: '#666', fontSize: '12px', display: 'block', marginTop: '5px' }}>
+              Enter number with country code (without + sign)
+            </small>
+          </div>
+          
+          {/* Message Type Selection */}
+          <div className="form-group" style={{ marginBottom: '15px' }}>
+            <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
+              <FiFileText style={{ marginRight: '5px' }} /> Message Type
+            </label>
+            <div style={{ display: 'flex', gap: '10px', marginTop: '5px' }}>
+              <button
+                onClick={() => setWhatsAppMessageType('report')}
+                style={{
+                  flex: 1,
+                  padding: '8px',
+                  background: whatsAppMessageType === 'report' ? '#25D366' : '#f8f9fa',
+                  color: whatsAppMessageType === 'report' ? 'white' : '#333',
+                  border: `1px solid ${whatsAppMessageType === 'report' ? '#25D366' : '#ddd'}`,
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontWeight: whatsAppMessageType === 'report' ? '600' : '400'
+                }}
+              >
+                Auto-generated Report
+              </button>
+              <button
+                onClick={() => setWhatsAppMessageType('custom')}
+                style={{
+                  flex: 1,
+                  padding: '8px',
+                  background: whatsAppMessageType === 'custom' ? '#3b82f6' : '#f8f9fa',
+                  color: whatsAppMessageType === 'custom' ? 'white' : '#333',
+                  border: `1px solid ${whatsAppMessageType === 'custom' ? '#3b82f6' : '#ddd'}`,
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontWeight: whatsAppMessageType === 'custom' ? '600' : '400'
+                }}
+              >
+                Custom Message
+              </button>
+            </div>
+          </div>
+          
+          {whatsAppMessageType === 'custom' && (
+            <div className="form-group" style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
+                <FiEdit style={{ marginRight: '5px' }} /> Custom Message
+              </label>
+              <textarea
+                value={whatsAppMessage}
+                onChange={(e) => setWhatsAppMessage(e.target.value)}
+                placeholder="Enter your custom message here..."
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  border: '1px solid #ddd',
+                  borderRadius: '4px',
+                  fontSize: '14px',
+                  resize: 'vertical',
+                  minHeight: '120px'
+                }}
+              />
+            </div>
+          )}
+          
+          <div className="preview-section" style={{
+            marginTop: '20px',
+            borderTop: '1px solid #eee',
+            paddingTop: '15px'
+          }}>
+            <h4 style={{ margin: '0 0 10px 0', display: 'flex', alignItems: 'center', gap: '5px' }}>
+              <FiEye /> Message Preview
+            </h4>
+            <div className="message-preview" style={{
+              backgroundColor: '#f8f9fa',
+              border: '1px solid #dee2e6',
+              borderRadius: '4px',
+              padding: '15px',
+              marginTop: '10px',
+              whiteSpace: 'pre-line',
+              fontFamily: 'monospace',
+              fontSize: '13px',
+              lineHeight: '1.5',
+              maxHeight: '200px',
+              overflowY: 'auto'
+            }}>
+              {whatsAppMessageType === 'report' ? prepareWhatsAppReport('report') : (whatsAppMessage || 'Type your custom message above...')}
+            </div>
+          </div>
+        </div>
+        
+        <div className="modal-footer" style={{
+          marginTop: '20px',
+          display: 'flex',
+          justifyContent: 'flex-end',
+          gap: '10px',
+          borderTop: '1px solid #e0e0e0',
+          paddingTop: '15px'
+        }}>
+          <button
+            onClick={() => setShowWhatsAppModal(false)}
+            disabled={sendingWhatsApp}
+            style={{
+              padding: '8px 16px',
+              background: '#6c757d',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={sendReportViaWhatsApp}
+            disabled={sendingWhatsApp || !whatsAppNumber}
+            style={{
+              padding: '8px 16px',
+              background: '#25D366',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '5px'
+            }}
+          >
+            {sendingWhatsApp ? (
+              <>
+                <div className="spinner-small" style={{
+                  width: '16px',
+                  height: '16px',
+                  border: '2px solid rgba(255,255,255,0.3)',
+                  borderTopColor: 'white',
+                  borderRadius: '50%',
+                  animation: 'spin 1s linear infinite'
+                }} />
+                Sending...
+              </>
+            ) : (
+              <>
+                <FiMessageSquare /> Open in WhatsApp
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 
   // Handlers
   const handleEdit = (id) => {
@@ -626,7 +1211,21 @@ const SpiralPage = () => {
             margin: 20px 0; 
             border-radius: 8px; 
           }
-          .summary h3 { margin-top: 0; }
+          .shift-section { 
+            margin: 20px 0; 
+            padding: 15px; 
+            border-radius: 8px;
+            border-left: 4px solid #f59e0b;
+          }
+          .night-shift { 
+            border-left-color: #1e40af;
+          }
+          .shift-header { 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+            margin-bottom: 10px; 
+          }
           .footer { 
             margin-top: 40px; 
             text-align: center; 
@@ -644,6 +1243,27 @@ const SpiralPage = () => {
           <h1>Spiral Section Production Report</h1>
           <div class="date">${reportData.formattedDate}</div>
           <div class="date">Report Generated by: Afsar</div>
+        </div>
+        
+        <!-- Shift-wise Summary -->
+        <div class="shift-section">
+          <div class="shift-header">
+            <h3 style="margin: 0; color: #f59e0b;">☀️ Day Shift Summary</h3>
+          </div>
+          <p><strong>Production:</strong> ${Math.round(reportData.dayShiftData.production)} Meter</p>
+          <p><strong>Weight:</strong> ${Math.round(reportData.dayShiftData.weight)} KG</p>
+          <p><strong>Average Efficiency:</strong> ${Math.round(reportData.dayShiftData.avgEfficiency)}%</p>
+          <p><strong>Records:</strong> ${reportData.dayShiftCount}</p>
+        </div>
+        
+        <div class="shift-section night-shift">
+          <div class="shift-header">
+            <h3 style="margin: 0; color: #1e40af;">🌙 Night Shift Summary</h3>
+          </div>
+          <p><strong>Production:</strong> ${Math.round(reportData.nightShiftData.production)} Meter</p>
+          <p><strong>Weight:</strong> ${Math.round(reportData.nightShiftData.weight)} KG</p>
+          <p><strong>Average Efficiency:</strong> ${Math.round(reportData.nightShiftData.avgEfficiency)}%</p>
+          <p><strong>Records:</strong> ${reportData.nightShiftCount}</p>
         </div>
         
         <h3>Item-wise Summary:</h3>
@@ -664,13 +1284,10 @@ const SpiralPage = () => {
                 ([item, data]) => `
               <tr>
                 <td>${item}</td>
-                <td>${data.production.toFixed(2)}</td>
-                <td>${(data.production * 1.2).toFixed(2)}</td>
-                <td>${data.weight.toFixed(2)}</td>
-                <td>${(data.count > 0
-                  ? data.efficiency / data.count
-                  : 0
-                ).toFixed(2)}%</td>
+                <td>${Math.round(data.production)}</td>
+                <td>${Math.round(data.production * 1.2)}</td>
+                <td>${Math.round(data.weight)}</td>
+                <td>${Math.round(data.count > 0 ? data.efficiency / data.count : 0)}%</td>
                 <td>85%</td>
               </tr>
             `
@@ -679,38 +1296,7 @@ const SpiralPage = () => {
           </tbody>
         </table>
         
-        <h3>Wire-wise Summary:</h3>
-        <table class="table">
-          <thead>
-            <tr>
-              <th>Wire Size</th>
-              <th>Production (Meter)</th>
-              <th>Target (Meter)</th>
-              <th>Weight (KG)</th>
-              <th>Avg Efficiency</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${Object.entries(reportData.wireWise)
-              .map(
-                ([wire, data]) => `
-              <tr>
-                <td>${wire}</td>
-                <td>${data.production.toFixed(2)}</td>
-                <td>${(data.production * 1.2).toFixed(2)}</td>
-                <td>${data.weight.toFixed(2)}</td>
-                <td>${(data.count > 0
-                  ? data.efficiency / data.count
-                  : 0
-                ).toFixed(2)}%</td>
-              </tr>
-            `
-              )
-              .join("")}
-          </tbody>
-        </table>
-        
-        <h3>Machine-wise Summary:</h3>
+        <h3>Machine-wise Summary - Day Shift:</h3>
         <table class="table">
           <thead>
             <tr>
@@ -719,75 +1305,79 @@ const SpiralPage = () => {
               <th>Target (Meter)</th>
               <th>Weight (KG)</th>
               <th>Avg Efficiency</th>
+              <th>Operator</th>
             </tr>
           </thead>
           <tbody>
-            ${Object.entries(reportData.machineWise)
-              .map(
-                ([machine, data]) => `
-              <tr>
-                <td>${machine}</td>
-                <td>${data.production.toFixed(2)}</td>
-                <td>${(data.production * 1.2).toFixed(2)}</td>
-                <td>${data.weight.toFixed(2)}</td>
-                <td>${(data.count > 0
-                  ? data.efficiency / data.count
-                  : 0
-                ).toFixed(2)}%</td>
-              </tr>
-            `
-              )
-              .join("")}
+            ${Array.from({ length: 14 }, (_, i) => {
+              const machineKey = `SP # ${i + 1}`;
+              const data = reportData.dayShiftData.machines[machineKey] || {
+                production: 0,
+                efficiency: 0,
+                operator: "Operator Absent",
+                count: 0
+              };
+              const efficiency = data.count > 0 ? Math.round(data.efficiency / data.count) : 0;
+              return `
+                <tr>
+                  <td>SP # ${i + 1}</td>
+                  <td>${Math.round(data.production)}</td>
+                  <td>${Math.round(data.production * 1.2)}</td>
+                  <td>${Math.round(data.weight || 0)}</td>
+                  <td>${efficiency}%</td>
+                  <td>${data.operator || "Operator Absent"}</td>
+                </tr>
+              `;
+            }).join('')}
           </tbody>
         </table>
         
-        <h3>Shift-wise Summary:</h3>
+        <h3>Machine-wise Summary - Night Shift:</h3>
         <table class="table">
           <thead>
             <tr>
-              <th>Shift Name</th>
+              <th>Machine No</th>
               <th>Production (Meter)</th>
               <th>Target (Meter)</th>
               <th>Weight (KG)</th>
               <th>Avg Efficiency</th>
+              <th>Operator</th>
             </tr>
           </thead>
           <tbody>
-            ${Object.entries(reportData.shiftWise)
-              .map(
-                ([shift, data]) => `
-              <tr>
-                <td>${shift}</td>
-                <td>${data.production.toFixed(2)}</td>
-                <td>${(data.production * 1.2).toFixed(2)}</td>
-                <td>${data.weight.toFixed(2)}</td>
-                <td>${(data.count > 0
-                  ? data.efficiency / data.count
-                  : 0
-                ).toFixed(2)}%</td>
-              </tr>
-            `
-              )
-              .join("")}
+            ${Array.from({ length: 14 }, (_, i) => {
+              const machineKey = `SP # ${i + 1}`;
+              const data = reportData.nightShiftData.machines[machineKey] || {
+                production: 0,
+                efficiency: 0,
+                operator: "Operator Absent",
+                count: 0
+              };
+              const efficiency = data.count > 0 ? Math.round(data.efficiency / data.count) : 0;
+              return `
+                <tr>
+                  <td>SP # ${i + 1}</td>
+                  <td>${Math.round(data.production)}</td>
+                  <td>${Math.round(data.production * 1.2)}</td>
+                  <td>${Math.round(data.weight || 0)}</td>
+                  <td>${efficiency}%</td>
+                  <td>${data.operator || "Operator Absent"}</td>
+                </tr>
+              `;
+            }).join('')}
           </tbody>
         </table>
         
         <div class="summary">
           <h3>Summary:</h3>
-          <p><strong>Total Production:</strong> ${reportData.totalProduction.toFixed(
-            2
-          )} Meter</p>
-          <p><strong>Target Production:</strong> ${(
-            reportData.totalProduction * 1.2
-          ).toFixed(2)} Meter</p>
-          <p><strong>Total Weight:</strong> ${reportData.totalWeight.toFixed(
-            2
-          )} KG</p>
-          <p><strong>Average Efficiency:</strong> ${reportData.avgEfficiency.toFixed(
-            2
-          )}%</p>
+          <p><strong>Total Production:</strong> ${Math.round(reportData.totalProduction)} Meter</p>
+          <p><strong>Target Production:</strong> ${Math.round(reportData.totalProduction * 1.2)} Meter</p>
+          <p><strong>Total Weight:</strong> ${Math.round(reportData.totalWeight)} KG</p>
+          <p><strong>Average Efficiency:</strong> ${Math.round(reportData.avgEfficiency)}%</p>
           <p><strong>Target Efficiency:</strong> 85%</p>
           <p><strong>Total Records:</strong> ${reportData.recordCount}</p>
+          <p><strong>Day Shift Records:</strong> ${reportData.dayShiftCount}</p>
+          <p><strong>Night Shift Records:</strong> ${reportData.nightShiftCount}</p>
         </div>
         
         <div class="footer">
@@ -815,7 +1405,7 @@ const SpiralPage = () => {
     printWindow.document.close();
   };
 
-  // Export report
+  // Export report to Excel
   const handleExportReport = () => {
     if (!reportData || reportData.recordCount === 0) {
       alert("No report data to export");
@@ -825,6 +1415,20 @@ const SpiralPage = () => {
     const csvContent = [
       ["Spiral Section Production Report", reportData.formattedDate],
       ["Generated by: Afsar"],
+      [],
+      ["SHIFT-WISE SUMMARY"],
+      [],
+      ["Day Shift Summary"],
+      ["Production (Meter):", Math.round(reportData.dayShiftData.production)],
+      ["Weight (KG):", Math.round(reportData.dayShiftData.weight)],
+      ["Average Efficiency:", Math.round(reportData.dayShiftData.avgEfficiency) + "%"],
+      ["Records:", reportData.dayShiftCount],
+      [],
+      ["Night Shift Summary"],
+      ["Production (Meter):", Math.round(reportData.nightShiftData.production)],
+      ["Weight (KG):", Math.round(reportData.nightShiftData.weight)],
+      ["Average Efficiency:", Math.round(reportData.nightShiftData.avgEfficiency) + "%"],
+      ["Records:", reportData.nightShiftCount],
       [],
       ["Item-wise Summary"],
       [
@@ -837,71 +1441,81 @@ const SpiralPage = () => {
       ],
       ...Object.entries(reportData.itemWise).map(([item, data]) => [
         item,
-        data.production.toFixed(2),
-        (data.production * 1.2).toFixed(2),
-        data.weight.toFixed(2),
-        (data.count > 0 ? data.efficiency / data.count : 0).toFixed(2) + "%",
+        Math.round(data.production),
+        Math.round(data.production * 1.2),
+        Math.round(data.weight),
+        Math.round(data.count > 0 ? data.efficiency / data.count : 0) + "%",
         "85%",
       ]),
       [],
-      ["Wire-wise Summary"],
-      [
-        "Wire Size",
-        "Production (Meter)",
-        "Target (Meter)",
-        "Weight (KG)",
-        "Avg Efficiency",
-      ],
-      ...Object.entries(reportData.wireWise).map(([wire, data]) => [
-        wire,
-        data.production.toFixed(2),
-        (data.production * 1.2).toFixed(2),
-        data.weight.toFixed(2),
-        (data.count > 0 ? data.efficiency / data.count : 0).toFixed(2) + "%",
-      ]),
-      [],
-      ["Machine-wise Summary"],
+      ["Machine-wise Summary - Day Shift"],
       [
         "Machine No",
         "Production (Meter)",
         "Target (Meter)",
         "Weight (KG)",
         "Avg Efficiency",
+        "Operator",
       ],
-      ...Object.entries(reportData.machineWise).map(([machine, data]) => [
-        machine,
-        data.production.toFixed(2),
-        (data.production * 1.2).toFixed(2),
-        data.weight.toFixed(2),
-        (data.count > 0 ? data.efficiency / data.count : 0).toFixed(2) + "%",
-      ]),
+      ...Array.from({ length: 14 }, (_, i) => {
+        const machineKey = `SP # ${i + 1}`;
+        const data = reportData.dayShiftData.machines[machineKey] || {
+          production: 0,
+          efficiency: 0,
+          operator: "Operator Absent",
+          count: 0
+        };
+        const efficiency = data.count > 0 ? Math.round(data.efficiency / data.count) : 0;
+        return [
+          `SP # ${i + 1}`,
+          Math.round(data.production),
+          Math.round(data.production * 1.2),
+          Math.round(data.weight || 0),
+          efficiency + "%",
+          data.operator || "Operator Absent",
+        ];
+      }),
       [],
-      ["Shift-wise Summary"],
+      ["Machine-wise Summary - Night Shift"],
       [
-        "Shift Name",
+        "Machine No",
         "Production (Meter)",
         "Target (Meter)",
         "Weight (KG)",
         "Avg Efficiency",
+        "Operator",
       ],
-      ...Object.entries(reportData.shiftWise).map(([shift, data]) => [
-        shift,
-        data.production.toFixed(2),
-        (data.production * 1.2).toFixed(2),
-        data.weight.toFixed(2),
-        (data.count > 0 ? data.efficiency / data.count : 0).toFixed(2) + "%",
-      ]),
+      ...Array.from({ length: 14 }, (_, i) => {
+        const machineKey = `SP # ${i + 1}`;
+        const data = reportData.nightShiftData.machines[machineKey] || {
+          production: 0,
+          efficiency: 0,
+          operator: "Operator Absent",
+          count: 0
+        };
+        const efficiency = data.count > 0 ? Math.round(data.efficiency / data.count) : 0;
+        return [
+          `SP # ${i + 1}`,
+          Math.round(data.production),
+          Math.round(data.production * 1.2),
+          Math.round(data.weight || 0),
+          efficiency + "%",
+          data.operator || "Operator Absent",
+        ];
+      }),
       [],
       ["SUMMARY"],
-      ["Total Production (Meter):", reportData.totalProduction.toFixed(2)],
+      ["Total Production (Meter):", Math.round(reportData.totalProduction)],
       [
         "Target Production (Meter):",
-        (reportData.totalProduction * 1.2).toFixed(2),
+        Math.round(reportData.totalProduction * 1.2),
       ],
-      ["Total Weight (KG):", reportData.totalWeight.toFixed(2)],
-      ["Average Efficiency:", reportData.avgEfficiency.toFixed(2) + "%"],
+      ["Total Weight (KG):", Math.round(reportData.totalWeight)],
+      ["Average Efficiency:", Math.round(reportData.avgEfficiency) + "%"],
       ["Target Efficiency:", "85%"],
       ["Total Records:", reportData.recordCount],
+      ["Day Shift Records:", reportData.dayShiftCount],
+      ["Night Shift Records:", reportData.nightShiftCount],
       [],
       ["Generated by: Afsar"],
       ["Generated on:", new Date().toLocaleString()],
@@ -946,7 +1560,7 @@ const SpiralPage = () => {
     {
       id: "total-production",
       title: "Total Production",
-      value: `${stats.totalProduction.toLocaleString()} M`,
+      value: `${Math.round(stats.totalProduction)} M`,
       icon: FiColumns,
       gradientColors: ["#3b82f6", "#2563eb"],
       description: "Total production in meters",
@@ -954,7 +1568,7 @@ const SpiralPage = () => {
     {
       id: "total-weight",
       title: "Total Weight",
-      value: `${stats.totalWeight.toLocaleString()} KG`,
+      value: `${Math.round(stats.totalWeight)} KG`,
       icon: FiWeight,
       gradientColors: ["#8b5cf6", "#7c3aed"],
       description: "Total weight in kilograms",
@@ -962,7 +1576,7 @@ const SpiralPage = () => {
     {
       id: "avg-efficiency",
       title: "Avg Efficiency",
-      value: `${stats.avgEfficiency.toFixed(2)}%`,
+      value: `${Math.round(stats.avgEfficiency)}%`,
       icon: FiTrendingUp2,
       gradientColors: ["#10b981", "#059669"],
       description: "Average efficiency percentage",
@@ -978,7 +1592,7 @@ const SpiralPage = () => {
     {
       id: "today-production",
       title: "Today's Production",
-      value: `${stats.todayProduction.toLocaleString()} M`,
+      value: `${Math.round(stats.todayProduction)} M`,
       icon: FiPackage,
       gradientColors: ["#3b82f6", "#1d4ed8"],
       description: "Today's production",
@@ -986,7 +1600,7 @@ const SpiralPage = () => {
     {
       id: "today-weight",
       title: "Today's Weight",
-      value: `${stats.todayWeight.toLocaleString()} KG`,
+      value: `${Math.round(stats.todayWeight)} KG`,
       icon: FiWeight,
       gradientColors: ["#8b5cf6", "#7c3aed"],
       description: "Today's weight",
@@ -994,7 +1608,7 @@ const SpiralPage = () => {
     {
       id: "today-avg-efficiency",
       title: "Today's Avg Efficiency",
-      value: `${stats.todayAvgEfficiency.toFixed(2)}%`,
+      value: `${Math.round(stats.todayAvgEfficiency)}%`,
       icon: FiActivity,
       gradientColors: ["#10b981", "#059669"],
       description: "Today's average efficiency",
@@ -1013,1081 +1627,1240 @@ const SpiralPage = () => {
   }
 
   return (
-    <div className="spiral-container">
-      {/* Database Status Banner */}
-      {!isSupabaseConnected && (
-        <div className="database-alert">
-          <FiAlertCircle size={20} />
-          <div>
-            <strong>Supabase Connection Issue</strong>
-            <div className="alert-subtext">
-              Check your .env file for REACT_APP_SUPABASE_URL and
-              REACT_APP_SUPABASE_ANON_KEY
+    <>
+      <div className="spiral-container">
+        {/* Database Status Banner */}
+        {!isSupabaseConnected && (
+          <div className="database-alert">
+            <FiAlertCircle size={20} />
+            <div>
+              <strong>Supabase Connection Issue</strong>
+              <div className="alert-subtext">
+                Check your .env file for REACT_APP_SUPABASE_URL and
+                REACT_APP_SUPABASE_ANON_KEY
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Header Section */}
-      <div className="header-section">
-        <div>
-          <div className="breadcrumb-nav">
+        {/* Header Section */}
+        <div className="header-section">
+          <div>
+            <div className="breadcrumb-nav">
+              <button
+                onClick={() => navigate("/production")}
+                className="breadcrumb-btn back-btn"
+              >
+                <FiBack size={16} /> Back to Production Sections
+              </button>
+              <button
+                onClick={() => navigate("/dashboard")}
+                className="breadcrumb-btn secondary"
+              >
+                <FiGrid size={16} /> Back to Dashboard
+              </button>
+            </div>
+            <div className="title-section">
+              <div className="title-icon">
+                <FiColumns size={28} />
+              </div>
+              <div>
+                <h1 className="page-title">
+                  Spiral Section
+                  <div
+                    className={`connection-badge ${
+                      isSupabaseConnected ? "connected" : "offline"
+                    }`}
+                  >
+                    {isSupabaseConnected ? (
+                      <>
+                        <FiCheckCircle size={10} /> Connected
+                      </>
+                    ) : (
+                      <>
+                        <FiXCircle size={10} /> Offline
+                      </>
+                    )}
+                  </div>
+                </h1>
+                <p className="page-subtitle">
+                  <FiDatabase size={14} />
+                  Data from: spiralsection table • Total Records:{" "}
+                  {stats.totalRecords} • By: Afsar
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="header-actions">
+            {/* Toggle Buttons */}
+            <button
+              onClick={() => setShowDashboard(!showDashboard)}
+              className="toggle-btn toggle-blue"
+            >
+              {showDashboard ? <FiEyeOff size={14} /> : <FiBarChart2 size={14} />}
+              {showDashboard ? " Hide Dashboard" : " Show Dashboard"}
+            </button>
+
+            <button
+              onClick={() => setShowStatsCards(!showStatsCards)}
+              className="toggle-btn toggle-green"
+            >
+              {showStatsCards ? <FiEyeOff size={14} /> : <FiLayers size={14} />}
+              {showStatsCards ? " Hide Stats" : " Show Stats"}
+            </button>
+
             <button
               onClick={() => navigate("/production")}
-              className="breadcrumb-btn back-btn"
+              className="production-sections-btn green-border"
             >
-              <FiBack size={16} /> Back to Production Sections
+              <FiGrid size={16} /> All Production Sections
             </button>
+
             <button
-              onClick={() => navigate("/dashboard")}
-              className="breadcrumb-btn secondary"
+              onClick={() => navigate("/production-sections/spiral/new")}
+              className="primary-btn blue-gradient"
             >
-              <FiGrid size={16} /> Back to Dashboard
+              <FiPlus size={20} /> New Production Entry
+            </button>
+
+            {/* Smart Entry Form Button */}
+            <button
+              onClick={() => navigate("/production-sections/spiral/smart-entry")}
+              className="smart-entry-btn green-border"
+            >
+              <FiCpu size={20} /> Smart Entry Form
+            </button>
+
+            <button
+              onClick={handleExport}
+              disabled={records.length === 0}
+              className="export-btn gray-border"
+            >
+              <FiDownload /> Export CSV
+            </button>
+
+            <button
+              onClick={fetchData}
+              disabled={loading}
+              className="refresh-btn blue-border"
+            >
+              {loading ? (
+                <>
+                  <div className="mini-spinner" />
+                  Loading...
+                </>
+              ) : (
+                <>
+                  <FiRefreshCw /> Refresh
+                </>
+              )}
             </button>
           </div>
-          <div className="title-section">
-            <div className="title-icon">
-              <FiColumns size={28} />
-            </div>
-            <div>
-              <h1 className="page-title">
-                Spiral Section
-                <div
-                  className={`connection-badge ${
-                    isSupabaseConnected ? "connected" : "offline"
-                  }`}
-                >
-                  {isSupabaseConnected ? (
-                    <>
-                      <FiCheckCircle size={10} /> Connected
-                    </>
-                  ) : (
-                    <>
-                      <FiXCircle size={10} /> Offline
-                    </>
-                  )}
-                </div>
-              </h1>
-              <p className="page-subtitle">
-                <FiDatabase size={14} />
-                Data from: spiralsection table • Total Records:{" "}
-                {stats.totalRecords} • By: Afsar
-              </p>
-            </div>
-          </div>
         </div>
 
-        <div className="header-actions">
-          {/* Toggle Buttons */}
-          <button
-            onClick={() => setShowDashboard(!showDashboard)}
-            className="toggle-btn toggle-blue"
-          >
-            {showDashboard ? <FiEyeOff size={14} /> : <FiBarChart2 size={14} />}
-            {showDashboard ? " Hide Dashboard" : " Show Dashboard"}
-          </button>
+        {/* Stats Cards - Conditional Rendering */}
+        {showStatsCards && (
+          <div className="stats-grid">
+            {statCards.map((card, index) => {
+              const gradients = [
+                { colors: ["#3b82f6", "#1d4ed8"], iconBg: "#3b82f6" },
+                { colors: ["#3b82f6", "#2563eb"], iconBg: "#3b82f6" },
+                { colors: ["#8b5cf6", "#7c3aed"], iconBg: "#8b5cf6" },
+                { colors: ["#10b981", "#059669"], iconBg: "#10b981" },
+                { colors: ["#f59e0b", "#d97706"], iconBg: "#f59e0b" },
+                { colors: ["#ef4444", "#dc2626"], iconBg: "#ef4444" },
+                { colors: ["#ec4899", "#db2777"], iconBg: "#ec4899" },
+                { colors: ["#06b6d4", "#0891b2"], iconBg: "#06b6d4" },
+              ];
 
-          <button
-            onClick={() => setShowStatsCards(!showStatsCards)}
-            className="toggle-btn toggle-green"
-          >
-            {showStatsCards ? <FiEyeOff size={14} /> : <FiLayers size={14} />}
-            {showStatsCards ? " Hide Stats" : " Show Stats"}
-          </button>
+              const gradient = gradients[index % gradients.length];
 
-          <button
-            onClick={() => navigate("/production")}
-            className="production-sections-btn green-border"
-          >
-            <FiGrid size={16} /> All Production Sections
-          </button>
-
-          <button
-            onClick={() => navigate("/production-sections/spiral/new")}
-            className="primary-btn blue-gradient"
-          >
-            <FiPlus size={20} /> New Production Entry
-          </button>
-
-          {/* Smart Entry Form Button */}
-          <button
-            onClick={() => navigate("/production-sections/spiral/smart-entry")}
-            className="smart-entry-btn green-border"
-          >
-            <FiCpu size={20} /> Smart Entry Form
-          </button>
-
-          <button
-            onClick={handleExport}
-            disabled={records.length === 0}
-            className="export-btn gray-border"
-          >
-            <FiDownload /> Export CSV
-          </button>
-
-          <button
-            onClick={fetchData}
-            disabled={loading}
-            className="refresh-btn blue-border"
-          >
-            {loading ? (
-              <>
-                <div className="mini-spinner" />
-                Loading...
-              </>
-            ) : (
-              <>
-                <FiRefreshCw /> Refresh
-              </>
-            )}
-          </button>
-        </div>
-      </div>
-
-      {/* Stats Cards - Conditional Rendering */}
-      {showStatsCards && (
-        <div className="stats-grid">
-          {statCards.map((card, index) => {
-            // Different gradient colors for each card
-            const gradients = [
-              { colors: ["#3b82f6", "#1d4ed8"], iconBg: "#3b82f6" }, // Blue
-              { colors: ["#3b82f6", "#2563eb"], iconBg: "#3b82f6" }, // Blue 2
-              { colors: ["#8b5cf6", "#7c3aed"], iconBg: "#8b5cf6" }, // Purple
-              { colors: ["#10b981", "#059669"], iconBg: "#10b981" }, // Green
-              { colors: ["#f59e0b", "#d97706"], iconBg: "#f59e0b" }, // Orange
-              { colors: ["#ef4444", "#dc2626"], iconBg: "#ef4444" }, // Red
-              { colors: ["#ec4899", "#db2777"], iconBg: "#ec4899" }, // Pink
-              { colors: ["#06b6d4", "#0891b2"], iconBg: "#06b6d4" }, // Cyan
-            ];
-
-            const gradient = gradients[index % gradients.length];
-
-            return (
-              <div
-                key={card.id}
-                className="stat-card"
-                style={{
-                  background: `linear-gradient(135deg, ${gradient.colors[0]}15 0%, ${gradient.colors[1]}05 100%)`,
-                  border: `1px solid ${gradient.colors[0]}30`,
-                  boxShadow: `0 10px 25px ${gradient.colors[0]}10, 0 5px 15px ${gradient.colors[1]}05`,
-                }}
-              >
+              return (
                 <div
-                  className="stat-card-glow"
+                  key={card.id}
+                  className="stat-card"
                   style={{
-                    background: `linear-gradient(90deg, transparent 0%, ${gradient.colors[0]}30 50%, transparent 100%)`,
+                    background: `linear-gradient(135deg, ${gradient.colors[0]}15 0%, ${gradient.colors[1]}05 100%)`,
+                    border: `1px solid ${gradient.colors[0]}30`,
+                    boxShadow: `0 10px 25px ${gradient.colors[0]}10, 0 5px 15px ${gradient.colors[1]}05`,
                   }}
-                />
+                >
+                  <div
+                    className="stat-card-glow"
+                    style={{
+                      background: `linear-gradient(90deg, transparent 0%, ${gradient.colors[0]}30 50%, transparent 100%)`,
+                    }}
+                  />
 
-                <div className="stat-card-content">
-                  <div>
-                    <div className="stat-title">{card.title}</div>
+                  <div className="stat-card-content">
+                    <div>
+                      <div className="stat-title">{card.title}</div>
+                      <div
+                        className="stat-value"
+                        style={{
+                          color: gradient.colors[0],
+                          textShadow: `0 2px 4px ${gradient.colors[0]}20`,
+                        }}
+                      >
+                        {card.value}
+                      </div>
+                    </div>
                     <div
-                      className="stat-value"
+                      className="stat-icon"
                       style={{
-                        color: gradient.colors[0],
-                        textShadow: `0 2px 4px ${gradient.colors[0]}20`,
+                        background: `linear-gradient(135deg, ${gradient.colors[0]} 0%, ${gradient.colors[1]} 100%)`,
+                        boxShadow: `0 4px 10px ${gradient.iconBg}40`,
                       }}
                     >
-                      {card.value}
+                      <card.icon size={24} />
                     </div>
                   </div>
-                  <div
-                    className="stat-icon"
-                    style={{
-                      background: `linear-gradient(135deg, ${gradient.colors[0]} 0%, ${gradient.colors[1]} 100%)`,
-                      boxShadow: `0 4px 10px ${gradient.iconBg}40`,
-                    }}
-                  >
-                    <card.icon size={24} />
-                  </div>
+                  <div className="stat-description">{card.description}</div>
                 </div>
-                <div className="stat-description">{card.description}</div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Today's Production Dashboard - Conditional Rendering */}
-      {showDashboard && (
-        <div className="today-production-dashboard">
-          <div className="section-header">
-            <div className="header-icon blue-gradient">
-              <FiCpu size={20} />
-            </div>
-            <div>
-              <h3>Today's Production Dashboard</h3>
-              <p className="section-subtitle">
-                Spiral production overview for today • Managed by: Afsar
-              </p>
-            </div>
+              );
+            })}
           </div>
+        )}
 
-          <div className="dashboard-grid">
-            {/* Item-wise Today */}
-            <div className="dashboard-section">
-              <h4 className="dashboard-title">
-                <FiPackage style={{ marginRight: "8px" }} />
-                Item-wise Production Today
-              </h4>
-              <div className="dashboard-cards">
-                {Object.entries(stats.itemWiseToday).length > 0 ? (
-                  Object.entries(stats.itemWiseToday).map(([item, data]) => (
-                    <div key={item} className="dashboard-card item-card">
-                      <div className="card-header">
-                        <div className="card-icon blue-gradient">
-                          <FiPackage size={14} />
-                        </div>
-                        <div className="card-name">{item}</div>
-                      </div>
-                      <div className="card-stats">
-                        <div className="card-production">
-                          {data.production.toFixed(0)}{" "}
-                          <span className="unit">M</span>
-                        </div>
-                        <div className="card-weight">
-                          {data.weight.toFixed(0)}{" "}
-                          <span className="unit">KG</span>
-                        </div>
-                        <div className="card-efficiency">
-                          {(data.count > 0
-                            ? data.efficiency / data.count
-                            : 0
-                          ).toFixed(1)}
-                          %
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="no-data">
-                    <FiPackage size={24} />
-                    <div>No item production today</div>
-                  </div>
-                )}
+        {/* Today's Production Dashboard - Conditional Rendering */}
+        {showDashboard && (
+          <div className="today-production-dashboard">
+            <div className="section-header">
+              <div className="header-icon blue-gradient">
+                <FiCpu size={20} />
+              </div>
+              <div>
+                <h3>Today's Production Dashboard</h3>
+                <p className="section-subtitle">
+                  Spiral production overview for today • Managed by: Afsar
+                </p>
               </div>
             </div>
 
-            {/* Machine-wise Today */}
-            <div className="dashboard-section">
-              <h4 className="dashboard-title">
-                <FiMachine style={{ marginRight: "8px" }} />
-                Machine-wise Production Today
-              </h4>
-              <div className="dashboard-cards">
-                {Object.entries(stats.machineWiseToday).length > 0 ? (
-                  Object.entries(stats.machineWiseToday).map(
-                    ([machine, data]) => (
-                      <div
-                        key={machine}
-                        className="dashboard-card machine-card"
-                      >
+            <div className="dashboard-grid">
+              {/* Item-wise Today */}
+              <div className="dashboard-section">
+                <h4 className="dashboard-title">
+                  <FiPackage style={{ marginRight: "8px" }} />
+                  Item-wise Production Today
+                </h4>
+                <div className="dashboard-cards">
+                  {Object.entries(stats.itemWiseToday).length > 0 ? (
+                    Object.entries(stats.itemWiseToday).map(([item, data]) => (
+                      <div key={item} className="dashboard-card item-card">
                         <div className="card-header">
-                          <div className="card-icon purple-gradient">
-                            <FiMachine size={14} />
+                          <div className="card-icon blue-gradient">
+                            <FiPackage size={14} />
                           </div>
-                          <div className="card-name">Machine {machine}</div>
+                          <div className="card-name">{item}</div>
                         </div>
                         <div className="card-stats">
                           <div className="card-production">
-                            {data.production.toFixed(0)}{" "}
+                            {Math.round(data.production)}{" "}
                             <span className="unit">M</span>
                           </div>
                           <div className="card-weight">
-                            {data.weight.toFixed(0)}{" "}
+                            {Math.round(data.weight)}{" "}
                             <span className="unit">KG</span>
                           </div>
                           <div className="card-efficiency">
-                            {(data.count > 0
-                              ? data.efficiency / data.count
-                              : 0
-                            ).toFixed(1)}
-                            %
+                            {Math.round(data.count > 0 ? data.efficiency / data.count : 0)}%
                           </div>
                         </div>
                       </div>
-                    )
-                  )
-                ) : (
-                  <div className="no-data">
-                    <FiMachine size={24} />
-                    <div>No machine production today</div>
-                  </div>
-                )}
+                    ))
+                  ) : (
+                    <div className="no-data">
+                      <FiPackage size={24} />
+                      <div>No item production today</div>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
 
-            {/* Finished Product-wise Today */}
-            <div className="dashboard-section">
-              <h4 className="dashboard-title">
-                <FiProduct style={{ marginRight: "8px" }} />
-                Finished Product-wise Today
-              </h4>
-              <div className="dashboard-cards">
-                {Object.entries(stats.finishedProductWiseToday).length > 0 ? (
-                  Object.entries(stats.finishedProductWiseToday).map(
-                    ([product, data]) => (
-                      <div
-                        key={product}
-                        className="dashboard-card product-card"
-                      >
-                        <div className="card-header">
-                          <div className="card-icon green-gradient">
-                            <FiProduct size={14} />
+              {/* Machine-wise Today */}
+              <div className="dashboard-section">
+                <h4 className="dashboard-title">
+                  <FiMachine style={{ marginRight: "8px" }} />
+                  Machine-wise Production Today
+                </h4>
+                <div className="dashboard-cards">
+                  {Object.entries(stats.machineWiseToday).length > 0 ? (
+                    Object.entries(stats.machineWiseToday).map(
+                      ([machine, data]) => (
+                        <div
+                          key={machine}
+                          className="dashboard-card machine-card"
+                        >
+                          <div className="card-header">
+                            <div className="card-icon purple-gradient">
+                              <FiMachine size={14} />
+                            </div>
+                            <div className="card-name">Machine {machine}</div>
                           </div>
-                          <div className="card-name">{product}</div>
-                        </div>
-                        <div className="card-stats">
-                          <div className="card-production">
-                            {data.production.toFixed(0)}{" "}
-                            <span className="unit">M</span>
-                          </div>
-                          <div className="card-weight">
-                            {data.weight.toFixed(0)}{" "}
-                            <span className="unit">KG</span>
-                          </div>
-                          <div className="card-efficiency">
-                            {(data.count > 0
-                              ? data.efficiency / data.count
-                              : 0
-                            ).toFixed(1)}
-                            %
+                          <div className="card-stats">
+                            <div className="card-production">
+                              {Math.round(data.production)}{" "}
+                              <span className="unit">M</span>
+                            </div>
+                            <div className="card-weight">
+                              {Math.round(data.weight)}{" "}
+                              <span className="unit">KG</span>
+                            </div>
+                            <div className="card-efficiency">
+                              {Math.round(data.count > 0 ? data.efficiency / data.count : 0)}%
+                            </div>
                           </div>
                         </div>
-                      </div>
+                      )
                     )
-                  )
-                ) : (
-                  <div className="no-data">
-                    <FiProduct size={24} />
-                    <div>No finished product today</div>
-                  </div>
-                )}
+                  ) : (
+                    <div className="no-data">
+                      <FiMachine size={24} />
+                      <div>No machine production today</div>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          </div>
-        </div>
-      )}
 
-      {/* Filters Section */}
-      <div className="filters-section">
-        <div className="filters-container">
-          <div className="filter-box">
-            <FiFilter size={14} />
-            <span style={{ fontWeight: "bold", color: "#3b82f6" }}>
-              FILTERS
-            </span>
-          </div>
-
-          <div className="filter-box search-box">
-            <FiSearch />
-            <input
-              type="text"
-              placeholder="Search items..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="filter-input"
-            />
-          </div>
-
-          <div className="filter-box select-box">
-            <select
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value)}
-              className="filter-select"
-            >
-              <option value="">All Wire Sizes</option>
-              {wireSizes.map((size) => (
-                <option key={size} value={size}>
-                  {size}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="filter-box date-box">
-            <input
-              type="date"
-              value={filterDate}
-              onChange={(e) => setFilterDate(e.target.value)}
-              max={new Date().toISOString().split("T")[0]}
-              className="filter-date"
-            />
-          </div>
-
-          <div className="filter-box button-box">
-            <button
-              onClick={() =>
-                filterDate ? setShowReport(true) : alert("Select date first")
-              }
-              className="filter-btn btn-generate"
-            >
-              <FiBarChart2 /> Generate Report
-            </button>
-            <button
-              onClick={() => {
-                setSearchTerm("");
-                setFilterType("");
-                setFilterDate("");
-                setShowReport(false);
-                setCurrentPage(1);
-              }}
-              className="filter-btn btn-clear"
-            >
-              <FiX /> Clear Filters
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Report Section */}
-      {showReport && reportData && (
-        <div className="report-section">
-          <div className="report-bg-pattern blue-radial" />
-
-          <div className="report-header">
-            <div>
-              <h2>Spiral Section Production Report</h2>
-              <div className="report-date">
-                {reportData.formattedDate}
-                <div className="report-date-subtext">
-                  Report Generated by: <strong>Afsar</strong>
+              {/* Finished Product-wise Today */}
+              <div className="dashboard-section">
+                <h4 className="dashboard-title">
+                  <FiProduct style={{ marginRight: "8px" }} />
+                  Finished Product-wise Today
+                </h4>
+                <div className="dashboard-cards">
+                  {Object.entries(stats.finishedProductWiseToday).length > 0 ? (
+                    Object.entries(stats.finishedProductWiseToday).map(
+                      ([product, data]) => (
+                        <div
+                          key={product}
+                          className="dashboard-card product-card"
+                        >
+                          <div className="card-header">
+                            <div className="card-icon green-gradient">
+                              <FiProduct size={14} />
+                            </div>
+                            <div className="card-name">{product}</div>
+                          </div>
+                          <div className="card-stats">
+                            <div className="card-production">
+                              {Math.round(data.production)}{" "}
+                              <span className="unit">M</span>
+                            </div>
+                            <div className="card-weight">
+                              {Math.round(data.weight)}{" "}
+                              <span className="unit">KG</span>
+                            </div>
+                            <div className="card-efficiency">
+                              {Math.round(data.count > 0 ? data.efficiency / data.count : 0)}%
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    )
+                  ) : (
+                    <div className="no-data">
+                      <FiProduct size={24} />
+                      <div>No finished product today</div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
-            <div className="report-actions">
-              <button
-                onClick={handlePrintReport}
-                className="print-report-btn blue-solid"
+          </div>
+        )}
+
+        {/* Filters Section */}
+        <div className="filters-section">
+          <div className="filters-container">
+            <div className="filter-box">
+              <FiFilter size={14} />
+              <span style={{ fontWeight: "bold", color: "#3b82f6" }}>
+                FILTERS
+              </span>
+            </div>
+
+            <div className="filter-box search-box">
+              <FiSearch />
+              <input
+                type="text"
+                placeholder="Search items..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="filter-input"
+              />
+            </div>
+
+            <div className="filter-box select-box">
+              <select
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value)}
+                className="filter-select"
               >
-                <FiPrinter /> Print Report
+                <option value="">All Wire Sizes</option>
+                {wireSizes.map((size) => (
+                  <option key={size} value={size}>
+                    {size}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="filter-box date-box">
+              <input
+                type="date"
+                value={filterDate}
+                onChange={(e) => setFilterDate(e.target.value)}
+                max={new Date().toISOString().split("T")[0]}
+                className="filter-date"
+              />
+            </div>
+
+            <div className="filter-box button-box">
+              <button
+                onClick={() =>
+                  filterDate ? setShowReport(true) : alert("Select date first")
+                }
+                className="filter-btn btn-generate"
+              >
+                <FiBarChart2 /> Generate Report
               </button>
               <button
-                onClick={handleExportReport}
-                className="export-report-btn blue-solid"
+                onClick={() => {
+                  setSearchTerm("");
+                  setFilterType("");
+                  setFilterDate("");
+                  setShowReport(false);
+                  setCurrentPage(1);
+                }}
+                className="filter-btn btn-clear"
               >
-                <FiDownload /> Export Report
-              </button>
-              <button
-                onClick={() => setShowReport(false)}
-                className="close-report-btn gray-border"
-              >
-                Close
+                <FiX /> Clear Filters
               </button>
             </div>
           </div>
+        </div>
 
-          {/* Item-wise Summary */}
-          {Object.keys(reportData.itemWise).length > 0 && (
-            <div className="item-report-section">
-              <h3>Item-wise Summary</h3>
-              <div className="item-report-grid">
-                {Object.entries(reportData.itemWise).map(([item, data]) => (
-                  <div key={item} className="item-report-card">
-                    <div className="item-report-header">
-                      <div className="item-report-icon blue-gradient">
-                        <FiPackage size={16} />
-                      </div>
-                      <div className="item-report-name">{item}</div>
-                    </div>
-                    <div className="item-report-stats">
-                      <div className="item-report-production">
-                        {data.production.toFixed(2)} M
-                      </div>
-                      <div className="item-report-weight">
-                        {data.weight.toFixed(2)} KG
-                      </div>
-                      <div className="item-report-efficiency">
-                        {(data.count > 0
-                          ? data.efficiency / data.count
-                          : 0
-                        ).toFixed(2)}
-                        % Efficiency
-                      </div>
-                    </div>
+        {/* Report Section */}
+        {showReport && reportData && (
+          <div className="report-section">
+            <div className="report-bg-pattern blue-radial" />
+
+            <div className="report-header">
+              <div>
+                <h2>Spiral Section Production Report</h2>
+                <div className="report-date">
+                  {reportData.formattedDate}
+                  <div className="report-date-subtext">
+                    Report Generated by: <strong>Afsar</strong>
                   </div>
-                ))}
+                </div>
+              </div>
+              <div className="report-actions">
+                {/* WhatsApp Button */}
+                <button
+                  onClick={() => setShowWhatsAppModal(true)}
+                  className="whatsapp-btn"
+                  style={{
+                    backgroundColor: '#25D366',
+                    color: 'white',
+                    border: 'none',
+                    padding: '10px 20px',
+                    borderRadius: '5px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    fontWeight: '500',
+                    transition: 'all 0.3s ease'
+                  }}
+                  onMouseOver={(e) => {
+                    e.target.style.backgroundColor = '#1da851';
+                    e.target.style.transform = 'translateY(-2px)';
+                    e.target.style.boxShadow = '0 4px 12px rgba(37, 211, 102, 0.3)';
+                  }}
+                  onMouseOut={(e) => {
+                    e.target.style.backgroundColor = '#25D366';
+                    e.target.style.transform = 'translateY(0)';
+                    e.target.style.boxShadow = 'none';
+                  }}
+                >
+                  <FiMessageSquare size={18} /> WhatsApp
+                </button>
+                
+                {/* Print Button */}
+                <button
+                  onClick={handlePrintReport}
+                  className="print-report-btn blue-solid"
+                  style={{
+                    backgroundColor: '#3b82f6',
+                    color: 'white',
+                    border: 'none',
+                    padding: '10px 20px',
+                    borderRadius: '5px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    fontWeight: '500'
+                  }}
+                >
+                  <FiPrinter /> Print Report
+                </button>
+                
+                {/* Export Button */}
+                <button
+                  onClick={handleExportReport}
+                  className="export-report-btn blue-solid"
+                  style={{
+                    backgroundColor: '#3b82f6',
+                    color: 'white',
+                    border: 'none',
+                    padding: '10px 20px',
+                    borderRadius: '5px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    fontWeight: '500'
+                  }}
+                >
+                  <FiDownload /> Export Report
+                </button>
+                
+                {/* Close Button */}
+                <button
+                  onClick={() => setShowReport(false)}
+                  className="close-report-btn gray-border"
+                  style={{
+                    backgroundColor: '#f1f5f9',
+                    color: '#64748b',
+                    border: '1px solid #cbd5e1',
+                    padding: '10px 20px',
+                    borderRadius: '5px',
+                    cursor: 'pointer',
+                    fontWeight: '500'
+                  }}
+                >
+                  Close
+                </button>
               </div>
             </div>
-          )}
 
-          {/* Wire-wise Summary */}
-          {Object.keys(reportData.wireWise).length > 0 && (
-            <div className="wire-report-section">
-              <h3>Wire-wise Summary</h3>
-              <div className="wire-report-grid">
-                {Object.entries(reportData.wireWise).map(([wire, data]) => (
-                  <div key={wire} className="wire-report-card">
-                    <div className="wire-report-header">
-                      <div className="wire-report-icon orange-gradient">
-                        <FiZap size={16} />
+            {/* Shift-wise Summary */}
+            <div className="shift-report-section">
+              <h3>Shift-wise Production Summary</h3>
+              <div className="shift-report-grid">
+                {/* Day Shift Card */}
+                <div className="day-shift-card" style={{
+                  background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
+                  border: '1px solid #f59e0b30',
+                  borderRadius: '8px',
+                  padding: '15px',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}>
+                  <div style={{
+                    position: 'absolute',
+                    top: '10px',
+                    right: '10px',
+                    background: '#f59e0b',
+                    color: 'white',
+                    padding: '4px 8px',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                    fontWeight: '600',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}>
+                    <FiSun size={12} /> Day Shift
+                  </div>
+                  <h4 style={{ margin: '0 0 15px 0', color: '#92400e' }}>☀️ Day Shift Production</h4>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#92400e' }}>
+                        {Math.round(reportData.dayShiftData.production)}
                       </div>
-                      <div className="wire-report-name">{wire}</div>
+                      <div style={{ fontSize: '12px', color: '#92400e' }}>Production (M)</div>
                     </div>
-                    <div className="wire-report-stats">
-                      <div className="wire-report-production">
-                        {data.production.toFixed(2)} M
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#92400e' }}>
+                        {Math.round(reportData.dayShiftData.weight)}
                       </div>
-                      <div className="wire-report-weight">
-                        {data.weight.toFixed(2)} KG
+                      <div style={{ fontSize: '12px', color: '#92400e' }}>Weight (KG)</div>
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#92400e' }}>
+                        {Math.round(reportData.dayShiftData.avgEfficiency)}%
                       </div>
-                      <div className="wire-report-efficiency">
-                        {(data.count > 0
-                          ? data.efficiency / data.count
-                          : 0
-                        ).toFixed(2)}
-                        % Efficiency
+                      <div style={{ fontSize: '12px', color: '#92400e' }}>Efficiency</div>
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#92400e' }}>
+                        {reportData.dayShiftCount}
                       </div>
+                      <div style={{ fontSize: '12px', color: '#92400e' }}>Records</div>
                     </div>
                   </div>
-                ))}
+                </div>
+
+                {/* Night Shift Card */}
+                <div className="night-shift-card" style={{
+                  background: 'linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%)',
+                  border: '1px solid #4f46e530',
+                  borderRadius: '8px',
+                  padding: '15px',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}>
+                  <div style={{
+                    position: 'absolute',
+                    top: '10px',
+                    right: '10px',
+                    background: '#4f46e5',
+                    color: 'white',
+                    padding: '4px 8px',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                    fontWeight: '600',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}>
+                    <FiMoon size={12} /> Night Shift
+                  </div>
+                  <h4 style={{ margin: '0 0 15px 0', color: '#3730a3' }}>🌙 Night Shift Production</h4>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#3730a3' }}>
+                        {Math.round(reportData.nightShiftData.production)}
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#3730a3' }}>Production (M)</div>
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#3730a3' }}>
+                        {Math.round(reportData.nightShiftData.weight)}
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#3730a3' }}>Weight (KG)</div>
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#3730a3' }}>
+                        {Math.round(reportData.nightShiftData.avgEfficiency)}%
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#3730a3' }}>Efficiency</div>
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#3730a3' }}>
+                        {reportData.nightShiftCount}
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#3730a3' }}>Records</div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-          )}
 
-          {/* Machine-wise Summary */}
-          {Object.keys(reportData.machineWise).length > 0 && (
+            {/* Item-wise Summary */}
+            {Object.keys(reportData.itemWise).length > 0 && (
+              <div className="item-report-section">
+                <h3>Item-wise Summary</h3>
+                <div className="item-report-grid">
+                  {Object.entries(reportData.itemWise).map(([item, data]) => (
+                    <div key={item} className="item-report-card">
+                      <div className="item-report-header">
+                        <div className="item-report-icon blue-gradient">
+                          <FiPackage size={16} />
+                        </div>
+                        <div className="item-report-name">{item}</div>
+                      </div>
+                      <div className="item-report-stats">
+                        <div className="item-report-production">
+                          {Math.round(data.production)} M
+                        </div>
+                        <div className="item-report-weight">
+                          {Math.round(data.weight)} KG
+                        </div>
+                        <div className="item-report-efficiency">
+                          {Math.round(data.count > 0 ? data.efficiency / data.count : 0)}% Efficiency
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Machine-wise Summary - Day Shift */}
             <div className="machine-report-section">
-              <h3>Machine-wise Summary</h3>
+              <h3>Machine-wise Summary - Day Shift</h3>
               <div className="machine-report-grid">
-                {Object.entries(reportData.machineWise).map(
-                  ([machine, data]) => (
-                    <div key={machine} className="machine-report-card">
+                {Array.from({ length: 14 }, (_, i) => {
+                  const machineNum = i + 1;
+                  const machineKey = `SP # ${machineNum}`;
+                  const data = reportData.dayShiftData.machines[machineKey] || {
+                    production: 0,
+                    efficiency: 0,
+                    operator: "Operator Absent",
+                    count: 0
+                  };
+                  const efficiency = data.count > 0 ? Math.round(data.efficiency / data.count) : 0;
+                  
+                  return (
+                    <div key={machineNum} className="machine-report-card">
                       <div className="machine-report-header">
                         <div className="machine-report-icon purple-gradient">
                           <FiMachine size={16} />
                         </div>
                         <div className="machine-report-name">
-                          Machine {machine}
+                          SP # {machineNum}
+                        </div>
+                        <div className="machine-report-operator">
+                          <FiUser size={12} /> {data.operator || "Operator Absent"}
                         </div>
                       </div>
                       <div className="machine-report-stats">
                         <div className="machine-report-production">
-                          {data.production.toFixed(2)} M
-                        </div>
-                        <div className="machine-report-weight">
-                          {data.weight.toFixed(2)} KG
+                          {Math.round(data.production)} M
                         </div>
                         <div className="machine-report-efficiency">
-                          {(data.count > 0
-                            ? data.efficiency / data.count
-                            : 0
-                          ).toFixed(2)}
-                          % Efficiency
+                          {efficiency}%
                         </div>
                       </div>
                     </div>
-                  )
-                )}
+                  );
+                })}
               </div>
             </div>
-          )}
 
-          {/* Shift-wise Summary */}
-          {Object.keys(reportData.shiftWise).length > 0 && (
-            <div className="shift-report-section">
-              <h3>Shift-wise Summary</h3>
-              <div className="shift-report-grid">
-                {Object.entries(reportData.shiftWise).map(([shift, data]) => (
-                  <div key={shift} className="shift-report-card">
-                    <div className="shift-report-header">
-                      <div className="shift-report-icon green-gradient">
-                        <FiCalendar size={16} />
+            {/* Machine-wise Summary - Night Shift */}
+            <div className="machine-report-section">
+              <h3>Machine-wise Summary - Night Shift</h3>
+              <div className="machine-report-grid">
+                {Array.from({ length: 14 }, (_, i) => {
+                  const machineNum = i + 1;
+                  const machineKey = `SP # ${machineNum}`;
+                  const data = reportData.nightShiftData.machines[machineKey] || {
+                    production: 0,
+                    efficiency: 0,
+                    operator: "Operator Absent",
+                    count: 0
+                  };
+                  const efficiency = data.count > 0 ? Math.round(data.efficiency / data.count) : 0;
+                  
+                  return (
+                    <div key={machineNum} className="machine-report-card">
+                      <div className="machine-report-header">
+                        <div className="machine-report-icon purple-gradient">
+                          <FiMachine size={16} />
+                        </div>
+                        <div className="machine-report-name">
+                          SP # {machineNum}
+                        </div>
+                        <div className="machine-report-operator">
+                          <FiUser size={12} /> {data.operator || "Operator Absent"}
+                        </div>
                       </div>
-                      <div className="shift-report-name">{shift}</div>
+                      <div className="machine-report-stats">
+                        <div className="machine-report-production">
+                          {Math.round(data.production)} M
+                        </div>
+                        <div className="machine-report-efficiency">
+                          {efficiency}%
+                        </div>
+                      </div>
                     </div>
-                    <div className="shift-report-stats">
-                      <div className="shift-report-production">
-                        {data.production.toFixed(2)} M
-                      </div>
-                      <div className="shift-report-weight">
-                        {data.weight.toFixed(2)} KG
-                      </div>
-                      <div className="shift-report-efficiency">
-                        {(data.count > 0
-                          ? data.efficiency / data.count
-                          : 0
-                        ).toFixed(2)}
-                        % Efficiency
-                      </div>
-                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Summary Section */}
+            <div className="report-summary">
+              <h3>Summary</h3>
+
+              <div className="summary-grid">
+                <div className="summary-item">
+                  <div className="summary-label">Total Production</div>
+                  <div className="summary-value production-value">
+                    {Math.round(reportData.totalProduction)} M
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Summary Section */}
-          <div className="report-summary">
-            <h3>Summary</h3>
-
-            <div className="summary-grid">
-              <div className="summary-item">
-                <div className="summary-label">Total Production</div>
-                <div className="summary-value production-value">
-                  {reportData.totalProduction.toFixed(2)} M
                 </div>
-              </div>
-              <div className="summary-item">
-                <div className="summary-label">Target Production</div>
-                <div className="summary-value target-value">
-                  {(reportData.totalProduction * 1.2).toFixed(2)} M
-                </div>
-              </div>
-              <div className="summary-item">
-                <div className="summary-label">Total Weight</div>
-                <div className="summary-value weight-value">
-                  {reportData.totalWeight.toFixed(2)} KG
-                </div>
-              </div>
-              <div className="summary-item">
-                <div className="summary-label">Average Efficiency</div>
-                <div className="summary-value efficiency-value">
-                  {reportData.avgEfficiency.toFixed(2)}%
-                </div>
-              </div>
-              <div className="summary-item">
-                <div className="summary-label">Target Efficiency</div>
-                <div className="summary-value target-efficiency-value">85%</div>
-              </div>
-              <div className="summary-item">
-                <div className="summary-label">Total Records</div>
-                <div className="summary-value records-value">
-                  {reportData.recordCount}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="report-footer">
-            Report generated on {new Date().toLocaleString()} by{" "}
-            <strong>Afsar</strong> • Data source: spiralsection table
-          </div>
-        </div>
-      )}
-
-      {/* Records Table */}
-      <div className="records-table-section">
-        <div className="table-header-section blue-gradient">
-          <div>
-            <h3>Spiral Production Records</h3>
-            <div className="table-stats">
-              Total: {records.length} records • Showing:{" "}
-              {filteredRecords.length} filtered • Page: {currentPage}/
-              {totalPages}
-              <div className="table-stats-subtext">Managed by: Afsar</div>
-            </div>
-          </div>
-          <div className="database-status">
-            <div
-              className={`status-indicator ${
-                isSupabaseConnected ? "connected" : "offline"
-              }`}
-            />
-            {isSupabaseConnected ? "Database Connected" : "Database Offline"}
-          </div>
-        </div>
-
-        {loading ? (
-          <div className="loading-records">
-            <div className="table-spinner" />
-            Loading records from spiralsection...
-          </div>
-        ) : filteredRecords.length === 0 ? (
-          <div className="empty-records">
-            <FiColumns size={48} />
-            <div className="empty-title">No records found</div>
-            <div className="empty-message">
-              {searchTerm || filterDate || filterType
-                ? "No records match your search criteria. Try adjusting your filters."
-                : "No spiral production records available. Create your first record to get started."}
-            </div>
-            <button
-              onClick={() => navigate("/production-sections/spiral/new")}
-              className="create-first-btn blue-gradient"
-            >
-              <FiPlus /> Create First Record
-            </button>
-          </div>
-        ) : (
-          <>
-            <div className="table-container">
-              <table className="production-table compact-table">
-                <thead>
-                  <tr className="table-header-row">
-                    <th className="table-header-cell compact-header">ID</th>
-                    <th className="table-header-cell compact-header">
-                      Item Details
-                    </th>
-                    <th className="table-header-cell compact-header">
-                      Material & Wire
-                    </th>
-                    <th className="table-header-cell compact-header">
-                      Finished Product
-                    </th>
-                    <th className="table-header-cell compact-header">
-                      <div>Machine</div>
-                      <div style={{ fontSize: "11px", opacity: 0.8 }}>(ID)</div>
-                    </th>
-                    <th className="table-header-cell compact-header">
-                      <div>Production</div>
-                      <div style={{ fontSize: "11px", opacity: 0.8 }}>
-                        (Target)
-                      </div>
-                    </th>
-                    <th className="table-header-cell compact-header">
-                      <div>Weight</div>
-                      <div style={{ fontSize: "11px", opacity: 0.8 }}>
-                        (Per M)
-                      </div>
-                    </th>
-                    <th className="table-header-cell compact-header">
-                      <div>Efficiency</div>
-                      <div style={{ fontSize: "11px", opacity: 0.8 }}>
-                        (Target)
-                      </div>
-                    </th>
-                    <th className="table-header-cell compact-header">
-                      <div>Operator</div>
-                      <div style={{ fontSize: "11px", opacity: 0.8 }}>
-                        (User)
-                      </div>
-                    </th>
-                    <th className="table-header-cell compact-header">
-                      <div>Shift</div>
-                      <div style={{ fontSize: "11px", opacity: 0.8 }}>
-                        (Code)
-                      </div>
-                    </th>
-                    <th className="table-header-cell compact-header">
-                      <div>Date & Time</div>
-                    </th>
-                    <th
-                      className="table-header-cell compact-header"
-                      style={{ width: "90px" }}
-                    >
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {currentRecords.map((record, index) => (
-                    <tr
-                      key={record.id}
-                      className={`table-row compact-row ${
-                        index % 2 === 0 ? "even" : "odd"
-                      }`}
-                      style={{ height: "55px" }}
-                    >
-                      {/* ID Cell */}
-                      <td className="table-cell compact-cell">
-                        <div className="id-cell">#{record.id}</div>
-                        {record.item_code && (
-                          <div className="id-code">
-                            Code: {record.item_code}
-                          </div>
-                        )}
-                      </td>
-
-                      {/* Item Details */}
-                      <td className="table-cell compact-cell">
-                        <div className="item-details-cell">
-                          <div className="item-icon-small">
-                            <FiPackage size={12} />
-                          </div>
-                          <div>
-                            <div className="item-name">
-                              {record.item_name || "N/A"}
-                            </div>
-                            <div className="item-size">
-                              Size: {record.raw_material_flatsize || "N/A"}
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* Material & Wire */}
-                      <td className="table-cell compact-cell">
-                        <div>
-                          <div className="material-cell">
-                            {record.material_type || "N/A"}
-                          </div>
-                          <div className="wire-size-cell">
-                            <FiZap size={8} />
-                            {record.wire_size || "N/A"}
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* Finished Product */}
-                      <td className="table-cell compact-cell">
-                        <div className="material-cell">
-                          {record.finishedproductname || "N/A"}
-                        </div>
-                      </td>
-
-                      {/* Machine */}
-                      <td className="table-cell compact-cell">
-                        <div>
-                          <div className="machine-cell">
-                            <FiMachine size={10} />
-                            {record.machine_no || "N/A"}
-                          </div>
-                          <div className="machine-id-cell">
-                            ID: {record.machine_id || "N/A"}
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* Production with Target */}
-                      <td className="table-cell compact-cell">
-                        <div>
-                          <div className="production-cell">
-                            {parseFloat(
-                              record.production_quantity || 0
-                            ).toLocaleString()}{" "}
-                            M
-                          </div>
-                          <div className="production-target-cell">
-                            <FiTarget size={8} />
-                            Target:{" "}
-                            {parseFloat(
-                              record.target_quantity ||
-                                record.production_quantity * 1.2
-                            ).toLocaleString()}{" "}
-                            M
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* Weight with Per Meter */}
-                      <td className="table-cell compact-cell">
-                        <div>
-                          <div className="weight-cell">
-                            {parseFloat(record.weight || 0).toLocaleString()} KG
-                          </div>
-                          <div className="weight-per-meter-cell">
-                            Per M:{" "}
-                            {parseFloat(record.per_meter_wt || 0).toFixed(2)} KG
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* Efficiency with Target */}
-                      <td className="table-cell compact-cell">
-                        <div>
-                          <div
-                            className={`efficiency-cell ${
-                              parseFloat(record.efficiency || 0) >= 85
-                                ? "high"
-                                : parseFloat(record.efficiency || 0) >= 70
-                                ? "medium"
-                                : "low"
-                            }`}
-                          >
-                            {parseFloat(record.efficiency || 0).toFixed(1)}%
-                          </div>
-                          <div className="efficiency-target-cell">
-                            Target: 85%
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* Operator with User */}
-                      <td className="table-cell compact-cell">
-                        <div>
-                          <div className="operator-cell">
-                            {record.operator_name || "N/A"}
-                          </div>
-                          <div className="user-cell">
-                            User: {record.users_name || "N/A"}
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* Shift with Code */}
-                      <td className="table-cell compact-cell">
-                        <div>
-                          <div className="shift-cell">
-                            {record.shift_name || "N/A"}
-                          </div>
-                          <div className="shift-code-cell">
-                            Code: {record.shift_code || "N/A"}
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* Date & Time */}
-                      <td className="table-cell compact-cell">
-                        <div>
-                          <div className="date-cell">
-                            {new Date(record.created_at).toLocaleDateString(
-                              "en-GB"
-                            )}
-                          </div>
-                          <div className="time-cell">
-                            {new Date(record.created_at).toLocaleTimeString(
-                              [],
-                              {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              }
-                            )}
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* Actions */}
-                      <td className="table-cell compact-cell">
-                        <div className="action-buttons-inline">
-                          <button
-                            onClick={() => handleView(record.id)}
-                            className="action-btn-outline view-btn-outline"
-                          >
-                            <FiEye size={10} /> View
-                          </button>
-                          <button
-                            onClick={() => handleEdit(record.id)}
-                            className="action-btn-outline edit-btn-outline"
-                          >
-                            <FiEdit size={10} /> Edit
-                          </button>
-                          <button
-                            onClick={() => handleDelete(record.id)}
-                            className="action-btn-outline delete-btn-outline"
-                          >
-                            <FiTrash2 size={10} /> Delete
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="pagination-section">
-                <div className="pagination-info">
-                  Page {currentPage} of {totalPages} • Showing{" "}
-                  {indexOfFirstItem + 1}-
-                  {Math.min(indexOfLastItem, filteredRecords.length)} of{" "}
-                  {filteredRecords.length} records
-                </div>
-                <div className="pagination-controls">
-                  <button
-                    onClick={handlePrevPage}
-                    disabled={currentPage === 1}
-                    className={`pagination-btn prev ${
-                      currentPage === 1 ? "disabled" : ""
-                    }`}
-                  >
-                    <FiChevronLeft /> Previous
-                  </button>
-                  <div className="page-numbers">
-                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                      let pageNum;
-                      if (totalPages <= 5) {
-                        pageNum = i + 1;
-                      } else if (currentPage <= 3) {
-                        pageNum = i + 1;
-                      } else if (currentPage >= totalPages - 2) {
-                        pageNum = totalPages - 4 + i;
-                      } else {
-                        pageNum = currentPage - 2 + i;
-                      }
-
-                      return (
-                        <button
-                          key={pageNum}
-                          onClick={() => setCurrentPage(pageNum)}
-                          className={`page-number ${
-                            currentPage === pageNum ? "active" : ""
-                          }`}
-                        >
-                          {pageNum}
-                        </button>
-                      );
-                    })}
+                <div className="summary-item">
+                  <div className="summary-label">Target Production</div>
+                  <div className="summary-value target-value">
+                    {Math.round(reportData.totalProduction * 1.2)} M
                   </div>
-                  <button
-                    onClick={handleNextPage}
-                    disabled={currentPage === totalPages}
-                    className={`pagination-btn next ${
-                      currentPage === totalPages ? "disabled" : ""
-                    }`}
-                  >
-                    Next <FiChevronRight />
-                  </button>
+                </div>
+                <div className="summary-item">
+                  <div className="summary-label">Total Weight</div>
+                  <div className="summary-value weight-value">
+                    {Math.round(reportData.totalWeight)} KG
+                  </div>
+                </div>
+                <div className="summary-item">
+                  <div className="summary-label">Average Efficiency</div>
+                  <div className="summary-value efficiency-value">
+                    {Math.round(reportData.avgEfficiency)}%
+                  </div>
+                </div>
+                <div className="summary-item">
+                  <div className="summary-label">Target Efficiency</div>
+                  <div className="summary-value target-efficiency-value">85%</div>
+                </div>
+                <div className="summary-item">
+                  <div className="summary-label">Total Records</div>
+                  <div className="summary-value records-value">
+                    {reportData.recordCount}
+                  </div>
+                </div>
+                <div className="summary-item">
+                  <div className="summary-label">Day Shift Records</div>
+                  <div className="summary-value day-shift-value" style={{ color: '#f59e0b' }}>
+                    {reportData.dayShiftCount}
+                  </div>
+                </div>
+                <div className="summary-item">
+                  <div className="summary-label">Night Shift Records</div>
+                  <div className="summary-value night-shift-value" style={{ color: '#4f46e5' }}>
+                    {reportData.nightShiftCount}
+                  </div>
                 </div>
               </div>
-            )}
-          </>
+            </div>
+
+            <div className="report-footer">
+              Report generated on {new Date().toLocaleString()} by{" "}
+              <strong>Afsar</strong> • Data source: spiralsection table
+            </div>
+          </div>
         )}
-      </div>
 
-      {/* Footer */}
-      <div className="page-footer">
-        <div className="footer-content">
-          <div>
-            <div className="footer-title">
-              Spiral Section • Production Management System
+        {/* Records Table */}
+        <div className="records-table-section">
+          <div className="table-header-section blue-gradient">
+            <div>
+              <h3>Spiral Production Records</h3>
+              <div className="table-stats">
+                Total: {records.length} records • Showing:{" "}
+                {filteredRecords.length} filtered • Page: {currentPage}/
+                {totalPages}
+                <div className="table-stats-subtext">Managed by: Afsar</div>
+              </div>
             </div>
-            <div className="footer-subtitle">
-              Database: spiralsection table • Last updated:{" "}
-              {new Date().toLocaleTimeString()} • Managed by: Afsar
-            </div>
-          </div>
-          <div className="footer-status">
-            <div
-              className={`database-connection ${
-                isSupabaseConnected ? "connected" : "offline"
-              }`}
-            >
+            <div className="database-status">
               <div
-                className={`connection-dot ${
+                className={`status-indicator ${
                   isSupabaseConnected ? "connected" : "offline"
                 }`}
               />
-              {isSupabaseConnected
-                ? "Supabase Database Connected"
-                : "Database Connection Issue"}
-            </div>
-            <div className="footer-stats">
-              {stats.totalRecords} records • {stats.totalProduction} M •{" "}
-              {stats.totalWeight} KG • {stats.avgEfficiency.toFixed(1)}%
-              efficiency
+              {isSupabaseConnected ? "Database Connected" : "Database Offline"}
             </div>
           </div>
+
+          {loading ? (
+            <div className="loading-records">
+              <div className="table-spinner" />
+              Loading records from spiralsection...
+            </div>
+          ) : filteredRecords.length === 0 ? (
+            <div className="empty-records">
+              <FiColumns size={48} />
+              <div className="empty-title">No records found</div>
+              <div className="empty-message">
+                {searchTerm || filterDate || filterType
+                  ? "No records match your search criteria. Try adjusting your filters."
+                  : "No spiral production records available. Create your first record to get started."}
+              </div>
+              <button
+                onClick={() => navigate("/production-sections/spiral/new")}
+                className="create-first-btn blue-gradient"
+              >
+                <FiPlus /> Create First Record
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className="table-container">
+                <table className="production-table compact-table">
+                  <thead>
+                    <tr className="table-header-row">
+                      <th className="table-header-cell compact-header">ID</th>
+                      <th className="table-header-cell compact-header">
+                        Item Details
+                      </th>
+                      <th className="table-header-cell compact-header">
+                        Material & Wire
+                      </th>
+                      <th className="table-header-cell compact-header">
+                        Finished Product
+                      </th>
+                      <th className="table-header-cell compact-header">
+                        <div>Machine</div>
+                        <div style={{ fontSize: "11px", opacity: 0.8 }}>(ID)</div>
+                      </th>
+                      <th className="table-header-cell compact-header">
+                        <div>Production</div>
+                        <div style={{ fontSize: "11px", opacity: 0.8 }}>
+                          (Target)
+                        </div>
+                      </th>
+                      <th className="table-header-cell compact-header">
+                        <div>Weight</div>
+                        <div style={{ fontSize: "11px", opacity: 0.8 }}>
+                          (Per M)
+                        </div>
+                      </th>
+                      <th className="table-header-cell compact-header">
+                        <div>Efficiency</div>
+                        <div style={{ fontSize: "11px", opacity: 0.8 }}>
+                          (Target)
+                        </div>
+                      </th>
+                      <th className="table-header-cell compact-header">
+                        <div>Operator</div>
+                        <div style={{ fontSize: "11px", opacity: 0.8 }}>
+                          (User)
+                        </div>
+                      </th>
+                      <th className="table-header-cell compact-header">
+                        <div>Shift</div>
+                        <div style={{ fontSize: "11px", opacity: 0.8 }}>
+                          (Code)
+                        </div>
+                      </th>
+                      <th className="table-header-cell compact-header">
+                        <div>Date & Time</div>
+                      </th>
+                      <th
+                        className="table-header-cell compact-header"
+                        style={{ width: "90px" }}
+                      >
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {currentRecords.map((record, index) => (
+                      <tr
+                        key={record.id}
+                        className={`table-row compact-row ${
+                          index % 2 === 0 ? "even" : "odd"
+                        }`}
+                        style={{ height: "55px" }}
+                      >
+                        {/* ID Cell */}
+                        <td className="table-cell compact-cell">
+                          <div className="id-cell">#{record.id}</div>
+                          {record.item_code && (
+                            <div className="id-code">
+                              Code: {record.item_code}
+                            </div>
+                          )}
+                        </td>
+
+                        {/* Item Details */}
+                        <td className="table-cell compact-cell">
+                          <div className="item-details-cell">
+                            <div className="item-icon-small">
+                              <FiPackage size={12} />
+                            </div>
+                            <div>
+                              <div className="item-name">
+                                {record.item_name || "N/A"}
+                              </div>
+                              <div className="item-size">
+                                Size: {record.raw_material_flatsize || "N/A"}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Material & Wire */}
+                        <td className="table-cell compact-cell">
+                          <div>
+                            <div className="material-cell">
+                              {record.material_type || "N/A"}
+                            </div>
+                            <div className="wire-size-cell">
+                              <FiZap size={8} />
+                              {record.wire_size || "N/A"}
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Finished Product */}
+                        <td className="table-cell compact-cell">
+                          <div className="material-cell">
+                            {record.finishedproductname || "N/A"}
+                          </div>
+                        </td>
+
+                        {/* Machine */}
+                        <td className="table-cell compact-cell">
+                          <div>
+                            <div className="machine-cell">
+                              <FiMachine size={10} />
+                              {record.machine_no || "N/A"}
+                            </div>
+                            <div className="machine-id-cell">
+                              ID: {record.machine_id || "N/A"}
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Production with Target */}
+                        <td className="table-cell compact-cell">
+                          <div>
+                            <div className="production-cell">
+                              {Math.round(parseFloat(record.production_quantity || 0))}{" "}
+                              M
+                            </div>
+                            <div className="production-target-cell">
+                              <FiTarget size={8} />
+                              Target:{" "}
+                              {Math.round(parseFloat(
+                                record.target_quantity ||
+                                  record.production_quantity * 1.2
+                              ))}{" "}
+                              M
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Weight with Per Meter */}
+                        <td className="table-cell compact-cell">
+                          <div>
+                            <div className="weight-cell">
+                              {Math.round(parseFloat(record.weight || 0))} KG
+                            </div>
+                            <div className="weight-per-meter-cell">
+                              Per M:{" "}
+                              {Math.round(parseFloat(record.per_meter_wt || 0))} KG
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Efficiency with Target */}
+                        <td className="table-cell compact-cell">
+                          <div>
+                            <div
+                              className={`efficiency-cell ${
+                                parseFloat(record.efficiency || 0) >= 85
+                                  ? "high"
+                                  : parseFloat(record.efficiency || 0) >= 70
+                                  ? "medium"
+                                  : "low"
+                              }`}
+                            >
+                              {Math.round(parseFloat(record.efficiency || 0))}%
+                            </div>
+                            <div className="efficiency-target-cell">
+                              Target: 85%
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Operator with User */}
+                        <td className="table-cell compact-cell">
+                          <div>
+                            <div className="operator-cell">
+                              {record.operator_name || "N/A"}
+                            </div>
+                            <div className="user-cell">
+                              User: {record.users_name || "N/A"}
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Shift with Code */}
+                        <td className="table-cell compact-cell">
+                          <div>
+                            <div className="shift-cell">
+                              {record.shift_name || "N/A"}
+                            </div>
+                            <div className="shift-code-cell">
+                              Code: {record.shift_code || "N/A"}
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Date & Time */}
+                        <td className="table-cell compact-cell">
+                          <div>
+                            <div className="date-cell">
+                              {new Date(record.created_at).toLocaleDateString(
+                                "en-GB"
+                              )}
+                            </div>
+                            <div className="time-cell">
+                              {new Date(record.created_at).toLocaleTimeString(
+                                [],
+                                {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                }
+                              )}
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Actions */}
+                        <td className="table-cell compact-cell">
+                          <div className="action-buttons-inline">
+                            <button
+                              onClick={() => handleView(record.id)}
+                              className="action-btn-outline view-btn-outline"
+                            >
+                              <FiEye size={10} /> View
+                            </button>
+                            <button
+                              onClick={() => handleEdit(record.id)}
+                              className="action-btn-outline edit-btn-outline"
+                            >
+                              <FiEdit size={10} /> Edit
+                            </button>
+                            <button
+                              onClick={() => handleDelete(record.id)}
+                              className="action-btn-outline delete-btn-outline"
+                            >
+                              <FiTrash2 size={10} /> Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="pagination-section">
+                  <div className="pagination-info">
+                    Page {currentPage} of {totalPages} • Showing{" "}
+                    {indexOfFirstItem + 1}-
+                    {Math.min(indexOfLastItem, filteredRecords.length)} of{" "}
+                    {filteredRecords.length} records
+                  </div>
+                  <div className="pagination-controls">
+                    <button
+                      onClick={handlePrevPage}
+                      disabled={currentPage === 1}
+                      className={`pagination-btn prev ${
+                        currentPage === 1 ? "disabled" : ""
+                      }`}
+                    >
+                      <FiChevronLeft /> Previous
+                    </button>
+                    <div className="page-numbers">
+                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        let pageNum;
+                        if (totalPages <= 5) {
+                          pageNum = i + 1;
+                        } else if (currentPage <= 3) {
+                          pageNum = i + 1;
+                        } else if (currentPage >= totalPages - 2) {
+                          pageNum = totalPages - 4 + i;
+                        } else {
+                          pageNum = currentPage - 2 + i;
+                        }
+
+                        return (
+                          <button
+                            key={pageNum}
+                            onClick={() => setCurrentPage(pageNum)}
+                            className={`page-number ${
+                              currentPage === pageNum ? "active" : ""
+                            }`}
+                          >
+                            {pageNum}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <button
+                      onClick={handleNextPage}
+                      disabled={currentPage === totalPages}
+                      className={`pagination-btn next ${
+                        currentPage === totalPages ? "disabled" : ""
+                      }`}
+                    >
+                      Next <FiChevronRight />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </div>
 
-        <div className="footer-actions">
-          <button
-            onClick={() => navigate("/production")}
-            className="footer-btn sections-btn"
-          >
-            <FiGrid size={12} /> All Production Sections
-          </button>
-          <button
-            onClick={() => navigate("/production-sections/spiral/new")}
-            className="footer-btn add-btn"
-          >
-            <FiPlus size={12} /> Add New Record
-          </button>
-          <button
-            onClick={() => navigate("/production-sections/spiral/smart-entry")}
-            className="footer-btn smart-entry-btn"
-          >
-            <FiCpu size={12} /> Smart Entry
-          </button>
-          <button onClick={fetchData} className="footer-btn refresh-footer-btn">
-            <FiRefreshCw size={12} /> Refresh Data
-          </button>
+        {/* Footer */}
+        <div className="page-footer">
+          <div className="footer-content">
+            <div>
+              <div className="footer-title">
+                Spiral Section • Production Management System
+              </div>
+              <div className="footer-subtitle">
+                Database: spiralsection table • Last updated:{" "}
+                {new Date().toLocaleTimeString()} • Managed by: Afsar
+              </div>
+            </div>
+            <div className="footer-status">
+              <div
+                className={`database-connection ${
+                  isSupabaseConnected ? "connected" : "offline"
+                }`}
+              >
+                <div
+                  className={`connection-dot ${
+                    isSupabaseConnected ? "connected" : "offline"
+                  }`}
+                />
+                {isSupabaseConnected
+                  ? "Supabase Database Connected"
+                  : "Database Connection Issue"}
+              </div>
+              <div className="footer-stats">
+                {stats.totalRecords} records • {Math.round(stats.totalProduction)} M •{" "}
+                {Math.round(stats.totalWeight)} KG • {Math.round(stats.avgEfficiency)}%
+                efficiency
+              </div>
+            </div>
+          </div>
+
+          <div className="footer-actions">
+            <button
+              onClick={() => navigate("/production")}
+              className="footer-btn sections-btn"
+            >
+              <FiGrid size={12} /> All Production Sections
+            </button>
+            <button
+              onClick={() => navigate("/production-sections/spiral/new")}
+              className="footer-btn add-btn"
+            >
+              <FiPlus size={12} /> Add New Record
+            </button>
+            <button
+              onClick={() => navigate("/production-sections/spiral/smart-entry")}
+              className="footer-btn smart-entry-btn"
+            >
+              <FiCpu size={12} /> Smart Entry
+            </button>
+            <button onClick={fetchData} className="footer-btn refresh-footer-btn">
+              <FiRefreshCw size={12} /> Refresh Data
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+
+      {/* WhatsApp Modal */}
+      {showWhatsAppModal && <WhatsAppModal />}
+    </>
   );
 };
 

@@ -788,3 +788,146 @@
 .navy-draft-badge {
   order: 3 !important; /* تیسرا آئے */
 }
+/* SpiralSmartForm.css میں یہ اضافے کریں */
+
+/* WhatsApp Button Styles */
+.whatsapp-btn {
+  background-color: #25D366 !important;
+  border-color: #25D366 !important;
+  color: white !important;
+  margin-right: 10px;
+}
+
+.whatsapp-btn:hover {
+  background-color: #1da851 !important;
+  border-color: #1da851 !important;
+}
+
+.pdf-btn {
+  background-color: #f59e0b !important;
+  border-color: #f59e0b !important;
+  color: white !important;
+  margin-right: 10px;
+}
+
+.pdf-btn:hover {
+  background-color: #d97706 !important;
+  border-color: #d97706 !important;
+}
+
+.share-buttons-container {
+  display: flex;
+  gap: 10px;
+  margin-right: 15px;
+}
+
+/* WhatsApp Modal Styles */
+.whatsapp-modal-overlay {
+  background-color: rgba(0, 0, 0, 0.7);
+  z-index: 9999;
+}
+
+.whatsapp-modal {
+  max-width: 500px;
+  background-color: white;
+}
+
+.whatsapp-modal .modal-header {
+  background-color: #25D366;
+  color: white;
+  padding: 15px 20px;
+  border-bottom: 1px solid #1da851;
+}
+
+.whatsapp-modal .modal-body {
+  padding: 20px;
+}
+
+.whatsapp-modal .modal-footer {
+  padding: 15px 20px;
+  border-top: 1px solid #e0e0e0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.whatsapp-modal .form-group {
+  margin-bottom: 15px;
+}
+
+.whatsapp-modal .form-input,
+.whatsapp-modal .form-textarea {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.whatsapp-modal .form-textarea {
+  resize: vertical;
+}
+
+.whatsapp-modal .required {
+  color: #ff4444;
+  margin-left: 4px;
+}
+
+.whatsapp-modal .preview-section {
+  margin-top: 20px;
+  border-top: 1px solid #eee;
+  padding-top: 15px;
+}
+
+.whatsapp-modal .message-preview {
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  padding: 15px;
+  margin-top: 10px;
+  white-space: pre-line;
+  font-family: monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.whatsapp-modal .btn-success {
+  background-color: #25D366;
+  border-color: #25D366;
+}
+
+.whatsapp-modal .btn-success:hover {
+  background-color: #1da851;
+  border-color: #1da851;
+}
+
+.navy-whatsapp-btn {
+  background-color: #1e3a8a !important;
+  border-color: #1e3a8a !important;
+}
+
+.navy-whatsapp-btn:hover {
+  background-color: #1e40af !important;
+  border-color: #1e40af !important;
+}
+
+/* Responsive styles for WhatsApp buttons */
+@media (max-width: 768px) {
+  .share-buttons-container {
+    flex-direction: column;
+    gap: 5px;
+    margin-right: 10px;
+  }
+  
+  .whatsapp-btn, .pdf-btn {
+    margin-right: 0;
+    margin-bottom: 5px;
+  }
+  
+  .whatsapp-modal {
+    max-width: 95%;
+    margin: 10px;
+  }
+}

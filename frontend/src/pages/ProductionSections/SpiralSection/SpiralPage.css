@@ -1719,3 +1719,130 @@
     font-size: 10pt !important;
   }
 }
+/* SpiralPage.css میں یہ اضافے کریں */
+
+/* Report Menu Styles */
+.report-menu-dropdown {
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.report-menu-item:hover {
+  background-color: #f8f9fa !important;
+  color: #3b82f6 !important;
+}
+
+/* WhatsApp Button in Report Section */
+.export-report-btn[style*="background-color: #25D366"] {
+  background-color: #25D366 !important;
+  border-color: #25D366 !important;
+  color: white !important;
+}
+
+.export-report-btn[style*="background-color: #25D366"]:hover {
+  background-color: #1da851 !important;
+  border-color: #1da851 !important;
+}
+
+/* Responsive styles for report menu */
+@media (max-width: 768px) {
+  .filter-box.button-box {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .report-menu-dropdown {
+    position: fixed !important;
+    top: auto !important;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100% !important;
+    border-radius: 8px 8px 0 0 !important;
+  }
+  
+  .report-actions {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+}
+
+/* WhatsApp Modal Styles (if you want dedicated CSS classes) */
+.whatsapp-modal-header {
+  background-color: #25D366;
+  color: white;
+  padding: 15px 20px;
+  border-radius: 8px 8px 0 0;
+}
+
+.whatsapp-modal-btn {
+  background-color: #25D366 !important;
+  border-color: #25D366 !important;
+  color: white !important;
+}
+
+.whatsapp-modal-btn:hover {
+  background-color: #1da851 !important;
+  border-color: #1da851 !important;
+}
+/* SpiralPage.css میں یہ اضافے کریں */
+
+/* WhatsApp Button Styles */
+.btn-whatsapp {
+  background-color: #25D366 !important;
+  border-color: #25D366 !important;
+  color: white !important;
+  transition: all 0.3s ease;
+}
+
+.btn-whatsapp:hover {
+  background-color: #1da851 !important;
+  border-color: #1da851 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
+}
+
+/* PDF Button Styles */
+.btn-pdf {
+  background-color: #f59e0b !important;
+  border-color: #f59e0b !important;
+  color: white !important;
+  transition: all 0.3s ease;
+}
+
+.btn-pdf:hover {
+  background-color: #d97706 !important;
+  border-color: #d97706 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+/* Report Actions Layout */
+.report-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Report Buttons Responsive */
+@media (max-width: 768px) {
+  .report-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .report-actions button {
+    width: 100%;
+    justify-content: center;
+  }
+}
