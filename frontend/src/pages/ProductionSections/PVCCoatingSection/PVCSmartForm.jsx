@@ -1,6 +1,6 @@
 // ========================================================
-// FILE: PVCSmartForm.jsx - CLEAN FIXED VERSION
-// Removed all unused imports and variables
+// FILE: PVCSmartForm.jsx - COLOR FIXED VERSION
+// Fixed all color issues - white text on white background resolved
 // ========================================================
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
