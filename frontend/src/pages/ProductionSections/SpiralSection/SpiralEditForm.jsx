@@ -1,18 +1,15 @@
 // src/pages/ProductionSections/SpiralSection/SpiralEditForm.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
-  FiSave, FiX, FiPackage, FiArrowLeft,
-  FiUser, FiSettings, FiTarget,
-  FiTool, FiBox, FiHash, FiGrid,
-  FiCalendar, FiCheck, FiAlertCircle,
-  FiDivide, FiPercent, FiEdit
+  FiSave, FiX, FiArrowLeft,
+  FiSettings, FiTrash2
 } from 'react-icons/fi';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '../../../supabaseClient';
 
 const SpiralEditForm = () => {
   const navigate = useNavigate();
-  const { id } = useParams();
+  const { id } = useParams(); // Get record ID from URL
   
   const [formData, setFormData] = useState({
     section_name: 'Spiral Section',
@@ -39,130 +36,261 @@ const SpiralEditForm = () => {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [originalData, setOriginalData] = useState(null);
+  const [fetchingRecord, setFetchingRecord] = useState(true);
+  const [duplicateError, setDuplicateError] = useState('');
   
   // Dynamic data from Supabase
   const [shifts, setShifts] = useState([]);
   const [spiralItems, setSpiralItems] = useState([]);
-  const [machineTargets, setMachineTargets] = useState([]);
+  const [targetsData, setTargetsData] = useState([]);
+  const [operators, setOperators] = useState([]);
+  const [currentUser, setCurrentUser] = useState('');
+
+  // Filtered machines based on selected shift
+  const [filteredMachines, setFilteredMachines] = useState([]);
+  
+  // Current target for selected shift and machine
+  const [currentTarget, setCurrentTarget] = useState(null);
   
   // Calculated fields
   const [calculatedWeight, setCalculatedWeight] = useState(0);
   const [calculatedEfficiency, setCalculatedEfficiency] = useState(0);
-  const [machineTarget, setMachineTarget] = useState(null);
-  const [efficiencyFormula, setEfficiencyFormula] = useState('');
 
-  // Fetch record data and configuration
+  // Original record data for comparison
+  const [originalRecord, setOriginalRecord] = useState(null);
+
+  // Get current logged-in user
   useEffect(() => {
-    fetchRecordAndConfigurationData();
-  }, [id]);
+    const fetchCurrentUser = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          setCurrentUser(user.email || 'System');
+        }
+      } catch (error) {
+        console.error('Error fetching current user:', error);
+        setCurrentUser('System');
+      }
+    };
+    
+    fetchCurrentUser();
+  }, []);
 
-  // Calculate when dependencies change
+  // Fetch existing record data
   useEffect(() => {
-    if (originalData) {
-      const weight = calculateWeight();
-      const { efficiency, formula, target } = calculateEfficiency();
-      
-      setCalculatedWeight(weight);
-      setCalculatedEfficiency(efficiency);
-      setMachineTarget(target);
-      setEfficiencyFormula(formula);
-    }
-  }, [formData.production_quantity, formData.per_meter_wt, formData.machine_id, formData.shift_code, machineTargets]);
+    const fetchRecordData = async () => {
+      if (!id) {
+        setFetchingRecord(false);
+        return;
+      }
 
-  const fetchRecordAndConfigurationData = async () => {
+      try {
+        setFetchingRecord(true);
+        
+        const { data, error } = await supabase
+          .from('spiralsection')
+          .select('*')
+          .eq('id', id)
+          .single();
+
+        if (error) {
+          throw error;
+        }
+
+        if (data) {
+          // Store original record for comparison
+          setOriginalRecord(data);
+          
+          // Set form data with fetched record
+          setFormData({
+            section_name: data.section_name || 'Spiral Section',
+            machine_id: data.machine_id || '',
+            machine_no: data.machine_no || '',
+            item_code: data.item_code || '',
+            item_name: data.item_name || '',
+            raw_material_flatsize: data.raw_material_flatsize || '',
+            material_type: data.material_type || '',
+            wire_size: data.wire_size || '',
+            finishedproductname: data.finishedproductname || '',
+            operator_name: data.operator_name || '',
+            production_quantity: data.production_quantity || '',
+            per_meter_wt: data.per_meter_wt || '',
+            weight: data.weight || '',
+            unit: data.unit || 'Meter',
+            efficiency: data.efficiency || 0,
+            users_name: data.users_name || '',
+            shift_code: data.shift_code || '',
+            shift_name: data.shift_name || '',
+            remarks: data.remarks || ''
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching record:', error);
+        alert('Failed to load record. Please try again.');
+        navigate('/production-sections/spiral');
+      } finally {
+        setFetchingRecord(false);
+      }
+    };
+
+    fetchRecordData();
+  }, [id, navigate]);
+
+  const fetchConfigurationData = useCallback(async () => {
     try {
       setLoading(true);
       
-      // 1. shifts ٹیبل سے ڈیٹا
+      // 1. Fetch shifts
       const { data: shiftData } = await supabase
         .from('shifts')
         .select('*')
         .order('start_time');
       
-      // 2. spiralitem ٹیبل سے ڈیٹا
+      // 2. Fetch spiral items
       const { data: spiralItemData } = await supabase
         .from('spiralitem')
         .select('*')
         .order('item_name');
       
-      // 3. targets ٹیبل سے ڈیٹا - Spiral سیکشن کے لیے
-      const { data: targetData } = await supabase
+      // 3. Fetch targets for Spiral section
+      const { data: targetsData } = await supabase
         .from('targets')
         .select('*')
-        .eq('is_active', true);
+        .eq('section_name', 'Spiral')
+        .eq('is_active', true)
+        .order('machine_id');
 
-      // 4. موجودہ ریکارڈ کی ڈیٹا
-      const { data: recordData, error: recordError } = await supabase
+      // 4. Fetch operators from spiralsection table
+      const { data: operatorsData } = await supabase
         .from('spiralsection')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-      if (recordError) {
-        console.error('Error fetching record:', recordError);
-        alert('Record not found!');
-        navigate('/production-sections/spiral');
-        return;
+        .select('operator_name')
+        .order('operator_name');
+      
+      // Get unique operator names
+      let uniqueOperators = [];
+      if (operatorsData) {
+        uniqueOperators = [...new Set(operatorsData.map(item => item.operator_name).filter(name => name))];
       }
 
       // Set data to state
       setShifts(shiftData || []);
       setSpiralItems(spiralItemData || []);
-      
-      // Filter targets for Spiral section
-      if (targetData) {
-        const spiralTargets = targetData.filter(target => 
-          target.section && 
-          (target.section.toLowerCase().includes('spiral') || 
-           target.section === 'Spiral')
-        );
-        setMachineTargets(spiralTargets);
-      } else {
-        setMachineTargets([]);
-      }
-
-      // Set form data from record
-      const recordShiftCode = recordData.shift || recordData.shift_code || '';
-      const selectedShift = shiftData?.find(s => 
-        s.shift_code === recordShiftCode || 
-        s.shift_name === recordShiftCode
-      );
-
-      setFormData({
-        section_name: recordData.section_name || 'Spiral Section',
-        machine_id: recordData.machine_id || '',
-        machine_no: recordData.machine_no || '',
-        item_code: recordData.item_code || '',
-        item_name: recordData.item_name || '',
-        raw_material_flatsize: recordData.raw_material_flatsize || '',
-        material_type: recordData.material_type || '',
-        wire_size: recordData.wire_size || '',
-        finishedproductname: recordData.finishedproductname || '',
-        operator_name: recordData.operator_name || '',
-        production_quantity: recordData.production_quantity || '',
-        per_meter_wt: recordData.per_meter_wt || '',
-        weight: recordData.weight || '',
-        unit: recordData.unit || 'Meter',
-        efficiency: recordData.efficiency || 0,
-        users_name: recordData.users_name || '',
-        shift_code: selectedShift ? selectedShift.shift_code : recordShiftCode,
-        shift_name: selectedShift ? selectedShift.shift_name : (recordData.shift_name || ''),
-        remarks: recordData.remarks || ''
-      });
-
-      setOriginalData(recordData);
+      setTargetsData(targetsData || []);
+      setOperators(uniqueOperators);
       
     } catch (error) {
-      console.error('Error fetching data:', error);
-      alert('Error loading record data');
-      navigate('/production-sections/spiral');
+      console.error('Error fetching configuration:', error);
+      // Fallback to static data
+      setShifts([
+        { id: 1, shift_code: 'D', shift_name: 'Day', start_time: '08:30:00', end_time: '22:30:00' },
+        { id: 2, shift_code: 'N', shift_name: 'Night', start_time: '22:30:00', end_time: '08:30:00' },
+        { id: 3, shift_code: 'E', shift_name: 'Evening', start_time: '16:00:00', end_time: '00:00:00' }
+      ]);
+      
+      setSpiralItems([
+        { 
+          id: 1, 
+          item_code: 'ITEM006', 
+          item_name: '5.45mm2P', 
+          raw_material_flatsize: 'T0.55_W3.40', 
+          material_type: 'PVC', 
+          wire_size: '1.65mm', 
+          finishedproductname: '7mm2P',
+          unit: 'Meter',
+          per_meter_wt: 0.064
+        }
+      ]);
+      
+      setTargetsData([
+        { 
+          id: 1, 
+          section_name: 'Spiral', 
+          machine_id: 'SP # 04', 
+          machine_no: '04', 
+          shift_code: 'D', 
+          shift_name: 'Day', 
+          target_qty: 12000, 
+          uom: 'Meter', 
+          is_active: true 
+        },
+        { 
+          id: 2, 
+          section_name: 'Spiral', 
+          machine_id: 'SP # 05', 
+          machine_no: '05', 
+          shift_code: 'N', 
+          shift_name: 'Night', 
+          target_qty: 11000, 
+          uom: 'Meter', 
+          is_active: true 
+        }
+      ]);
+      
+      setOperators(['Operator 1', 'Operator 2', 'Operator 3']);
+      
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const calculateWeight = () => {
+  // Fetch all configuration data
+  useEffect(() => {
+    fetchConfigurationData();
+  }, [fetchConfigurationData]);
+
+  // Filter machines when shift changes
+  useEffect(() => {
+    if (formData.shift_code && targetsData.length > 0) {
+      const machinesForShift = targetsData.filter(target => 
+        target.shift_code === formData.shift_code && 
+        target.section_name === 'Spiral'
+      );
+      
+      const uniqueMachines = machinesForShift.filter((machine, index, self) => 
+        index === self.findIndex(m => 
+          m.machine_id === machine.machine_id && 
+          m.machine_no === machine.machine_no
+        )
+      );
+      
+      setFilteredMachines(uniqueMachines);
+      
+      if (formData.machine_id && !uniqueMachines.find(m => m.machine_id === formData.machine_id)) {
+        setFormData(prev => ({
+          ...prev,
+          machine_id: '',
+          machine_no: ''
+        }));
+      }
+    } else {
+      setFilteredMachines([]);
+    }
+  }, [formData.shift_code, formData.machine_id, targetsData]);
+
+  // Find target when shift OR machine changes
+  useEffect(() => {
+    if (formData.shift_code && formData.machine_id && targetsData.length > 0) {
+      const target = targetsData.find(t => 
+        t.section_name === 'Spiral' &&
+        t.machine_id === formData.machine_id &&
+        t.shift_code === formData.shift_code
+      );
+      
+      setCurrentTarget(target || null);
+      
+      if (target && target.machine_no !== formData.machine_no) {
+        setFormData(prev => ({
+          ...prev,
+          machine_no: target.machine_no
+        }));
+      }
+    } else {
+      setCurrentTarget(null);
+    }
+  }, [formData.shift_code, formData.machine_id, formData.machine_no, targetsData]);
+
+  // Calculate weight function
+  const calculateWeight = useCallback(() => {
     const productionQty = parseFloat(formData.production_quantity) || 0;
     const perMeterWt = parseFloat(formData.per_meter_wt) || 0;
     
@@ -171,62 +299,96 @@ const SpiralEditForm = () => {
       return parseFloat(weight.toFixed(2));
     }
     return 0;
-  };
+  }, [formData.production_quantity, formData.per_meter_wt]);
 
-  const calculateEfficiency = () => {
+  // Calculate efficiency function
+  const calculateEfficiency = useCallback(() => {
     const productionQty = parseFloat(formData.production_quantity) || 0;
-    const shiftCode = formData.shift_code;
-    const machineId = formData.machine_id;
     
-    let target = null;
     let efficiency = 0;
-    let formula = '';
 
-    if (machineId && shiftCode && productionQty > 0) {
-      // پہلے shift_code سے تلاش کریں
-      target = machineTargets.find(m => 
-        m.machine_id.trim() === machineId.trim() && 
-        m.shift_code.trim() === shiftCode.trim()
-      );
-      
-      // اگر نہ ملے تو shift_name سے تلاش کریں
-      if (!target) {
-        const currentShift = shifts.find(s => s.shift_code === shiftCode);
-        if (currentShift) {
-          target = machineTargets.find(m => 
-            m.machine_id.trim() === machineId.trim() && 
-            m.shift_name.trim() === currentShift.shift_name.trim()
-          );
-        }
-      }
-      
-      if (target && target.target_qty > 0) {
-        efficiency = (productionQty / target.target_qty) * 100;
-        efficiency = parseFloat(efficiency.toFixed(2));
-        formula = `(${productionQty} ÷ ${target.target_qty}) × 100 = ${efficiency}%`;
-      } else {
-        formula = 'Target not found';
-      }
-    } else {
-      if (!machineId) formula = 'Select Machine first';
-      else if (!shiftCode) formula = 'Select Shift first';
-      else formula = 'Enter Production Quantity';
+    if (currentTarget && currentTarget.target_qty > 0 && productionQty > 0) {
+      efficiency = (productionQty / currentTarget.target_qty) * 100;
+      efficiency = parseFloat(efficiency.toFixed(2));
     }
     
-    return { efficiency, formula, target };
+    return efficiency;
+  }, [formData.production_quantity, currentTarget]);
+
+  // Calculate all fields
+  useEffect(() => {
+    const weight = calculateWeight();
+    const efficiency = calculateEfficiency();
+    
+    setCalculatedWeight(weight);
+    setCalculatedEfficiency(efficiency);
+  }, [calculateWeight, calculateEfficiency]);
+
+  // Check for duplicate entry before submitting (exclude current record)
+  const checkDuplicateEntry = async () => {
+    if (!formData.machine_id || !formData.shift_code) {
+      return false;
+    }
+
+    // If machine and shift haven't changed, no duplicate check needed
+    if (originalRecord && 
+        originalRecord.machine_id === formData.machine_id && 
+        originalRecord.shift_code === formData.shift_code) {
+      return false;
+    }
+
+    try {
+      const today = new Date();
+      const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0).toISOString();
+      const todayEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59).toISOString();
+
+      const { data, error } = await supabase
+        .from('spiralsection')
+        .select('*')
+        .eq('machine_id', formData.machine_id)
+        .eq('shift_code', formData.shift_code)
+        .neq('id', id) // Exclude current record
+        .gte('created_at', todayStart)
+        .lte('created_at', todayEnd);
+
+      if (error) {
+        console.error('Error checking duplicate:', error);
+        return false;
+      }
+
+      return data && data.length > 0;
+    } catch (error) {
+      console.error('Error in duplicate check:', error);
+      return false;
+    }
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    
+    // Clear duplicate error when user changes data
+    if (duplicateError) {
+      setDuplicateError('');
+    }
     
     if (name === 'shift_code') {
       const selectedShift = shifts.find(shift => shift.shift_code === value);
       setFormData(prev => ({
         ...prev,
         shift_code: value,
-        shift_name: selectedShift ? selectedShift.shift_name : ''
+        shift_name: selectedShift ? selectedShift.shift_name : '',
+        machine_id: '',
+        machine_no: ''
       }));
     } 
+    else if (name === 'machine_id') {
+      const selectedMachine = filteredMachines.find(m => m.machine_id === value);
+      setFormData(prev => ({
+        ...prev,
+        machine_id: value,
+        machine_no: selectedMachine ? selectedMachine.machine_no : ''
+      }));
+    }
     else if (name === 'item_code') {
       const selectedItem = spiralItems.find(item => item.item_code === value);
       if (selectedItem) {
@@ -248,6 +410,17 @@ const SpiralEditForm = () => {
         }));
       }
     }
+    else if (name === 'operator_name') {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+      
+      // Add new operator to list if not already present
+      if (value && !operators.includes(value)) {
+        setOperators(prev => [...prev, value].sort());
+      }
+    }
     else {
       setFormData(prev => ({
         ...prev,
@@ -261,17 +434,6 @@ const SpiralEditForm = () => {
         [name]: ''
       }));
     }
-  };
-
-  const handleMachineChange = (e) => {
-    const machineId = e.target.value;
-    const selectedMachine = machineTargets.find(m => m.machine_id === machineId);
-    
-    setFormData(prev => ({
-      ...prev,
-      machine_id: machineId,
-      machine_no: selectedMachine ? selectedMachine.machine_no : ''
-    }));
   };
 
   const validateForm = () => {
@@ -294,17 +456,24 @@ const SpiralEditForm = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
+  const handleUpdate = async (e) => {
     e.preventDefault();
     
     if (!validateForm()) {
       return;
     }
 
+    // Check for duplicate entry (only if machine or shift changed)
+    const isDuplicate = await checkDuplicateEntry();
+    if (isDuplicate) {
+      setDuplicateError(`This machine (${formData.machine_id}) already has an entry for ${formData.shift_name} shift today. Only one entry per machine per shift per day is allowed.`);
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      const recordData = {
+      const updatedData = {
         section_name: formData.section_name.trim(),
         machine_id: formData.machine_id.trim(),
         machine_no: formData.machine_no.trim(),
@@ -320,19 +489,17 @@ const SpiralEditForm = () => {
         weight: calculatedWeight,
         unit: 'Meter',
         efficiency: calculatedEfficiency,
-        users_name: formData.users_name.trim() || 'System',
-        shift: formData.shift_code,
+        users_name: currentUser, // Auto-filled from logged-in user
+        shift_code: formData.shift_code,
         shift_name: formData.shift_name,
         remarks: formData.remarks.trim(),
         updated_at: new Date().toISOString()
       };
 
-      // Update record
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('spiralsection')
-        .update(recordData)
-        .eq('id', id)
-        .select();
+        .update(updatedData)
+        .eq('id', id);
 
       if (error) throw error;
       
@@ -340,10 +507,32 @@ const SpiralEditForm = () => {
       navigate('/production-sections/spiral');
       
     } catch (error) {
-      console.error('Error updating form:', error);
-      alert('Failed to update record. Please try again.');
+      console.error('Error updating record:', error);
+      alert('Failed to update record. Please try again. Error: ' + error.message);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    const confirmDelete = window.confirm('Are you sure you want to delete this record? This action cannot be undone.');
+    
+    if (!confirmDelete) return;
+    
+    try {
+      const { error } = await supabase
+        .from('spiralsection')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      alert('Record deleted successfully!');
+      navigate('/production-sections/spiral');
+      
+    } catch (error) {
+      console.error('Error deleting record:', error);
+      alert('Failed to delete record. Please try again.');
     }
   };
 
@@ -354,45 +543,36 @@ const SpiralEditForm = () => {
   };
 
   const handleReset = () => {
-    if (originalData && window.confirm('Reset all changes to original values?')) {
-      const recordShiftCode = originalData.shift || originalData.shift_code || '';
-      const selectedShift = shifts.find(s => 
-        s.shift_code === recordShiftCode || 
-        s.shift_name === recordShiftCode
-      );
-
-      setFormData({
-        section_name: originalData.section_name || 'Spiral Section',
-        machine_id: originalData.machine_id || '',
-        machine_no: originalData.machine_no || '',
-        item_code: originalData.item_code || '',
-        item_name: originalData.item_name || '',
-        raw_material_flatsize: originalData.raw_material_flatsize || '',
-        material_type: originalData.material_type || '',
-        wire_size: originalData.wire_size || '',
-        finishedproductname: originalData.finishedproductname || '',
-        operator_name: originalData.operator_name || '',
-        production_quantity: originalData.production_quantity || '',
-        per_meter_wt: originalData.per_meter_wt || '',
-        weight: originalData.weight || '',
-        unit: originalData.unit || 'Meter',
-        efficiency: originalData.efficiency || 0,
-        users_name: originalData.users_name || '',
-        shift_code: selectedShift ? selectedShift.shift_code : recordShiftCode,
-        shift_name: selectedShift ? selectedShift.shift_name : (originalData.shift_name || ''),
-        remarks: originalData.remarks || ''
-      });
+    if (window.confirm('Reset all changes to original values?')) {
+      if (originalRecord) {
+        setFormData({
+          section_name: originalRecord.section_name || 'Spiral Section',
+          machine_id: originalRecord.machine_id || '',
+          machine_no: originalRecord.machine_no || '',
+          item_code: originalRecord.item_code || '',
+          item_name: originalRecord.item_name || '',
+          raw_material_flatsize: originalRecord.raw_material_flatsize || '',
+          material_type: originalRecord.material_type || '',
+          wire_size: originalRecord.wire_size || '',
+          finishedproductname: originalRecord.finishedproductname || '',
+          operator_name: originalRecord.operator_name || '',
+          production_quantity: originalRecord.production_quantity || '',
+          per_meter_wt: originalRecord.per_meter_wt || '',
+          weight: originalRecord.weight || '',
+          unit: originalRecord.unit || 'Meter',
+          efficiency: originalRecord.efficiency || 0,
+          users_name: originalRecord.users_name || '',
+          shift_code: originalRecord.shift_code || '',
+          shift_name: originalRecord.shift_name || '',
+          remarks: originalRecord.remarks || ''
+        });
+      }
       setErrors({});
+      setDuplicateError('');
     }
   };
 
-  // Get unique machines for Spiral section
-  const spiralMachines = machineTargets
-    .filter((value, index, self) => 
-      index === self.findIndex(t => t.machine_id === value.machine_id)
-    );
-
-  if (loading) {
+  if (fetchingRecord || loading) {
     return (
       <div style={{ 
         padding: '50px', 
@@ -408,189 +588,175 @@ const SpiralEditForm = () => {
           animation: 'spin 1s linear infinite',
           margin: '0 auto 20px'
         }} />
-        <p>Loading record data from database...</p>
+        <p>
+          {fetchingRecord 
+            ? 'Loading record data...' 
+            : 'Loading configuration data...'}
+        </p>
       </div>
     );
   }
 
-  // Get current shift name
-  const currentShiftName = formData.shift_name || shifts.find(s => s.shift_code === formData.shift_code)?.shift_name || '';
-  
-  // Calculate weight formula for display
-  const weightFormula = formData.production_quantity && formData.per_meter_wt 
-    ? `${formData.production_quantity} × ${formData.per_meter_wt} = ${calculatedWeight.toFixed(2)} KG`
-    : 'Production × Per Meter Weight = Weight (KG)';
+  // Filter shifts to only show those that have targets in Spiral section
+  const availableShifts = shifts.filter(shift => 
+    targetsData.some(target => 
+      target.shift_code === shift.shift_code && 
+      target.section_name === 'Spiral'
+    )
+  );
 
   return (
-    <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
+    <div style={{ 
+      padding: '0', 
+      maxWidth: '1200px', 
+      margin: '0 auto',
+      width: '100%'
+    }}>
       {/* Header */}
       <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '30px',
-        flexWrap: 'wrap',
-        gap: '20px'
+        padding: '20px',
+        marginBottom: '20px',
+        background: 'white',
+        borderBottom: '1px solid #e5e7eb'
       }}>
-        <div>
+        <button
+          onClick={() => navigate('/production-sections/spiral')}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            color: '#64748b',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            fontSize: '14px',
+            marginBottom: '15px',
+            padding: '0'
+          }}
+        >
+          <FiArrowLeft /> Back to Spiral Section
+        </button>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h1 style={{
+              margin: '0',
+              fontSize: '24px',
+              color: '#1e293b'
+            }}>
+              Edit Spiral Section Record
+            </h1>
+            <p style={{ 
+              margin: '8px 0 0', 
+              color: '#64748b',
+              fontSize: '14px'
+            }}>
+              Production in Meter | Weight in KG | Targets from targets table
+            </p>
+            <p style={{ 
+              margin: '4px 0 0', 
+              color: '#ef4444',
+              fontSize: '13px',
+              fontWeight: '500'
+            }}>
+              Note: Only one entry per machine per shift per day is allowed
+            </p>
+          </div>
           <button
-            onClick={() => navigate('/production-sections/spiral')}
+            type="button"
+            onClick={handleDelete}
             style={{
               background: 'transparent',
-              border: 'none',
-              color: '#64748b',
+              border: '1px solid #fca5a5',
+              padding: '10px 20px',
+              borderRadius: '6px',
+              color: '#ef4444',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
-              fontSize: '14px',
-              marginBottom: '10px',
-              padding: '8px 16px',
-              borderRadius: '8px',
-              transition: 'all 0.2s ease'
+              fontWeight: '500',
+              fontSize: '14px'
             }}
           >
-            <FiArrowLeft /> Back to Spiral Section
+            <FiTrash2 size={16} /> Delete Record
           </button>
-          <h1 style={{
-            margin: '0',
-            fontSize: '32px',
-            color: '#1e293b',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '15px'
-          }}>
-            <div style={{
-              width: '60px',
-              height: '60px',
-              background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-              borderRadius: '15px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'white'
-            }}>
-              <FiEdit size={28} />
-            </div>
-            Edit Spiral Section Record
-          </h1>
-          <p style={{ 
-            margin: '10px 0 0 75px', 
-            color: '#64748b',
-            fontSize: '16px'
-          }}>
-            Editing Record ID: {id} | Targets from targets table
-          </p>
         </div>
       </div>
 
       {/* Form Container */}
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleUpdate}>
         <div style={{
           background: 'white',
-          borderRadius: '12px',
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-          padding: '30px',
-          marginBottom: '30px',
-          border: '1px solid #e5e7eb'
+          padding: '20px'
         }}>
           
-          {/* Section 1: Basic Information */}
-          <div style={{ marginBottom: '30px' }}>
-            <h3 style={{ 
-              margin: '0 0 20px 0', 
-              color: '#1e293b',
-              paddingBottom: '10px',
-              borderBottom: '2px solid #f59e0b',
+          {/* Duplicate Entry Error Message */}
+          {duplicateError && (
+            <div style={{
+              background: '#fee2e2',
+              border: '1px solid #ef4444',
+              borderRadius: '6px',
+              padding: '12px 15px',
+              marginBottom: '20px',
+              color: '#b91c1c',
+              fontSize: '14px',
               display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-              fontSize: '20px',
-              fontWeight: '700'
+              alignItems: 'flex-start',
+              gap: '10px'
             }}>
-              <FiHash style={{ color: '#f59e0b' }} /> Basic Information
+              <div style={{
+                width: '20px',
+                height: '20px',
+                background: '#ef4444',
+                borderRadius: '50%',
+                color: 'white',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '12px',
+                fontWeight: 'bold',
+                flexShrink: 0
+              }}>!</div>
+              <div>
+                <strong>Duplicate Entry Detected!</strong>
+                <div style={{ marginTop: '5px' }}>{duplicateError}</div>
+                <div style={{ marginTop: '5px', fontSize: '13px' }}>
+                  Please check existing records or select a different machine/shift.
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Section 1: Basic Information */}
+          <div style={{ marginBottom: '25px' }}>
+            <h3 style={{ 
+              margin: '0 0 15px 0', 
+              color: '#1e293b',
+              paddingBottom: '8px',
+              borderBottom: '1px solid #d1d5db',
+              fontSize: '18px',
+              fontWeight: '600'
+            }}>
+              Basic Information
             </h3>
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-              gap: '20px'
+              gap: '15px'
             }}>
               {/* Section Name */}
               <div>
                 <label style={labelStyle}>Section Name</label>
                 <div style={{
-                  padding: '14px 15px',
-                  borderRadius: '10px',
-                  border: '1px solid #f59e0b',
-                  background: '#fef3c7',
-                  fontSize: '15px',
-                  color: '#92400e',
-                  fontWeight: '600',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px'
+                  padding: '12px 15px',
+                  borderRadius: '6px',
+                  border: '1px solid #e5e7eb',
+                  background: '#f8fafc',
+                  fontSize: '14px',
+                  color: '#374151',
+                  fontWeight: '500'
                 }}>
-                  <div style={{
-                    width: '8px',
-                    height: '8px',
-                    background: '#f59e0b',
-                    borderRadius: '50%'
-                  }} />
                   {formData.section_name}
-                </div>
-              </div>
-
-              {/* Machine ID */}
-              <div>
-                <label style={labelStyle}>Machine ID *</label>
-                <select
-                  name="machine_id"
-                  value={formData.machine_id}
-                  onChange={handleMachineChange}
-                  style={{
-                    ...selectStyle(errors.machine_id),
-                    background: formData.machine_id ? '#fef3c7' : '#fef2f2',
-                    borderColor: formData.machine_id ? '#f59e0b' : (errors.machine_id ? '#ef4444' : '#f87171')
-                  }}
-                >
-                  <option value="">Select Machine</option>
-                  {spiralMachines.map(machine => (
-                    <option key={machine.id} value={machine.machine_id}>
-                      {machine.machine_id} ({machine.machine_no})
-                    </option>
-                  ))}
-                </select>
-                {errors.machine_id && <ErrorText text={errors.machine_id} />}
-              </div>
-
-              {/* Machine Number */}
-              <div>
-                <label style={labelStyle}>Machine Number</label>
-                <div style={{
-                  padding: '14px 15px',
-                  borderRadius: '10px',
-                  border: '1px solid #f59e0b',
-                  background: formData.machine_no ? '#fef3c7' : '#fef2f2',
-                  fontSize: '15px',
-                  color: formData.machine_no ? '#92400e' : '#dc2626',
-                  fontWeight: formData.machine_no ? '600' : 'normal',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px'
-                }}>
-                  {formData.machine_no ? (
-                    <>
-                      <div style={{
-                        width: '8px',
-                        height: '8px',
-                        background: '#f59e0b',
-                        borderRadius: '50%'
-                      }} />
-                      {formData.machine_no}
-                    </>
-                  ) : (
-                    'Select Machine ID first'
-                  )}
                 </div>
               </div>
 
@@ -601,14 +767,10 @@ const SpiralEditForm = () => {
                   name="shift_code"
                   value={formData.shift_code}
                   onChange={handleChange}
-                  style={{
-                    ...selectStyle(errors.shift_code),
-                    background: formData.shift_code ? '#fef3c7' : '#fef2f2',
-                    borderColor: formData.shift_code ? '#f59e0b' : (errors.shift_code ? '#ef4444' : '#f87171')
-                  }}
+                  style={selectStyle(errors.shift_code)}
                 >
                   <option value="">Select shift</option>
-                  {shifts.map(shift => (
+                  {availableShifts.map(shift => (
                     <option key={shift.id} value={shift.shift_code}>
                       {shift.shift_name} ({shift.shift_code})
                     </option>
@@ -621,54 +783,121 @@ const SpiralEditForm = () => {
               <div>
                 <label style={labelStyle}>Shift Name</label>
                 <div style={{
-                  padding: '14px 15px',
-                  borderRadius: '10px',
-                  border: '1px solid #f59e0b',
-                  background: formData.shift_name ? '#fef3c7' : '#fef2f2',
-                  fontSize: '15px',
-                  color: formData.shift_name ? '#92400e' : '#dc2626',
-                  fontWeight: formData.shift_name ? '600' : 'normal',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px'
+                  padding: '12px 15px',
+                  borderRadius: '6px',
+                  border: '1px solid #e5e7eb',
+                  background: '#f8fafc',
+                  fontSize: '14px',
+                  color: formData.shift_name ? '#374151' : '#9ca3af',
+                  fontWeight: '500'
                 }}>
-                  {formData.shift_name ? (
-                    <>
-                      <div style={{
-                        width: '8px',
-                        height: '8px',
-                        background: '#f59e0b',
-                        borderRadius: '50%'
-                      }} />
-                      {formData.shift_name}
-                    </>
-                  ) : (
-                    'Select Shift Code first'
-                  )}
+                  {formData.shift_name || 'Select Shift first'}
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Section 2: Item Details */}
-          <div style={{ marginBottom: '30px' }}>
+          {/* Section 2: Machine Details */}
+          <div style={{ 
+            marginBottom: '25px',
+            paddingTop: '10px',
+            borderTop: '1px solid #e5e7eb'
+          }}>
             <h3 style={{ 
-              margin: '0 0 20px 0', 
+              margin: '0 0 15px 0', 
               color: '#1e293b',
-              paddingBottom: '10px',
-              borderBottom: '2px solid #8b5cf6',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-              fontSize: '20px',
-              fontWeight: '700'
+              fontSize: '18px',
+              fontWeight: '600'
             }}>
-              <FiBox style={{ color: '#8b5cf6' }} /> Item Details
+              Machine Details
             </h3>
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-              gap: '20px'
+              gap: '15px'
+            }}>
+              {/* Machine ID */}
+              <div>
+                <label style={labelStyle}>Machine ID *</label>
+                <select
+                  name="machine_id"
+                  value={formData.machine_id}
+                  onChange={handleChange}
+                  disabled={!formData.shift_code}
+                  style={{
+                    ...selectStyle(errors.machine_id),
+                    opacity: formData.shift_code ? 1 : 0.6,
+                    cursor: formData.shift_code ? 'pointer' : 'not-allowed'
+                  }}
+                >
+                  <option value="">
+                    {formData.shift_code 
+                      ? `Select machine for ${formData.shift_name} shift` 
+                      : 'Select Shift first'}
+                  </option>
+                  {filteredMachines.map(machine => (
+                    <option key={`${machine.machine_id}-${machine.machine_no}`} value={machine.machine_id}>
+                      {machine.machine_id} (No: {machine.machine_no})
+                    </option>
+                  ))}
+                </select>
+                {errors.machine_id && <ErrorText text={errors.machine_id} />}
+              </div>
+
+              {/* Machine Number */}
+              <div>
+                <label style={labelStyle}>Machine Number</label>
+                <div style={{
+                  padding: '12px 15px',
+                  borderRadius: '6px',
+                  border: '1px solid #e5e7eb',
+                  background: '#f8fafc',
+                  fontSize: '14px',
+                  color: formData.machine_no ? '#374151' : '#9ca3af',
+                  fontWeight: '500'
+                }}>
+                  {formData.machine_no || 'Select Machine ID first'}
+                </div>
+              </div>
+
+              {/* Target Display */}
+              <div>
+                <label style={labelStyle}>Shift Target</label>
+                <div style={{
+                  padding: '12px 15px',
+                  borderRadius: '6px',
+                  border: '1px solid #e5e7eb',
+                  background: '#f8fafc',
+                  fontSize: '14px',
+                  color: currentTarget ? '#374151' : '#9ca3af',
+                  fontWeight: '500'
+                }}>
+                  {currentTarget 
+                    ? `${currentTarget.target_qty.toLocaleString()} ${currentTarget.uom || 'Meter'}`
+                    : 'Select Shift and Machine'}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Section 3: Item Details */}
+          <div style={{ 
+            marginBottom: '25px',
+            paddingTop: '10px',
+            borderTop: '1px solid #e5e7eb'
+          }}>
+            <h3 style={{ 
+              margin: '0 0 15px 0', 
+              color: '#1e293b',
+              fontSize: '18px',
+              fontWeight: '600'
+            }}>
+              Item Details
+            </h3>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+              gap: '15px'
             }}>
               {/* Item Code */}
               <div>
@@ -677,11 +906,7 @@ const SpiralEditForm = () => {
                   name="item_code"
                   value={formData.item_code}
                   onChange={handleChange}
-                  style={{
-                    ...selectStyle(errors.item_code),
-                    background: formData.item_code ? '#f5f3ff' : '#fef2f2',
-                    borderColor: formData.item_code ? '#8b5cf6' : (errors.item_code ? '#ef4444' : '#f87171')
-                  }}
+                  style={selectStyle(errors.item_code)}
                 >
                   <option value="">Select item code</option>
                   {spiralItems.map(item => (
@@ -696,56 +921,55 @@ const SpiralEditForm = () => {
               {/* Item Name */}
               <div>
                 <label style={labelStyle}>Item Name</label>
-                <input
-                  type="text"
-                  name="item_name"
-                  value={formData.item_name}
-                  onChange={handleChange}
-                  style={{
-                    ...inputStyle(),
-                    background: '#f5f3ff',
-                    borderColor: '#8b5cf6'
-                  }}
-                />
+                <div style={{
+                  padding: '12px 15px',
+                  borderRadius: '6px',
+                  border: '1px solid #e5e7eb',
+                  background: '#f8fafc',
+                  fontSize: '14px',
+                  color: formData.item_name ? '#374151' : '#9ca3af',
+                  fontWeight: '500'
+                }}>
+                  {formData.item_name || 'Select Item Code first'}
+                </div>
               </div>
 
               {/* Finished Product Name */}
               <div>
                 <label style={labelStyle}>Finished Product Name</label>
-                <input
-                  type="text"
-                  name="finishedproductname"
-                  value={formData.finishedproductname}
-                  onChange={handleChange}
-                  style={{
-                    ...inputStyle(),
-                    background: '#f5f3ff',
-                    borderColor: '#8b5cf6'
-                  }}
-                />
+                <div style={{
+                  padding: '12px 15px',
+                  borderRadius: '6px',
+                  border: '1px solid #e5e7eb',
+                  background: '#f8fafc',
+                  fontSize: '14px',
+                  color: formData.finishedproductname ? '#374151' : '#9ca3af',
+                  fontWeight: '500'
+                }}>
+                  {formData.finishedproductname || 'Select Item Code first'}
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Section 3: Production Details */}
-          <div style={{ marginBottom: '30px' }}>
+          {/* Section 4: Production Details */}
+          <div style={{ 
+            marginBottom: '25px',
+            paddingTop: '10px',
+            borderTop: '1px solid #e5e7eb'
+          }}>
             <h3 style={{ 
-              margin: '0 0 20px 0', 
+              margin: '0 0 15px 0', 
               color: '#1e293b',
-              paddingBottom: '10px',
-              borderBottom: '2px solid #3b82f6',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-              fontSize: '20px',
-              fontWeight: '700'
+              fontSize: '18px',
+              fontWeight: '600'
             }}>
-              <FiTool style={{ color: '#3b82f6' }} /> Production Details
+              Production Details
             </h3>
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-              gap: '20px'
+              gap: '15px'
             }}>
               {/* Production Quantity */}
               <div>
@@ -756,14 +980,12 @@ const SpiralEditForm = () => {
                     name="production_quantity"
                     value={formData.production_quantity}
                     onChange={handleChange}
-                    placeholder="Enter quantity in meters"
+                    placeholder="Enter quantity"
                     min="0.01"
                     step="0.01"
                     style={{
                       ...inputStyle(errors.production_quantity),
-                      background: formData.production_quantity ? '#dbeafe' : '#fef2f2',
-                      borderColor: formData.production_quantity ? '#3b82f6' : (errors.production_quantity ? '#ef4444' : '#f87171'),
-                      paddingRight: '80px'
+                      paddingRight: '70px'
                     }}
                   />
                   <div style={{
@@ -771,9 +993,9 @@ const SpiralEditForm = () => {
                     right: '15px',
                     top: '50%',
                     transform: 'translateY(-50%)',
-                    color: formData.production_quantity ? '#3b82f6' : '#dc2626',
-                    fontWeight: '600',
-                    fontSize: '14px'
+                    color: '#6b7280',
+                    fontWeight: '500',
+                    fontSize: '13px'
                   }}>
                     Meter
                   </div>
@@ -795,9 +1017,7 @@ const SpiralEditForm = () => {
                     step="0.0001"
                     style={{
                       ...inputStyle(),
-                      background: formData.per_meter_wt ? '#dbeafe' : '#fef2f2',
-                      borderColor: formData.per_meter_wt ? '#3b82f6' : '#f87171',
-                      paddingRight: '50px'
+                      paddingRight: '45px'
                     }}
                   />
                   <div style={{
@@ -805,366 +1025,183 @@ const SpiralEditForm = () => {
                     right: '15px',
                     top: '50%',
                     transform: 'translateY(-50%)',
-                    color: formData.per_meter_wt ? '#3b82f6' : '#dc2626',
-                    fontWeight: '600',
-                    fontSize: '14px'
+                    color: '#6b7280',
+                    fontWeight: '500',
+                    fontSize: '13px'
                   }}>
                     KG
                   </div>
                 </div>
               </div>
+
+              {/* Unit */}
+              <div>
+                <label style={labelStyle}>Unit</label>
+                <div style={{
+                  padding: '12px 15px',
+                  borderRadius: '6px',
+                  border: '1px solid #e5e7eb',
+                  background: '#f8fafc',
+                  fontSize: '14px',
+                  color: '#374151',
+                  fontWeight: '500'
+                }}>
+                  Meter
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Section 4: Calculations & Efficiency */}
-          <div style={{ marginBottom: '30px' }}>
+          {/* Section 5: Auto-Calculations */}
+          <div style={{ 
+            marginBottom: '25px',
+            paddingTop: '10px',
+            borderTop: '1px solid #e5e7eb'
+          }}>
             <h3 style={{ 
-              margin: '0 0 20px 0', 
+              margin: '0 0 15px 0', 
               color: '#1e293b',
-              paddingBottom: '10px',
-              borderBottom: '2px solid #10b981',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-              fontSize: '20px',
-              fontWeight: '700'
+              fontSize: '18px',
+              fontWeight: '600'
             }}>
-              <FiTarget style={{ color: '#10b981' }} /> Auto-Calculations
+              Auto-Calculations
             </h3>
             
             <div style={{
-              background: 'linear-gradient(135deg, #f0fdf4 0%, #d1fae5 100%)',
-              border: '2px solid #10b981',
-              borderRadius: '12px',
-              padding: '25px',
-              marginBottom: '20px',
-              boxShadow: '0 4px 6px -1px rgba(16, 185, 129, 0.1)'
+              border: '1px solid #e5e7eb',
+              borderRadius: '6px',
+              padding: '15px',
+              marginBottom: '15px'
             }}>
-              <div style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '15px', 
-                marginBottom: '25px' 
-              }}>
-                <div style={{
-                  width: '50px',
-                  height: '50px',
-                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                  borderRadius: '12px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'white'
-                }}>
-                  <FiGrid size={24} />
-                </div>
-                <div>
-                  <h3 style={{ margin: '0 0 5px 0', color: '#047857', fontSize: '22px', fontWeight: '700' }}>
-                    Auto-Calculated Fields
-                  </h3>
-                  <p style={{ margin: '0', color: '#065f46', fontSize: '14px' }}>
-                    Based on spiralitem & targets tables
-                  </p>
-                </div>
-              </div>
-
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-                gap: '20px',
-                marginBottom: '20px'
+                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                gap: '15px'
               }}>
                 {/* Weight Calculation */}
                 <div style={{
-                  background: calculatedWeight > 0 ? '#f0fdf4' : '#fef2f2',
-                  padding: '20px',
-                  borderRadius: '10px',
-                  border: `2px solid ${calculatedWeight > 0 ? '#10b981' : '#f87171'}`,
-                  textAlign: 'center',
-                  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)'
+                  background: '#f8fafc',
+                  padding: '12px',
+                  borderRadius: '6px',
+                  border: '1px solid #e5e7eb'
                 }}>
                   <div style={{ 
-                    fontSize: '14px', 
-                    color: calculatedWeight > 0 ? '#047857' : '#dc2626', 
-                    marginBottom: '8px', 
+                    fontSize: '12px', 
+                    color: '#6b7280', 
+                    marginBottom: '5px', 
                     fontWeight: '600'
                   }}>
                     Calculated Weight
                   </div>
                   <div style={{ 
-                    fontSize: '28px', 
-                    fontWeight: '800', 
-                    color: calculatedWeight > 0 ? '#10b981' : '#dc2626'
+                    fontSize: '18px', 
+                    fontWeight: '700', 
+                    color: '#374151'
                   }}>
                     {calculatedWeight > 0 ? calculatedWeight.toFixed(2) : '0.00'} 
-                    <span style={{ fontSize: '18px', fontWeight: '600' }}> KG</span>
-                  </div>
-                  <div style={{ 
-                    fontSize: '12px', 
-                    color: calculatedWeight > 0 ? '#047857' : '#dc2626', 
-                    marginTop: '8px'
-                  }}>
-                    {weightFormula}
-                  </div>
-                </div>
-
-                {/* Target Display */}
-                <div style={{
-                  background: machineTarget ? '#dbeafe' : '#fef2f2',
-                  padding: '20px',
-                  borderRadius: '10px',
-                  border: `2px solid ${machineTarget ? '#3b82f6' : '#f87171'}`,
-                  textAlign: 'center',
-                  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)'
-                }}>
-                  <div style={{ 
-                    fontSize: '14px', 
-                    color: machineTarget ? '#1d4ed8' : '#dc2626', 
-                    marginBottom: '8px', 
-                    fontWeight: '600'
-                  }}>
-                    Shift Target
-                  </div>
-                  <div style={{ 
-                    fontSize: '28px', 
-                    fontWeight: '800', 
-                    color: machineTarget ? '#3b82f6' : '#dc2626'
-                  }}>
-                    {machineTarget 
-                      ? machineTarget.target_qty.toLocaleString('en-US', { 
-                          minimumFractionDigits: 2, 
-                          maximumFractionDigits: 2 
-                        }) 
-                      : '--'} 
-                    <span style={{ fontSize: '18px', fontWeight: '600' }}> Meter</span>
-                  </div>
-                  <div style={{ 
-                    fontSize: '12px', 
-                    color: machineTarget ? '#1d4ed8' : '#dc2626', 
-                    marginTop: '8px' 
-                  }}>
-                    {machineTarget 
-                      ? `${currentShiftName} | targets table`
-                      : 'Select Shift and Machine'}
+                    <span style={{ fontSize: '14px', fontWeight: '600' }}> KG</span>
                   </div>
                 </div>
 
                 {/* Efficiency Display */}
                 <div style={{
-                  background: calculatedEfficiency > 0 
-                    ? (calculatedEfficiency >= 90 ? '#f0fdf4' : 
-                       calculatedEfficiency >= 80 ? '#fef3c7' : '#fef2f2')
-                    : '#fef2f2',
-                  padding: '20px',
-                  borderRadius: '10px',
-                  border: `2px solid ${
-                    calculatedEfficiency > 0
-                      ? (calculatedEfficiency > 100 ? '#ef4444' :
-                         calculatedEfficiency >= 90 ? '#10b981' :
-                         calculatedEfficiency >= 80 ? '#f59e0b' : '#ef4444')
-                      : '#f87171'
-                  }`,
-                  textAlign: 'center',
-                  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)'
+                  background: '#f8fafc',
+                  padding: '12px',
+                  borderRadius: '6px',
+                  border: '1px solid #e5e7eb'
                 }}>
                   <div style={{ 
-                    fontSize: '14px', 
-                    color: calculatedEfficiency > 0
-                      ? (calculatedEfficiency > 100 ? '#b91c1c' :
-                         calculatedEfficiency >= 90 ? '#047857' :
-                         calculatedEfficiency >= 80 ? '#92400e' : '#b91c1c')
-                      : '#dc2626',
-                    marginBottom: '8px',
+                    fontSize: '12px', 
+                    color: '#6b7280',
+                    marginBottom: '5px',
                     fontWeight: '600'
                   }}>
                     Efficiency
                   </div>
                   <div style={{ 
-                    fontSize: '28px', 
-                    fontWeight: '800', 
-                    color: calculatedEfficiency > 0
-                      ? (calculatedEfficiency > 100 ? '#ef4444' :
-                         calculatedEfficiency >= 90 ? '#10b981' :
-                         calculatedEfficiency >= 80 ? '#f59e0b' : '#ef4444')
-                      : '#dc2626'
+                    fontSize: '18px', 
+                    fontWeight: '700', 
+                    color: '#374151'
                   }}>
                     {calculatedEfficiency > 0 ? calculatedEfficiency.toFixed(2) : '0.00'}%
                   </div>
-                  <div style={{ 
-                    fontSize: '12px', 
-                    color: calculatedEfficiency > 0
-                      ? (calculatedEfficiency > 100 ? '#ef4444' :
-                         calculatedEfficiency >= 90 ? '#10b981' :
-                         calculatedEfficiency >= 80 ? '#f59e0b' : '#ef4444')
-                      : '#dc2626',
-                    marginTop: '8px',
-                    fontWeight: '600'
-                  }}>
-                    {calculatedEfficiency > 0 
-                      ? (calculatedEfficiency > 100 ? 'Over Target' :
-                         calculatedEfficiency >= 90 ? 'Excellent' :
-                         calculatedEfficiency >= 80 ? 'Good' : 'Below Target')
-                      : 'Enter Production & Select Shift'}
-                  </div>
-                </div>
-              </div>
-
-              {/* Target Details Column */}
-              <div style={{
-                background: '#e0f2fe',
-                padding: '15px',
-                borderRadius: '10px',
-                border: '2px solid #0ea5e9',
-                marginTop: '15px'
-              }}>
-                <div style={{ 
-                  fontSize: '16px', 
-                  color: '#0369a1', 
-                  marginBottom: '10px', 
-                  fontWeight: '600',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px'
-                }}>
-                  <FiTarget />
-                  Current Target Details
-                </div>
-                
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                  gap: '10px'
-                }}>
-                  <div>
-                    <div style={{ fontSize: '13px', color: '#64748b' }}>Machine</div>
-                    <div style={{ fontSize: '16px', fontWeight: '600', color: '#1e293b' }}>
-                      {formData.machine_id || '--'}
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <div style={{ fontSize: '13px', color: '#64748b' }}>Shift</div>
-                    <div style={{ fontSize: '16px', fontWeight: '600', color: '#1e293b' }}>
-                      {formData.shift_code || '--'}
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <div style={{ fontSize: '13px', color: '#64748b' }}>Target</div>
-                    <div style={{ 
-                      fontSize: '16px', 
-                      fontWeight: '600', 
-                      color: machineTarget ? '#10b981' : '#ef4444'
-                    }}>
-                      {machineTarget 
-                        ? `${machineTarget.target_qty} ${machineTarget.uom}`
-                        : 'Not found'}
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <div style={{ fontSize: '13px', color: '#64748b' }}>Status</div>
-                    <div style={{ 
-                      fontSize: '16px', 
-                      fontWeight: '600', 
-                      color: machineTarget ? '#10b981' : '#ef4444'
-                    }}>
-                      {machineTarget ? 'Found ✓' : 'Missing ✗'}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div style={{
-                background: '#d1fae5',
-                padding: '15px',
-                borderRadius: '8px',
-                fontSize: '14px',
-                color: '#065f46',
-                marginTop: '15px',
-                border: '1px solid #10b981'
-              }}>
-                <div style={{ marginBottom: '5px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                  <FiDivide /> <strong>Formula 1 (Weight):</strong> Production Quantity (Meter) × Per Meter Weight (KG) = Weight (KG)
-                </div>
-                <div style={{ marginBottom: '5px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                  <FiDivide /> <strong>Formula 2 (Efficiency):</strong> (Production Quantity ÷ Shift Target) × 100
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                  <strong>Data Sources:</strong> 
-                  <span style={{ color: '#10b981', fontWeight: '600' }}>spiralitem table</span> | 
-                  <span style={{ color: '#3b82f6', fontWeight: '600' }}>targets table</span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Section 5: Operator Details */}
-          <div style={{ marginBottom: '30px' }}>
+          {/* Section 6: Operator Details */}
+          <div style={{ 
+            marginBottom: '25px',
+            paddingTop: '10px',
+            borderTop: '1px solid #e5e7eb'
+          }}>
             <h3 style={{ 
-              margin: '0 0 20px 0', 
+              margin: '0 0 15px 0', 
               color: '#1e293b',
-              paddingBottom: '10px',
-              borderBottom: '2px solid #8b5cf6',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-              fontSize: '20px',
-              fontWeight: '700'
+              fontSize: '18px',
+              fontWeight: '600'
             }}>
-              <FiUser style={{ color: '#8b5cf6' }} /> Operator Details
+              Operator Details
             </h3>
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-              gap: '20px'
+              gap: '15px'
             }}>
-              {/* Operator Name */}
+              {/* Operator Name with datalist for suggestions */}
               <div>
                 <label style={labelStyle}>Operator Name *</label>
-                <input
-                  type="text"
-                  name="operator_name"
-                  value={formData.operator_name}
-                  onChange={handleChange}
-                  placeholder="Enter operator name"
-                  style={{
-                    ...inputStyle(errors.operator_name),
-                    background: formData.operator_name ? '#f5f3ff' : '#fef2f2',
-                    borderColor: formData.operator_name ? '#8b5cf6' : (errors.operator_name ? '#ef4444' : '#f87171')
-                  }}
-                />
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type="text"
+                    name="operator_name"
+                    value={formData.operator_name}
+                    onChange={handleChange}
+                    placeholder="Enter or select operator name"
+                    list="operatorSuggestions"
+                    style={inputStyle(errors.operator_name)}
+                  />
+                  <datalist id="operatorSuggestions">
+                    {operators.map((operator, index) => (
+                      <option key={index} value={operator} />
+                    ))}
+                  </datalist>
+                </div>
                 {errors.operator_name && <ErrorText text={errors.operator_name} />}
               </div>
 
-              {/* User Name */}
+              {/* User Name - Auto-filled and disabled */}
               <div>
-                <label style={labelStyle}>User Name</label>
+                <label style={labelStyle}>Updated By</label>
                 <input
                   type="text"
-                  name="users_name"
-                  value={formData.users_name}
-                  onChange={handleChange}
-                  placeholder="System user name"
+                  value={currentUser}
+                  disabled
                   style={{
                     ...inputStyle(),
-                    background: '#f5f3ff',
-                    borderColor: '#8b5cf6'
+                    background: '#f3f4f6',
+                    cursor: 'not-allowed'
                   }}
                 />
+                <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '5px' }}>
+                  Auto-filled from logged-in user
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Section 6: Remarks */}
-          <div style={{ marginBottom: '30px' }}>
+          {/* Section 7: Remarks */}
+          <div style={{ 
+            marginBottom: '25px',
+            paddingTop: '10px',
+            borderTop: '1px solid #e5e7eb'
+          }}>
             <h3 style={{ 
-              margin: '0 0 20px 0', 
+              margin: '0 0 15px 0', 
               color: '#1e293b',
-              paddingBottom: '10px',
-              borderBottom: '2px solid #64748b',
-              fontSize: '20px',
-              fontWeight: '700'
+              fontSize: '18px',
+              fontWeight: '600'
             }}>
               Additional Information
             </h3>
@@ -1175,17 +1212,18 @@ const SpiralEditForm = () => {
                 value={formData.remarks}
                 onChange={handleChange}
                 placeholder="Enter any additional notes or remarks..."
-                rows="4"
+                rows="3"
                 style={{
                   width: '100%',
-                  padding: '15px',
-                  borderRadius: '10px',
-                  border: '1px solid #8b5cf6',
-                  background: '#faf5ff',
-                  fontSize: '15px',
-                  color: '#1e293b',
+                  padding: '12px 15px',
+                  borderRadius: '6px',
+                  border: '1px solid #e5e7eb',
+                  background: '#f8fafc',
+                  fontSize: '14px',
+                  color: '#1f2937',
                   resize: 'vertical',
-                  fontFamily: 'inherit'
+                  fontFamily: 'inherit',
+                  boxSizing: 'border-box'
                 }}
               />
             </div>
@@ -1196,89 +1234,86 @@ const SpiralEditForm = () => {
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            paddingTop: '30px',
-            borderTop: '2px solid #e5e7eb'
+            paddingTop: '20px',
+            borderTop: '1px solid #e5e7eb'
           }}>
-            <button
-              type="button"
-              onClick={handleReset}
-              style={{
-                background: 'transparent',
-                border: '2px solid #d1d5db',
-                padding: '14px 28px',
-                borderRadius: '10px',
-                color: '#6b7280',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                fontWeight: '600',
-                fontSize: '15px'
-              }}
-            >
-              <FiSettings /> Reset Changes
-            </button>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button
+                type="button"
+                onClick={handleReset}
+                style={{
+                  background: 'transparent',
+                  border: '1px solid #d1d5db',
+                  padding: '10px 20px',
+                  borderRadius: '6px',
+                  color: '#6b7280',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  fontWeight: '500',
+                  fontSize: '14px'
+                }}
+              >
+                <FiSettings size={16} /> Reset
+              </button>
 
-            <div style={{ display: 'flex', gap: '20px' }}>
               <button
                 type="button"
                 onClick={handleCancel}
                 style={{
                   background: 'transparent',
-                  border: '2px solid #fca5a5',
-                  padding: '14px 32px',
-                  borderRadius: '10px',
+                  border: '1px solid #fca5a5',
+                  padding: '10px 20px',
+                  borderRadius: '6px',
                   color: '#ef4444',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '12px',
-                  fontWeight: '600',
-                  fontSize: '15px'
+                  gap: '8px',
+                  fontWeight: '500',
+                  fontSize: '14px'
                 }}
               >
-                <FiX /> Cancel
-              </button>
-
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                style={{
-                  background: isSubmitting 
-                    ? '#9ca3af' 
-                    : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                  border: 'none',
-                  padding: '14px 40px',
-                  borderRadius: '10px',
-                  color: 'white',
-                  cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                  fontSize: '16px',
-                  fontWeight: '600',
-                  boxShadow: '0 4px 6px -1px rgba(16, 185, 129, 0.3)'
-                }}
-              >
-                {isSubmitting ? (
-                  <>
-                    <div style={{
-                      width: '16px',
-                      height: '16px',
-                      border: '2px solid rgba(255,255,255,0.3)',
-                      borderTopColor: 'white',
-                      borderRadius: '50%',
-                      animation: 'spin 1s linear infinite'
-                    }} />
-                    Updating...
-                  </>
-                ) : (
-                  <>
-                    <FiSave /> Update Record
-                  </>
-                )}
+                <FiX size={16} /> Cancel
               </button>
             </div>
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              style={{
+                background: isSubmitting ? '#9ca3af' : '#3b82f6',
+                border: 'none',
+                padding: '10px 24px',
+                borderRadius: '6px',
+                color: 'white',
+                cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                fontSize: '14px',
+                fontWeight: '600'
+              }}
+            >
+              {isSubmitting ? (
+                <>
+                  <div style={{
+                    width: '14px',
+                    height: '14px',
+                    border: '2px solid rgba(255,255,255,0.3)',
+                    borderTopColor: 'white',
+                    borderRadius: '50%',
+                    animation: 'spin 1s linear infinite'
+                  }} />
+                  Updating...
+                </>
+              ) : (
+                <>
+                  <FiSave size={16} /> Update Record
+                </>
+              )}
+            </button>
           </div>
         </div>
       </form>
@@ -1288,30 +1323,71 @@ const SpiralEditForm = () => {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
         }
+        
+        /* Mobile Responsive Styles */
+        @media (max-width: 768px) {
+          div[style*="grid-template-columns"] {
+            grid-template-columns: 1fr !important;
+          }
+          
+          h1 {
+            font-size: 20px !important;
+          }
+          
+          h3 {
+            font-size: 16px !important;
+          }
+          
+          div[style*="justify-content: space-between"] {
+            flex-direction: column;
+            gap: 15px;
+          }
+          
+          div[style*="justify-content: space-between"] > div {
+            width: 100%;
+            justify-content: center;
+          }
+          
+          button[style*="background: transparent"][style*="border: 1px solid #fca5a5"] {
+            margin-left: 0 !important;
+          }
+        }
+        
+        /* Better mobile input styles */
+        input, select, textarea {
+          font-size: 16px !important;
+          width: 100% !important;
+          box-sizing: border-box !important;
+        }
+        
+        /* Larger touch targets for mobile */
+        button, select, input[type="text"], input[type="number"] {
+          min-height: 44px;
+        }
       `}</style>
     </div>
   );
 };
 
-// Reusable styles
+// Reusable styles - Light colors only
 const labelStyle = {
-  marginBottom: '10px',
+  marginBottom: '6px',
   fontWeight: '600',
   color: '#374151',
-  fontSize: '15px',
+  fontSize: '13px',
   display: 'block'
 };
 
 const inputStyle = (hasError) => ({
   width: '100%',
-  padding: '14px 15px',
-  borderRadius: '10px',
+  padding: '10px 12px',
+  borderRadius: '6px',
   border: `1px solid ${hasError ? '#ef4444' : '#e5e7eb'}`,
   background: '#f8fafc',
-  fontSize: '15px',
+  fontSize: '14px',
   color: '#1f2937',
-  transition: 'all 0.2s ease',
-  outline: 'none'
+  outline: 'none',
+  boxSizing: 'border-box'
 });
 
 const selectStyle = (hasError) => ({
@@ -1320,21 +1396,18 @@ const selectStyle = (hasError) => ({
   appearance: 'none',
   backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
   backgroundRepeat: 'no-repeat',
-  backgroundPosition: 'right 15px center',
-  backgroundSize: '20px',
-  paddingRight: '45px'
+  backgroundPosition: 'right 12px center',
+  backgroundSize: '14px',
+  paddingRight: '35px'
 });
 
 const ErrorText = ({ text }) => (
   <div style={{ 
     color: '#ef4444', 
-    fontSize: '13px', 
-    marginTop: '6px',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '5px'
+    fontSize: '11px', 
+    marginTop: '4px'
   }}>
-    <FiAlertCircle size={14} /> {text}
+    {text}
   </div>
 );
 

@@ -1602,7 +1602,7 @@ const SpiralPage = () => {
           </div>
         )}
 
-        {/* HEADER SECTION */}
+        {/* ===== HEADER SECTION - CORRECTED ===== */}
         <div className="header-section">
           <div className="header-main">
             <div className="header-left">
