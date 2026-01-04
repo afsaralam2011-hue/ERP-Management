@@ -3,49 +3,381 @@
   <head>
     <meta charset="utf-8" />
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
-    <meta name="description" content="Pakistan Wire Industries - ERP Management System" />
     
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Caveat:wght@600&display=swap" rel="stylesheet">
+    <!-- Viewport for Mobile Optimization -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, minimum-scale=1.0" />
     
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#005461" />
     
-    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+    <!-- PWA Settings -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Spiral Section">
+    
+    <!-- Description -->
+    <meta
+      name="description"
+      content="Pakistan Wire Industries - Spiral Section Production Management System"
+    />
+    
+    <!-- Mobile Touch Icons -->
+    <link rel="apple-touch-icon" sizes="180x180" href="%PUBLIC_URL%/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="%PUBLIC_URL%/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="%PUBLIC_URL%/favicon-16x16.png">
+    
+    <!-- Manifest for PWA -->
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <title>Pakistan Wire Industries - ERP System</title>
     
-    <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-  </head>
-
-  <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
-    <div id="root"></div>
+    <!-- Fonts for Better Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- اضافی scripts اگر چاہیں -->
+    <title>Pakistan Wire Industries - Spiral Section</title>
+    
+    <!-- Critical CSS for Fast Loading -->
+    <style>
+      /* Base Mobile Optimizations */
+      * {
+        -webkit-tap-highlight-color: transparent;
+        -webkit-touch-callout: none;
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      
+      /* Allow text selection for inputs */
+      input, textarea, select {
+        -webkit-user-select: text;
+        -moz-user-select: text;
+        -ms-user-select: text;
+        user-select: text;
+        font-size: 16px; /* Prevent iOS zoom */
+      }
+      
+      html {
+        font-size: 14px;
+        height: 100%;
+        overflow-x: hidden;
+      }
+      
+      @media (min-width: 768px) {
+        html {
+          font-size: 16px;
+        }
+      }
+      
+      /* Body Styles */
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', 'Roboto', 'Oxygen',
+          'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+          sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        background-color: #f8fafc;
+        color: #1e293b;
+        line-height: 1.5;
+        height: 100%;
+        overflow-x: hidden;
+        touch-action: manipulation;
+      }
+      
+      /* Root Container */
+      #root {
+        height: 100%;
+        min-height: 100vh;
+      }
+      
+      /* Loading States */
+      .app-loading {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background: linear-gradient(135deg, #005461, #018790);
+        color: white;
+      }
+      
+      .loading-spinner {
+        width: 50px;
+        height: 50px;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: white;
+        animation: spin 1s linear infinite;
+        margin-bottom: 20px;
+      }
+      
+      /* Animations */
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      
+      @keyframes slideIn {
+        from { transform: translateX(-100%); }
+        to { transform: translateX(0); }
+      }
+      
+      /* Scrollbar Styling */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      
+      ::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 4px;
+      }
+      
+      ::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+      }
+      
+      ::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+      }
+      
+      /* Selection Color */
+      ::selection {
+        background-color: #00B7B5;
+        color: white;
+      }
+      
+      /* Focus Styles for Accessibility */
+      :focus {
+        outline: 2px solid #00B7B5;
+        outline-offset: 2px;
+      }
+      
+      /* Mobile Specific Adjustments */
+      @media screen and (max-width: 768px) {
+        /* Prevent zoom on inputs */
+        input, select, textarea {
+          font-size: 16px !important;
+        }
+        
+        /* Better touch targets */
+        button, 
+        .action-btn,
+        .filter-btn,
+        .pagination-btn {
+          min-height: 44px;
+          min-width: 44px;
+        }
+        
+        /* Hide text on small screens */
+        .mobile-text-hide {
+          display: none;
+        }
+        
+        /* Adjust table for mobile */
+        .table-container {
+          margin: 0 -1rem;
+          padding: 0 1rem;
+        }
+        
+        /* Card adjustments */
+        .card, .stat-card, .dashboard-card {
+          margin: 0.5rem;
+          padding: 0.75rem;
+        }
+      }
+      
+      /* Tablet Adjustments */
+      @media screen and (min-width: 769px) and (max-width: 1024px) {
+        /* Adjust grid layouts */
+        .stats-grid {
+          grid-template-columns: repeat(2, 1fr) !important;
+        }
+        
+        .dashboard-grid {
+          grid-template-columns: 1fr !important;
+        }
+      }
+      
+      /* Print Styles */
+      @media print {
+        .no-print {
+          display: none !important;
+        }
+        
+        body {
+          background: white;
+          color: black;
+        }
+        
+        a {
+          text-decoration: none;
+          color: black;
+        }
+      }
+      
+      /* Utility Classes */
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+      
+      .text-truncate {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      
+      .flex-center {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .flex-between {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      
+      .grid-responsive {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+      }
+    </style>
+    
+    <!-- Progressive Web App Features -->
     <script>
-      // Service worker registration
+      // Register service worker for PWA
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/service-worker.js');
+          navigator.serviceWorker.register('/service-worker.js')
+            .then(registration => {
+              console.log('ServiceWorker registration successful');
+            })
+            .catch(err => {
+              console.log('ServiceWorker registration failed: ', err);
+            });
         });
       }
+      
+      // Prevent pinch zoom on mobile
+      document.addEventListener('touchmove', function(event) {
+        if (event.scale !== 1) {
+          event.preventDefault();
+        }
+      }, { passive: false });
+      
+      // Handle orientation change
+      window.addEventListener('orientationchange', function() {
+        // Force repaint on orientation change
+        document.body.style.transform = 'rotate(0deg)';
+        setTimeout(function() {
+          document.body.style.transform = '';
+        }, 100);
+      });
+      
+      // Detect mobile device
+      function isMobileDevice() {
+        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      }
+      
+      // Add mobile class to body
+      if (isMobileDevice()) {
+        document.body.classList.add('mobile-device');
+      }
+    </script>
+  </head>
+  <body>
+    <noscript>
+      <div style="
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: #005461;
+        color: white;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 2rem;
+        z-index: 9999;
+      ">
+        <h1 style="margin-bottom: 1rem; color: white;">JavaScript Required</h1>
+        <p style="margin-bottom: 2rem; max-width: 600px;">
+          This application requires JavaScript to function properly. Please enable JavaScript in your browser settings.
+        </p>
+        <p style="font-size: 0.9rem; opacity: 0.8;">
+          Pakistan Wire Industries - Spiral Section Production Management System
+        </p>
+      </div>
+    </noscript>
+    
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="app-loading" style="display: none;">
+      <div class="loading-spinner"></div>
+      <h2 style="margin-bottom: 0.5rem; text-align: center;">Loading Spiral Section</h2>
+      <p style="opacity: 0.8; text-align: center;">Pakistan Wire Industries Production System</p>
+    </div>
+    
+    <!-- Main App Container -->
+    <div id="root"></div>
+    
+    <!-- Script to show loading screen -->
+    <script>
+      // Show loading screen immediately
+      document.getElementById('loading-screen').style.display = 'flex';
+      
+      // Hide loading screen when React app mounts
+      window.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+          const loadingScreen = document.getElementById('loading-screen');
+          if (loadingScreen) {
+            loadingScreen.style.opacity = '0';
+            loadingScreen.style.transition = 'opacity 0.3s ease';
+            setTimeout(function() {
+              loadingScreen.style.display = 'none';
+            }, 300);
+          }
+        }, 500);
+      });
+      
+      // Handle page visibility for better mobile experience
+      document.addEventListener('visibilitychange', function() {
+        if (document.visibilityState === 'visible') {
+          // Page became visible again
+          document.title = 'Pakistan Wire Industries - Spiral Section';
+        }
+      });
+    </script>
+    
+    <!-- Performance Monitoring (Optional) -->
+    <script>
+      // Performance monitoring
+      window.addEventListener('load', function() {
+        if (window.performance) {
+          const perfData = window.performance.getEntriesByType('navigation')[0];
+          console.log('Page load time: ' + (perfData.loadEventEnd - perfData.fetchStart) + 'ms');
+        }
+      });
     </script>
   </body>
-  <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ERP Management</title>
-  </head>
-  <body style="margin: 0; padding: 0; border: none;">
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
-</html>
 </html>

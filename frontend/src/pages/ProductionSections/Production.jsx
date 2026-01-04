@@ -56,9 +56,9 @@ const Production = () => {
       name: 'PVC Coating Section', 
       description: 'PVC coating application and finishing',
       path: '/production-sections/pvc-coating',
-      color: '#8b5cf6',
+      color: '#07ccd3e1',
       icon: FiLayers
-    },
+    },  
     { 
       id: 'cutting-packing',
       name: 'Cutting & Packing Section', 
@@ -72,7 +72,7 @@ const Production = () => {
       name: 'Finished Goods Section', 
       description: 'Finished products inventory and quality control',
       path: '/production-sections/finished-goods',
-      color: '#ef4444',
+      color: 'rgba(27, 170, 231, 1)',
       icon: FiCheckSquare
     },
   ];

@@ -121,7 +121,7 @@ const Header = ({
               flexShrink: 0
             }}>
               <img 
-                src="/images/logoB.png" 
+                src="/images/logoA.png" 
                 alt="PWI Logo"
                 style={{
                   height: "24px",
@@ -495,7 +495,7 @@ const Header = ({
           }}
           title="Logout"
         >
-          <FiLogOut style={{ fontSize: "18px" }} />
+          <FiLogOut style={{ fontSize: "25px" }} />
           <span>Logout</span>
         </button>
       </div>

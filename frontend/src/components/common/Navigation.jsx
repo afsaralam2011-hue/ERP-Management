@@ -35,10 +35,10 @@ const Navigation = () => {
   
   // Your provided color scheme with proper contrast
   const COLORS = {
-    primary: '#3C467B',    // Dark Blue - Primary color
-    secondary: '#50589C',  // Medium Blue - Secondary
-    accent: '#636CCB',     // Light Blue - Accent
-    highlight: '#6E8CFB',  // Very Light Blue - Highlight
+    primary: '#36656B',    // Dark Blue - Primary color
+    secondary: '#75B06F',  // Medium Blue - Secondary
+    accent: '#DAD887',     // Light Blue - Accent
+    highlight: '#FF7DB0',  // Very Light Blue - Highlight
     white: '#FFFFFF',
     lightGray: '#F8FAFC',
     darkGray: '#1E293B',
@@ -259,6 +259,7 @@ const Navigation = () => {
           icon: <FiBox />,
           color: COLORS.highlight,
           subItems: [
+            { path: '/production-sections/flattening', label: 'Flattening Section', icon: <FiLayers /> },
             { path: '/production-sections/flattening/smart-entry', label: 'Flattening Production Entry', icon: <FiClipboard /> },
             { path: '/flattening-inventory', label: 'Flattening Inventory Reports', icon: <FiArchive /> },
             { path: '/flattening-ledger', label: 'Flattening Inventory Ledger', icon: <FiDatabase /> },
