@@ -1,11 +1,12 @@
-// src/App.jsx - UPDATED VERSION WITH WELCOME SCREEN EVENT LISTENER
-import React, { useEffect } from "react";
+// src/App.jsx - COMPLETE UPDATED VERSION
+import React, { useEffect, useState } from "react";
 import {
   BrowserRouter as Router,
   Routes,
   Route,
   Navigate,
   useNavigate,
+  useLocation,
 } from "react-router-dom";
 
 // ========== AUTH PAGES ==========
@@ -41,13 +42,14 @@ import SpiralForm from "./pages/ProductionSections/SpiralSection/SpiralForm";
 import SpiralEditForm from "./pages/ProductionSections/SpiralSection/SpiralEditForm";
 import SpiralView from "./pages/ProductionSections/SpiralSection/SpiralView";
 import SpiralSmartForm from "./pages/ProductionSections/SpiralSection/SpiralSmartForm";
+import SpiralMultiEntryForm from "./pages/ProductionSections/SpiralSection/SpiralMultiEntryForm.jsx";
 
 // ========== RAW MATERIAL SECTION ==========
 import RawMaterialPage from "./pages/ProductionSections/RawMaterialSection/RawMaterialPage";
-import RawMaterialLogForm from "./pages/ProductionSections/RawMaterialSection/RawMaterialLogForm"; 
-import MaterialReceivedForm from "./pages/ProductionSections/RawMaterialSection/MaterialReceivedForm"; 
-import MaterialIssueForm from "./pages/ProductionSections/RawMaterialSection/MaterialIssueForm"; 
-import RawMaterialEditForm from "./pages/ProductionSections/RawMaterialSection/RawMaterialEditForm"; 
+import RawMaterialLogForm from "./pages/ProductionSections/RawMaterialSection/RawMaterialLogForm";
+import MaterialReceivedForm from "./pages/ProductionSections/RawMaterialSection/MaterialReceivedForm";
+import MaterialIssueForm from "./pages/ProductionSections/RawMaterialSection/MaterialIssueForm";
+import RawMaterialEditForm from "./pages/ProductionSections/RawMaterialSection/RawMaterialEditForm";
 import RawMaterialForm from "./pages/ProductionSections/RawMaterialSection/RawMaterialForm";
 
 // ========== PVC COATING SECTION ==========
@@ -61,30 +63,155 @@ import PVCSmartForm from "./pages/ProductionSections/PVCCoatingSection/PVCSmartF
 import DailyProductionReport from "./pages/ProductionReports/DailyProductionReport";
 
 // ========== INVENTORY REPORTS ==========
-import FlatteningInventoryReport from './components/FlatteningInventoryReport';
-import FlatteningInventoryLedger from './components/FlatteningInventoryLedger';
+import FlatteningInventoryReport from "./components/FlatteningInventoryReport";
+import FlatteningInventoryLedger from "./components/FlatteningInventoryLedger";
 
 // ========== LAYOUT ==========
-import Layout from './components/common/Layout';
+import Layout from "./components/common/Layout";
+
+// ========== AUTH CONTEXT / HOOKS ==========
+// Import your auth context or hooks if available
+// import { useAuth } from "./contexts/AuthContext";
+
+function AppWrapper() {
+  const [isAppReady, setIsAppReady] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    console.log("AppWrapper mounted, current path:", location.pathname);
+
+    // Function to mark React app as loaded
+    const markAppLoaded = () => {
+      if (window.reactAppLoaded) {
+        window.reactAppLoaded();
+        console.log("Marked React app as loaded");
+      }
+    };
+
+    // Function to check authentication status
+    const checkAuthStatus = () => {
+      // Check for auth token in localStorage or sessionStorage
+      const token = localStorage.getItem("authToken") || 
+                   sessionStorage.getItem("authToken") ||
+                   localStorage.getItem("userToken");
+      
+      const userData = localStorage.getItem("user") || 
+                      sessionStorage.getItem("user");
+
+      console.log("Auth check - Token exists:", !!token, "User data exists:", !!userData);
+
+      return {
+        isAuthenticated: !!token || !!userData,
+        token,
+        userData: userData ? JSON.parse(userData) : null
+      };
+    };
+
+    // Function to handle app-ready event
+    const handleAppReady = (event) => {
+      console.log("App-ready event received:", event.detail);
+      
+      const auth = checkAuthStatus();
+      const currentPath = location.pathname;
+
+      console.log("Current path:", currentPath, "Is authenticated:", auth.isAuthenticated);
+
+      // If already authenticated, go to dashboard
+      if (auth.isAuthenticated) {
+        if (currentPath === "/" || currentPath === "/login") {
+          console.log("User is authenticated, redirecting to dashboard");
+          navigate("/dashboard", { replace: true });
+        }
+      } else {
+        // Not authenticated
+        if (currentPath !== "/login" && currentPath !== "/register") {
+          console.log("User not authenticated, redirecting to login");
+          navigate("/login", { replace: true });
+        }
+      }
+
+      setIsAppReady(true);
+    };
+
+    // Function to initialize app
+    const initializeApp = () => {
+      console.log("Initializing React app...");
+
+      // Mark React app as loaded
+      markAppLoaded();
+
+      // Check if we should handle navigation immediately
+      // (if welcome screen already finished or was skipped)
+      const welcomeScreenSkipped = localStorage.getItem("pwi_welcome_skipped") === "true";
+      const lastWelcomeDate = localStorage.getItem("pwi_last_welcome_date");
+      const today = new Date().toDateString();
+
+      console.log("Welcome screen skipped:", welcomeScreenSkipped, "Last welcome date:", lastWelcomeDate);
+
+      if (welcomeScreenSkipped || lastWelcomeDate === today) {
+        // Welcome screen already handled, check auth and navigate
+        const auth = checkAuthStatus();
+        const currentPath = location.pathname;
+
+        if (auth.isAuthenticated) {
+          if (currentPath === "/" || currentPath === "/login") {
+            navigate("/dashboard", { replace: true });
+          }
+        } else {
+          if (currentPath !== "/login" && currentPath !== "/register") {
+            navigate("/login", { replace: true });
+          }
+        }
+      }
+
+      // Listen for app-ready event from welcome screen
+      window.addEventListener("app-ready", handleAppReady);
+
+      // Also provide a global function for welcome screen to trigger
+      window.triggerReactNavigation = () => {
+        console.log("Manual trigger from welcome screen");
+        handleAppReady({ detail: { source: "manual" } });
+      };
+
+      // Cleanup
+      return () => {
+        window.removeEventListener("app-ready", handleAppReady);
+        delete window.triggerReactNavigation;
+      };
+    };
+
+    // Initialize with a small delay to ensure DOM is ready
+    const initTimer = setTimeout(initializeApp, 100);
+
+    return () => {
+      clearTimeout(initTimer);
+      window.removeEventListener("app-ready", handleAppReady);
+      delete window.triggerReactNavigation;
+    };
+  }, [navigate, location]);
+
+  // Show loading state while app is initializing
+  if (!isAppReady && (location.pathname === "/" || location.pathname === "")) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600 mb-4"></div>
+          <h2 className="text-xl font-semibold text-gray-700 mb-2">
+            Loading Pakistan Wire Industries ERP
+          </h2>
+          <p className="text-gray-500">
+            Please wait while we prepare your dashboard...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return <AppContent />;
+}
 
 function AppContent() {
-  const navigate = useNavigate();
-  
-  useEffect(() => {
-    // Listen for app-ready event from welcome screen
-    const handleAppReady = () => {
-      console.log('App ready event received, navigating to login...');
-      navigate('/login'); // Navigate to your login page
-    };
-    
-    window.addEventListener('app-ready', handleAppReady);
-    
-    // Cleanup
-    return () => {
-      window.removeEventListener('app-ready', handleAppReady);
-    };
-  }, [navigate]);
-
   return (
     <Routes>
       {/* ========== AUTH ROUTES ========== */}
@@ -198,7 +325,7 @@ function AppContent() {
       />
       
       {/* ========== PRODUCTION SUB-DEPARTMENT ROUTES ========== */}
-      {/* Flattening Department - Redirect to Flattening Page */}
+      {/* Flattening Department */}
       <Route
         path="/production/flattening"
         element={
@@ -211,7 +338,7 @@ function AppContent() {
         }
       />
       
-      {/* Plating Department - Redirect to Production Dashboard (temporary) */}
+      {/* Plating Department */}
       <Route
         path="/production/plating"
         element={
@@ -224,7 +351,7 @@ function AppContent() {
         }
       />
       
-      {/* PVC Department - Redirect to PVC Coating Page */}
+      {/* PVC Department */}
       <Route
         path="/production/pvc"
         element={
@@ -237,7 +364,7 @@ function AppContent() {
         }
       />
       
-      {/* Cutting Department - Redirect to Production Dashboard (temporary) */}
+      {/* Cutting Department */}
       <Route
         path="/production/cutting"
         element={
@@ -250,7 +377,7 @@ function AppContent() {
         }
       />
       
-      {/* Raw Material Department - Redirect to Raw Material Page */}
+      {/* Raw Material Department */}
       <Route
         path="/production/raw-material"
         element={
@@ -554,8 +681,8 @@ function AppContent() {
       
       {/* ========== INVENTORY REPORTS ========== */}
       {/* Flattening Inventory Report */}
-      <Route 
-        path="/flattening-inventory" 
+      <Route
+        path="/flattening-inventory"
         element={
           <Layout
             title="Flattening Inventory Report"
@@ -563,12 +690,12 @@ function AppContent() {
           >
             <FlatteningInventoryReport />
           </Layout>
-        } 
+        }
       />
       
       {/* Flattening Inventory Ledger */}
-      <Route 
-        path="/flattening-ledger" 
+      <Route
+        path="/flattening-ledger"
         element={
           <Layout
             title="Flattening Inventory Ledger"
@@ -576,11 +703,27 @@ function AppContent() {
           >
             <FlatteningInventoryLedger />
           </Layout>
-        } 
+        }
       />
       
+      {/* Spiral Multi-Entry Form */}
+      <Route
+        path="/production-sections/spiral/multi-entry"
+        element={
+          <Layout
+            title="Multi-Item Spiral Production"
+            subtitle="Add multiple items for the same machine in one entry"
+          >
+            <SpiralMultiEntryForm />
+          </Layout>
+        }
+      />
+
       {/* ========== DEFAULT ROUTES ========== */}
-      <Route path="/" element={<Navigate to="/login" />} />
+      {/* Root path - will be handled by AppWrapper based on auth status */}
+      <Route path="/" element={<div />} />
+      
+      {/* Fallback route */}
       <Route path="*" element={<Navigate to="/dashboard" />} />
     </Routes>
   );
@@ -589,7 +732,7 @@ function AppContent() {
 function App() {
   return (
     <Router>
-      <AppContent />
+      <AppWrapper />
     </Router>
   );
 }

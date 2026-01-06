@@ -64,7 +64,7 @@ const Header = ({
   return (
     <div className="header-container" style={{
       background: "linear-gradient(135deg, #3C467B 0%, #50589C 50%, #636CCB 100%)",
-      padding: "12px 24px 56px 24px",
+      padding: "12px 24px 50px 25px",
       display: "flex",
       alignItems: "center",
       justifyContent: "space-between",
@@ -468,7 +468,7 @@ const Header = ({
           style={{
             background: "rgba(255,255,255,0.15)",
             border: "1px solid rgba(255,255,255,0.3)",
-            color: "#FFFFFF",
+            color: "rgba(216, 7, 7, 0.92)",
             fontSize: "14px",
             cursor: "pointer",
             padding: "10px 18px",

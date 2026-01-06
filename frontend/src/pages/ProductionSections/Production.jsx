@@ -196,7 +196,7 @@ const Production = () => {
           .summary-value { font-size: 24px; font-weight: bold; color: #333; }
           .summary-label { font-size: 14px; color: #666; margin-top: 5px; }
           .table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-          .table th, .table td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+          .table th, .table td { border: 1px solid #ddd; padding: 1px; text-align: left; }
           .table th { background-color: #f8f9fa; }
           .footer { margin-top: 40px; text-align: center; color: #666; font-size: 12px; }
           @media print { body { margin: 20px; } .no-print { display: none; } }

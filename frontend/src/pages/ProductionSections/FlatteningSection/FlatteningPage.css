@@ -113,7 +113,7 @@ html, body, #root {
 }
 
 .breadcrumb-btn.back-btn {
-  border-color: #a20101f6 !important;
+  border-color: hsla(93, 99%, 32%, 0.965) !important;
   color: lch(87.45% 40.2 195.33 / 0.941) !important;
 }
 

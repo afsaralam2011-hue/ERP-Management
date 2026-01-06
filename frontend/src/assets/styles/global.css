@@ -14,7 +14,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-color: #f8fafc;
-  color: #1e293b;
+  color: lab(43.9% 68.2 55.09);
   line-height: 1.5;
 }
 

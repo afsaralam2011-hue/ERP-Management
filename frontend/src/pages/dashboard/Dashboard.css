@@ -508,7 +508,7 @@ body {
   .main-header {
     flex-direction: column;
     gap: 16px;
-    padding: 12px;
+    padding: 1px;
   }
   
   .header-left,

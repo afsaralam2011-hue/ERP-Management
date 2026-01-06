@@ -18,7 +18,7 @@
     <!-- Description -->
     <meta
       name="description"
-      content="Pakistan Wire Industries - Spiral Section Production Management System"
+      content="Pakistan Wire Industries - Management System"
     />
     
     <!-- Mobile Touch Icons -->
@@ -34,7 +34,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <title>Pakistan Wire Industries - Spiral Section</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    
+    <title>Pakistan Wire Industries</title>
     
     <!-- Critical CSS for Fast Loading -->
     <style>
@@ -91,6 +94,80 @@
         min-height: 100vh;
       }
       
+      /* Welcome Screen Styles */
+      .welcome-screen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #005461, #018790);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        color: white;
+        text-align: center;
+        padding: 2rem;
+        transition: opacity 0.5s ease;
+      }
+      
+      .welcome-logo {
+        width: 150px;
+        height: 150px;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: pulse 2s infinite;
+      }
+      
+      .welcome-logo img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+      }
+      
+      .welcome-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        letter-spacing: 1px;
+      }
+      
+      .welcome-subtitle {
+        font-size: 1.2rem;
+        opacity: 0.9;
+        margin-bottom: 2rem;
+        max-width: 600px;
+      }
+      
+      .countdown-timer {
+        font-size: 3rem;
+        font-weight: bold;
+        margin: 2rem 0;
+        color: #00B7B5;
+        text-shadow: 0 2px 10px rgba(0, 183, 181, 0.3);
+      }
+      
+      .progress-bar {
+        width: 300px;
+        height: 8px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 4px;
+        overflow: hidden;
+        margin: 2rem 0;
+      }
+      
+      .progress-fill {
+        height: 100%;
+        background: #00B7B5;
+        width: 0%;
+        transition: width 0.3s ease;
+        border-radius: 4px;
+      }
+      
       /* Loading States */
       .app-loading {
         display: flex;
@@ -118,190 +195,41 @@
         100% { transform: rotate(360deg); }
       }
       
-      @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-      }
-      
-      @keyframes slideIn {
-        from { transform: translateX(-100%); }
-        to { transform: translateX(0); }
-      }
-      
-      /* Scrollbar Styling */
-      ::-webkit-scrollbar {
-        width: 8px;
-        height: 8px;
-      }
-      
-      ::-webkit-scrollbar-track {
-        background: #f1f5f9;
-        border-radius: 4px;
-      }
-      
-      ::-webkit-scrollbar-thumb {
-        background: #cbd5e1;
-        border-radius: 4px;
-      }
-      
-      ::-webkit-scrollbar-thumb:hover {
-        background: #94a3b8;
-      }
-      
-      /* Selection Color */
-      ::selection {
-        background-color: #00B7B5;
-        color: white;
-      }
-      
-      /* Focus Styles for Accessibility */
-      :focus {
-        outline: 2px solid #00B7B5;
-        outline-offset: 2px;
+      @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
       }
       
       /* Mobile Specific Adjustments */
       @media screen and (max-width: 768px) {
-        /* Prevent zoom on inputs */
-        input, select, textarea {
-          font-size: 16px !important;
+        .welcome-title {
+          font-size: 2rem;
         }
         
-        /* Better touch targets */
-        button, 
-        .action-btn,
-        .filter-btn,
-        .pagination-btn {
-          min-height: 44px;
-          min-width: 44px;
+        .welcome-subtitle {
+          font-size: 1rem;
         }
         
-        /* Hide text on small screens */
-        .mobile-text-hide {
-          display: none;
+        .welcome-logo {
+          width: 120px;
+          height: 120px;
         }
         
-        /* Adjust table for mobile */
-        .table-container {
-          margin: 0 -1rem;
-          padding: 0 1rem;
+        .countdown-timer {
+          font-size: 2.5rem;
         }
         
-        /* Card adjustments */
-        .card, .stat-card, .dashboard-card {
-          margin: 0.5rem;
-          padding: 0.75rem;
+        .progress-bar {
+          width: 250px;
         }
-      }
-      
-      /* Tablet Adjustments */
-      @media screen and (min-width: 769px) and (max-width: 1024px) {
-        /* Adjust grid layouts */
-        .stats-grid {
-          grid-template-columns: repeat(2, 1fr) !important;
-        }
-        
-        .dashboard-grid {
-          grid-template-columns: 1fr !important;
-        }
-      }
-      
-      /* Print Styles */
-      @media print {
-        .no-print {
-          display: none !important;
-        }
-        
-        body {
-          background: white;
-          color: black;
-        }
-        
-        a {
-          text-decoration: none;
-          color: black;
-        }
-      }
-      
-      /* Utility Classes */
-      .sr-only {
-        position: absolute;
-        width: 1px;
-        height: 1px;
-        padding: 0;
-        margin: -1px;
-        overflow: hidden;
-        clip: rect(0, 0, 0, 0);
-        white-space: nowrap;
-        border: 0;
-      }
-      
-      .text-truncate {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-      
-      .flex-center {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-      
-      .flex-between {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-      }
-      
-      .grid-responsive {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 1rem;
       }
     </style>
     
-    <!-- Progressive Web App Features -->
-    <script>
-      // Register service worker for PWA
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/service-worker.js')
-            .then(registration => {
-              console.log('ServiceWorker registration successful');
-            })
-            .catch(err => {
-              console.log('ServiceWorker registration failed: ', err);
-            });
-        });
-      }
-      
-      // Prevent pinch zoom on mobile
-      document.addEventListener('touchmove', function(event) {
-        if (event.scale !== 1) {
-          event.preventDefault();
-        }
-      }, { passive: false });
-      
-      // Handle orientation change
-      window.addEventListener('orientationchange', function() {
-        // Force repaint on orientation change
-        document.body.style.transform = 'rotate(0deg)';
-        setTimeout(function() {
-          document.body.style.transform = '';
-        }, 100);
-      });
-      
-      // Detect mobile device
-      function isMobileDevice() {
-        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      }
-      
-      // Add mobile class to body
-      if (isMobileDevice()) {
-        document.body.classList.add('mobile-device');
-      }
-    </script>
+    <!-- Background Music (Optional) -->
+    <audio id="background-music" loop>
+      <source src="%PUBLIC_URL%/audio/welcome-music.mp3" type="audio/mpeg">
+    </audio>
   </head>
   <body>
     <noscript>
@@ -311,7 +239,7 @@
         left: 0;
         right: 0;
         bottom: 0;
-        background: #005461;
+        background: hsl(359, 80%, 33%);
         color: white;
         display: flex;
         flex-direction: column;
@@ -326,56 +254,297 @@
           This application requires JavaScript to function properly. Please enable JavaScript in your browser settings.
         </p>
         <p style="font-size: 0.9rem; opacity: 0.8;">
-          Pakistan Wire Industries - Spiral Section Production Management System
+          Pakistan Wire Industries - Production Management System
         </p>
       </div>
     </noscript>
     
+    <!-- Welcome Screen (Initially Hidden) -->
+    <div id="welcome-screen" class="welcome-screen" style="display: none;">
+      <div class="welcome-logo">
+        <img src="%PUBLIC_URL%/logoA" alt="Pakistan Wire Industries Logo" id="company-logo" />
+      </div>
+      
+      <h1 class="welcome-title">Pakistan Wire Industries</h1>
+      
+      <p class="welcome-subtitle">
+        Welcome to our Production Management System
+      </p>
+      
+      <div class="countdown-timer" id="countdown">15</div>
+      
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+      
+      <p class="mb-6">Loading login in <span id="countdown-text">15</span> seconds</p>
+      
+      <button 
+        id="skip-button" 
+        class="px-6 py-3 bg-white/20 hover:bg-white/30 text-white font-semibold rounded-lg transition-all duration-300 backdrop-blur-sm border border-white/30 hover:border-white/50"
+      >
+        Skip & Go to Login
+      </button>
+      
+      <div class="mt-8 text-sm opacity-70">
+        <p>© 2024 Pakistan Wire Industries | All Rights Reserved</p>
+      </div>
+    </div>
+    
     <!-- Loading Screen -->
     <div id="loading-screen" class="app-loading" style="display: none;">
       <div class="loading-spinner"></div>
-      <h2 style="margin-bottom: 0.5rem; text-align: center;">Loading Spiral Section</h2>
+      <h2 style="margin-bottom: 0.5rem; text-align: center;">Loading Application</h2>
       <p style="opacity: 0.8; text-align: center;">Pakistan Wire Industries Production System</p>
     </div>
     
     <!-- Main App Container -->
     <div id="root"></div>
     
-    <!-- Script to show loading screen -->
+    <!-- Main Script -->
     <script>
-      // Show loading screen immediately
-      document.getElementById('loading-screen').style.display = 'flex';
+      // Global variables
+      let countdownInterval = null;
+      let hasRedirected = false; // Flag to prevent multiple redirects
       
-      // Hide loading screen when React app mounts
-      window.addEventListener('DOMContentLoaded', function() {
-        setTimeout(function() {
-          const loadingScreen = document.getElementById('loading-screen');
-          if (loadingScreen) {
-            loadingScreen.style.opacity = '0';
-            loadingScreen.style.transition = 'opacity 0.3s ease';
-            setTimeout(function() {
-              loadingScreen.style.display = 'none';
-            }, 300);
+      // Function to check if user is authenticated (simplified version)
+      function isUserAuthenticated() {
+        // Check if token exists in localStorage
+        return localStorage.getItem('authToken') !== null ||
+               localStorage.getItem('user') !== null ||
+               sessionStorage.getItem('authToken') !== null;
+      }
+      
+      // Function to check if welcome screen should be shown
+      function shouldShowWelcomeScreen() {
+        // Check if user has already seen welcome screen today
+        const lastWelcomeDate = localStorage.getItem('pwi_last_welcome_date');
+        const today = new Date().toDateString();
+        
+        // Don't show if:
+        // 1. User is already authenticated
+        // 2. User saw welcome screen today
+        // 3. User manually skipped welcome screen
+        if (isUserAuthenticated()) {
+          return false;
+        }
+        
+        if (lastWelcomeDate === today) {
+          return false;
+        }
+        
+        return localStorage.getItem('pwi_welcome_skipped') !== 'true';
+      }
+      
+      // Function to mark welcome screen as shown
+      function markWelcomeScreenShown() {
+        const today = new Date().toDateString();
+        localStorage.setItem('pwi_last_welcome_date', today);
+      }
+      
+      // Function to mark welcome screen as skipped
+      function markWelcomeScreenSkipped() {
+        localStorage.setItem('pwi_welcome_skipped', 'true');
+      }
+      
+      // Function to trigger app-ready event
+      function triggerAppReady() {
+        console.log('Dispatching app-ready event...');
+        const event = new CustomEvent('app-ready', {
+          detail: { timestamp: new Date().toISOString() }
+        });
+        window.dispatchEvent(event);
+        
+        // Also provide a global function for React to call
+        if (window.reactAppReady) {
+          window.reactAppReady();
+        }
+      }
+      
+      // Function to redirect to login
+      function redirectToLogin() {
+        if (hasRedirected) return; // Prevent multiple redirects
+        
+        hasRedirected = true;
+        
+        // First hide welcome screen
+        const welcomeScreen = document.getElementById('welcome-screen');
+        if (welcomeScreen) {
+          welcomeScreen.style.opacity = '0';
+          setTimeout(() => {
+            welcomeScreen.style.display = 'none';
+          }, 500);
+        }
+        
+        // Mark welcome as shown/skipped
+        markWelcomeScreenShown();
+        markWelcomeScreenSkipped();
+        
+        // Stop music if playing
+        const backgroundMusic = document.getElementById('background-music');
+        if (backgroundMusic) {
+          backgroundMusic.pause();
+          backgroundMusic.currentTime = 0;
+        }
+        
+        // Clear interval if running
+        if (countdownInterval) {
+          clearInterval(countdownInterval);
+          countdownInterval = null;
+        }
+        
+        // Trigger app-ready event for React to handle navigation
+        console.log('Triggering app-ready event for React navigation...');
+        triggerAppReady();
+        
+        // Show loading screen briefly
+        showLoadingScreen();
+      }
+      
+      // Function to show loading screen
+      function showLoadingScreen() {
+        const loadingScreen = document.getElementById('loading-screen');
+        if (loadingScreen) {
+          loadingScreen.style.display = 'flex';
+          loadingScreen.style.opacity = '1';
+          
+          // Hide loading screen after React app loads
+          setTimeout(() => {
+            if (loadingScreen) {
+              loadingScreen.style.opacity = '0';
+              setTimeout(() => {
+                loadingScreen.style.display = 'none';
+              }, 500);
+            }
+          }, 1000);
+        }
+      }
+      
+      // Function to start welcome screen
+      function startWelcomeScreen() {
+        // Check if welcome screen should be shown
+        if (!shouldShowWelcomeScreen()) {
+          console.log('Skipping welcome screen - user already authenticated or saw it today');
+          showLoadingScreen();
+          triggerAppReady();
+          return;
+        }
+        
+        const welcomeScreen = document.getElementById('welcome-screen');
+        const countdownElement = document.getElementById('countdown');
+        const progressFill = document.getElementById('progress-fill');
+        const countdownText = document.getElementById('countdown-text');
+        
+        // Show welcome screen
+        welcomeScreen.style.display = 'flex';
+        welcomeScreen.style.opacity = '1';
+        
+        // Load logo
+        const logoElement = document.getElementById('company-logo');
+        if (logoElement) {
+          // Handle logo loading error
+          logoElement.onerror = function() {
+            console.log('Logo failed to load, showing fallback');
+            this.style.display = 'none';
+            this.parentElement.innerHTML = '<div style="font-size: 3rem; font-weight: bold; color: white;">PWI</div>';
+          };
+        }
+        
+        let timeLeft = 15;
+        const totalTime = 15;
+        
+        // Background music handling (optional)
+        const backgroundMusic = document.getElementById('background-music');
+        if (backgroundMusic) {
+          const startMusic = () => {
+            backgroundMusic.volume = 0.2;
+            backgroundMusic.play().catch(e => {
+              console.log('Autoplay prevented, user interaction required');
+            });
+          };
+          
+          document.addEventListener('click', startMusic, { once: true });
+          document.addEventListener('touchstart', startMusic, { once: true });
+        }
+        
+        // Start countdown
+        countdownInterval = setInterval(() => {
+          timeLeft--;
+          countdownElement.textContent = timeLeft;
+          countdownText.textContent = timeLeft;
+          
+          // Update progress bar
+          const progressPercentage = ((totalTime - timeLeft) / totalTime) * 100;
+          progressFill.style.width = `${progressPercentage}%`;
+          
+          if (timeLeft <= 0) {
+            redirectToLogin();
           }
-        }, 500);
-      });
+        }, 1000);
+        
+        // Skip button
+        document.getElementById('skip-button').addEventListener('click', function() {
+          markWelcomeScreenSkipped();
+          redirectToLogin();
+        });
+      }
       
-      // Handle page visibility for better mobile experience
-      document.addEventListener('visibilitychange', function() {
-        if (document.visibilityState === 'visible') {
-          // Page became visible again
-          document.title = 'Pakistan Wire Industries - Spiral Section';
+      // Initialize when DOM is loaded
+      document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM loaded, initializing welcome screen...');
+        
+        // Check current URL - if already on login page, don't show welcome
+        const currentPath = window.location.pathname;
+        const isLoginPage = currentPath.includes('/login') || 
+                           currentPath === '/' || 
+                           currentPath === '';
+        
+        if (isLoginPage && !shouldShowWelcomeScreen()) {
+          // Already on login page and shouldn't show welcome
+          console.log('Already on login page, showing loading screen...');
+          showLoadingScreen();
+          setTimeout(triggerAppReady, 500);
+        } else {
+          // Start welcome screen
+          startWelcomeScreen();
         }
       });
-    </script>
-    
-    <!-- Performance Monitoring (Optional) -->
-    <script>
+      
+      // Global function for React to call when it's ready
+      window.reactAppLoaded = function() {
+        console.log('React app loaded successfully');
+        
+        // Hide any loading screens
+        const loadingScreen = document.getElementById('loading-screen');
+        if (loadingScreen) {
+          loadingScreen.style.opacity = '0';
+          setTimeout(() => {
+            loadingScreen.style.display = 'none';
+          }, 300);
+        }
+        
+        // Update welcome screen if still visible
+        const welcomeScreen = document.getElementById('welcome-screen');
+        if (welcomeScreen && welcomeScreen.style.display !== 'none') {
+          const countdownText = document.getElementById('countdown-text');
+          if (countdownText) {
+            countdownText.textContent = 'app loading...';
+          }
+        }
+      };
+      
+      // Handle page visibility
+      document.addEventListener('visibilitychange', function() {
+        if (document.visibilityState === 'visible') {
+          document.title = 'Pakistan Wire Industries';
+        }
+      });
+      
       // Performance monitoring
       window.addEventListener('load', function() {
         if (window.performance) {
           const perfData = window.performance.getEntriesByType('navigation')[0];
-          console.log('Page load time: ' + (perfData.loadEventEnd - perfData.fetchStart) + 'ms');
+          console.log('Page loaded in: ' + (perfData.loadEventEnd - perfData.fetchStart) + 'ms');
         }
       });
     </script>

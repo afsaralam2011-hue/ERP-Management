@@ -35,7 +35,7 @@ const Navigation = () => {
   
   // Your provided color scheme with proper contrast
   const COLORS = {
-    primary: '#36656B',    // Dark Blue - Primary color
+    primary: '#04626eff',    // Dark Blue - Primary color
     secondary: '#75B06F',  // Medium Blue - Secondary
     accent: '#DAD887',     // Light Blue - Accent
     highlight: '#FF7DB0',  // Very Light Blue - Highlight

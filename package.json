@@ -1,7 +1,7 @@
 {
-  "name": "devine-water-erp",
+  "name": "erp-system",
   "version": "1.0.0",
-  "description": "Devine Water - ERP Water Delivery Management System",
+  "description": "ERP Management System",
   "private": true,
   "scripts": {
     "install:all": "cd frontend && npm install && cd ../backend && npm install",
@@ -13,17 +13,28 @@
     "start:backend": "cd backend && npm start"
   },
   "keywords": [
-    "erp",
-    "water-delivery",
+    "erp-system",
     "management-system"
   ],
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "sequelize-cli": "^6.6.3",
-    "concurrently": "^8.0.0"
+    "concurrently": "^8.0.0",
+    "sequelize-cli": "^6.6.3"
   },
   "dependencies": {
-    "sequelize": "^6.37.7"
-  }
+    "@tailwindcss/cli": "^4.1.18",
+    "sequelize": "^6.37.7",
+    "tailwindcss": "^4.1.18"
+  },
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/afsaralam2011-hue/ERP-Management.git"
+  },
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/afsaralam2011-hue/ERP-Management/issues"
+  },
+  "homepage": "https://github.com/afsaralam2011-hue/ERP-Management#readme"
 }
