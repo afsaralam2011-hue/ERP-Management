@@ -28,7 +28,7 @@
 
 .production-metrics-dashboard .spinner {
   font-size: 3rem;
-  color: #6b7280;
+  color: #374151;
   animation: metrics-spin 1s linear infinite;
 }
 
@@ -41,7 +41,7 @@
   margin-top: 10px;
   padding: 8px 16px;
   background: #f3f4f6;
-  color: #6b7280;
+  color: #374151;
   border-radius: 20px;
   font-size: 0.9rem;
   border: 1px solid #e5e7eb;
@@ -92,6 +92,19 @@
   background: white;
   width: 100%;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  position: relative;
+  overflow: hidden;
+}
+
+.production-metrics-dashboard .department-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 6px;
+  background: inherit;
+  opacity: 0.8;
 }
 
 .production-metrics-dashboard .department-btn:hover {
@@ -133,8 +146,18 @@
 
 .production-metrics-dashboard .dept-table-info {
   font-size: 0.8rem;
-  color: #6b7280;
+  color: #374151;
   margin-top: 4px;
+  font-weight: 500;
+}
+
+.production-metrics-dashboard .dept-last-update {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-top: 6px;
+  font-style: italic;
+  border-top: 1px solid #f3f4f6;
+  padding-top: 6px;
 }
 
 .production-metrics-dashboard .active-indicator {
@@ -206,8 +229,23 @@
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
+.production-metrics-dashboard .last-update-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  padding: 6px 12px;
+  border-radius: 20px;
+  margin-left: 12px;
+  font-weight: 500;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #92400e;
+  border: 1px solid #fbbf24;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
 .production-metrics-dashboard .dashboard-subtitle {
-  color: #6b7280;
+  color: #374151;
   margin: 0;
   font-size: 0.95rem;
   padding-left: 4px;
@@ -218,7 +256,7 @@
   margin-left: 8px;
   padding-left: 8px;
   border-left: 1px solid #d1d5db;
-  color: #6b7280;
+  color: #374151;
 }
 
 .production-metrics-dashboard .header-right {
@@ -229,7 +267,7 @@
 
 .production-metrics-dashboard .refresh-info {
   font-size: 0.9rem;
-  color: #6b7280;
+  color: #374151;
   padding: 8px 16px;
   background: #f8fafc;
   border-radius: 20px;
@@ -338,9 +376,10 @@
   align-items: center;
   justify-content: center;
   font-size: 1.8rem;
-  color: white;
+  color: #374151;
   transition: all 0.3s ease;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
 }
 
 .production-metrics-dashboard .summary-card:hover .summary-icon {
@@ -402,7 +441,7 @@
 
 .production-metrics-dashboard .value-unit {
   font-size: 1.1rem;
-  color: #6b7280;
+  color: #374151;
   font-weight: 500;
 }
 
@@ -433,7 +472,7 @@
   align-items: center;
   gap: 10px;
   font-size: 0.95rem;
-  color: #6b7280;
+  color: #374151;
   font-weight: 500;
 }
 
@@ -441,6 +480,22 @@
   font-weight: 600;
   font-size: 1rem;
   color: #374151;
+}
+
+/* Efficiency colors based on percentage */
+.production-metrics-dashboard .efficiency-excellent {
+  color: #10b981 !important;
+  font-weight: 700 !important;
+}
+
+.production-metrics-dashboard .efficiency-good {
+  color: #f59e0b !important;
+  font-weight: 700 !important;
+}
+
+.production-metrics-dashboard .efficiency-poor {
+  color: #ef4444 !important;
+  font-weight: 700 !important;
 }
 
 .production-metrics-dashboard .highlight-green,
@@ -522,7 +577,7 @@
 
 .production-metrics-dashboard .metric-label {
   font-size: 0.85rem;
-  color: #6b7280;
+  color: #374151;
   margin-bottom: 8px;
   font-weight: 500;
 }
@@ -659,7 +714,7 @@
 .production-metrics-dashboard .summary-stat span {
   display: block;
   font-size: 0.9rem;
-  color: #6b7280;
+  color: #374151;
   margin-bottom: 8px;
   font-weight: 500;
 }
@@ -681,7 +736,7 @@
 
 .production-metrics-dashboard .no-shift-data p {
   font-size: 0.95rem;
-  color: #6b7280;
+  color: #374151;
 }
 
 /* ===== METRICS SECTION - SCOPED ===== */
@@ -708,7 +763,7 @@
   align-items: center;
   gap: 16px;
   font-size: 0.9rem;
-  color: #6b7280;
+  color: #374151;
 }
 
 .production-metrics-dashboard .info-item {
@@ -793,7 +848,7 @@
 
 .production-metrics-dashboard .metric-description {
   font-size: 0.9rem;
-  color: #6b7280;
+  color: #374151;
   line-height: 1.5;
 }
 
@@ -808,7 +863,7 @@
 .production-metrics-dashboard .metric-unit {
   font-size: 1.1rem;
   font-weight: 500;
-  color: #6b7280;
+  color: #374151;
   margin-left: 8px;
 }
 
@@ -834,7 +889,7 @@
 
 .production-metrics-dashboard .change-label {
   font-size: 0.85rem;
-  color: #9ca3af;
+  color: #374151;
   font-weight: 500;
 }
 
@@ -902,7 +957,7 @@
 }
 
 .production-metrics-dashboard .target-cell {
-  color: #6b7280 !important;
+  color: #374151 !important;
   font-weight: 500;
 }
 
@@ -938,7 +993,7 @@
 }
 
 .production-metrics-dashboard .machine-count {
-  color: #9ca3af;
+  color: #374151;
   font-size: 0.85rem;
   font-weight: 500;
 }
@@ -951,7 +1006,7 @@
 
 .production-metrics-dashboard .footer-note {
   font-size: 0.9rem;
-  color: #6b7280;
+  color: #374151;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -1025,7 +1080,7 @@
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: #6b7280;
+  background: #374151;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
@@ -1048,7 +1103,7 @@
 
 .production-metrics-dashboard .detail-inline span {
   font-size: 0.9rem;
-  color: #6b7280;
+  color: #374151;
   font-weight: 500;
 }
 
@@ -1164,7 +1219,7 @@
 
 .production-metrics-dashboard .detail-label {
   font-size: 0.95rem;
-  color: #6b7280;
+  color: #374151;
   font-weight: 600;
 }
 
@@ -1211,7 +1266,6 @@
   width: 14px;
   height: 14px;
   border-radius: 4px;
-  background: #6b7280;
 }
 
 .production-metrics-dashboard .legend-item span {
@@ -1286,7 +1340,7 @@
 }
 
 .production-metrics-dashboard .report-card-description {
-  color: #6b7280;
+  color: #374151;
   font-size: 0.95rem;
   line-height: 1.6;
   margin-bottom: 24px;
@@ -1371,7 +1425,7 @@
 
 .production-metrics-dashboard .stat-label {
   font-size: 0.9rem;
-  color: #6b7280;
+  color: #374151;
   font-weight: 500;
 }
 
@@ -1439,7 +1493,7 @@
   border-radius: 10px;
   background: transparent;
   border: none;
-  color: #6b7280;
+  color: #374151;
   font-weight: 600;
   font-size: 0.95rem;
   cursor: pointer;

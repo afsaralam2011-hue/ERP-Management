@@ -2,16 +2,11 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { 
   FaIndustry, FaCheckCircle, FaChartLine, 
-  FaDatabase, FaSpinner, FaCalendarAlt, FaCogs, FaArrowUp, 
-  FaArrowDown, FaCheck, FaTimes, FaWarehouse, FaCut, 
-  FaBoxOpen, FaShieldAlt, FaBuilding, FaListAlt, FaBullseye,
-  FaTrophy, FaRocket, FaStar, FaBolt, FaSyncAlt,
-  FaSun, FaMoon, FaClock, FaFileAlt, FaChartBar, 
-  FaFileExport, FaFilter, FaClipboardList, FaEye, 
-  FaTable, FaSitemap, FaDownload, FaHistory,
-  FaPrint, FaFileDownload, FaEye as FaView,
-  FaTimesCircle, FaExclamationTriangle, FaRegCalendarCheck,
-  FaRegClock, FaTachometerAlt, FaCalculator
+  FaDatabase, FaCalendarAlt, FaCogs, FaArrowUp, 
+  FaWarehouse, FaCut, FaBoxOpen, FaShieldAlt, 
+  FaBuilding, FaBullseye, FaSyncAlt, FaSun, 
+  FaMoon, FaClock, FaPrint, FaWhatsapp,
+  FaUser, FaFileExcel
 } from "react-icons/fa";
 import { supabase } from "../../supabaseClient";
 
@@ -75,6 +70,92 @@ const DailyProductionReport = () => {
     }
   ], []);
 
+  // Calculate efficiency for individual item
+  const calculateItemEfficiency = useCallback((production, target) => {
+    if (target === 0) return 0;
+    return parseFloat(((production / target) * 100).toFixed(1));
+  }, []);
+
+  // Get machine status
+  const getMachineStatus = useCallback((machine) => {
+    if (!machine) return 'pending';
+    const efficiency = parseFloat(machine.efficiency);
+    if (efficiency === 0) return 'pending';
+    if (efficiency >= 100) return 'completed';
+    if (efficiency >= 80) return 'good';
+    if (efficiency >= 60) return 'in-progress';
+    return 'maintenance';
+  }, []);
+
+  // Get status color
+  const getStatusColor = useCallback((status) => {
+    switch(status) {
+      case 'completed': return '#10b981';
+      case 'good': return '#10b981';
+      case 'in-progress': return '#f59e0b';
+      case 'pending': return '#6b7280';
+      case 'maintenance': return '#ef4444';
+      default: return '#6b7280';
+    }
+  }, []);
+
+  // Get status text
+  const getStatusText = useCallback((status) => {
+    switch(status) {
+      case 'completed': return 'Completed';
+      case 'good': return 'Good';
+      case 'in-progress': return 'In Progress';
+      case 'pending': return 'Pending';
+      case 'maintenance': return 'Maintenance';
+      default: return status;
+    }
+  }, []);
+
+  // Format data for table display
+  const formatDataForTable = useCallback((allData) => {
+    const tableData = [];
+    
+    Object.keys(allData).forEach(deptName => {
+      const dept = departments.find(d => d.name === deptName);
+      if (!dept || !allData[deptName]) return;
+      
+      const { combinationData, machineData } = allData[deptName];
+      
+      // Process combination data for detailed records
+      combinationData.forEach(combo => {
+        const machine = machineData.find(m => m.name === combo.machine);
+        const efficiency = calculateItemEfficiency(combo.production, combo.target);
+        
+        tableData.push({
+          id: `${deptName}_${combo.machine}_${combo.shift}_${combo.date}`,
+          department: dept.name,
+          section: dept.name.replace(' Section', ''),
+          shift: combo.shift,
+          production_quantity: combo.production,
+          target_quantity: combo.target,
+          quantity_unit: dept.unit,
+          date: combo.date,
+          operator: combo.operator || 'N/A',
+          machine: combo.machine,
+          status: getMachineStatus(machine),
+          efficiency: efficiency,
+          entries: combo.entries,
+          statusColor: getStatusColor(getMachineStatus(machine))
+        });
+      });
+    });
+    
+    return tableData;
+  }, [departments, calculateItemEfficiency, getMachineStatus, getStatusColor]);
+
+  const getShiftIcon = (shiftName) => {
+    const name = shiftName?.toLowerCase() || '';
+    if (name.includes('morning') || name.includes('صبح') || name === 'a' || name === 'day') return <FaSun />;
+    if (name.includes('evening') || name.includes('شام') || name === 'b') return <FaClock />;
+    if (name.includes('night') || name.includes('رات') || name === 'c' || name === 'night') return <FaMoon />;
+    return <FaClock />;
+  };
+
   // Calculate all data correctly function (same as ProductionMetrics)
   const calculateAllDataCorrectly = useCallback((records) => {
     const combinationMap = {};
@@ -96,6 +177,7 @@ const DailyProductionReport = () => {
       const shift = record.shift_name || record.shift || record.shift_no || 'unknown';
       const target = parseFloat(record.target_qty) || parseFloat(record.target) || 0;
       const production = parseFloat(record.production_quantity) || parseFloat(record.production) || 0;
+      const operator = record.operator_name || record.operator || record.operator_id || 'N/A';
 
       const combinationKey = `${machine}_${shift}_${dateStr}`;
       const shiftKey = `${shift}`.trim();
@@ -109,7 +191,8 @@ const DailyProductionReport = () => {
           date: dateStr,
           target: target,
           production: 0,
-          entries: 0
+          entries: 0,
+          operator: operator
         };
       }
       combinationMap[combinationKey].production += production;
@@ -154,10 +237,14 @@ const DailyProductionReport = () => {
           days: new Set(),
           entries: 0,
           lastActive: recordDate,
-          machineNumber: parseInt(machine.replace(/[^0-9]/g, '')) || 0
+          machineNumber: parseInt(machine.replace(/[^0-9]/g, '')) || 0,
+          operators: new Set([operator])
         };
-      } else if (recordDate > machineMap[machineKey].lastActive) {
-        machineMap[machineKey].lastActive = recordDate;
+      } else {
+        machineMap[machineKey].operators.add(operator);
+        if (recordDate > machineMap[machineKey].lastActive) {
+          machineMap[machineKey].lastActive = recordDate;
+        }
       }
       
       if (!machineMap[machineKey].shiftDays[shift]) {
@@ -328,7 +415,8 @@ const DailyProductionReport = () => {
           lastActive: machine.lastActive ? 
             machine.lastActive.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) : 
             'Never',
-          machineNumber: machine.machineNumber
+          machineNumber: machine.machineNumber,
+          operators: [...machine.operators]
         };
       })
       .sort((a, b) => a.machineNumber - b.machineNumber);
@@ -336,17 +424,10 @@ const DailyProductionReport = () => {
     return {
       dailyData: processedDailyData,
       machineData: processedMachineData,
-      shiftData: processedShiftData
+      shiftData: processedShiftData,
+      combinationData: Object.values(combinationMap)
     };
   }, [date]);
-
-  const getShiftIcon = (shiftName) => {
-    const name = shiftName?.toLowerCase() || '';
-    if (name.includes('morning') || name.includes('صبح') || name === 'a' || name === 'day') return <FaSun />;
-    if (name.includes('evening') || name.includes('شام') || name === 'b') return <FaClock />;
-    if (name.includes('night') || name.includes('رات') || name === 'c' || name === 'night') return <FaMoon />;
-    return <FaClock />;
-  };
 
   // Fetch actual production data
   const fetchActualData = useCallback(async () => {
@@ -368,7 +449,7 @@ const DailyProductionReport = () => {
       for (const dept of departments) {
         const { data: productionRecords, error } = await supabase
           .from(dept.tableName)
-          .select('*')
+          .select('*, operator_name, operator, operator_id')
           .gte('created_at', `${dateStr}T00:00:00`)
           .lt('created_at', `${dateStr}T23:59:59`)
           .order('created_at', { ascending: false })
@@ -379,7 +460,8 @@ const DailyProductionReport = () => {
           allData[dept.name] = {
             dailyData: [],
             machineData: [],
-            shiftData: []
+            shiftData: [],
+            combinationData: []
           };
           continue;
         }
@@ -389,7 +471,8 @@ const DailyProductionReport = () => {
           allData[dept.name] = {
             dailyData: [],
             machineData: [],
-            shiftData: []
+            shiftData: [],
+            combinationData: []
           };
           continue;
         }
@@ -402,15 +485,9 @@ const DailyProductionReport = () => {
       setAllDepartmentsData(allData);
       setLastRefresh(new Date());
       
-      // If a specific department is selected, set its data
-      if (selectedDepartment !== "all") {
-        const selectedDept = departments.find(d => d.name === selectedDepartment);
-        if (selectedDept && allData[selectedDept.name]) {
-          const deptData = allData[selectedDept.name];
-          const formattedData = formatDataForTable(deptData, selectedDept);
-          setProductionData(formattedData);
-        }
-      }
+      // Format data for selected department
+      const formattedData = formatDataForTable(allData);
+      setProductionData(formattedData);
       
     } catch (error) {
       console.error('Error fetching production data:', error);
@@ -420,108 +497,16 @@ const DailyProductionReport = () => {
     } finally {
       setLoading(false);
     }
-  }, [date, selectedDepartment, departments, calculateAllDataCorrectly]);
-
-  // Format data for table display
-  const formatDataForTable = useCallback((deptData, deptInfo) => {
-    if (!deptData || !deptInfo) return [];
-    
-    const tableData = [];
-    const { dailyData, shiftData, machineData } = deptData;
-    
-    // Get today's data
-    const todayData = dailyData.length > 0 ? dailyData[0] : null;
-    
-    if (todayData && shiftData.length > 0) {
-      shiftData.forEach(shift => {
-        // Find machines for this shift
-        const shiftMachines = machineData.filter(machine => 
-          machine.shifts.includes(shift.name)
-        );
-        
-        shiftMachines.forEach(machine => {
-          const efficiency = calculateItemEfficiency(machine.production, machine.target);
-          
-          tableData.push({
-            id: `${shift.name}_${machine.name}`,
-            department: deptInfo.name,
-            section: deptInfo.name.replace(' Section', ''),
-            shift: shift.name,
-            production_quantity: machine.production,
-            target_quantity: machine.target,
-            quantity_unit: deptInfo.unit,
-            date: date.toISOString().split('T')[0],
-            operator: 'Operator Data', // This would come from actual data
-            machine: machine.name,
-            status: getMachineStatus(machine),
-            efficiency: efficiency,
-            entries: machine.entries,
-            statusColor: getStatusColor(getMachineStatus(machine))
-          });
-        });
-      });
-    }
-    
-    return tableData;
-  }, [date]);
-
-  // Get machine status
-  const getMachineStatus = useCallback((machine) => {
-    const efficiency = parseFloat(machine.efficiency);
-    if (efficiency === 0) return 'pending';
-    if (efficiency >= 100) return 'completed';
-    if (efficiency >= 80) return 'good';
-    if (efficiency >= 60) return 'in-progress';
-    return 'maintenance';
-  }, []);
-
-  // Get status color
-  const getStatusColor = useCallback((status) => {
-    switch(status) {
-      case 'completed': return '#10b981';
-      case 'good': return '#10b981';
-      case 'in-progress': return '#f59e0b';
-      case 'pending': return '#6b7280';
-      case 'maintenance': return '#ef4444';
-      default: return '#6b7280';
-    }
-  }, []);
-
-  // Get status text
-  const getStatusText = useCallback((status) => {
-    switch(status) {
-      case 'completed': return 'Completed';
-      case 'good': return 'Good';
-      case 'in-progress': return 'In Progress';
-      case 'pending': return 'Pending';
-      case 'maintenance': return 'Maintenance';
-      default: return status;
-    }
-  }, []);
-
-  // Calculate efficiency for individual item
-  const calculateItemEfficiency = useCallback((production, target) => {
-    if (target === 0) return 0;
-    return parseFloat(((production / target) * 100).toFixed(1));
-  }, []);
+  }, [date, departments, calculateAllDataCorrectly, formatDataForTable]);
 
   // Get selected department data
   const getSelectedDepartmentData = useCallback(() => {
     if (selectedDepartment === "all") {
-      // Combine all departments data
-      const allData = [];
-      Object.keys(allDepartmentsData).forEach(deptName => {
-        const dept = departments.find(d => d.name === deptName);
-        if (dept && allDepartmentsData[deptName]) {
-          const formattedData = formatDataForTable(allDepartmentsData[deptName], dept);
-          allData.push(...formattedData);
-        }
-      });
-      return allData;
-    } else {
       return productionData;
+    } else {
+      return productionData.filter(item => item.department === selectedDepartment);
     }
-  }, [selectedDepartment, allDepartmentsData, productionData, departments, formatDataForTable]);
+  }, [selectedDepartment, productionData]);
 
   // Calculate department totals
   const calculateDepartmentTotals = useCallback((deptName) => {
@@ -537,7 +522,7 @@ const DailyProductionReport = () => {
       };
     }
     
-    const { dailyData, shiftData, machineData } = allDepartmentsData[deptName];
+    const { dailyData } = allDepartmentsData[deptName];
     const todayData = dailyData.length > 0 ? dailyData[0] : null;
     
     if (!todayData) {
@@ -546,8 +531,8 @@ const DailyProductionReport = () => {
         totalTarget: 0,
         efficiency: 0,
         records: 0,
-        machines: machineData.length || 0,
-        shifts: shiftData.length || 0,
+        machines: 0,
+        shifts: 0,
         combinations: 0
       };
     }
@@ -628,38 +613,249 @@ const DailyProductionReport = () => {
     fetchActualData();
   }, [fetchActualData]);
 
+  // Export to CSV (Excel alternative without xlsx library)
+  const handleExportExcel = useCallback(() => {
+    const exportData = getSelectedDepartmentData();
+    
+    if (exportData.length === 0) {
+      alert("No data to export!");
+      return;
+    }
+    
+    // Prepare CSV data
+    const csvRows = [];
+    
+    // Add headers
+    const headers = ['Department', 'Section', 'Shift', 'Operator', 'Machine', 'Production', 'Target', 'Unit', 'Efficiency (%)', 'Entries', 'Status', 'Date'];
+    csvRows.push(headers.join(','));
+    
+    // Add data rows
+    exportData.forEach(item => {
+      const row = [
+        `"${item.department}"`,
+        `"${item.section}"`,
+        `"${item.shift}"`,
+        `"${item.operator}"`,
+        `"${item.machine}"`,
+        item.production_quantity,
+        item.target_quantity,
+        `"${item.quantity_unit}"`,
+        item.efficiency,
+        item.entries,
+        `"${getStatusText(item.status)}"`,
+        `"${item.date}"`
+      ];
+      csvRows.push(row.join(','));
+    });
+    
+    // Add summary
+    const totals = calculateTotals();
+    csvRows.push('');
+    csvRows.push('SUMMARY,,,,,,,');
+    csvRows.push('Metric,Value');
+    csvRows.push(`Total Production,${totals.totalProduction}`);
+    csvRows.push(`Total Target,${totals.totalTarget}`);
+    csvRows.push(`Efficiency (%),${totals.efficiency}`);
+    csvRows.push(`Total Records,${totals.records}`);
+    csvRows.push(`Total Machines,${totals.machines}`);
+    csvRows.push(`Total Shifts,${totals.shifts}`);
+    
+    // Create CSV string
+    const csvString = csvRows.join('\n');
+    
+    // Create blob and download
+    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute("href", url);
+    link.setAttribute("download", `production-report-${selectedDepartment === "all" ? "all-departments" : selectedDepartment.replace(/ /g, '-')}-${date.toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    alert(`CSV report exported successfully!`);
+  }, [getSelectedDepartmentData, selectedDepartment, date, calculateTotals, getStatusText]);
+
   // Print report
   const handlePrint = useCallback(() => {
-    window.print();
-  }, []);
-
-  // Export data
-  const handleExport = useCallback(() => {
-    const exportData = {
-      reportDate: date.toISOString(),
-      selectedDepartment,
-      departments: departments.map(dept => {
-        const totals = calculateDepartmentTotals(dept.name);
-        return {
-          name: dept.name,
-          unit: dept.unit,
-          tableName: dept.tableName,
-          ...totals
-        };
-      }),
-      overallTotals: calculateTotals(),
-      lastRefresh: lastRefresh.toISOString(),
-      data: getSelectedDepartmentData()
-    };
+    const printContent = document.createElement('div');
+    printContent.style.padding = '20px';
+    printContent.style.backgroundColor = 'white';
     
-    const dataStr = JSON.stringify(exportData, null, 2);
-    const dataBlob = new Blob([dataStr], {type: 'application/json'});
-    const url = URL.createObjectURL(dataBlob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `production-report-${date.toISOString().split('T')[0]}.json`;
-    link.click();
-  }, [date, selectedDepartment, departments, calculateDepartmentTotals, calculateTotals, lastRefresh, getSelectedDepartmentData]);
+    // Add header
+    const header = document.createElement('div');
+    header.innerHTML = `
+      <h1 style="text-align: center; color: #1e293b; margin-bottom: 20px;">
+        Daily Production Report
+      </h1>
+      <div style="text-align: center; color: #64748b; margin-bottom: 30px;">
+        Date: ${date.toLocaleDateString('en-US', { 
+          weekday: 'long', 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric' 
+        })}
+      </div>
+    `;
+    printContent.appendChild(header);
+    
+    // Add department info if selected
+    if (selectedDepartment !== "all") {
+      const deptInfo = document.createElement('div');
+      deptInfo.innerHTML = `
+        <div style="text-align: center; background: #f3f4f6; padding: 10px; border-radius: 5px; margin-bottom: 20px;">
+          <strong>Department:</strong> ${selectedDepartment}
+        </div>
+      `;
+      printContent.appendChild(deptInfo);
+    }
+    
+    // Add summary table
+    const totals = calculateTotals();
+    const summaryTable = document.createElement('table');
+    summaryTable.style.width = '100%';
+    summaryTable.style.borderCollapse = 'collapse';
+    summaryTable.style.marginBottom = '30px';
+    summaryTable.innerHTML = `
+      <thead>
+        <tr style="background: #f8fafc; border-bottom: 2px solid #e5e7eb;">
+          <th style="padding: 12px; text-align: left;">Metric</th>
+          <th style="padding: 12px; text-align: right;">Value</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="border-bottom: 1px solid #e5e7eb;">
+          <td style="padding: 12px;"><strong>Total Production</strong></td>
+          <td style="padding: 12px; text-align: right;">${totals.totalProduction.toLocaleString()}</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #e5e7eb;">
+          <td style="padding: 12px;"><strong>Total Target</strong></td>
+          <td style="padding: 12px; text-align: right;">${totals.totalTarget.toLocaleString()}</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #e5e7eb;">
+          <td style="padding: 12px;"><strong>Efficiency</strong></td>
+          <td style="padding: 12px; text-align: right; color: ${totals.efficiency >= 100 ? '#10b981' : totals.efficiency >= 90 ? '#f59e0b' : '#ef4444'}">
+            ${totals.efficiency}%
+          </td>
+        </tr>
+        <tr>
+          <td style="padding: 12px;"><strong>Total Records</strong></td>
+          <td style="padding: 12px; text-align: right;">${totals.records}</td>
+        </tr>
+      </tbody>
+    `;
+    printContent.appendChild(summaryTable);
+    
+    // Add data table if available
+    const filteredData = getSelectedDepartmentData();
+    if (filteredData.length > 0) {
+      const dataTable = document.createElement('table');
+      dataTable.style.width = '100%';
+      dataTable.style.borderCollapse = 'collapse';
+      dataTable.innerHTML = `
+        <thead>
+          <tr style="background: #f8fafc; border-bottom: 2px solid #e5e7eb;">
+            <th style="padding: 8px; text-align: left;">Dept</th>
+            <th style="padding: 8px; text-align: left;">Shift</th>
+            <th style="padding: 8px; text-align: left;">Operator</th>
+            <th style="padding: 8px; text-align: left;">Machine</th>
+            <th style="padding: 8px; text-align: right;">Production</th>
+            <th style="padding: 8px; text-align: right;">Target</th>
+            <th style="padding: 8px; text-align: center;">Efficiency</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${filteredData.map(item => `
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+              <td style="padding: 8px;">${item.section}</td>
+              <td style="padding: 8px;">${item.shift}</td>
+              <td style="padding: 8px;">${item.operator}</td>
+              <td style="padding: 8px;">${item.machine}</td>
+              <td style="padding: 8px; text-align: right;">${formatQuantity(item.production_quantity, item.quantity_unit)}</td>
+              <td style="padding: 8px; text-align: right;">${formatQuantity(item.target_quantity, item.quantity_unit)}</td>
+              <td style="padding: 8px; text-align: center; color: ${item.efficiency >= 100 ? '#10b981' : item.efficiency >= 90 ? '#f59e0b' : '#ef4444'}">
+                ${item.efficiency}%
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      `;
+      printContent.appendChild(dataTable);
+    }
+    
+    // Add footer
+    const footer = document.createElement('div');
+    footer.style.marginTop = '30px';
+    footer.style.textAlign = 'center';
+    footer.style.color = '#6b7280';
+    footer.style.fontSize = '12px';
+    footer.innerHTML = `
+      <div>Generated on: ${new Date().toLocaleString()}</div>
+      <div>ERP Production Management System</div>
+    `;
+    printContent.appendChild(footer);
+    
+    // Open print dialog
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Production Report - ${date.toISOString().split('T')[0]}</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+            table { width: 100%; border-collapse: collapse; font-size: 12px; }
+            th, td { padding: 8px; text-align: left; border: 1px solid #ddd; }
+            th { background-color: #f8f9fa; }
+            @media print {
+              body { padding: 0; }
+              table { page-break-inside: auto; }
+              tr { page-break-inside: avoid; }
+            }
+          </style>
+        </head>
+        <body>
+          ${printContent.innerHTML}
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+    printWindow.close();
+  }, [date, selectedDepartment, calculateTotals, getSelectedDepartmentData, formatQuantity]);
+
+  // Share via WhatsApp
+  const handleShareWhatsApp = useCallback(() => {
+    const totals = calculateTotals();
+    const deptText = selectedDepartment === "all" ? "All Departments" : selectedDepartment;
+    
+    const message = `📊 *Daily Production Report*
+    
+🗓️ Date: ${date.toLocaleDateString('en-US', { 
+  weekday: 'short', 
+  month: 'short', 
+  day: 'numeric' 
+})}
+🏭 Department: ${deptText}
+
+📈 *Summary:*
+✅ Production: ${totals.totalProduction.toLocaleString()}
+🎯 Target: ${totals.totalTarget.toLocaleString()}
+📊 Efficiency: ${totals.efficiency}%
+📝 Records: ${totals.records}
+⚙️ Machines: ${totals.machines}
+🔄 Shifts: ${totals.shifts}
+
+📋 *Status:* ${totals.efficiency >= 100 ? '✅ Target Achieved' : totals.efficiency >= 80 ? '⚠️ Needs Improvement' : '❌ Below Target'}
+
+🔗 Generated from ERP Production System`;
+
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+  }, [date, selectedDepartment, calculateTotals]);
 
   // Format last refresh time
   const formatLastRefresh = useCallback(() => {
@@ -683,14 +879,7 @@ const DailyProductionReport = () => {
   // Handle department change
   const handleDepartmentChange = useCallback((deptName) => {
     setSelectedDepartment(deptName);
-    if (deptName !== "all") {
-      const selectedDept = departments.find(d => d.name === deptName);
-      if (selectedDept && allDepartmentsData[deptName]) {
-        const formattedData = formatDataForTable(allDepartmentsData[deptName], selectedDept);
-        setProductionData(formattedData);
-      }
-    }
-  }, [departments, allDepartmentsData, formatDataForTable]);
+  }, []);
 
   // Initialize data
   useEffect(() => {
@@ -804,7 +993,7 @@ const DailyProductionReport = () => {
               alignItems: 'center',
               gap: '10px'
             }}>
-              <FaRegCalendarCheck />
+              <FaCalendarAlt />
               {date.toLocaleDateString('en-US', { 
                 weekday: 'long', 
                 year: 'numeric', 
@@ -817,7 +1006,7 @@ const DailyProductionReport = () => {
                 paddingLeft: '10px',
                 borderLeft: '1px solid #d1d5db'
               }}>
-                <FaRegClock style={{ marginRight: '6px' }} />
+                <FaClock style={{ marginRight: '6px' }} />
                 Last refresh: {formatLastRefresh()}
               </span>
             </p>
@@ -908,7 +1097,7 @@ const DailyProductionReport = () => {
                 transition: 'all 0.2s'
               }}
             >
-              <FaSitemap />
+              <FaBuilding />
               All Departments
             </button>
             {allDepartments.map(dept => (
@@ -1080,7 +1269,7 @@ const DailyProductionReport = () => {
             borderRadius: '50%'
           }}></div>
           <div style={{ color: '#64748b', marginBottom: '10px', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <FaTachometerAlt />
+            <FaChartLine />
             Avg per Record
           </div>
           <div style={{ 
@@ -1101,6 +1290,91 @@ const DailyProductionReport = () => {
             Per production record • {totals.combinations || 0} M-S-D pairs
           </div>
         </div>
+      </div>
+
+      {/* Action Buttons */}
+      <div style={{
+        backgroundColor: 'white',
+        padding: '20px',
+        borderRadius: '10px',
+        boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+        marginBottom: '30px',
+        display: 'flex',
+        justifyContent: 'center',
+        gap: '15px',
+        flexWrap: 'wrap'
+      }}>
+        <button
+          onClick={handleExportExcel}
+          style={{
+            padding: '12px 24px',
+            backgroundColor: '#10b981',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            fontWeight: '600',
+            fontSize: '14px',
+            transition: 'all 0.2s',
+            minWidth: '180px'
+          }}
+          onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#059669'}
+          onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#10b981'}
+        >
+          <FaFileExcel size={18} />
+          Export to CSV
+        </button>
+        
+        <button
+          onClick={handlePrint}
+          style={{
+            padding: '12px 24px',
+            backgroundColor: '#3b82f6',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            fontWeight: '600',
+            fontSize: '14px',
+            transition: 'all 0.2s',
+            minWidth: '180px'
+          }}
+          onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#2563eb'}
+          onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#3b82f6'}
+        >
+          <FaPrint size={18} />
+          Print Report
+        </button>
+        
+        <button
+          onClick={handleShareWhatsApp}
+          style={{
+            padding: '12px 24px',
+            backgroundColor: '#25D366',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            fontWeight: '600',
+            fontSize: '14px',
+            transition: 'all 0.2s',
+            minWidth: '180px'
+          }}
+          onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#128C7E'}
+          onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#25D366'}
+        >
+          <FaWhatsapp size={18} />
+          Share on WhatsApp
+        </button>
       </div>
 
       {/* Production Details */}
@@ -1153,47 +1427,8 @@ const DailyProductionReport = () => {
             </p>
           </div>
           
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <button
-              onClick={handleExport}
-              style={{
-                padding: '8px 16px',
-                backgroundColor: '#10b981',
-                color: 'white',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                fontWeight: '600',
-                transition: 'all 0.2s'
-              }}
-              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#059669'}
-              onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#10b981'}
-            >
-              <FaFileDownload /> Export
-            </button>
-            <button
-              onClick={handlePrint}
-              style={{
-                padding: '8px 16px',
-                backgroundColor: '#3b82f6',
-                color: 'white',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                fontWeight: '600',
-                transition: 'all 0.2s'
-              }}
-              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#2563eb'}
-              onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#3b82f6'}
-            >
-              <FaPrint /> Print
-            </button>
+          <div style={{ color: '#64748b', fontSize: '14px' }}>
+            Total Records: {filteredData.length}
           </div>
         </div>
 
@@ -1326,7 +1561,10 @@ const DailyProductionReport = () => {
                             </div>
                           </td>
                           <td style={{ padding: '12px' }}>
-                            {item.operator}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <FaUser style={{ color: '#6b7280', fontSize: '14px' }} />
+                              {item.operator || 'N/A'}
+                            </div>
                           </td>
                           <td style={{ padding: '12px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -1500,7 +1738,7 @@ const DailyProductionReport = () => {
             alignItems: 'center',
             gap: '10px'
           }}>
-            <FaSitemap />
+            <FaBuilding />
             Department-wise Summary
           </h2>
           
@@ -1701,79 +1939,6 @@ const DailyProductionReport = () => {
         </div>
       )}
 
-      {/* Data Source Info */}
-      <div style={{
-        marginTop: '30px',
-        padding: '20px',
-        backgroundColor: '#f8fafc',
-        borderRadius: '10px',
-        border: '1px solid #e5e7eb'
-      }}>
-        <div style={{
-          display: 'flex',
-          alignItems: 'flex-start',
-          gap: '20px',
-          flexWrap: 'wrap'
-        }}>
-          <div style={{
-            width: '50px',
-            height: '50px',
-            borderRadius: '10px',
-            backgroundColor: '#3b82f610',
-            color: '#3b82f6',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0
-          }}>
-            <FaCalculator size={24} />
-          </div>
-          <div style={{ flex: 1 }}>
-            <h4 style={{ 
-              margin: '0 0 10px 0', 
-              color: '#1e293b',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
-            }}>
-              Calculation Method
-            </h4>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-              gap: '15px',
-              fontSize: '14px'
-            }}>
-              <div>
-                <strong style={{ color: '#374151', display: 'block', marginBottom: '5px' }}>
-                  <FaCheckCircle style={{ marginRight: '6px', color: '#10b981' }} />
-                  Target Calculation:
-                </strong>
-                <span style={{ color: '#6b7280' }}>Per Machine-Shift-Day (Unique Combination)</span>
-              </div>
-              <div>
-                <strong style={{ color: '#374151', display: 'block', marginBottom: '5px' }}>
-                  <FaCheckCircle style={{ marginRight: '6px', color: '#10b981' }} />
-                  Production Calculation:
-                </strong>
-                <span style={{ color: '#6b7280' }}>Sum of All Entries</span>
-              </div>
-              <div>
-                <strong style={{ color: '#374151', display: 'block', marginBottom: '5px' }}>
-                  <FaCheckCircle style={{ marginRight: '6px', color: '#10b981' }} />
-                  Machine Efficiency:
-                </strong>
-                <span style={{ color: '#6b7280' }}>
-                  <span style={{ color: '#10b981' }}>≥80% Green</span>, 
-                  <span style={{ color: '#f59e0b' }}> 70-79% Yellow</span>, 
-                  <span style={{ color: '#ef4444' }}> &lt;70% Red</span>
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Print Styles */}
       <style>
         {`
@@ -1803,10 +1968,6 @@ const DailyProductionReport = () => {
             th, td {
               border: 1px solid #ddd !important;
               padding: 6px !important;
-            }
-            
-            .print-only {
-              display: block !important;
             }
             
             @page {

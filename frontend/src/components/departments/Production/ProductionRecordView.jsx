@@ -6,7 +6,7 @@ const ProductionRecordView = () => {
   
   return (
     <div>
-      <h1>Production Record Details</h1>
+      <h1>Production Record Details aaaaaaaaaaaaaaaaaa</h1>
       <p>Viewing details for production record ID: {id}</p>
     </div>
   );

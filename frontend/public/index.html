@@ -114,8 +114,8 @@
       }
       
       .welcome-logo {
-        width: 150px;
-        height: 150px;
+        width: 180px;
+        height: 180px;
         margin-bottom: 2rem;
         display: flex;
         align-items: center;
@@ -127,6 +127,7 @@
         max-width: 100%;
         max-height: 100%;
         object-fit: contain;
+        filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
       }
       
       .welcome-title {
@@ -134,6 +135,7 @@
         font-weight: 700;
         margin-bottom: 1rem;
         letter-spacing: 1px;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
       }
       
       .welcome-subtitle {
@@ -141,6 +143,7 @@
         opacity: 0.9;
         margin-bottom: 2rem;
         max-width: 600px;
+        line-height: 1.6;
       }
       
       .countdown-timer {
@@ -149,6 +152,7 @@
         margin: 2rem 0;
         color: #00B7B5;
         text-shadow: 0 2px 10px rgba(0, 183, 181, 0.3);
+        animation: countdownPulse 1s infinite;
       }
       
       .progress-bar {
@@ -162,7 +166,7 @@
       
       .progress-fill {
         height: 100%;
-        background: #00B7B5;
+        background: linear-gradient(90deg, #00B7B5, #00d4d2);
         width: 0%;
         transition: width 0.3s ease;
         border-radius: 4px;
@@ -201,6 +205,47 @@
         100% { transform: scale(1); }
       }
       
+      @keyframes countdownPulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+      }
+      
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      
+      /* Welcome screen elements animation */
+      .welcome-screen > * {
+        animation: fadeIn 0.8s ease-out forwards;
+        opacity: 0;
+      }
+      
+      .welcome-logo {
+        animation-delay: 0.2s;
+      }
+      
+      .welcome-title {
+        animation-delay: 0.4s;
+      }
+      
+      .welcome-subtitle {
+        animation-delay: 0.6s;
+      }
+      
+      .countdown-timer {
+        animation-delay: 0.8s;
+      }
+      
+      .progress-bar {
+        animation-delay: 1s;
+      }
+      
+      #skip-button {
+        animation-delay: 1.2s;
+      }
+      
       /* Mobile Specific Adjustments */
       @media screen and (max-width: 768px) {
         .welcome-title {
@@ -209,11 +254,12 @@
         
         .welcome-subtitle {
           font-size: 1rem;
+          padding: 0 1rem;
         }
         
         .welcome-logo {
-          width: 120px;
-          height: 120px;
+          width: 140px;
+          height: 140px;
         }
         
         .countdown-timer {
@@ -224,51 +270,97 @@
           width: 250px;
         }
       }
+      
+      @media screen and (max-width: 480px) {
+        .welcome-title {
+          font-size: 1.8rem;
+        }
+        
+        .welcome-logo {
+          width: 120px;
+          height: 120px;
+        }
+        
+        .countdown-timer {
+          font-size: 2rem;
+        }
+      }
     </style>
     
     <!-- Background Music (Optional) -->
-    <audio id="background-music" loop>
+    <audio id="background-music" preload="auto">
       <source src="%PUBLIC_URL%/audio/welcome-music.mp3" type="audio/mpeg">
+      <source src="%PUBLIC_URL%/audio/welcome-music.ogg" type="audio/ogg">
+      Your browser does not support the audio element.
     </audio>
   </head>
   <body>
     <noscript>
-      <div style="
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: hsl(359, 80%, 33%);
-        color: white;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-        padding: 2rem;
-        z-index: 9999;
-      ">
-        <h1 style="margin-bottom: 1rem; color: white;">JavaScript Required</h1>
-        <p style="margin-bottom: 2rem; max-width: 600px;">
+      <div class="noscript-container">
+        <h1>JavaScript Required</h1>
+        <p>
           This application requires JavaScript to function properly. Please enable JavaScript in your browser settings.
         </p>
-        <p style="font-size: 0.9rem; opacity: 0.8;">
+        <p class="noscript-footer">
           Pakistan Wire Industries - Production Management System
         </p>
       </div>
+      <style>
+        .noscript-container {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: hsl(359, 80%, 33%);
+          color: white;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          text-align: center;
+          padding: 2rem;
+          z-index: 9999;
+        }
+        
+        .noscript-container h1 {
+          margin-bottom: 1rem;
+          color: white;
+          font-size: 2rem;
+        }
+        
+        .noscript-container p {
+          margin-bottom: 2rem;
+          max-width: 600px;
+          font-size: 1.1rem;
+          line-height: 1.6;
+        }
+        
+        .noscript-footer {
+          font-size: 0.9rem;
+          opacity: 0.8;
+          margin-top: 2rem;
+        }
+      </style>
     </noscript>
     
-    <!-- Welcome Screen (Initially Hidden) -->
-    <div id="welcome-screen" class="welcome-screen" style="display: none;">
+    <!-- Welcome Screen -->
+    <div id="welcome-screen" class="welcome-screen">
       <div class="welcome-logo">
-        <img src="%PUBLIC_URL%/logoA" alt="Pakistan Wire Industries Logo" id="company-logo" />
+        <!-- Try multiple logo paths to ensure it works -->
+        <img 
+          src="%PUBLIC_URL%/logoA.png" 
+          alt="Pakistan Wire Industries Logo" 
+          id="company-logo"
+          onerror="this.onerror=null; this.src='%PUBLIC_URL%/assets/images/logoA.png'; this.onerror=function(){handleLogoError(this);}"
+        />
       </div>
       
       <h1 class="welcome-title">Pakistan Wire Industries</h1>
       
       <p class="welcome-subtitle">
-        Welcome to our Production Management System
+        Welcome to the Production Management System.<br>
+        Streamlining manufacturing operations with precision and efficiency.
       </p>
       
       <div class="countdown-timer" id="countdown">15</div>
@@ -277,25 +369,41 @@
         <div class="progress-fill" id="progress-fill"></div>
       </div>
       
-      <p class="mb-6">Loading login in <span id="countdown-text">15</span> seconds</p>
+      <p class="mb-6" style="font-size: 1.1rem;">
+        Loading application in <span id="countdown-text" style="font-weight: bold;">15</span> seconds
+      </p>
       
       <button 
         id="skip-button" 
-        class="px-6 py-3 bg-white/20 hover:bg-white/30 text-white font-semibold rounded-lg transition-all duration-300 backdrop-blur-sm border border-white/30 hover:border-white/50"
+        class="px-8 py-3 bg-white/20 hover:bg-white/30 text-white font-semibold rounded-lg transition-all duration-300 backdrop-blur-sm border border-white/30 hover:border-white/50 hover:shadow-lg transform hover:-translate-y-1"
+        style="min-height: 48px; min-width: 180px;"
       >
-        Skip & Go to Login
+        <span class="flex items-center justify-center gap-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+          </svg>
+          Skip to Login
+        </span>
       </button>
       
-      <div class="mt-8 text-sm opacity-70">
-        <p>© 2024 Pakistan Wire Industries | All Rights Reserved</p>
+      <div class="mt-10 text-sm opacity-70">
+        <p>ERP System v2.0 | © 2024 Pakistan Wire Industries</p>
+        <p class="mt-1" style="font-size: 0.8rem;">All Rights Reserved</p>
       </div>
     </div>
     
     <!-- Loading Screen -->
     <div id="loading-screen" class="app-loading" style="display: none;">
       <div class="loading-spinner"></div>
-      <h2 style="margin-bottom: 0.5rem; text-align: center;">Loading Application</h2>
-      <p style="opacity: 0.8; text-align: center;">Pakistan Wire Industries Production System</p>
+      <h2 style="margin-bottom: 0.5rem; text-align: center; font-size: 1.5rem;">
+        Loading Application
+      </h2>
+      <p style="opacity: 0.8; text-align: center; max-width: 300px;">
+        Pakistan Wire Industries Production Management System
+      </p>
+      <div class="mt-6 text-xs opacity-60">
+        Initializing modules...
+      </div>
     </div>
     
     <!-- Main App Container -->
@@ -305,14 +413,48 @@
     <script>
       // Global variables
       let countdownInterval = null;
-      let hasRedirected = false; // Flag to prevent multiple redirects
+      let hasRedirected = false;
+      let backgroundMusicStarted = false;
       
-      // Function to check if user is authenticated (simplified version)
+      // Function to handle logo loading error
+      function handleLogoError(imgElement) {
+        console.log('Logo failed to load from all sources');
+        
+        // Create a fallback logo
+        const logoContainer = imgElement.parentElement;
+        logoContainer.innerHTML = `
+          <div style="
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #00B7B5, #005461);
+            border-radius: 50%;
+            color: white;
+            font-size: 3rem;
+            font-weight: bold;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+          ">
+            PWI
+          </div>
+        `;
+      }
+      
+      // Function to check if user is authenticated
       function isUserAuthenticated() {
-        // Check if token exists in localStorage
-        return localStorage.getItem('authToken') !== null ||
-               localStorage.getItem('user') !== null ||
-               sessionStorage.getItem('authToken') !== null;
+        // Check multiple possible auth storage locations
+        const authToken = localStorage.getItem('authToken') ||
+                         sessionStorage.getItem('authToken') ||
+                         localStorage.getItem('token') ||
+                         sessionStorage.getItem('token');
+        
+        const userData = localStorage.getItem('user') ||
+                        sessionStorage.getItem('user') ||
+                        localStorage.getItem('userData') ||
+                        sessionStorage.getItem('userData');
+        
+        return !!authToken || !!userData;
       }
       
       // Function to check if welcome screen should be shown
@@ -320,156 +462,211 @@
         // Check if user has already seen welcome screen today
         const lastWelcomeDate = localStorage.getItem('pwi_last_welcome_date');
         const today = new Date().toDateString();
+        const welcomeDisabled = localStorage.getItem('pwi_welcome_disabled') === 'true';
         
         // Don't show if:
         // 1. User is already authenticated
-        // 2. User saw welcome screen today
-        // 3. User manually skipped welcome screen
+        // 2. Welcome screen is disabled
+        // 3. User saw welcome screen today
         if (isUserAuthenticated()) {
+          console.log('User authenticated, skipping welcome screen');
+          return false;
+        }
+        
+        if (welcomeDisabled) {
+          console.log('Welcome screen disabled by user');
           return false;
         }
         
         if (lastWelcomeDate === today) {
+          console.log('Welcome screen already shown today');
           return false;
         }
         
-        return localStorage.getItem('pwi_welcome_skipped') !== 'true';
+        return true;
       }
       
       // Function to mark welcome screen as shown
       function markWelcomeScreenShown() {
         const today = new Date().toDateString();
         localStorage.setItem('pwi_last_welcome_date', today);
+        console.log('Welcome screen marked as shown for today:', today);
       }
       
-      // Function to mark welcome screen as skipped
-      function markWelcomeScreenSkipped() {
-        localStorage.setItem('pwi_welcome_skipped', 'true');
+      // Function to disable welcome screen permanently
+      function disableWelcomeScreen() {
+        localStorage.setItem('pwi_welcome_disabled', 'true');
+        console.log('Welcome screen disabled permanently');
       }
       
-      // Function to trigger app-ready event
-      function triggerAppReady() {
-        console.log('Dispatching app-ready event...');
-        const event = new CustomEvent('app-ready', {
-          detail: { timestamp: new Date().toISOString() }
-        });
-        window.dispatchEvent(event);
+      // Function to start background music
+      function startBackgroundMusic() {
+        if (backgroundMusicStarted) return;
         
-        // Also provide a global function for React to call
-        if (window.reactAppReady) {
-          window.reactAppReady();
-        }
-      }
-      
-      // Function to redirect to login
-      function redirectToLogin() {
-        if (hasRedirected) return; // Prevent multiple redirects
-        
-        hasRedirected = true;
-        
-        // First hide welcome screen
-        const welcomeScreen = document.getElementById('welcome-screen');
-        if (welcomeScreen) {
-          welcomeScreen.style.opacity = '0';
+        const backgroundMusic = document.getElementById('background-music');
+        if (backgroundMusic) {
+          // Only start music if user has interacted with the page
+          const startMusic = () => {
+            backgroundMusic.volume = 0.15; // Low volume
+            backgroundMusic.play().then(() => {
+              console.log('Background music started');
+              backgroundMusicStarted = true;
+            }).catch(error => {
+              console.log('Could not play background music:', error.message);
+            });
+          };
+          
+          // Add click event to start music
+          document.addEventListener('click', startMusic, { once: true });
+          document.addEventListener('touchstart', startMusic, { once: true });
+          
+          // Also try to start after a delay
           setTimeout(() => {
-            welcomeScreen.style.display = 'none';
-          }, 500);
+            if (!backgroundMusicStarted) {
+              startMusic();
+            }
+          }, 2000);
         }
-        
-        // Mark welcome as shown/skipped
-        markWelcomeScreenShown();
-        markWelcomeScreenSkipped();
-        
-        // Stop music if playing
+      }
+      
+      // Function to stop background music
+      function stopBackgroundMusic() {
         const backgroundMusic = document.getElementById('background-music');
         if (backgroundMusic) {
           backgroundMusic.pause();
           backgroundMusic.currentTime = 0;
+          backgroundMusicStarted = false;
+          console.log('Background music stopped');
+        }
+      }
+      
+      // Function to trigger app navigation
+      function triggerAppNavigation() {
+        if (hasRedirected) {
+          console.log('Navigation already triggered, skipping');
+          return;
         }
         
-        // Clear interval if running
+        hasRedirected = true;
+        
+        // Stop background music
+        stopBackgroundMusic();
+        
+        // Clear countdown interval
         if (countdownInterval) {
           clearInterval(countdownInterval);
           countdownInterval = null;
         }
         
-        // Trigger app-ready event for React to handle navigation
-        console.log('Triggering app-ready event for React navigation...');
-        triggerAppReady();
+        // Mark welcome screen as shown
+        markWelcomeScreenShown();
         
-        // Show loading screen briefly
-        showLoadingScreen();
-      }
-      
-      // Function to show loading screen
-      function showLoadingScreen() {
-        const loadingScreen = document.getElementById('loading-screen');
-        if (loadingScreen) {
-          loadingScreen.style.display = 'flex';
-          loadingScreen.style.opacity = '1';
-          
-          // Hide loading screen after React app loads
-          setTimeout(() => {
-            if (loadingScreen) {
-              loadingScreen.style.opacity = '0';
-              setTimeout(() => {
-                loadingScreen.style.display = 'none';
-              }, 500);
-            }
-          }, 1000);
-        }
-      }
-      
-      // Function to start welcome screen
-      function startWelcomeScreen() {
-        // Check if welcome screen should be shown
-        if (!shouldShowWelcomeScreen()) {
-          console.log('Skipping welcome screen - user already authenticated or saw it today');
-          showLoadingScreen();
-          triggerAppReady();
-          return;
+        // Get current path
+        const currentPath = window.location.pathname;
+        console.log('Current path:', currentPath);
+        
+        // Check authentication
+        const isAuthenticated = isUserAuthenticated();
+        console.log('User authenticated:', isAuthenticated);
+        
+        // Determine where to navigate
+        let targetPath = '/login';
+        
+        if (isAuthenticated) {
+          // Already logged in, go to dashboard
+          if (currentPath === '/' || currentPath === '/login' || currentPath === '') {
+            targetPath = '/dashboard';
+          } else {
+            // Stay on current page
+            targetPath = currentPath;
+          }
+        } else {
+          // Not authenticated, go to login
+          if (currentPath !== '/login' && currentPath !== '/register') {
+            targetPath = '/login';
+          } else {
+            // Already on auth page
+            targetPath = currentPath;
+          }
         }
         
+        console.log('Navigating to:', targetPath);
+        
+        // Fade out welcome screen
         const welcomeScreen = document.getElementById('welcome-screen');
+        if (welcomeScreen) {
+          welcomeScreen.style.opacity = '0';
+          welcomeScreen.style.transition = 'opacity 0.5s ease';
+          
+          setTimeout(() => {
+            welcomeScreen.style.display = 'none';
+            
+            // Show loading screen briefly
+            const loadingScreen = document.getElementById('loading-screen');
+            if (loadingScreen) {
+              loadingScreen.style.display = 'flex';
+              loadingScreen.style.opacity = '1';
+              
+              // Dispatch app-ready event for React to handle
+              console.log('Dispatching app-ready event');
+              const event = new CustomEvent('app-ready', {
+                detail: {
+                  timestamp: new Date().toISOString(),
+                  targetPath: targetPath,
+                  isAuthenticated: isAuthenticated
+                }
+              });
+              window.dispatchEvent(event);
+              
+              // Also call global function if it exists
+              if (window.triggerReactNavigation) {
+                window.triggerReactNavigation(targetPath, isAuthenticated);
+              }
+              
+              // Hide loading screen after React takes over
+              setTimeout(() => {
+                if (loadingScreen) {
+                  loadingScreen.style.opacity = '0';
+                  setTimeout(() => {
+                    loadingScreen.style.display = 'none';
+                  }, 500);
+                }
+              }, 1000);
+            }
+          }, 500);
+        } else {
+          // Welcome screen not found, trigger event immediately
+          console.log('Dispatching app-ready event (no welcome screen)');
+          const event = new CustomEvent('app-ready', {
+            detail: {
+              timestamp: new Date().toISOString(),
+              targetPath: targetPath,
+              isAuthenticated: isAuthenticated
+            }
+          });
+          window.dispatchEvent(event);
+        }
+      }
+      
+      // Function to start countdown
+      function startCountdown() {
         const countdownElement = document.getElementById('countdown');
-        const progressFill = document.getElementById('progress-fill');
         const countdownText = document.getElementById('countdown-text');
+        const progressFill = document.getElementById('progress-fill');
         
-        // Show welcome screen
-        welcomeScreen.style.display = 'flex';
-        welcomeScreen.style.opacity = '1';
-        
-        // Load logo
-        const logoElement = document.getElementById('company-logo');
-        if (logoElement) {
-          // Handle logo loading error
-          logoElement.onerror = function() {
-            console.log('Logo failed to load, showing fallback');
-            this.style.display = 'none';
-            this.parentElement.innerHTML = '<div style="font-size: 3rem; font-weight: bold; color: white;">PWI</div>';
-          };
+        if (!countdownElement || !countdownText || !progressFill) {
+          console.error('Countdown elements not found');
+          triggerAppNavigation();
+          return;
         }
         
         let timeLeft = 15;
         const totalTime = 15;
         
-        // Background music handling (optional)
-        const backgroundMusic = document.getElementById('background-music');
-        if (backgroundMusic) {
-          const startMusic = () => {
-            backgroundMusic.volume = 0.2;
-            backgroundMusic.play().catch(e => {
-              console.log('Autoplay prevented, user interaction required');
-            });
-          };
-          
-          document.addEventListener('click', startMusic, { once: true });
-          document.addEventListener('touchstart', startMusic, { once: true });
-        }
-        
-        // Start countdown
         countdownInterval = setInterval(() => {
           timeLeft--;
+          
+          // Update display
           countdownElement.textContent = timeLeft;
           countdownText.textContent = timeLeft;
           
@@ -477,66 +674,117 @@
           const progressPercentage = ((totalTime - timeLeft) / totalTime) * 100;
           progressFill.style.width = `${progressPercentage}%`;
           
+          // Change color when 5 seconds remain
+          if (timeLeft <= 5) {
+            countdownElement.style.color = '#ff6b6b';
+            countdownElement.style.animation = 'none';
+          }
+          
+          // Navigate when countdown reaches 0
           if (timeLeft <= 0) {
-            redirectToLogin();
+            triggerAppNavigation();
           }
         }, 1000);
+      }
+      
+      // Function to initialize welcome screen
+      function initializeWelcomeScreen() {
+        console.log('Initializing welcome screen...');
         
-        // Skip button
-        document.getElementById('skip-button').addEventListener('click', function() {
-          markWelcomeScreenSkipped();
-          redirectToLogin();
-        });
+        // Check if welcome screen should be shown
+        if (!shouldShowWelcomeScreen()) {
+          console.log('Skipping welcome screen');
+          triggerAppNavigation();
+          return;
+        }
+        
+        // Start background music
+        startBackgroundMusic();
+        
+        // Start countdown
+        startCountdown();
+        
+        // Setup skip button
+        const skipButton = document.getElementById('skip-button');
+        if (skipButton) {
+          skipButton.addEventListener('click', function() {
+            console.log('Skip button clicked');
+            disableWelcomeScreen();
+            triggerAppNavigation();
+          });
+        }
+        
+        // Add double-click to disable welcome permanently
+        const welcomeScreen = document.getElementById('welcome-screen');
+        if (welcomeScreen) {
+          let clickCount = 0;
+          let clickTimer;
+          
+          welcomeScreen.addEventListener('click', function(e) {
+            if (e.target.id !== 'skip-button') {
+              clickCount++;
+              
+              if (clickCount === 1) {
+                clickTimer = setTimeout(() => {
+                  clickCount = 0;
+                }, 500);
+              }
+              
+              if (clickCount === 3) {
+                clearTimeout(clickTimer);
+                clickCount = 0;
+                disableWelcomeScreen();
+                alert('Welcome screen has been disabled permanently. Refresh to skip.');
+              }
+            }
+          });
+        }
+        
+        console.log('Welcome screen initialized');
       }
       
       // Initialize when DOM is loaded
       document.addEventListener('DOMContentLoaded', function() {
-        console.log('DOM loaded, initializing welcome screen...');
+        console.log('DOM loaded, starting initialization...');
         
-        // Check current URL - if already on login page, don't show welcome
-        const currentPath = window.location.pathname;
-        const isLoginPage = currentPath.includes('/login') || 
-                           currentPath === '/' || 
-                           currentPath === '';
-        
-        if (isLoginPage && !shouldShowWelcomeScreen()) {
-          // Already on login page and shouldn't show welcome
-          console.log('Already on login page, showing loading screen...');
-          showLoadingScreen();
-          setTimeout(triggerAppReady, 500);
-        } else {
-          // Start welcome screen
-          startWelcomeScreen();
-        }
+        // Small delay to ensure everything is ready
+        setTimeout(() => {
+          initializeWelcomeScreen();
+        }, 300);
       });
       
-      // Global function for React to call when it's ready
+      // Global functions for React to call
       window.reactAppLoaded = function() {
-        console.log('React app loaded successfully');
+        console.log('React app loaded callback received');
         
-        // Hide any loading screens
+        // Hide any remaining loading screens
         const loadingScreen = document.getElementById('loading-screen');
-        if (loadingScreen) {
+        if (loadingScreen && loadingScreen.style.display !== 'none') {
           loadingScreen.style.opacity = '0';
           setTimeout(() => {
             loadingScreen.style.display = 'none';
           }, 300);
         }
-        
-        // Update welcome screen if still visible
-        const welcomeScreen = document.getElementById('welcome-screen');
-        if (welcomeScreen && welcomeScreen.style.display !== 'none') {
-          const countdownText = document.getElementById('countdown-text');
-          if (countdownText) {
-            countdownText.textContent = 'app loading...';
-          }
-        }
       };
       
-      // Handle page visibility
+      // Handle page visibility changes
       document.addEventListener('visibilitychange', function() {
         if (document.visibilityState === 'visible') {
           document.title = 'Pakistan Wire Industries';
+          
+          // Resume music if it was playing
+          const backgroundMusic = document.getElementById('background-music');
+          if (backgroundMusic && backgroundMusicStarted) {
+            backgroundMusic.play().catch(e => {
+              console.log('Could not resume music:', e.message);
+            });
+          }
+        } else {
+          // Pause music when page is hidden
+          const backgroundMusic = document.getElementById('background-music');
+          if (backgroundMusic) {
+            backgroundMusic.pause();
+          }
         }
       });
       
@@ -544,7 +792,11 @@
       window.addEventListener('load', function() {
         if (window.performance) {
           const perfData = window.performance.getEntriesByType('navigation')[0];
-          console.log('Page loaded in: ' + (perfData.loadEventEnd - perfData.fetchStart) + 'ms');
+          const loadTime = perfData.loadEventEnd - perfData.fetchStart;
+          console.log(`Page loaded in: ${loadTime.toFixed(2)}ms`);
+          
+          // Store performance data
+          localStorage.setItem('pwi_last_load_time', loadTime.toFixed(2));
         }
       });
     </script>

@@ -1234,3 +1234,1737 @@ body {
 }
 .company-name { font-size: 1.8rem !important; }
 .company-tagline { font-size: 1.1rem !important; }
+/* Error Message کو چھوٹا اور پتلا کریں */
+.error-container {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 15px;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  animation: slideIn 0.3s ease;
+  max-height: 80px;
+  overflow: hidden;
+}
+
+.error-icon {
+  color: var(--danger-color);
+  font-size: 18px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.error-message {
+  color: #dc2626;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  font-weight: 500;
+  flex: 1;
+  max-height: 60px;
+  overflow: auto;
+  padding-right: 5px;
+}
+
+.error-message::-webkit-scrollbar {
+  width: 4px;
+}
+
+.error-message::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 2px;
+}
+
+.error-message::-webkit-scrollbar-thumb {
+  background: #dc2626;
+  border-radius: 2px;
+}
+
+/* General Error کو چھوٹا کریں */
+.error-container.small {
+  padding: 8px 12px;
+  margin-bottom: 15px;
+  max-height: 60px;
+}
+
+.error-container.small .error-icon {
+  font-size: 16px;
+}
+
+.error-container.small .error-message {
+  font-size: 0.8rem;
+  max-height: 45px;
+}
+/* ==================== MOBILE CSS ==================== */
+
+/* Mobile Login Page */
+.mobile-login-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Mobile Header */
+.mobile-header {
+  padding: 20px 15px;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.mobile-logo {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.mobile-logo-icon {
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 20px;
+  font-family: 'Arial', sans-serif;
+}
+
+.mobile-logo-text h1 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.mobile-logo-text p {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin: 3px 0 0 0;
+}
+
+/* Mobile Welcome */
+.mobile-welcome {
+  padding: 25px 20px 15px;
+  text-align: center;
+  background: white;
+}
+
+.mobile-welcome h2 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 5px;
+}
+
+.mobile-welcome p {
+  font-size: 0.95rem;
+  color: #64748b;
+}
+
+/* Mobile Login Card */
+.mobile-login-card {
+  flex: 1;
+  padding: 20px;
+  background: white;
+  border-radius: 20px 20px 0 0;
+  margin-top: -10px;
+  box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Mobile Error */
+.mobile-error {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 15px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  color: #dc2626;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.mobile-error svg {
+  flex-shrink: 0;
+}
+
+/* Mobile Login Form */
+.mobile-login-form {
+  margin-bottom: 25px;
+}
+
+.mobile-input-group {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.mobile-input-icon {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #64748b;
+  font-size: 18px;
+  z-index: 1;
+}
+
+.mobile-input-group input {
+  width: 100%;
+  padding: 16px 16px 16px 50px;
+  font-size: 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  background: white;
+  transition: all 0.3s ease;
+}
+
+.mobile-input-group input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.mobile-input-group input::placeholder {
+  color: #94a3b8;
+}
+
+.mobile-password-header {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
+.mobile-forgot-password {
+  color: #2563eb;
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.mobile-password-toggle {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 18px;
+  padding: 5px;
+  cursor: pointer;
+}
+
+.mobile-remember {
+  margin: 20px 0 25px;
+}
+
+.mobile-remember label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9rem;
+  color: #475569;
+  cursor: pointer;
+}
+
+.mobile-remember input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #cbd5e1;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.mobile-remember input[type="checkbox"]:checked {
+  background-color: #2563eb;
+  border-color: #2563eb;
+}
+
+/* Mobile Login Button */
+.mobile-login-button {
+  width: 100%;
+  padding: 18px 24px;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.3s ease;
+  margin-bottom: 25px;
+}
+
+.mobile-login-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 15px rgba(37, 99, 235, 0.2);
+}
+
+.mobile-login-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.mobile-spinner {
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Mobile Features */
+.mobile-features-container {
+  margin: 25px 0;
+  padding: 20px;
+  background: #f8fafc;
+  border-radius: 12px;
+}
+
+.mobile-features-container h3 {
+  font-size: 1.2rem;
+  color: #1e293b;
+  margin-bottom: 15px;
+  text-align: center;
+  font-weight: 700;
+}
+
+.mobile-features-scroll {
+  display: flex;
+  gap: 15px;
+  overflow-x: auto;
+  padding-bottom: 10px;
+  scrollbar-width: thin;
+}
+
+.mobile-features-scroll::-webkit-scrollbar {
+  height: 5px;
+}
+
+.mobile-features-scroll::-webkit-scrollbar-track {
+  background: #e2e8f0;
+  border-radius: 3px;
+}
+
+.mobile-features-scroll::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 3px;
+}
+
+.mobile-feature {
+  min-width: 200px;
+  background: white;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.mobile-feature-icon {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.mobile-feature-content h4 {
+  font-size: 0.95rem;
+  color: #1e293b;
+  margin-bottom: 3px;
+  font-weight: 600;
+}
+
+.mobile-feature-content p {
+  font-size: 0.8rem;
+  color: #64748b;
+  line-height: 1.3;
+}
+
+/* Mobile Register Section */
+.mobile-register-section {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 20px;
+  background: #f1f5f9;
+  border-radius: 12px;
+  margin: 20px 0;
+}
+
+.mobile-register-icon {
+  font-size: 22px;
+  color: #2563eb;
+  flex-shrink: 0;
+}
+
+.mobile-register-content {
+  flex: 1;
+}
+
+.mobile-register-content p {
+  color: #475569;
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+}
+
+.mobile-register-button {
+  display: inline-block;
+  padding: 10px 20px;
+  background: white;
+  color: #2563eb;
+  border: 2px solid #2563eb;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.85rem;
+  transition: all 0.3s ease;
+}
+
+.mobile-register-button:hover {
+  background: #2563eb;
+  color: white;
+}
+
+/* Mobile Footer */
+.mobile-footer {
+  padding: 20px;
+  text-align: center;
+  color: #64748b;
+  font-size: 0.8rem;
+  background: white;
+  border-top: 1px solid #e2e8f0;
+}
+
+.mobile-footer p {
+  margin: 3px 0;
+}
+
+/* ==================== DESKTOP CSS FIXES ==================== */
+
+/* Desktop کے لیے book spine صرف desktop پر */
+@media (max-width: 768px) {
+  .book-spine {
+    display: none !important;
+  }
+  
+  .login-container {
+    flex-direction: column;
+    height: auto !important;
+  }
+  
+  .login-left-panel,
+  .login-right-panel {
+    width: 100% !important;
+    min-height: auto !important;
+  }
+}
+
+/* Desktop Container */
+.login-container {
+  display: flex;
+  position: relative;
+}
+
+/* Book Spine Styles */
+.book-spine {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 70px;
+  height: 100%;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  z-index: 10;
+  box-shadow: 
+    inset -4px 0 8px rgba(0, 0, 0, 0.5),
+    inset 4px 0 8px rgba(0, 0, 0, 0.5);
+}
+
+.book-spine-line {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(to bottom, transparent 0%, #3b82f6 10%, #3b82f6 90%, transparent 100%);
+  box-shadow: 0 0 8px #3b82f6;
+  opacity: 0.7;
+}
+
+.book-pages {
+  position: absolute;
+  left: -15px;
+  top: 0;
+  width: 30px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 15px 0;
+}
+
+.book-page {
+  flex: 1;
+  background: linear-gradient(to right,
+    transparent 0%,
+    rgba(255, 255, 255, 0.2) 20%,
+    rgba(255, 255, 255, 0.4) 50%,
+    rgba(255, 255, 255, 0.2) 80%,
+    transparent 100%
+  );
+  border-radius: 2px;
+  opacity: 0.8;
+}
+
+/* Desktop Panels */
+.login-left-panel {
+  flex: 1;
+  padding: 40px 50px;
+}
+
+.login-right-panel {
+  flex: 1;
+  padding: 40px 50px;
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  color: white;
+}
+
+/* Responsive Adjustments */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .login-container {
+    max-width: 95%;
+    margin: 20px auto;
+  }
+  
+  .book-spine {
+    width: 50px;
+  }
+  
+  .login-left-panel,
+  .login-right-panel {
+    padding: 30px 35px;
+  }
+}
+
+@media (max-width: 768px) {
+  .mobile-login-page {
+    display: block;
+  }
+  
+  .login-page-wrapper,
+  .login-container,
+  .login-left-panel,
+  .login-right-panel {
+    display: none;
+  }
+}
+/* ==================== MOBILE CSS ==================== */
+
+/* Mobile Login Page */
+.mobile-login-page {
+  min-height: 100vh;
+  background: white;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+
+/* Mobile Slider Section */
+.mobile-slider-section {
+  height: 220px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.mobile-slider-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.mobile-slider-track {
+  display: flex;
+  transition: transform 0.5s ease-in-out;
+  height: 100%;
+}
+
+.mobile-slide {
+  flex: 0 0 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  text-align: center;
+  color: white;
+}
+
+.mobile-slide-icon {
+  width: 70px;
+  height: 70px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  margin-bottom: 15px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.mobile-slide-content h3 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.mobile-slide-content p {
+  font-size: 0.9rem;
+  opacity: 0.9;
+  line-height: 1.4;
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+/* Slider Controls */
+.mobile-slider-prev,
+.mobile-slider-next {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  z-index: 10;
+  transition: all 0.3s ease;
+}
+
+.mobile-slider-prev:hover,
+.mobile-slider-next:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.mobile-slider-prev {
+  left: 10px;
+}
+
+.mobile-slider-next {
+  right: 10px;
+}
+
+/* Slider Dots */
+.mobile-slider-dots {
+  position: absolute;
+  bottom: 20px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  z-index: 10;
+}
+
+.mobile-slider-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.3s ease;
+}
+
+.mobile-slider-dot.active {
+  background: white;
+  transform: scale(1.3);
+}
+
+/* Mobile Header with Logo */
+.mobile-header {
+  padding: 20px 15px;
+  background: white;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.mobile-logo-container {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.mobile-company-logo {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.mobile-logo-fallback {
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  border-radius: 12px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 20px;
+  font-family: 'Arial', sans-serif;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+}
+
+.mobile-logo-text {
+  letter-spacing: 1px;
+}
+
+.mobile-company-info {
+  flex: 1;
+}
+
+.mobile-company-name {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.mobile-company-tagline {
+  font-size: 0.9rem;
+  color: #64748b;
+  margin: 4px 0 0 0;
+}
+
+/* Mobile Welcome */
+.mobile-welcome {
+  padding: 20px 15px 15px;
+  text-align: center;
+  background: white;
+}
+
+.mobile-welcome h2 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 8px;
+}
+
+.mobile-welcome p {
+  font-size: 1rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+/* Mobile Login Card */
+.mobile-login-card {
+  flex: 1;
+  padding: 20px 15px;
+  background: white;
+}
+
+/* Mobile Error */
+.mobile-error {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 15px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  color: #dc2626;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.mobile-error svg {
+  flex-shrink: 0;
+  font-size: 18px;
+}
+
+/* Mobile Login Form */
+.mobile-login-form {
+  margin-bottom: 25px;
+}
+
+.mobile-input-group {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.mobile-input-icon {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #64748b;
+  font-size: 20px;
+  z-index: 1;
+}
+
+.mobile-input-group input {
+  width: 100%;
+  padding: 18px 18px 18px 55px;
+  font-size: 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  background: white;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.mobile-input-group input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.mobile-input-group input::placeholder {
+  color: #94a3b8;
+}
+
+.mobile-password-header {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
+.mobile-forgot-password {
+  color: #2563eb;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.mobile-password-toggle {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 20px;
+  padding: 5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mobile-remember {
+  margin: 20px 0 25px;
+}
+
+.mobile-remember label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.95rem;
+  color: #475569;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.mobile-remember input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #cbd5e1;
+  border-radius: 6px;
+  cursor: pointer;
+  appearance: none;
+  position: relative;
+}
+
+.mobile-remember input[type="checkbox"]:checked {
+  background-color: #2563eb;
+  border-color: #2563eb;
+}
+
+.mobile-remember input[type="checkbox"]:checked::after {
+  content: '✓';
+  position: absolute;
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Mobile Login Button */
+.mobile-login-button {
+  width: 100%;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.3s ease;
+  margin-bottom: 25px;
+  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.2);
+}
+
+.mobile-login-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+}
+
+.mobile-login-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.mobile-login-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.mobile-spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Mobile Register Section */
+.mobile-register-section {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 20px;
+  background: #f8fafc;
+  border-radius: 12px;
+  margin: 20px 0;
+  border: 1px solid #e2e8f0;
+}
+
+.mobile-register-icon {
+  font-size: 24px;
+  color: #2563eb;
+  flex-shrink: 0;
+}
+
+.mobile-register-content {
+  flex: 1;
+}
+
+.mobile-register-content p {
+  color: #475569;
+  font-size: 0.95rem;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.mobile-register-button {
+  display: inline-block;
+  padding: 12px 24px;
+  background: white;
+  color: #2563eb;
+  border: 2px solid #2563eb;
+  border-radius: 10px;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.mobile-register-button:hover {
+  background: #2563eb;
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);
+}
+
+/* Mobile Footer */
+.mobile-footer {
+  padding: 20px 15px;
+  text-align: center;
+  color: #64748b;
+  font-size: 0.85rem;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+}
+
+.mobile-footer p {
+  margin: 3px 0;
+  font-weight: 500;
+}
+
+/* ==================== DESKTOP CSS ==================== */
+
+/* Desktop Slider */
+.desktop-slider {
+  margin: 30px 0;
+}
+
+.desktop-slider-track {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.desktop-slide {
+  padding: 20px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  transition: all 0.3s ease;
+  opacity: 0.8;
+  transform: translateX(-10px);
+}
+
+.desktop-slide.active {
+  opacity: 1;
+  transform: translateX(0);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.desktop-slide-icon {
+  font-size: 32px;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.desktop-slide-content h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 5px;
+  color: white;
+}
+
+.desktop-slide-content p {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.4;
+}
+
+.desktop-slider-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.desktop-slider-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.3s ease;
+  opacity: 0.5;
+}
+
+.desktop-slider-dot.active {
+  opacity: 1;
+  transform: scale(1.3);
+}
+
+/* ==================== RESPONSIVE ==================== */
+
+@media (max-width: 768px) {
+  .mobile-login-page {
+    display: block;
+  }
+  
+  .login-page-wrapper,
+  .login-container,
+  .login-left-panel,
+  .login-right-panel {
+    display: none;
+  }
+}
+
+@media (min-width: 769px) {
+  .mobile-login-page {
+    display: none;
+  }
+}
+
+/* Small Mobile Adjustments */
+@media (max-width: 360px) {
+  .mobile-slide-content h3 {
+    font-size: 1.2rem;
+  }
+  
+  .mobile-slide-content p {
+    font-size: 0.8rem;
+  }
+  
+  .mobile-company-name {
+    font-size: 1.1rem;
+  }
+  
+  .mobile-company-tagline {
+    font-size: 0.8rem;
+  }
+}
+/* ==================== MOBILE CSS - COMPACT VERSION ==================== */
+
+/* Mobile Login Page - Full Height */
+.mobile-login-page {
+  min-height: 100vh;
+  background: white;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Mobile Slider Section - Compact */
+.mobile-slider-section {
+  height: 180px; /* Reduced from 220px */
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.mobile-slider-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.mobile-slider-track {
+  display: flex;
+  transition: transform 0.4s ease-in-out;
+  height: 100%;
+}
+
+.mobile-slide {
+  flex: 0 0 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 15px;
+  text-align: center;
+  color: white;
+}
+
+.mobile-slide-icon {
+  width: 55px;
+  height: 55px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  margin-bottom: 10px;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+}
+
+.mobile-slide-content h3 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 5px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.mobile-slide-content p {
+  font-size: 0.85rem;
+  opacity: 0.9;
+  line-height: 1.3;
+  max-width: 280px;
+  margin: 0 auto;
+}
+
+/* Slider Controls */
+.mobile-slider-prev,
+.mobile-slider-next {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 18px;
+  cursor: pointer;
+  backdrop-filter: blur(5px);
+  z-index: 10;
+  transition: all 0.2s ease;
+}
+
+.mobile-slider-prev:hover,
+.mobile-slider-next:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.mobile-slider-prev {
+  left: 8px;
+}
+
+.mobile-slider-next {
+  right: 8px;
+}
+
+/* Slider Dots */
+.mobile-slider-dots {
+  position: absolute;
+  bottom: 15px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  z-index: 10;
+}
+
+.mobile-slider-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.3s ease;
+}
+
+.mobile-slider-dot.active {
+  background: white;
+  transform: scale(1.4);
+  width: 20px;
+  border-radius: 10px;
+}
+
+/* Compact Header with Logo */
+.mobile-header {
+  padding: 15px;
+  background: white;
+  border-bottom: 1px solid #e2e8f0;
+  flex-shrink: 0;
+}
+
+.mobile-logo-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mobile-company-logo {
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
+  border-radius: 10px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+}
+
+.mobile-logo-fallback {
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  border-radius: 10px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 18px;
+  font-family: 'Arial', sans-serif;
+  box-shadow: 0 3px 8px rgba(37, 99, 235, 0.15);
+}
+
+.mobile-logo-text {
+  letter-spacing: 1px;
+}
+
+.mobile-company-info {
+  flex: 1;
+  min-width: 0; /* Prevent text overflow */
+}
+
+.mobile-company-name {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mobile-company-tagline {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin: 3px 0 0 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Compact Welcome */
+.mobile-welcome {
+  padding: 15px 15px 10px;
+  text-align: center;
+  background: white;
+  flex-shrink: 0;
+}
+
+.mobile-welcome h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 5px;
+}
+
+.mobile-welcome p {
+  font-size: 0.9rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+/* Scrollable Content Area */
+.mobile-scrollable-content {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Mobile Login Card */
+.mobile-login-card {
+  padding: 15px;
+  background: white;
+}
+
+/* Mobile Error */
+.mobile-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  color: #dc2626;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.mobile-error svg {
+  flex-shrink: 0;
+  font-size: 16px;
+}
+
+/* Mobile Login Form */
+.mobile-login-form {
+  margin-bottom: 20px;
+}
+
+.mobile-input-group {
+  position: relative;
+  margin-bottom: 15px;
+}
+
+.mobile-input-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #64748b;
+  font-size: 18px;
+  z-index: 1;
+}
+
+.mobile-input-group input {
+  width: 100%;
+  padding: 16px 16px 16px 50px;
+  font-size: 15px;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  background: white;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.mobile-input-group input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.mobile-input-group input::placeholder {
+  color: #94a3b8;
+  font-size: 14px;
+}
+
+.mobile-password-header {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 6px;
+}
+
+.mobile-forgot-password {
+  color: #2563eb;
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.mobile-password-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 18px;
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mobile-remember {
+  margin: 15px 0 20px;
+}
+
+.mobile-remember label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: #475569;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.mobile-remember input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #cbd5e1;
+  border-radius: 5px;
+  cursor: pointer;
+  appearance: none;
+  position: relative;
+}
+
+.mobile-remember input[type="checkbox"]:checked {
+  background-color: #2563eb;
+  border-color: #2563eb;
+}
+
+.mobile-remember input[type="checkbox"]:checked::after {
+  content: '✓';
+  position: absolute;
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Mobile Login Button */
+.mobile-login-button {
+  width: 100%;
+  padding: 18px 20px;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+}
+
+.mobile-login-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(37, 99, 235, 0.3);
+}
+
+.mobile-login-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.mobile-login-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.mobile-spinner {
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Mobile Register Section */
+.mobile-register-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 10px;
+  margin: 15px 0;
+  border: 1px solid #e2e8f0;
+}
+
+.mobile-register-icon {
+  font-size: 22px;
+  color: #2563eb;
+  flex-shrink: 0;
+}
+
+.mobile-register-content {
+  flex: 1;
+}
+
+.mobile-register-content p {
+  color: #475569;
+  font-size: 0.9rem;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+.mobile-register-button {
+  display: inline-block;
+  padding: 10px 20px;
+  background: white;
+  color: #2563eb;
+  border: 2px solid #2563eb;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 0.85rem;
+  transition: all 0.3s ease;
+}
+
+.mobile-register-button:hover {
+  background: #2563eb;
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(37, 99, 235, 0.2);
+}
+
+/* Mobile Footer */
+.mobile-footer {
+  padding: 15px;
+  text-align: center;
+  color: #64748b;
+  font-size: 0.8rem;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  margin-top: 10px;
+}
+
+.mobile-footer p {
+  margin: 3px 0;
+  font-weight: 500;
+}
+
+/* ==================== RESPONSIVE ADJUSTMENTS ==================== */
+
+/* Very Small Phones */
+@media (max-width: 360px) {
+  .mobile-slider-section {
+    height: 160px;
+  }
+  
+  .mobile-slide-icon {
+    width: 48px;
+    height: 48px;
+    font-size: 22px;
+  }
+  
+  .mobile-slide-content h3 {
+    font-size: 1rem;
+  }
+  
+  .mobile-slide-content p {
+    font-size: 0.75rem;
+  }
+  
+  .mobile-company-name {
+    font-size: 1rem;
+  }
+  
+  .mobile-company-tagline {
+    font-size: 0.75rem;
+  }
+  
+  .mobile-welcome h2 {
+    font-size: 1.3rem;
+  }
+  
+  .mobile-welcome p {
+    font-size: 0.85rem;
+  }
+  
+  .mobile-login-button {
+    padding: 16px;
+    font-size: 0.95rem;
+  }
+}
+
+/* Medium Phones */
+@media (min-width: 361px) and (max-width: 420px) {
+  .mobile-slider-section {
+    height: 170px;
+  }
+  
+  .mobile-slide-icon {
+    width: 52px;
+    height: 52px;
+    font-size: 24px;
+  }
+  
+  .mobile-slide-content h3 {
+    font-size: 1.1rem;
+  }
+  
+  .mobile-slide-content p {
+    font-size: 0.8rem;
+  }
+}
+
+/* Large Phones */
+@media (min-width: 421px) and (max-width: 768px) {
+  .mobile-slider-section {
+    height: 190px;
+  }
+  
+  .mobile-slide-icon {
+    width: 60px;
+    height: 60px;
+    font-size: 28px;
+  }
+  
+  .mobile-slide-content h3 {
+    font-size: 1.25rem;
+  }
+  
+  .mobile-slide-content p {
+    font-size: 0.85rem;
+  }
+  
+  .mobile-company-name {
+    font-size: 1.2rem;
+  }
+  
+  .mobile-company-tagline {
+    font-size: 0.85rem;
+  }
+  
+  .mobile-welcome h2 {
+    font-size: 1.6rem;
+  }
+}
+
+/* Prevent horizontal scroll */
+@media (max-width: 768px) {
+  body {
+    overflow-x: hidden;
+  }
+  
+  .mobile-login-page {
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+}
+
+/* Desktop View Hidden on Mobile */
+@media (max-width: 768px) {
+  .login-page-wrapper {
+    display: none !important;
+  }
+}
+
+/* Desktop View */
+@media (min-width: 769px) {
+  .mobile-login-page {
+    display: none !important;
+  }
+}

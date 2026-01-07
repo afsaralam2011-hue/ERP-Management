@@ -7,8 +7,8 @@ import {
   FaBoxOpen, FaShieldAlt, FaBuilding, FaListAlt, FaBullseye,
   FaTrophy, FaRocket, FaStar, FaBolt, FaSyncAlt,
   FaSun, FaMoon, FaClock, FaFileAlt, FaChartBar, 
-  FaFileExport, FaFilter, FaDownload, FaEye, FaTable, 
-  FaSitemap, FaClipboardList
+  FaFileExport, FaFilter, FaClipboardList, FaEye, 
+  FaTable, FaSitemap, FaDownload, FaHistory
 } from 'react-icons/fa';
 import { supabase } from '../../../../supabaseClient';
 import './ProductionMetrics.css';
@@ -22,6 +22,8 @@ const ProductionMetrics = () => {
   const [isSupabaseConnected, setIsSupabaseConnected] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState('Flatting Section');
   const [lastRefresh, setLastRefresh] = useState(new Date());
+  const [departmentLastUpdates, setDepartmentLastUpdates] = useState({});
+  const [isLoadingUpdates, setIsLoadingUpdates] = useState(false);
 
   const departments = useMemo(() => [
     { 
@@ -74,6 +76,37 @@ const ProductionMetrics = () => {
     }
   ], []);
 
+  // Function to fetch last update time for each department
+  const fetchDepartmentLastUpdates = useCallback(async () => {
+    if (!supabase) return;
+    
+    setIsLoadingUpdates(true);
+    const updates = {};
+    
+    try {
+      for (const dept of departments) {
+        const { data, error } = await supabase
+          .from(dept.tableName)
+          .select('created_at')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+        
+        if (!error && data && data.created_at) {
+          updates[dept.name] = new Date(data.created_at);
+        } else {
+          updates[dept.name] = null;
+        }
+      }
+      
+      setDepartmentLastUpdates(updates);
+    } catch (error) {
+      console.error('Error fetching last updates:', error);
+    } finally {
+      setIsLoadingUpdates(false);
+    }
+  }, [departments]);
+
   const getCurrentDepartment = useCallback(() => {
     return departments.find(dept => dept.name === selectedDepartment);
   }, [selectedDepartment, departments]);
@@ -86,7 +119,29 @@ const ProductionMetrics = () => {
     return <FaClock />;
   };
 
-  // Main calculation function
+  // Format last update time
+  const formatLastUpdate = useCallback((date) => {
+    if (!date) return 'No data';
+    
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins} min ago`;
+    if (diffHours < 24) return `${diffHours} hr ago`;
+    if (diffDays < 7) return `${diffDays} days ago`;
+    
+    return date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }, []);
+
   const calculateAllDataCorrectly = useCallback((records) => {
     const combinationMap = {};
     const shiftMap = {};
@@ -457,6 +512,9 @@ const ProductionMetrics = () => {
       setShiftData(calculatedShiftData);
       setLastRefresh(new Date());
       
+      // Fetch last updates for all departments
+      fetchDepartmentLastUpdates();
+      
     } catch (error) {
       console.error('Error fetching production data:', error);
       setIsSupabaseConnected(false);
@@ -467,7 +525,7 @@ const ProductionMetrics = () => {
     } finally {
       setLoading(false);
     }
-  }, [selectedDepartment, getCurrentDepartment, calculateAllDataCorrectly]);
+  }, [selectedDepartment, getCurrentDepartment, calculateAllDataCorrectly, fetchDepartmentLastUpdates]);
 
   const getUnit = useCallback(() => {
     const currentDept = getCurrentDepartment();
@@ -496,7 +554,7 @@ const ProductionMetrics = () => {
           change: '0%',
           isPositive: true,
           icon: <FaIndustry />,
-          borderColor: '#3b82f6',
+          color: '#3b82f6',
           description: 'Total production this month',
           highlight: false
         },
@@ -508,7 +566,7 @@ const ProductionMetrics = () => {
           change: '0%',
           isPositive: true,
           icon: <FaBullseye />,
-          borderColor: '#10b981',
+          color: '#10b981',
           description: 'Monthly Production Target days met',
           highlight: false
         },
@@ -520,7 +578,7 @@ const ProductionMetrics = () => {
           change: '0%',
           isPositive: true,
           icon: <FaChartLine />,
-          borderColor: '#10b981',
+          color: '#10b981',
           description: 'Monthly Target Efficiency',
           highlight: false
         },
@@ -532,7 +590,7 @@ const ProductionMetrics = () => {
           change: '0%',
           isPositive: true,
           icon: <FaBolt />,
-          borderColor: '#8b5cf6',
+          color: '#8b5cf6',
           description: 'Average Daily Production',
           highlight: false
         },
@@ -557,7 +615,7 @@ const ProductionMetrics = () => {
         change: '+0%',
         isPositive: true,
         icon: <FaIndustry />,
-        borderColor: '#3b82f6',
+        color: '#3b82f6',
         description: 'Total production this month',
         highlight: false
       },
@@ -569,7 +627,7 @@ const ProductionMetrics = () => {
         change: '+0%',
         isPositive: true,
         icon: <FaBullseye />,
-        borderColor: '#10b981',
+        color: '#10b981',
         description: 'Monthly Production Target days met',
         highlight: false
       },
@@ -581,7 +639,7 @@ const ProductionMetrics = () => {
         change: avgEfficiency > 80 ? '+0%' : '-0%',
         isPositive: avgEfficiency > 80,
         icon: <FaChartLine />,
-        borderColor: avgEfficiency > 80 ? '#10b981' : '#f59e0b',
+        color: avgEfficiency > 80 ? '#10b981' : '#f59e0b',
         description: 'Monthly Target Efficiency',
         highlight: false
       },
@@ -595,7 +653,7 @@ const ProductionMetrics = () => {
         change: '+0%',
         isPositive: true,
         icon: <FaBolt />,
-        borderColor: '#8b5cf6',
+        color: '#8b5cf6',
         description: 'Average Daily Production',
         highlight: false
       },
@@ -672,15 +730,7 @@ const ProductionMetrics = () => {
     });
   }, [shiftData, dailyData]);
 
-  // Efficiency color function
-  const getEfficiencyColor = useCallback((efficiency) => {
-    const eff = parseFloat(efficiency);
-    if (eff >= 80) return '#10b981'; // Green
-    if (eff >= 70) return '#f59e0b'; // Yellow
-    return '#ef4444'; // Red
-  }, []);
-
-  // Report generation functions
+  // Function to generate daily report
   const generateDailyReport = useCallback(() => {
     const reportData = {
       date: new Date().toISOString().split('T')[0],
@@ -689,33 +739,33 @@ const ProductionMetrics = () => {
       shiftData: shiftData,
       machineData: machineData,
       summary: getTodayActualSummary(),
-      metrics: calculateMetrics()
+      generatedAt: new Date().toISOString()
     };
-    
-    console.log('Generating daily report:', reportData);
-    
-    alert(`Daily report for ${selectedDepartment} is being generated...`);
     
     const dataStr = JSON.stringify(reportData, null, 2);
     const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-    const exportFileDefaultName = `daily-report-${selectedDepartment.replace(/\s+/g, '-').toLowerCase()}-${new Date().toISOString().split('T')[0]}.json`;
+    const exportFileDefaultName = `daily-report-${selectedDepartment}-${new Date().toISOString().split('T')[0]}.json`;
     
     const linkElement = document.createElement('a');
     linkElement.setAttribute('href', dataUri);
     linkElement.setAttribute('download', exportFileDefaultName);
     linkElement.click();
-  }, [selectedDepartment, dailyData, shiftData, machineData, getTodayActualSummary, calculateMetrics]);
+    
+    alert(`Daily report for ${selectedDepartment} has been generated and downloaded as ${exportFileDefaultName}`);
+  }, [selectedDepartment, dailyData, shiftData, machineData, getTodayActualSummary]);
 
+  // Function to view analytics
   const viewAnalytics = useCallback(() => {
-    console.log('Opening analytics view...');
-    alert('Analytics view would open here with detailed charts and graphs.');
+    alert('Analytics view would open here with detailed charts and graphs for production analysis.');
   }, []);
 
+  // Function to refresh dashboard
   const refreshDashboard = useCallback(() => {
     fetchActualData();
-    alert('Dashboard refreshed with latest data!');
+    alert('Dashboard has been refreshed with the latest production data!');
   }, [fetchActualData]);
 
+  // Function to export dashboard data
   const exportDashboard = useCallback(() => {
     const dashboardData = {
       timestamp: new Date().toISOString(),
@@ -725,20 +775,29 @@ const ProductionMetrics = () => {
       machineData: machineData,
       shiftData: shiftData,
       metrics: calculateMetrics(),
-      todaySummary: getTodayActualSummary()
+      todaySummary: getTodayActualSummary(),
+      lastRefresh: lastRefresh.toISOString()
     };
     
     const dataStr = JSON.stringify(dashboardData, null, 2);
     const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-    const exportFileDefaultName = `dashboard-export-${selectedDepartment.replace(/\s+/g, '-').toLowerCase()}-${new Date().toISOString().split('T')[0]}.json`;
+    const exportFileDefaultName = `dashboard-export-${selectedDepartment}-${new Date().toISOString().split('T')[0]}.json`;
     
     const linkElement = document.createElement('a');
     linkElement.setAttribute('href', dataUri);
     linkElement.setAttribute('download', exportFileDefaultName);
     linkElement.click();
     
-    alert(`Dashboard data exported successfully as ${exportFileDefaultName}`);
-  }, [selectedDepartment, dailyData, monthlyData, machineData, shiftData, calculateMetrics, getTodayActualSummary]);
+    alert(`Dashboard data has been exported successfully as ${exportFileDefaultName}`);
+  }, [selectedDepartment, dailyData, monthlyData, machineData, shiftData, calculateMetrics, getTodayActualSummary, lastRefresh]);
+
+  // Function to get efficiency color
+  const getEfficiencyColor = useCallback((efficiency) => {
+    const eff = parseFloat(efficiency);
+    if (eff >= 80) return '#10b981'; // Green
+    if (eff >= 70) return '#f59e0b'; // Yellow
+    return '#ef4444'; // Red
+  }, []);
 
   useEffect(() => {
     fetchActualData();
@@ -767,37 +826,108 @@ const ProductionMetrics = () => {
 
   return (
     <div className="production-metrics-dashboard">
+      {/* Departments Navigation with Left Side Shadow and Last Update */}
       <div className="departments-nav">
         <div className="departments-header">
           <FaBuilding size={24} />
           <h2>Production Departments</h2>
+          {isLoadingUpdates && (
+            <div style={{ fontSize: '0.85rem', color: '#6b7280', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <FaSpinner style={{ animation: 'metrics-spin 1s linear infinite' }} /> Loading updates...
+            </div>
+          )}
         </div>
         <div className="departments-grid">
-          {departments.map(dept => (
-            <button
-              key={dept.id}
-              className={`department-btn ${selectedDepartment === dept.name ? 'active' : ''}`}
-              onClick={() => setSelectedDepartment(dept.name)}
-            >
-              <div className="dept-icon" style={{ color: dept.color }}>
-                {dept.icon}
-              </div>
-              <div className="dept-name">{dept.name}</div>
-              <div className="dept-table-info">
-                {dept.unit} • {dept.tableName}
-              </div>
-              {selectedDepartment === dept.name && (
-                <div className="active-indicator" style={{ background: dept.color }} />
-              )}
-            </button>
-          ))}
+          {departments.map(dept => {
+            const lastUpdate = departmentLastUpdates[dept.name];
+            const isActive = selectedDepartment === dept.name;
+            
+            return (
+              <button
+                key={dept.id}
+                className={`department-btn ${isActive ? 'active' : ''}`}
+                onClick={() => setSelectedDepartment(dept.name)}
+                style={{
+                  background: `linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)`,
+                  border: `1px solid ${dept.color}30`,
+                  boxShadow: isActive 
+                    ? `8px 0 20px -5px ${dept.color}40, 0 8px 25px rgba(59, 130, 246, 0.15)` 
+                    : `8px 0 20px -5px ${dept.color}20, 0 2px 8px rgba(0, 0, 0, 0.04)`,
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}
+              >
+                <div 
+                  className="dept-icon" 
+                  style={{ 
+                    color: dept.color,
+                    background: `linear-gradient(135deg, ${dept.color}15, ${dept.color}05)`,
+                    border: `1px solid ${dept.color}30`
+                  }}
+                >
+                  {dept.icon}
+                </div>
+                <div className="dept-name">{dept.name}</div>
+                <div className="dept-table-info">
+                  {dept.unit} • {dept.tableName}
+                </div>
+                
+                {/* Last Update Badge */}
+                {lastUpdate && (
+                  <div 
+                    style={{ 
+                      fontSize: '0.7rem', 
+                      color: '#6b7280', 
+                      marginTop: '8px',
+                      padding: '4px 8px',
+                      background: '#f8fafc',
+                      borderRadius: '10px',
+                      border: '1px solid #e5e7eb',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}
+                  >
+                    <FaHistory size={10} />
+                    Last: {formatLastUpdate(lastUpdate)}
+                  </div>
+                )}
+                
+                {/* Left side shadow effect */}
+                <div 
+                  style={{
+                    position: 'absolute',
+                    left: 0,
+                    top: 0,
+                    bottom: 0,
+                    width: '6px',
+                    background: `linear-gradient(to bottom, ${dept.color}80, ${dept.color}40)`,
+                    borderTopLeftRadius: '12px',
+                    borderBottomLeftRadius: '12px'
+                  }}
+                />
+                
+                {isActive && (
+                  <div className="active-indicator" style={{ background: dept.color }} />
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
 
+      {/* Dashboard Header with Last Update */}
       <div className="dashboard-header">
         <div className="header-left">
           <h1 className="dashboard-title">
-            <div className="dept-title-icon" style={{ color: currentDept?.color || '#3b82f6' }}>
+            <div 
+              className="dept-title-icon" 
+              style={{ 
+                color: currentDept?.color || '#3b82f6',
+                background: `linear-gradient(135deg, ${currentDept?.color || '#3b82f6'}15, ${currentDept?.color || '#3b82f6'}05)`,
+                border: `1px solid ${currentDept?.color || '#3b82f6'}30`
+              }}
+            >
               {currentDept?.icon || <FaIndustry />}
             </div>
             {selectedDepartment} Dashboard
@@ -809,6 +939,18 @@ const ProductionMetrics = () => {
             Real-time production data • Updated: {formatLastRefresh()}
             <span className="table-info"> • Table: {currentDept?.tableName}</span>
             <span className="unit-info"> • Unit: {unit}</span>
+            {departmentLastUpdates[selectedDepartment] && (
+              <span style={{ 
+                marginLeft: '8px', 
+                paddingLeft: '8px', 
+                borderLeft: '1px solid #d1d5db', 
+                color: '#10b981',
+                fontWeight: '500'
+              }}>
+                <FaHistory style={{ marginRight: '4px' }} />
+                Last Update: {formatLastUpdate(departmentLastUpdates[selectedDepartment])}
+              </span>
+            )}
           </p>
         </div>
         <div className="header-right">
@@ -821,6 +963,7 @@ const ProductionMetrics = () => {
         </div>
       </div>
 
+      {/* Today's Summary Section */}
       <div className="today-summary-section">
         <h2 className="section-title">
           <FaCalendarAlt /> Today's Production Summary
@@ -1016,6 +1159,7 @@ const ProductionMetrics = () => {
         </div>
       </div>
 
+      {/* Performance Indicators */}
       <div className="metrics-section">
         <div className="section-header">
           <h2 className="section-title">Performance Indicators</h2>
@@ -1027,14 +1171,16 @@ const ProductionMetrics = () => {
         </div>
         <div className="metrics-grid">
           {metrics.map((metric) => (
-            <div 
-              key={metric.id} 
-              className="metric-card"
-              style={{ borderLeftColor: metric.borderColor }}
-            >
+            <div key={metric.id} className="metric-card" style={{ 
+              borderLeftColor: metric.color,
+              borderColor: `${metric.color}30`
+            }}>
               <div className="metric-header">
-                <div className="metric-icon-wrapper" style={{ borderColor: metric.borderColor }}>
-                  <div className="metric-icon" style={{ color: metric.borderColor }}>
+                <div className="metric-icon-wrapper" style={{ 
+                  borderColor: metric.color,
+                  background: `linear-gradient(135deg, ${metric.color}15, ${metric.color}05)`
+                }}>
+                  <div className="metric-icon" style={{ color: metric.color }}>
                     {metric.icon}
                   </div>
                 </div>
@@ -1057,6 +1203,7 @@ const ProductionMetrics = () => {
         </div>
       </div>
 
+      {/* Shift-wise Performance Table */}
       {shiftData.length > 0 && (
         <div className="table-section">
           <h2 className="section-title">
@@ -1082,7 +1229,7 @@ const ProductionMetrics = () => {
                   <tr key={index}>
                     <td className="shift-cell">
                       <div className="shift-cell-content">
-                        <div className="shift-icon-cell" style={{ color: getEfficiencyColor(shift.efficiency) }}>
+                        <div className="shift-icon-cell" style={{ color: shift.statusColor }}>
                           {shift.icon}
                         </div>
                         {shift.name}
@@ -1103,10 +1250,7 @@ const ProductionMetrics = () => {
                         maximumFractionDigits: 1
                       })}
                     </td>
-                    <td 
-                      className={`efficiency-cell ${shift.status}`} 
-                      style={{ color: getEfficiencyColor(shift.efficiency) }}
-                    >
+                    <td className={`efficiency-cell ${shift.status}`} style={{ color: shift.statusColor }}>
                       {shift.efficiency}%
                     </td>
                     <td className="machines-cell">
@@ -1123,13 +1267,11 @@ const ProductionMetrics = () => {
                       {shift.entries}
                     </td>
                     <td className="status-cell">
-                      <span 
-                        className={`status-badge ${shift.status}`} 
-                        style={{ 
-                          color: getEfficiencyColor(shift.efficiency),
-                          borderColor: getEfficiencyColor(shift.efficiency)
-                        }}
-                      >
+                      <span className={`status-badge ${shift.status}`} style={{ 
+                        color: shift.statusColor,
+                        borderColor: shift.statusColor,
+                        background: `${shift.statusColor}15`
+                      }}>
                         {shift.status.toUpperCase()}
                       </span>
                     </td>
@@ -1147,6 +1289,7 @@ const ProductionMetrics = () => {
         </div>
       )}
 
+      {/* Daily Production Table */}
       {dailyData.length > 0 && (
         <div className="table-section">
           <h2 className="section-title">
@@ -1193,12 +1336,10 @@ const ProductionMetrics = () => {
                         maximumFractionDigits: unit === 'Meter' ? 0 : 0
                       })}
                     </td>
-                    <td 
-                      className={`efficiency-cell ${day.status}`} 
-                      style={{ 
-                        color: getEfficiencyColor(day.efficiency)
-                      }}
-                    >
+                    <td className={`efficiency-cell ${day.status}`} style={{ 
+                      color: day.status === 'met' ? '#10b981' : 
+                             day.status === 'good' ? '#f59e0b' : '#ef4444'
+                    }}>
                       {day.efficiency}%
                       {parseFloat(day.efficiency) > 100 && <FaArrowUp className="efficiency-up" />}
                     </td>
@@ -1226,6 +1367,7 @@ const ProductionMetrics = () => {
         </div>
       )}
 
+      {/* Monthly Production Report */}
       {monthlyData.length > 0 && (
         <div className="table-section">
           <h2 className="section-title">
@@ -1263,12 +1405,10 @@ const ProductionMetrics = () => {
                         maximumFractionDigits: unit === 'Meter' ? 0 : 0
                       })}
                     </td>
-                    <td 
-                      className={`efficiency-cell ${month.status}`} 
-                      style={{ 
-                        color: getEfficiencyColor(month.efficiency)
-                      }}
-                    >
+                    <td className={`efficiency-cell ${month.status}`} style={{ 
+                      color: month.status === 'met' ? '#10b981' : 
+                             month.status === 'good' ? '#f59e0b' : '#ef4444'
+                    }}>
                       {month.efficiency}%
                       {parseFloat(month.efficiency) > 100 && <FaArrowUp className="efficiency-up" />}
                     </td>
@@ -1292,6 +1432,7 @@ const ProductionMetrics = () => {
         </div>
       )}
 
+      {/* Machine Status */}
       {machineData.length > 0 && (
         <div className="machine-section">
           <h2 className="section-title">
@@ -1369,6 +1510,7 @@ const ProductionMetrics = () => {
         </div>
       )}
 
+      {/* Data Source Info */}
       <div className="data-source-info">
         <div className="source-card">
           <div className="source-icon-wrapper">
@@ -1394,10 +1536,27 @@ const ProductionMetrics = () => {
                 </span>
               </div>
             </div>
+            <div className="target-legend">
+              <h4 className="legend-title">Last Update Status</h4>
+              <div className="legend-items">
+                {departments.map(dept => (
+                  <div key={dept.id} className="legend-item">
+                    <div className="legend-color" style={{ background: dept.color }}></div>
+                    <span>{dept.name}</span>
+                    <span style={{ fontSize: '0.8rem', color: '#6b7280' }}>
+                      {departmentLastUpdates[dept.name] 
+                        ? formatLastUpdate(departmentLastUpdates[dept.name])
+                        : 'No data'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
+      {/* Report Cards Section */}
       <div className="report-cards-section">
         {/* Daily Production Report Card */}
         <div className="report-card">
@@ -1463,19 +1622,16 @@ const ProductionMetrics = () => {
             <div className="stat-item">
               <div className="stat-value">
                 {monthlyData.length > 0 
-                  ? (monthlyData[0]?.production / (unit === 'Meter' ? 1000 : 1)).toLocaleString('en-US', { 
-                      minimumFractionDigits: unit === 'Meter' ? 2 : 0,
-                      maximumFractionDigits: unit === 'Meter' ? 2 : 0
-                    })
+                  ? monthlyData[0]?.production?.toLocaleString() || '0'
                   : '0'}
               </div>
-              <div className="stat-label">Current Month Production ({unit === 'Meter' ? 'KM' : unit})</div>
+              <div className="stat-label">Current Month Production ({unit})</div>
             </div>
             <div className="stat-item">
               <div className="stat-value">
                 {machineData.length > 0 
                   ? Math.round(machineData.reduce((sum, machine) => 
-                      sum + parseFloat(machine.efficiency), 0) / machineData.length)
+                      sum + parseFloat(machine.efficiency), 0) / machineData.length) || '0'
                   : '0'}%
               </div>
               <div className="stat-label">Avg Machine Efficiency</div>
@@ -1595,6 +1751,7 @@ const ProductionMetrics = () => {
         </div>
       </div>
 
+      {/* No Data Message */}
       {dailyData.length === 0 && monthlyData.length === 0 && machineData.length === 0 && shiftData.length === 0 && (
         <div className="no-data-message">
           <h3>

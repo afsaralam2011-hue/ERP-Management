@@ -1,4 +1,4 @@
-import { useState } from "react"; // ✅ FIXED: Removed unused useEffect import
+import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { 
   FiUser, 
@@ -10,7 +10,21 @@ import {
   FiEye,
   FiEyeOff
 } from "react-icons/fi";
+import { createClient } from '@supabase/supabase-js';
 import "./Register.css";
+
+// سپر بیس کلائنٹ بنائیں
+const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
+const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
+
+const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+    storage: window.localStorage
+  }
+});
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -121,7 +135,7 @@ export default function Register() {
     return Object.keys(newErrors).length === 0;
   };
 
-  // Handle form submission
+  // Handle form submission with Supabase
   const handleRegister = async (e) => {
     e.preventDefault();
     
@@ -131,36 +145,103 @@ export default function Register() {
     
     setLoading(true);
     setErrors({});
+    setSuccess("");
 
     try {
-      // Mock API call for testing
-      console.log("Registration attempt with:", formData);
+      console.log("Registration attempt with:", formData.email);
       
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Mock successful registration
-      setSuccess("Account created successfully! Redirecting to login...");
-      
-      // Redirect to login after 2 seconds
-      setTimeout(() => {
-        navigate("/login", { replace: true });
-      }, 2000);
+      // Step 1: سپر بیس میں یوزر رجسٹر کریں
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: formData.email.trim(),
+        password: formData.password,
+        options: {
+          data: {
+            full_name: formData.name.trim(),
+            role: 'user'
+          },
+          emailRedirectTo: `${window.location.origin}/login`
+        }
+      });
+
+      console.log("Supabase signup response:", { authData, authError });
+
+      if (authError) {
+        console.error("Signup error details:", authError);
+        
+        // مختلف قسم کی ایررز کے لیے پیغامات
+        if (authError.message.includes("already registered")) {
+          setErrors({ general: "This email is already registered. Please try logging in." });
+        } else if (authError.message.includes("password")) {
+          setErrors({ general: "Password is too weak. Please choose a stronger password." });
+        } else if (authError.message.includes("rate limit")) {
+          setErrors({ general: "Too many attempts. Please try again later." });
+        } else {
+          setErrors({ general: `Registration failed: ${authError.message}` });
+        }
+        return;
+      }
+
+      if (!authData.user) {
+        setErrors({ general: "Registration failed. No user data received." });
+        return;
+      }
+
+      // Step 2: یوزر پروفائل ٹیبل میں ریکارڈ بنائیں
+      try {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: authData.user.id,
+            full_name: formData.name.trim(),
+            role: 'user',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          });
+
+        if (profileError) {
+          console.error("Profile creation error:", profileError);
+          // پروفائل بنانے میں غلطی ہو تو بھی لاگ ان کرنے دیں
+          // یوزر بن چکا ہے تو مسئلہ نہیں
+        }
+      } catch (profileErr) {
+        console.warn("Profile creation warning:", profileErr);
+      }
+
+      // Step 3: صارف کو پیغام دکھائیں
+      if (authData.session) {
+        // اگر ایمیل کنفرمیشن کی ضرورت نہیں تو فوراً لاگ ان
+        setSuccess("Account created successfully! Redirecting to dashboard...");
+        
+        // یوزر کا ڈیٹا ذخیرہ کریں
+        const user = {
+          id: authData.user.id,
+          email: authData.user.email,
+          name: formData.name.trim(),
+          role: 'user'
+        };
+        
+        localStorage.setItem("token", authData.session.access_token);
+        localStorage.setItem("user", JSON.stringify(user));
+        localStorage.setItem("refresh_token", authData.session.refresh_token);
+        
+        // ڈیش بورڈ پر ری ڈائریکٹ کریں
+        setTimeout(() => {
+          navigate("/dashboard", { replace: true });
+        }, 1500);
+        
+      } else {
+        // ایمیل کنفرمیشن کی ضرورت ہے
+        setSuccess("Account created successfully! Please check your email to verify your account. You will be redirected to login page.");
+        
+        // لاگ ان پیج پر ری ڈائریکٹ کریں
+        setTimeout(() => {
+          navigate("/login", { replace: true });
+        }, 3000);
+      }
 
     } catch (err) {
-      console.error("Registration error:", err);
-      
-      let errorMessage = "Registration failed. Please try again.";
-      
-      if (err.message?.includes("already registered")) {
-        errorMessage = "This email is already registered. Please try logging in.";
-      } else if (err.message?.includes("password")) {
-        errorMessage = "Password is too weak. Please choose a stronger password.";
-      } else if (err.message?.includes("email")) {
-        errorMessage = "Invalid email format. Please enter a valid email address.";
-      }
-      
-      setErrors({ general: errorMessage });
+      console.error("Unexpected registration error:", err);
+      setErrors({ general: "An unexpected error occurred. Please try again." });
     } finally {
       setLoading(false);
     }
@@ -284,6 +365,7 @@ export default function Register() {
                       className={`register-input ${errors.name ? 'input-error' : ''}`}
                       disabled={loading}
                       required
+                      placeholder=" "
                     />
                     <label 
                       htmlFor="name" 
@@ -315,6 +397,7 @@ export default function Register() {
                       className={`register-input ${errors.email ? 'input-error' : ''}`}
                       disabled={loading}
                       required
+                      placeholder=" "
                     />
                     <label 
                       htmlFor="email" 
@@ -346,6 +429,7 @@ export default function Register() {
                       className={`register-input ${errors.password ? 'input-error' : ''}`}
                       disabled={loading}
                       required
+                      placeholder=" "
                     />
                     <label 
                       htmlFor="password" 
@@ -387,6 +471,7 @@ export default function Register() {
                       }`}
                       disabled={loading}
                       required
+                      placeholder=" "
                     />
                     <label 
                       htmlFor="confirmPassword" 

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Welcome Screen</title>
+    <style>
+        body { margin: 0; padding: 20px; font-family: Arial; }
+        .test-btn { 
+            padding: 10px 20px; 
+            margin: 10px; 
+            background: #005461; 
+            color: white; 
+            border: none; 
+            cursor: pointer; 
+        }
+    </style>
+</head>
+<body>
+    <h2>Welcome Screen Tester</h2>
+    
+    <button class="test-btn" onclick="window.open('http://localhost:3000', '_blank')">
+        Test in New Tab
+    </button>
+    
+    <button class="test-btn" onclick="clearStorage()">
+        Clear LocalStorage
+    </button>
+    
+    <button class="test-btn" onclick="simulateAuth()">
+        Simulate Login
+    </button>
+    
+    <div id="status" style="margin-top: 20px; padding: 10px; background: #f0f0f0;"></div>
+    
+    <script>
+        function clearStorage() {
+            localStorage.clear();
+            sessionStorage.clear();
+            document.getElementById('status').innerHTML = 
+                '✅ Storage cleared. Refresh main app to see welcome screen.';
+        }
+        
+        function simulateAuth() {
+            localStorage.setItem('authToken', 'test-token-123');
+            localStorage.setItem('user', JSON.stringify({name: 'Test User'}));
+            document.getElementById('status').innerHTML = 
+                '✅ Simulated login. Should go directly to dashboard.';
+        }
+        
+        // موجودہ اسٹیٹس دکھائیں
+        document.getElementById('status').innerHTML = `
+            <h3>Current Status:</h3>
+            <div>Last Welcome: ${localStorage.getItem('pwi_last_welcome_date') || 'Never'}</div>
+            <div>Authenticated: ${localStorage.getItem('authToken') ? 'Yes' : 'No'}</div>
+        `;
+    </script>
+</body>
+</html>
