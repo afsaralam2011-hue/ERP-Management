@@ -13,9 +13,7 @@ import {
   FiHome,
   FiShield,
   FiTrendingUp,
-  FiCloud,
-  FiUsers,
-  FiDollarSign
+  FiCloud
 } from "react-icons/fi";
 import { createClient } from '@supabase/supabase-js';
 import "./Login.css";
@@ -71,14 +69,20 @@ export default function Login() {
     rememberMe: false
   });
   const [showPass, setShowPass] = useState(false);
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState({
+    email: "",
+    password: "",
+    general: ""
+  });
   const [loading, setLoading] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [autoSlide, setAutoSlide] = useState(true);
   const slideIntervalRef = useRef(null);
+  const emailInputRef = useRef(null);
+  const passwordInputRef = useRef(null);
   const navigate = useNavigate();
-  const mobileContentRef = useRef(null);
+  const formRef = useRef(null);
 
   // موبائل ڈیوائس چیک کریں
   useEffect(() => {
@@ -124,6 +128,37 @@ export default function Login() {
     }
   }, []);
 
+  // HTML5 built-in validation کے ساتھ فارم والیڈیشن
+  const validateForm = () => {
+    const newErrors = {
+      email: "",
+      password: "",
+      general: ""
+    };
+    let hasError = false;
+
+    // Email validation
+    if (!formData.email.trim()) {
+      newErrors.email = "Email is required";
+      hasError = true;
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = "Please enter a valid email address";
+      hasError = true;
+    }
+
+    // Password validation
+    if (!formData.password) {
+      newErrors.password = "Password is required";
+      hasError = true;
+    } else if (formData.password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
+      hasError = true;
+    }
+
+    setErrors(newErrors);
+    return !hasError;
+  };
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
@@ -131,26 +166,31 @@ export default function Login() {
       [name]: type === 'checkbox' ? checked : value
     }));
     
-    if (errors[name] || errors.general) {
-      setErrors({});
+    // فیلڈ پر توجہ دینے پر خامی چھپائیں
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: "" }));
+    }
+    if (errors.general) {
+      setErrors(prev => ({ ...prev, general: "" }));
     }
   };
 
   const handleLogin = async (e) => {
     e.preventDefault();
     
-    if (!formData.email || !formData.password) {
-      setErrors({ general: "Email and password are required" });
-      return;
-    }
-    
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      setErrors({ general: "Invalid email format" });
+    // HTML5 validation چیک کریں
+    if (!validateForm()) {
+      // Focus on first error field
+      if (errors.email) {
+        emailInputRef.current?.focus();
+      } else if (errors.password) {
+        passwordInputRef.current?.focus();
+      }
       return;
     }
     
     setLoading(true);
-    setErrors({});
+    setErrors({ email: "", password: "", general: "" });
     
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -160,7 +200,20 @@ export default function Login() {
       
       if (error) {
         console.error("Login error:", error);
-        setErrors({ general: "Invalid email or password" });
+        
+        if (error.message.includes("Invalid")) {
+          setErrors({ 
+            general: "Invalid email or password",
+            email: "",
+            password: ""
+          });
+        } else {
+          setErrors({ 
+            general: error.message,
+            email: "",
+            password: ""
+          });
+        }
         return;
       }
       
@@ -185,7 +238,11 @@ export default function Login() {
       
     } catch (err) {
       console.error("Login failed:", err);
-      setErrors({ general: "Login failed. Please try again." });
+      setErrors({ 
+        general: "Login failed. Please try again.",
+        email: "",
+        password: ""
+      });
     } finally {
       setLoading(false);
     }
@@ -194,6 +251,13 @@ export default function Login() {
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && !loading) {
       handleLogin(e);
+    }
+  };
+
+  // فیلڈ پر توجہ دینے پر خامی چھپائیں
+  const handleInputFocus = (fieldName) => {
+    if (errors[fieldName]) {
+      setErrors(prev => ({ ...prev, [fieldName]: "" }));
     }
   };
 
@@ -216,11 +280,26 @@ export default function Login() {
     setTimeout(() => setAutoSlide(true), 5000);
   };
 
+  // Form submission with HTML5 validation
+  const handleFormSubmit = (e) => {
+    e.preventDefault();
+    
+    // Check HTML5 validity
+    const form = formRef.current;
+    if (!form.checkValidity()) {
+      // Show custom error messages
+      validateForm();
+      return;
+    }
+    
+    handleLogin(e);
+  };
+
   // موبائل کے لیے UI
   if (isMobile) {
     return (
       <div className="mobile-login-page">
-        {/* Top Slider Section - Compact */}
+        {/* Top Slider Section */}
         <div className="mobile-slider-section">
           <div className="mobile-slider-container">
             <div 
@@ -243,7 +322,6 @@ export default function Login() {
               ))}
             </div>
             
-            {/* Slider Controls */}
             <button className="mobile-slider-prev" onClick={prevSlide}>
               <FiChevronLeft />
             </button>
@@ -251,7 +329,6 @@ export default function Login() {
               <FiChevronRight />
             </button>
             
-            {/* Slider Dots */}
             <div className="mobile-slider-dots">
               {slidesData.map((_, index) => (
                 <button
@@ -264,7 +341,7 @@ export default function Login() {
           </div>
         </div>
 
-        {/* Compact Header with Logo */}
+        {/* Mobile Header with Logo */}
         <div className="mobile-header">
           <div className="mobile-logo-container">
             <img
@@ -286,122 +363,146 @@ export default function Login() {
           </div>
         </div>
 
-        {/* Compact Welcome */}
+        {/* Mobile Welcome */}
         <div className="mobile-welcome">
           <h2>Welcome Back</h2>
           <p>Sign in to your account</p>
         </div>
 
-        {/* Scrollable Content Area */}
-        <div className="mobile-scrollable-content" ref={mobileContentRef}>
-          {/* Login Form */}
-          <div className="mobile-login-card">
-            {errors.general && (
-              <div className="mobile-error">
-                <FiAlertCircle />
-                <span>{errors.general}</span>
+        {/* Mobile Login Form */}
+        <div className="mobile-login-card">
+          {errors.general && (
+            <div className="mobile-error">
+              <FiAlertCircle />
+              <span>{errors.general}</span>
+            </div>
+          )}
+
+          <form 
+            ref={formRef}
+            onSubmit={handleFormSubmit} 
+            className="mobile-login-form"
+            noValidate
+          >
+            <div className="mobile-input-group">
+              <FiMail className="mobile-input-icon" />
+              <input
+                ref={emailInputRef}
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                onFocus={() => handleInputFocus('email')}
+                onKeyPress={handleKeyPress}
+                placeholder="Email Address"
+                disabled={loading}
+                required
+                pattern="[^@\s]+@[^@\s]+\.[^@\s]+"
+                title="Please enter a valid email address"
+                aria-describedby={errors.email ? "email-error" : undefined}
+              />
+            </div>
+            {errors.email && (
+              <div id="email-error" className="mobile-field-error">
+                <FiAlertCircle className="mobile-error-icon" />
+                <span>{errors.email}</span>
               </div>
             )}
 
-            <form onSubmit={handleLogin} className="mobile-login-form">
-              <div className="mobile-input-group">
-                <FiMail className="mobile-input-icon" />
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  onKeyPress={handleKeyPress}
-                  placeholder="Email Address"
-                  disabled={loading}
-                  required
-                />
-              </div>
-
-              <div className="mobile-input-group">
-                <div className="mobile-password-header">
-                  <Link to="/forgot-password" className="mobile-forgot-password">
-                    Forgot Password?
-                  </Link>
-                </div>
-                <FiLock className="mobile-input-icon" />
-                <input
-                  type={showPass ? "text" : "password"}
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  onKeyPress={handleKeyPress}
-                  placeholder="Password"
-                  disabled={loading}
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPass(!showPass)}
-                  className="mobile-password-toggle"
-                  disabled={loading}
-                >
-                  {showPass ? <FiEyeOff /> : <FiEye />}
-                </button>
-              </div>
-
-              <div className="mobile-remember">
-                <label>
-                  <input
-                    type="checkbox"
-                    name="rememberMe"
-                    checked={formData.rememberMe}
-                    onChange={handleChange}
-                    disabled={loading}
-                  />
-                  <span>Keep me signed in</span>
-                </label>
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="mobile-login-button"
-              >
-                {loading ? (
-                  <>
-                    <div className="mobile-spinner"></div>
-                    <span>Signing in...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>Sign In</span>
-                    <FiArrowRight />
-                  </>
-                )}
-              </button>
-            </form>
-
-            {/* Register Section */}
-            <div className="mobile-register-section">
-              <div className="mobile-register-icon">
-                <FiUserPlus />
-              </div>
-              <div className="mobile-register-content">
-                <p>New to PWI ERP?</p>
-                <Link to="/register" className="mobile-register-button">
-                  Create Account
+            <div className="mobile-input-group">
+              <div className="mobile-password-header">
+                <Link to="/forgot-password" className="mobile-forgot-password">
+                  Forgot Password?
                 </Link>
               </div>
+              <FiLock className="mobile-input-icon" />
+              <input
+                ref={passwordInputRef}
+                type={showPass ? "text" : "password"}
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                onFocus={() => handleInputFocus('password')}
+                onKeyPress={handleKeyPress}
+                placeholder="Password"
+                disabled={loading}
+                required
+                minLength="6"
+                title="Password must be at least 6 characters"
+                aria-describedby={errors.password ? "password-error" : undefined}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPass(!showPass)}
+                className="mobile-password-toggle"
+                disabled={loading}
+              >
+                {showPass ? <FiEyeOff /> : <FiEye />}
+              </button>
+            </div>
+            {errors.password && (
+              <div id="password-error" className="mobile-field-error">
+                <FiAlertCircle className="mobile-error-icon" />
+                <span>{errors.password}</span>
+              </div>
+            )}
+
+            <div className="mobile-remember">
+              <label>
+                <input
+                  type="checkbox"
+                  name="rememberMe"
+                  checked={formData.rememberMe}
+                  onChange={handleChange}
+                  disabled={loading}
+                />
+                <span>Keep me signed in</span>
+              </label>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="mobile-login-button"
+            >
+              {loading ? (
+                <>
+                  <div className="mobile-spinner"></div>
+                  <span>Signing in...</span>
+                </>
+              ) : (
+                <>
+                  <span>Sign In</span>
+                  <FiArrowRight />
+                </>
+              )}
+            </button>
+          </form>
+
+          {/* Mobile Register Section */}
+          <div className="mobile-register-section">
+            <div className="mobile-register-icon">
+              <FiUserPlus />
+            </div>
+            <div className="mobile-register-content">
+              <p>New to PWI ERP?</p>
+              <Link to="/register" className="mobile-register-button">
+                Create Account
+              </Link>
             </div>
           </div>
+        </div>
 
-          {/* Mobile Footer */}
-          <div className="mobile-footer">
-            <p>&copy; {new Date().getFullYear()} All rights reserved</p>
-            <p>ERP System v2.0</p>
-          </div>
+        {/* Mobile Footer */}
+        <div className="mobile-footer">
+          <p>&copy; {new Date().getFullYear()} All rights reserved</p>
+          <p>ERP System v2.0</p>
         </div>
       </div>
     );
   }
 
-  // Desktop View (وہی رہے گا)
+  // Desktop View
   return (
     <div className="login-page-wrapper">
       <div className="login-container">
@@ -447,32 +548,48 @@ export default function Login() {
 
             <div className="login-card">
               {errors.general && (
-                <div className="error-container">
+                <div className="error-container" role="alert">
                   <FiAlertCircle className="error-icon" />
                   <div className="error-message">{errors.general}</div>
                 </div>
               )}
 
-              <form onSubmit={handleLogin} className="login-form" noValidate>
+              <form 
+                ref={formRef}
+                onSubmit={handleFormSubmit} 
+                className="login-form"
+                noValidate
+              >
                 <div className="form-group floating-label-group">
                   <div className="input-wrapper">
                     <FiMail className="input-icon" />
                     <input
+                      ref={emailInputRef}
                       id="email"
                       name="email"
                       type="email"
                       value={formData.email}
                       onChange={handleChange}
+                      onFocus={() => handleInputFocus('email')}
                       onKeyPress={handleKeyPress}
                       className={`login-input ${errors.email ? 'input-error' : ''}`}
                       disabled={loading}
                       required
+                      pattern="[^@\s]+@[^@\s]+\.[^@\s]+"
+                      title="Please enter a valid email address"
                       placeholder=" "
+                      aria-describedby={errors.email ? "email-error" : undefined}
                     />
                     <label htmlFor="email" className="floating-label">
                       Email Address
                     </label>
                   </div>
+                  {errors.email && (
+                    <div id="email-error" className="field-error">
+                      <FiAlertCircle className="error-icon-small" />
+                      <span>{errors.email}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="form-group floating-label-group">
@@ -484,16 +601,21 @@ export default function Login() {
                   <div className="input-wrapper">
                     <FiLock className="input-icon" />
                     <input
+                      ref={passwordInputRef}
                       id="password"
                       name="password"
                       type={showPass ? "text" : "password"}
                       value={formData.password}
                       onChange={handleChange}
+                      onFocus={() => handleInputFocus('password')}
                       onKeyPress={handleKeyPress}
                       className={`login-input ${errors.password ? 'input-error' : ''}`}
                       disabled={loading}
                       required
+                      minLength="6"
+                      title="Password must be at least 6 characters"
                       placeholder=" "
+                      aria-describedby={errors.password ? "password-error" : undefined}
                     />
                     <label htmlFor="password" className="floating-label">
                       Password
@@ -507,6 +629,12 @@ export default function Login() {
                       {showPass ? <FiEyeOff /> : <FiEye />}
                     </button>
                   </div>
+                  {errors.password && (
+                    <div id="password-error" className="field-error">
+                      <FiAlertCircle className="error-icon-small" />
+                      <span>{errors.password}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="form-bottom">
