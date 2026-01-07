@@ -214,10 +214,10 @@ const RawMaterialLogForm = ({ onClose, editData, isModal = true }) => {
   // ========================================================
   // OPTIONS
   // ========================================================
-  const wireSizes = ['1.20mm', '1.50mm', '2.00mm', '2.50mm', '3.00mm', '3.50mm', '4.00mm', '4.50mm', '5.00mm'];
-  const categories = ['B4', 'B6', 'B8', 'B10', 'B12', 'B14', 'B16'];
+  const wireSizes = ['1.20mm', '1.45mm', '1.64mm', '2.00mm', '1.40mm', '1.25mm', '1.10mm'];
+  const categories = ['B2', 'B4', 'GHD', 'F9', 'B12', 'B14', 'B16'];
   const shapes = ['coil_form', 'bobbins_form', 'sheet_form', 'rod_form'];
-  const departments = ['Production', 'Warehouse', 'Flattening', 'Spiral', 'PVC Coating', 'Cutting & Packing'];
+  const departments = ['Production', 'Warehouse', 'Flattening'];
 
   // ========================================================
   // CSS STYLES

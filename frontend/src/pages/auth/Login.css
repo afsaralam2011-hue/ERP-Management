@@ -1,23 +1,13 @@
-/* Login.css - 100% Complete Final Version */
+/* Login.css - Complete Fixed Version */
 :root {
   --primary-color: #2563eb;
   --primary-dark: #1d4ed8;
   --secondary-color: #64748b;
-  --success-color: #10b981;
   --danger-color: #ef4444;
-  --warning-color: #f59e0b;
-  --background-light: #f8fafc;
-  --background-dark: #1e293b;
+  --success-color: #10b981;
+  --border-color: #e2e8f0;
   --text-primary: #1e293b;
   --text-secondary: #64748b;
-  --border-color: #e2e8f0;
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-  --radius-sm: 0.375rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-  --transition: all 0.3s ease;
 }
 
 * {
@@ -27,26 +17,13 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   min-height: 100vh;
 }
 
-.visually-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
+/* ==================== DESKTOP CSS - PERFECT ==================== */
 
 /* Login Page Wrapper */
 .login-page-wrapper {
@@ -54,31 +31,29 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 30px 20px; /* 20px سے 30px کر دیا */
+  padding: 20px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
-/* Login Container - ہائٹ بڑھائی گئی */
+/* Login Container */
 .login-container {
   display: flex;
-  width: 1200px;
-  height: 820px; /* 750px سے 820px کر دیا (+70px) */
+  width: 100%;
+  max-width: 1200px;
+  height: 750px;
   background: white;
   border-radius: 20px;
   overflow: hidden;
-  box-shadow: 
-    0 15px 30px rgba(0, 0, 0, 0.2),
-    0 8px 15px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
   position: relative;
-  margin: auto;
 }
 
-/* Book Spine Effect */
+/* Book Spine Effect - FIXED */
 .book-spine {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  width: 70px;
+  width: 80px;
   height: 100%;
   background: 
     linear-gradient(135deg,
@@ -87,98 +62,9 @@ body {
       #334155 50%,
       #1e293b 75%,
       #0f172a 100%
-    ),
-    linear-gradient(
-      90deg,
-      transparent 0%,
-      rgba(255, 255, 255, 0.05) 50%,
-      transparent 100%
     );
   z-index: 10;
   overflow: hidden;
-  box-shadow: 
-    inset -4px 0 8px rgba(0, 0, 0, 0.5),
-    inset 4px 0 8px rgba(0, 0, 0, 0.5),
-    0 0 20px rgba(0, 0, 0, 0.3);
-}
-
-.book-spine::before {
-  content: '';
-  position: absolute;
-  top: -100%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 50px;
-  height: 300%;
-  background: 
-    conic-gradient(
-      from 0deg at 50% 50%,
-      #b87333 0deg,
-      #daa520 90deg,
-      #ffd700 180deg,
-      #daa520 270deg,
-      #b87333 360deg
-    ),
-    repeating-radial-gradient(
-      circle at 50% 50%,
-      transparent 0px,
-      transparent 2px,
-      rgba(0, 0, 0, 0.2) 3px,
-      rgba(0, 0, 0, 0.2) 4px
-    );
-  border-radius: 25px;
-  animation: wireCoilSpin 15s linear infinite;
-  box-shadow: 
-    0 0 2px rgba(184, 115, 51, 0.6),
-    inset 0 0 12px rgba(218, 165, 32, 0.4);
-  opacity: 0.9;
-}
-
-@keyframes wireCoilSpin {
-  0% {
-    transform: translateX(-50%) rotate(0deg);
-    top: -100%;
-  }
-  100% {
-    transform: translateX(-50%) rotate(360deg);
-    top: 0%;
-  }
-}
-
-.book-spine::after {
-  content: '';
-  position: absolute;
-  top: -150%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 35px;
-  height: 300%;
-  background: 
-    conic-gradient(
-      from 180deg at 50% 50%,
-      #a0aec0 0deg,
-      #cbd5e0 90deg,
-      #edf2f7 180deg,
-      #cbd5e0 270deg,
-      #a0aec0 360deg
-    );
-  border-radius: 17.5px;
-  animation: wireCoilSpin2 20s linear infinite reverse;
-  opacity: 0.6;
-  box-shadow: 
-    0 0 1px rgba(160, 174, 192, 0.5),
-    inset 0 0 8px rgba(203, 213, 224, 0.3);
-}
-
-@keyframes wireCoilSpin2 {
-  0% {
-    transform: translateX(-50%) rotate(0deg);
-    top: -150%;
-  }
-  100% {
-    transform: translateX(-50%) rotate(-360deg);
-    top: 50%;
-  }
 }
 
 .book-spine-line {
@@ -187,1530 +73,12 @@ body {
   transform: translateX(-50%);
   width: 4px;
   height: 100%;
-  background: linear-gradient(
-    to bottom,
+  background: linear-gradient(to bottom,
     transparent 0%,
     #3b82f6 10%,
     #3b82f6 90%,
     transparent 100%
   );
-  box-shadow: 
-    0 0 8px #3b82f6,
-    0 0 15px #3b82f6;
-  z-index: 11;
-  opacity: 0.7;
-  animation: connectorPulse 3s ease-in-out infinite;
-}
-
-@keyframes connectorPulse {
-  0%, 100% {
-    opacity: 0.5;
-    box-shadow: 
-      0 0 8px #3b82f6,
-      0 0 15px #3b82f6;
-  }
-  50% {
-    opacity: 0.9;
-    box-shadow: 
-      0 0 15px #3b82f6,
-      0 0 30px #3b82f6,
-      0 0 45px #3b82f6;
-  }
-}
-
-.book-pages {
-  position: absolute;
-  left: -15px;
-  top: 0;
-  width: 30px;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  padding: 15px 0;
-}
-
-.book-page {
-  flex: 1;
-  background: linear-gradient(to right,
-    transparent 0%,
-    rgba(255, 255, 255, 0.2) 20%,
-    rgba(255, 255, 255, 0.4) 50%,
-    rgba(255, 255, 255, 0.2) 80%,
-    transparent 100%
-  );
-  border-radius: 2px;
-  opacity: 0.8;
-}
-
-/* Left Panel - ہائٹ بڑھائی گئی */
-.login-left-panel {
-  flex: 1;
-  padding: 40px 50px;
-  display: flex;
-  flex-direction: column;
-  background: white;
-  overflow-y: auto;
-  position: relative;
-  min-height: 820px; /* 750px سے 820px کر دیا */
-}
-
-.login-left-panel::before {
-  content: '';
-  position: absolute;
-  right: 0;
-  top: 0;
-  width: 1px;
-  height: 100%;
-  background: linear-gradient(to bottom, 
-    transparent 0%, 
-    rgba(0, 0, 0, 0.1) 10%, 
-    rgba(0, 0, 0, 0.1) 90%, 
-    transparent 100%);
-}
-
-.login-content {
-  max-width: 500px;
-  width: 100%;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  padding: 15px 0; /* 10px سے 15px کر دیا */
-}
-
-/* Logo Section */
-.logo-section {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  margin-bottom: 55px; /* 50px سے 55px کر دیا */
-  flex-wrap: wrap;
-}
-
-.logo-container {
-  width: 60px;
-  height: 60px;
-  flex-shrink: 0;
-  position: relative;
-}
-
-.company-logo {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-
-.logo-fallback {
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-  border-radius: 14px;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-weight: bold;
-  font-size: 24px;
-}
-
-.logo-text {
-  font-family: 'Arial', sans-serif;
-  letter-spacing: 1px;
-}
-
-.company-info {
-  flex: 1;
-  min-width: 200px;
-}
-
-.company-name {
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: var(--text-primary);
-  margin-bottom: 6px;
-  line-height: 1.2;
-  letter-spacing: 0.4px;
-}
-
-.company-tagline {
-  font-size: 0.95rem;
-  color: var(--text-secondary);
-  font-weight: 500;
-  letter-spacing: 0.2px;
-}
-
-/* Welcome Section Left */
-.welcome-section-left {
-  margin-bottom: 45px; /* 40px سے 45px کر دیا */
-}
-
-.welcome-title {
-  font-size: 2rem;
-  font-weight: 800;
-  color: var(--text-primary);
-  margin-bottom: 10px;
-  line-height: 1.2;
-}
-
-.welcome-subtitle {
-  font-size: 1.05rem;
-  color: var(--text-secondary);
-  line-height: 1.5;
-}
-
-/* Login Card */
-.login-card {
-  flex: 1;
-  margin-top: 10px; /* 5px سے 10px کر دیا */
-}
-
-/* Error Container */
-.error-container {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 15px;
-  background-color: #fef2f2;
-  border: 1px solid #fee2e2;
-  border-radius: var(--radius-md);
-  margin-bottom: 25px;
-  animation: slideIn 0.3s ease;
-}
-
-.error-icon {
-  color: var(--danger-color);
-  font-size: 20px;
-  flex-shrink: 0;
-}
-
-.error-message {
-  color: #991b1b;
-  font-size: 0.9rem;
-  line-height: 1.5;
-  font-weight: 500;
-}
-
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Login Form */
-.login-form {
-  margin-bottom: 40px; /* 35px سے 40px کر دیا */
-}
-
-.form-group {
-  margin-bottom: 25px;
-}
-
-.form-label-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.floating-label-group {
-  position: relative;
-}
-
-.input-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.input-icon {
-  position: absolute;
-  left: 16px;
-  color: var(--text-secondary);
-  font-size: 20px;
-  pointer-events: none;
-  z-index: 1;
-  transition: var(--transition);
-}
-
-.floating-label {
-  position: absolute;
-  left: 48px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-secondary);
-  font-size: 1rem;
-  pointer-events: none;
-  transition: all 0.2s ease;
-  background: white;
-  padding: 0 6px;
-  z-index: 2;
-  font-weight: 500;
-}
-
-.floating-label-float {
-  top: 0;
-  font-size: 0.75rem;
-  color: var(--primary-color);
-  transform: translateY(-50%);
-  background: white;
-  font-weight: 600;
-}
-
-.login-input {
-  width: 100%;
-  padding: 18px 18px 18px 52px;
-  font-size: 1rem;
-  border: 2px solid var(--border-color);
-  border-radius: 12px;
-  background: white;
-  transition: var(--transition);
-  line-height: 1.5;
-  color: var(--text-primary);
-  position: relative;
-  z-index: 1;
-  font-weight: 500;
-  min-height: 58px;
-}
-
-.login-input::placeholder {
-  color: transparent;
-}
-
-.login-input:focus + .floating-label,
-.login-input:not(:placeholder-shown) + .floating-label {
-  top: 0;
-  font-size: 0.75rem;
-  color: var(--primary-color);
-  transform: translateY(-50%);
-  background: white;
-  font-weight: 600;
-}
-
-.login-input:focus ~ .input-icon {
-  transform: translateY(-2px);
-  color: var(--primary-color);
-}
-
-.login-input:focus {
-  outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
-}
-
-.login-input:hover:not(:focus) {
-  border-color: #94a3b8;
-}
-
-.login-input.input-error {
-  border-color: var(--danger-color);
-}
-
-.login-input.input-error:focus {
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
-}
-
-.login-input.input-error + .floating-label {
-  color: var(--danger-color);
-}
-
-.login-input:disabled {
-  background-color: #f8fafc;
-  cursor: not-allowed;
-  opacity: 0.7;
-}
-
-.field-error {
-  color: var(--danger-color);
-  font-size: 0.85rem;
-  margin-top: 8px;
-  animation: slideIn 0.3s ease;
-  font-weight: 500;
-  padding-left: 4px;
-}
-
-.password-toggle {
-  position: absolute;
-  right: 16px;
-  background: none;
-  border: none;
-  color: var(--text-secondary);
-  cursor: pointer;
-  padding: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: var(--transition);
-  z-index: 2;
-  font-size: 18px;
-}
-
-.password-toggle:hover:not(:disabled) {
-  color: var(--text-primary);
-  transform: scale(1.1);
-}
-
-.password-toggle:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.forgot-password {
-  color: var(--primary-color);
-  text-decoration: none;
-  font-size: 0.9rem;
-  font-weight: 600;
-  transition: var(--transition);
-}
-
-.forgot-password:hover {
-  color: var(--primary-dark);
-  text-decoration: underline;
-}
-
-.form-bottom {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 20px;
-  margin-top: 35px; /* 30px سے 35px کر دیا */
-}
-
-.checkbox-label {
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-  user-select: none;
-  gap: 12px;
-  font-size: 0.9rem;
-  color: var(--text-secondary);
-  font-weight: 500;
-}
-
-.remember-checkbox {
-  display: none;
-}
-
-.checkbox-custom {
-  width: 20px;
-  height: 20px;
-  border: 2px solid var(--border-color);
-  border-radius: 5px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: var(--transition);
-  flex-shrink: 0;
-}
-
-.remember-checkbox:checked + .checkbox-custom {
-  background-color: var(--primary-color);
-  border-color: var(--primary-color);
-}
-
-.remember-checkbox:checked + .checkbox-custom::after {
-  content: '✓';
-  color: white;
-  font-size: 12px;
-  font-weight: bold;
-}
-
-.checkbox-text {
-  line-height: 1.5;
-}
-
-.login-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  padding: 18px 35px;
-  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-  color: white;
-  border: none;
-  border-radius: 12px;
-  font-size: 1rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: var(--transition);
-  min-width: 150px;
-  flex-shrink: 0;
-  letter-spacing: 0.3px;
-}
-
-.login-button:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 
-    0 8px 15px rgba(37, 99, 235, 0.2),
-    0 4px 4px rgba(37, 99, 235, 0.1);
-}
-
-.login-button:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-.login-button:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.button-spinner {
-  width: 20px;
-  height: 20px;
-  border: 3px solid rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  border-top-color: white;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.button-icon {
-  font-size: 20px;
-  font-weight: bold;
-}
-
-/* Social Login */
-.social-login {
-  margin: 40px 0; /* 35px سے 40px کر دیا */
-  padding: 30px 0; /* 25px سے 30px کر دیا */
-  border-top: 1px solid var(--border-color);
-  border-bottom: 1px solid var(--border-color);
-}
-
-.social-login-text {
-  text-align: center;
-  color: var(--text-secondary);
-  font-size: 0.9rem;
-  margin-bottom: 20px;
-  position: relative;
-  font-weight: 500;
-}
-
-.social-login-text::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 50%;
-  width: 100%;
-  height: 1px;
-  background: var(--border-color);
-  z-index: 0;
-}
-
-.social-login-text span {
-  background: white;
-  padding: 0 20px;
-  position: relative;
-  z-index: 1;
-}
-
-.social-buttons {
-  display: flex;
-  gap: 15px;
-}
-
-.social-button {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  padding: 16px 24px;
-  border: 2px solid var(--border-color);
-  border-radius: 12px;
-  background: white;
-  color: var(--text-primary);
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: var(--transition);
-  min-height: 50px;
-}
-
-.social-button:hover:not(:disabled) {
-  border-color: var(--primary-color);
-  background-color: #f8fafc;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
-}
-
-.social-button:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-.social-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.social-button.google:hover:not(:disabled) {
-  border-color: #4285f4;
-  background-color: #f8fafc;
-}
-
-.social-button.microsoft:hover:not(:disabled) {
-  border-color: #7fba00;
-  background-color: #f8fafc;
-}
-
-.social-icon {
-  width: 20px;
-  height: 20px;
-}
-
-/* Register Section */
-.register-section {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  padding: 30px; /* 25px سے 30px کر دیا */
-  background-color: #f8fafc;
-  border-radius: 14px;
-  margin-top: 45px; /* 40px سے 45px کر دیا */
-  border: 1px solid var(--border-color);
-}
-
-.register-icon {
-  font-size: 24px;
-  color: var(--primary-color);
-  flex-shrink: 0;
-}
-
-.register-content {
-  flex: 1;
-}
-
-.register-text {
-  color: var(--text-secondary);
-  font-size: 0.9rem;
-  margin-bottom: 8px;
-  font-weight: 500;
-}
-
-.register-button {
-  display: inline-block;
-  padding: 12px 28px;
-  background-color: white;
-  color: var(--primary-color);
-  border: 2px solid var(--primary-color);
-  border-radius: 12px;
-  text-decoration: none;
-  font-weight: 700;
-  font-size: 0.9rem;
-  transition: var(--transition);
-}
-
-.register-button:hover {
-  background-color: var(--primary-color);
-  color: white;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);
-}
-
-/* Login Footer */
-.login-footer {
-  margin-top: 45px; /* 40px سے 45px کر دیا */
-  padding-top: 25px; /* 20px سے 25px کر دیا */
-  border-top: 1px solid var(--border-color);
-  text-align: center;
-  color: var(--text-secondary);
-  font-size: 0.75rem;
-  display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 10px;
-  font-weight: 500;
-}
-
-.footer-version {
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-/* =================== RIGHT PANEL =================== */
-
-/* Right Panel - ہائٹ بڑھائی گئی */
-.login-right-panel {
-  flex: 1;
-  padding: 40px 50px 30px 50px;
-  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-  color: white;
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-  position: relative;
-  min-height: 820px; /* 750px سے 820px کر دیا */
-}
-
-.login-right-panel::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 1px;
-  height: 100%;
-  background: linear-gradient(to bottom, 
-    transparent 0%, 
-    rgba(255, 255, 255, 0.1) 10%, 
-    rgba(255, 255, 255, 0.1) 90%, 
-    transparent 100%);
-}
-
-.right-content {
-  width: 100%;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  justify-content: space-between;
-}
-
-/* Pakistan Wire Industries Title */
-.pwi-title-container {
-  text-align: center;
-  margin-bottom: 35px; /* 30px سے 35px کر دیا */
-  padding: 0 15px;
-}
-
-.pwi-main-title {
-  font-size: 1.8rem;
-  font-weight: 800;
-  color: #ffffff;
-  margin-bottom: 6px;
-  line-height: 1.2;
-  letter-spacing: 0.4px;
-  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
-}
-
-.pwi-subtitle {
-  font-size: 1rem;
-  color: #d1d5db;
-  font-weight: 500;
-  line-height: 1.4;
-  opacity: 0.9;
-}
-
-/* Handwriting Effect Container - ہائٹ بڑھائی گئی */
-.handwriting-effect-container {
-  flex-shrink: 0;
-  margin-bottom: 35px; /* 30px سے 35px کر دیا */
-  height: 150px; /* 140px سے 150px کر دیا */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
-  padding: 15px; /* 12px سے 15px کر دیا */
-  box-shadow: 
-    inset 0 1px 4px rgba(0, 0, 0, 0.3),
-    0 2px 8px rgba(0, 0, 0, 0.2);
-}
-
-/* Features List */
-.features-list {
-  flex: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 18px; /* 15px سے 18px کر دیا */
-  margin-bottom: 40px; /* 35px سے 40px کر دیا */
-}
-
-.feature-item {
-  display: flex;
-  gap: 16px; /* 14px سے 16px کر دیا */
-  align-items: flex-start;
-  padding: 12px 0; /* 10px سے 12px کر دیا */
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.feature-item:last-child {
-  border-bottom: none;
-}
-
-.feature-icon {
-  font-size: 22px;
-  flex-shrink: 0;
-  line-height: 1;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 7px;
-  padding: 5px;
-}
-
-.feature-content h3 {
-  font-size: 1.1rem;
-  font-weight: 600;
-  margin-bottom: 3px;
-  color: #ffffff;
-  letter-spacing: 0.1px;
-}
-
-.feature-content p {
-  color: #cbd5e1;
-  font-size: 0.85rem;
-  line-height: 1.4;
-  font-weight: 400;
-  opacity: 0.8;
-}
-
-/* Stats Section */
-.stats-section {
-  display: flex;
-  justify-content: space-between;
-  gap: 15px; /* 12px سے 15px کر دیا */
-  margin-bottom: 40px; /* 35px سے 40px کر دیا */
-  padding: 25px 0; /* 20px سے 25px کر دیا */
-  border-top: 1px solid rgba(255, 255, 255, 0.15);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-}
-
-.stat-item {
-  text-align: center;
-  flex: 1;
-}
-
-.stat-value {
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: #ffffff;
-  margin-bottom: 3px;
-  line-height: 1;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-.stat-label {
-  font-size: 0.8rem;
-  color: #cbd5e1;
-  font-weight: 500;
-  opacity: 0.9;
-  letter-spacing: 0.4px;
-  text-transform: uppercase;
-}
-
-/* Company Info Section */
-.company-info-section {
-  margin-top: auto;
-  padding: 25px; /* 20px سے 25px کر دیا */
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.company-title {
-  font-size: 1.3rem;
-  font-weight: 700;
-  margin-bottom: 10px;
-  color: #ffffff;
-  letter-spacing: 0.2px;
-  text-align: center;
-  line-height: 1.3;
-}
-
-.company-description {
-  font-size: 0.9rem;
-  color: #e2e8f0;
-  line-height: 1.5;
-  font-weight: 400;
-  text-align: center;
-  opacity: 0.9;
-}
-
-/* =================== RESPONSIVE DESIGN =================== */
-
-@media (max-width: 1200px) {
-  .login-container {
-    width: 1100px;
-    height: 760px; /* 700px سے 760px کر دیا (+60px) */
-  }
-  
-  .login-left-panel,
-  .login-right-panel {
-    min-height: 760px; /* 700px سے 760px کر دیا */
-  }
-}
-
-@media (max-width: 1024px) {
-  .login-container {
-    flex-direction: column;
-    max-width: 650px;
-    width: 100%;
-    height: auto;
-    min-height: auto;
-  }
-  
-  .book-spine {
-    display: none;
-  }
-  
-  .login-left-panel::before,
-  .login-right-panel::before {
-    display: none;
-  }
-  
-  .login-left-panel,
-  .login-right-panel {
-    padding: 35px 35px;
-    min-height: auto;
-  }
-  
-  .login-right-panel {
-    order: -1;
-  }
-  
-  .right-content {
-    max-width: 100%;
-  }
-  
-  .login-content {
-    max-width: 100%;
-  }
-  
-  .pwi-main-title {
-    font-size: 1.6rem;
-  }
-  
-  .handwriting-effect-container {
-    height: 140px; /* 130px سے 140px کر دیا */
-    margin-bottom: 30px; /* 25px سے 30px کر دیا */
-  }
-  
-  .features-list {
-    gap: 14px; /* 12px سے 14px کر دیا */
-    margin-bottom: 30px; /* 25px سے 30px کر دیا */
-  }
-  
-  .stat-value {
-    font-size: 1.6rem;
-  }
-}
-
-@media (max-width: 768px) {
-  .handwriting-effect-container {
-    height: 130px; /* 115px سے 130px کر دیا */
-  }
-  
-  .login-left-panel,
-  .login-right-panel {
-    padding: 30px;
-  }
-  
-  .pwi-main-title {
-    font-size: 1.5rem;
-  }
-  
-  .handwriting-effect-container {
-    height: 125px; /* 110px سے 125px کر دیا */
-  }
-  
-  .stats-section {
-    flex-wrap: wrap;
-    gap: 12px; /* 10px سے 12px کر دیا */
-  }
-  
-  .stat-item {
-    flex: 0 0 calc(50% - 6px);
-  }
-}
-
-@media (max-width: 480px) {
-  .handwriting-effect-container {
-    height: 115px; /* 100px سے 115px کر دیا */
-  }
-  
-  .pwi-main-title {
-    font-size: 1.3rem;
-  }
-  
-  .handwriting-effect-container {
-    height: 110px; /* 95px سے 110px کر دیا */
-  }
-  
-  .feature-item {
-    gap: 12px; /* 10px سے 12px کر دیا */
-  }
-  
-  .stat-item {
-    flex: 0 0 100%;
-  }
-  
-  .company-info-section {
-    padding: 18px; /* 15px سے 18px کر دیا */
-  }
-}
-
-/* High Contrast Mode Support */
-@media (prefers-contrast: high) {
-  .login-input,
-  .social-button,
-  .login-button,
-  .register-button {
-    border-width: 3px;
-  }
-  
-  .login-input:focus {
-    outline: 4px solid var(--primary-color);
-    outline-offset: 2px;
-  }
-}
-
-/* Reduced Motion */
-@media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-  
-  .book-spine::before,
-  .book-spine::after,
-  .book-spine-line {
-    animation: none;
-  }
-}
-
-/* Dark Mode Support */
-@media (prefers-color-scheme: dark) {
-  .login-left-panel {
-    background-color: #1a202c;
-    color: #e2e8f0;
-  }
-  
-  .company-name,
-  .welcome-title,
-  .checkbox-text,
-  .login-input,
-  .footer-version {
-    color: #e2e8f0;
-  }
-  
-  .company-tagline,
-  .welcome-subtitle,
-  .login-input::placeholder,
-  .forgot-password,
-  .social-login-text,
-  .register-text {
-    color: #a0aec0;
-  }
-  
-  .login-input {
-    background-color: #2d3748;
-    border-color: #4a5568;
-    color: #e2e8f0;
-  }
-  
-  .floating-label {
-    background-color: #2d3748;
-  }
-  
-  .social-button {
-    background-color: #2d3748;
-    border-color: #4a5568;
-    color: #e2e8f0;
-  }
-  
-  .company-info-section {
-    background: rgba(255, 255, 255, 0.08);
-  }
-}
-/* یہ کوڈ صرف ایک لائن میں لکھیں */
-.company-name, .company-tagline { color: #1e293b !important; 
-
-}
-.company-name { font-size: 1.8rem !important; }
-.company-tagline { font-size: 1.1rem !important; }
-/* Error Message کو چھوٹا اور پتلا کریں */
-.error-container {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 12px 15px;
-  background-color: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: 8px;
-  margin-bottom: 20px;
-  animation: slideIn 0.3s ease;
-  max-height: 80px;
-  overflow: hidden;
-}
-
-.error-icon {
-  color: var(--danger-color);
-  font-size: 18px;
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-
-.error-message {
-  color: #dc2626;
-  font-size: 0.85rem;
-  line-height: 1.4;
-  font-weight: 500;
-  flex: 1;
-  max-height: 60px;
-  overflow: auto;
-  padding-right: 5px;
-}
-
-.error-message::-webkit-scrollbar {
-  width: 4px;
-}
-
-.error-message::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 2px;
-}
-
-.error-message::-webkit-scrollbar-thumb {
-  background: #dc2626;
-  border-radius: 2px;
-}
-
-/* General Error کو چھوٹا کریں */
-.error-container.small {
-  padding: 8px 12px;
-  margin-bottom: 15px;
-  max-height: 60px;
-}
-
-.error-container.small .error-icon {
-  font-size: 16px;
-}
-
-.error-container.small .error-message {
-  font-size: 0.8rem;
-  max-height: 45px;
-}
-/* ==================== MOBILE CSS ==================== */
-
-/* Mobile Login Page */
-.mobile-login-page {
-  min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-/* Mobile Header */
-.mobile-header {
-  padding: 20px 15px;
-  background: rgba(255, 255, 255, 0.95);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-.mobile-logo {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-}
-
-.mobile-logo-icon {
-  width: 50px;
-  height: 50px;
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-weight: bold;
-  font-size: 20px;
-  font-family: 'Arial', sans-serif;
-}
-
-.mobile-logo-text h1 {
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: #1e293b;
-  margin: 0;
-  line-height: 1.2;
-}
-
-.mobile-logo-text p {
-  font-size: 0.85rem;
-  color: #64748b;
-  margin: 3px 0 0 0;
-}
-
-/* Mobile Welcome */
-.mobile-welcome {
-  padding: 25px 20px 15px;
-  text-align: center;
-  background: white;
-}
-
-.mobile-welcome h2 {
-  font-size: 1.6rem;
-  font-weight: 700;
-  color: #1e293b;
-  margin-bottom: 5px;
-}
-
-.mobile-welcome p {
-  font-size: 0.95rem;
-  color: #64748b;
-}
-
-/* Mobile Login Card */
-.mobile-login-card {
-  flex: 1;
-  padding: 20px;
-  background: white;
-  border-radius: 20px 20px 0 0;
-  margin-top: -10px;
-  box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.1);
-}
-
-/* Mobile Error */
-.mobile-error {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 15px;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: 10px;
-  margin-bottom: 20px;
-  color: #dc2626;
-  font-size: 0.85rem;
-  font-weight: 500;
-}
-
-.mobile-error svg {
-  flex-shrink: 0;
-}
-
-/* Mobile Login Form */
-.mobile-login-form {
-  margin-bottom: 25px;
-}
-
-.mobile-input-group {
-  position: relative;
-  margin-bottom: 20px;
-}
-
-.mobile-input-icon {
-  position: absolute;
-  left: 15px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #64748b;
-  font-size: 18px;
-  z-index: 1;
-}
-
-.mobile-input-group input {
-  width: 100%;
-  padding: 16px 16px 16px 50px;
-  font-size: 16px;
-  border: 2px solid #e2e8f0;
-  border-radius: 12px;
-  background: white;
-  transition: all 0.3s ease;
-}
-
-.mobile-input-group input:focus {
-  outline: none;
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-}
-
-.mobile-input-group input::placeholder {
-  color: #94a3b8;
-}
-
-.mobile-password-header {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 8px;
-}
-
-.mobile-forgot-password {
-  color: #2563eb;
-  text-decoration: none;
-  font-size: 0.85rem;
-  font-weight: 600;
-}
-
-.mobile-password-toggle {
-  position: absolute;
-  right: 15px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  color: #64748b;
-  font-size: 18px;
-  padding: 5px;
-  cursor: pointer;
-}
-
-.mobile-remember {
-  margin: 20px 0 25px;
-}
-
-.mobile-remember label {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 0.9rem;
-  color: #475569;
-  cursor: pointer;
-}
-
-.mobile-remember input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
-  border: 2px solid #cbd5e1;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.mobile-remember input[type="checkbox"]:checked {
-  background-color: #2563eb;
-  border-color: #2563eb;
-}
-
-/* Mobile Login Button */
-.mobile-login-button {
-  width: 100%;
-  padding: 18px 24px;
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
-  color: white;
-  border: none;
-  border-radius: 12px;
-  font-size: 1rem;
-  font-weight: 700;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  transition: all 0.3s ease;
-  margin-bottom: 25px;
-}
-
-.mobile-login-button:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 15px rgba(37, 99, 235, 0.2);
-}
-
-.mobile-login-button:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-
-.mobile-spinner {
-  width: 20px;
-  height: 20px;
-  border: 3px solid rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  border-top-color: white;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-/* Mobile Features */
-.mobile-features-container {
-  margin: 25px 0;
-  padding: 20px;
-  background: #f8fafc;
-  border-radius: 12px;
-}
-
-.mobile-features-container h3 {
-  font-size: 1.2rem;
-  color: #1e293b;
-  margin-bottom: 15px;
-  text-align: center;
-  font-weight: 700;
-}
-
-.mobile-features-scroll {
-  display: flex;
-  gap: 15px;
-  overflow-x: auto;
-  padding-bottom: 10px;
-  scrollbar-width: thin;
-}
-
-.mobile-features-scroll::-webkit-scrollbar {
-  height: 5px;
-}
-
-.mobile-features-scroll::-webkit-scrollbar-track {
-  background: #e2e8f0;
-  border-radius: 3px;
-}
-
-.mobile-features-scroll::-webkit-scrollbar-thumb {
-  background: #94a3b8;
-  border-radius: 3px;
-}
-
-.mobile-feature {
-  min-width: 200px;
-  background: white;
-  padding: 15px;
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
-
-.mobile-feature-icon {
-  width: 40px;
-  height: 40px;
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 18px;
-  flex-shrink: 0;
-}
-
-.mobile-feature-content h4 {
-  font-size: 0.95rem;
-  color: #1e293b;
-  margin-bottom: 3px;
-  font-weight: 600;
-}
-
-.mobile-feature-content p {
-  font-size: 0.8rem;
-  color: #64748b;
-  line-height: 1.3;
-}
-
-/* Mobile Register Section */
-.mobile-register-section {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  padding: 20px;
-  background: #f1f5f9;
-  border-radius: 12px;
-  margin: 20px 0;
-}
-
-.mobile-register-icon {
-  font-size: 22px;
-  color: #2563eb;
-  flex-shrink: 0;
-}
-
-.mobile-register-content {
-  flex: 1;
-}
-
-.mobile-register-content p {
-  color: #475569;
-  font-size: 0.9rem;
-  margin-bottom: 8px;
-}
-
-.mobile-register-button {
-  display: inline-block;
-  padding: 10px 20px;
-  background: white;
-  color: #2563eb;
-  border: 2px solid #2563eb;
-  border-radius: 8px;
-  text-decoration: none;
-  font-weight: 600;
-  font-size: 0.85rem;
-  transition: all 0.3s ease;
-}
-
-.mobile-register-button:hover {
-  background: #2563eb;
-  color: white;
-}
-
-/* Mobile Footer */
-.mobile-footer {
-  padding: 20px;
-  text-align: center;
-  color: #64748b;
-  font-size: 0.8rem;
-  background: white;
-  border-top: 1px solid #e2e8f0;
-}
-
-.mobile-footer p {
-  margin: 3px 0;
-}
-
-/* ==================== DESKTOP CSS FIXES ==================== */
-
-/* Desktop کے لیے book spine صرف desktop پر */
-@media (max-width: 768px) {
-  .book-spine {
-    display: none !important;
-  }
-  
-  .login-container {
-    flex-direction: column;
-    height: auto !important;
-  }
-  
-  .login-left-panel,
-  .login-right-panel {
-    width: 100% !important;
-    min-height: auto !important;
-  }
-}
-
-/* Desktop Container */
-.login-container {
-  display: flex;
-  position: relative;
-}
-
-/* Book Spine Styles */
-.book-spine {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 70px;
-  height: 100%;
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-  z-index: 10;
-  box-shadow: 
-    inset -4px 0 8px rgba(0, 0, 0, 0.5),
-    inset 4px 0 8px rgba(0, 0, 0, 0.5);
-}
-
-.book-spine-line {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 4px;
-  height: 100%;
-  background: linear-gradient(to bottom, transparent 0%, #3b82f6 10%, #3b82f6 90%, transparent 100%);
   box-shadow: 0 0 8px #3b82f6;
   opacity: 0.7;
 }
@@ -1740,482 +108,375 @@ body {
   opacity: 0.8;
 }
 
-/* Desktop Panels */
+/* Left Panel */
 .login-left-panel {
   flex: 1;
   padding: 40px 50px;
-}
-
-.login-right-panel {
-  flex: 1;
-  padding: 40px 50px;
-  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-  color: white;
-}
-
-/* Responsive Adjustments */
-@media (min-width: 769px) and (max-width: 1024px) {
-  .login-container {
-    max-width: 95%;
-    margin: 20px auto;
-  }
-  
-  .book-spine {
-    width: 50px;
-  }
-  
-  .login-left-panel,
-  .login-right-panel {
-    padding: 30px 35px;
-  }
-}
-
-@media (max-width: 768px) {
-  .mobile-login-page {
-    display: block;
-  }
-  
-  .login-page-wrapper,
-  .login-container,
-  .login-left-panel,
-  .login-right-panel {
-    display: none;
-  }
-}
-/* ==================== MOBILE CSS ==================== */
-
-/* Mobile Login Page */
-.mobile-login-page {
-  min-height: 100vh;
-  background: white;
-  padding: 0;
   display: flex;
   flex-direction: column;
-  overflow-x: hidden;
+  background: white;
+  overflow-y: auto;
 }
 
-/* Mobile Slider Section */
-.mobile-slider-section {
-  height: 220px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  position: relative;
-  overflow: hidden;
+.login-left-panel::before {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 1px;
+  height: 100%;
+  background: linear-gradient(to bottom, 
+    transparent 0%, 
+    rgba(0, 0, 0, 0.1) 10%, 
+    rgba(0, 0, 0, 0.1) 90%, 
+    transparent 100%);
 }
 
-.mobile-slider-container {
+.login-content {
+  max-width: 500px;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Logo Section */
+.logo-section {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+.logo-container {
+  width: 60px;
+  height: 60px;
+  flex-shrink: 0;
   position: relative;
+}
+
+.company-logo {
   width: 100%;
   height: 100%;
-  overflow: hidden;
-}
-
-.mobile-slider-track {
-  display: flex;
-  transition: transform 0.5s ease-in-out;
-  height: 100%;
-}
-
-.mobile-slide {
-  flex: 0 0 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  text-align: center;
-  color: white;
-}
-
-.mobile-slide-icon {
-  width: 70px;
-  height: 70px;
-  border-radius: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 32px;
-  margin-bottom: 15px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-}
-
-.mobile-slide-content h3 {
-  font-size: 1.4rem;
-  font-weight: 700;
-  margin-bottom: 8px;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-.mobile-slide-content p {
-  font-size: 0.9rem;
-  opacity: 0.9;
-  line-height: 1.4;
-  max-width: 300px;
-  margin: 0 auto;
-}
-
-/* Slider Controls */
-.mobile-slider-prev,
-.mobile-slider-next {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 20px;
-  cursor: pointer;
-  backdrop-filter: blur(10px);
-  z-index: 10;
-  transition: all 0.3s ease;
-}
-
-.mobile-slider-prev:hover,
-.mobile-slider-next:hover {
-  background: rgba(255, 255, 255, 0.3);
-  transform: translateY(-50%) scale(1.1);
-}
-
-.mobile-slider-prev {
-  left: 10px;
-}
-
-.mobile-slider-next {
-  right: 10px;
-}
-
-/* Slider Dots */
-.mobile-slider-dots {
-  position: absolute;
-  bottom: 20px;
-  left: 0;
-  right: 0;
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  z-index: 10;
-}
-
-.mobile-slider-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  border: none;
-  background: rgba(255, 255, 255, 0.5);
-  cursor: pointer;
-  padding: 0;
-  transition: all 0.3s ease;
-}
-
-.mobile-slider-dot.active {
-  background: white;
-  transform: scale(1.3);
-}
-
-/* Mobile Header with Logo */
-.mobile-header {
-  padding: 20px 15px;
-  background: white;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-}
-
-.mobile-logo-container {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-}
-
-.mobile-company-logo {
-  width: 60px;
-  height: 60px;
   object-fit: contain;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.mobile-logo-fallback {
-  width: 60px;
-  height: 60px;
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
-  border-radius: 12px;
+.logo-fallback {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+  border-radius: 14px;
   display: none;
   align-items: center;
   justify-content: center;
   color: white;
   font-weight: bold;
-  font-size: 20px;
-  font-family: 'Arial', sans-serif;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+  font-size: 24px;
 }
 
-.mobile-logo-text {
-  letter-spacing: 1px;
-}
-
-.mobile-company-info {
+.company-info {
   flex: 1;
 }
 
-.mobile-company-name {
-  font-size: 1.3rem;
-  font-weight: 700;
-  color: #1e293b;
-  margin: 0;
+.company-name {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 6px;
   line-height: 1.2;
 }
 
-.mobile-company-tagline {
-  font-size: 0.9rem;
-  color: #64748b;
-  margin: 4px 0 0 0;
-}
-
-/* Mobile Welcome */
-.mobile-welcome {
-  padding: 20px 15px 15px;
-  text-align: center;
-  background: white;
-}
-
-.mobile-welcome h2 {
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: #1e293b;
-  margin-bottom: 8px;
-}
-
-.mobile-welcome p {
-  font-size: 1rem;
-  color: #64748b;
+.company-tagline {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
   font-weight: 500;
 }
 
-/* Mobile Login Card */
-.mobile-login-card {
-  flex: 1;
-  padding: 20px 15px;
-  background: white;
+/* Welcome Section */
+.welcome-section-left {
+  margin-bottom: 30px;
 }
 
-/* Mobile Error */
-.mobile-error {
+.welcome-title {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 10px;
+  line-height: 1.2;
+}
+
+.welcome-subtitle {
+  font-size: 1.05rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* Login Card */
+.login-card {
+  flex: 1;
+  margin-top: 10px;
+}
+
+/* Error Container */
+.error-container {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 12px 15px;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: 10px;
+  background-color: #fef2f2;
+  border: 1px solid #fee2e2;
+  border-radius: 8px;
   margin-bottom: 20px;
+}
+
+.error-icon {
+  color: var(--danger-color);
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.error-message {
   color: #dc2626;
   font-size: 0.85rem;
   font-weight: 500;
 }
 
-.mobile-error svg {
-  flex-shrink: 0;
-  font-size: 18px;
+/* Login Form - FIXED FLOATING LABELS */
+.login-form {
+  margin-bottom: 30px;
 }
 
-/* Mobile Login Form */
-.mobile-login-form {
+.form-group {
   margin-bottom: 25px;
 }
 
-.mobile-input-group {
-  position: relative;
-  margin-bottom: 20px;
-}
-
-.mobile-input-icon {
-  position: absolute;
-  left: 15px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #64748b;
-  font-size: 20px;
-  z-index: 1;
-}
-
-.mobile-input-group input {
-  width: 100%;
-  padding: 18px 18px 18px 55px;
-  font-size: 16px;
-  border: 2px solid #e2e8f0;
-  border-radius: 12px;
-  background: white;
-  transition: all 0.3s ease;
-  font-weight: 500;
-}
-
-.mobile-input-group input:focus {
-  outline: none;
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-}
-
-.mobile-input-group input::placeholder {
-  color: #94a3b8;
-}
-
-.mobile-password-header {
+.form-label-row {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 8px;
 }
 
-.mobile-forgot-password {
-  color: #2563eb;
+.floating-label-group {
+  position: relative;
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  left: 16px;
+  color: var(--text-secondary);
+  font-size: 20px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.floating-label {
+  position: absolute;
+  left: 48px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-secondary);
+  font-size: 1rem;
+  pointer-events: none;
+  transition: all 0.2s ease;
+  background: white;
+  padding: 0 6px;
+  z-index: 2;
+  font-weight: 500;
+}
+
+.login-input {
+  width: 100%;
+  padding: 16px 16px 16px 52px;
+  font-size: 1rem;
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  background: white;
+  transition: all 0.3s ease;
+  line-height: 1.5;
+  color: var(--text-primary);
+  position: relative;
+  z-index: 1;
+  font-weight: 500;
+  min-height: 56px;
+}
+
+/* Fix for floating labels - SHOW LABEL ON TOP WHEN INPUT HAS VALUE */
+.login-input:not(:placeholder-shown) + .floating-label,
+.login-input:focus + .floating-label {
+  top: 0;
+  font-size: 0.75rem;
+  color: var(--primary-color);
+  transform: translateY(-50%);
+  background: white;
+  font-weight: 600;
+}
+
+.login-input:focus ~ .input-icon {
+  color: var(--primary-color);
+}
+
+.login-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.login-input.input-error {
+  border-color: var(--danger-color);
+}
+
+.field-error {
+  color: var(--danger-color);
+  font-size: 0.85rem;
+  margin-top: 8px;
+  padding-left: 4px;
+  font-weight: 500;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 16px;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  z-index: 2;
+}
+
+.forgot-password {
+  color: var(--primary-color);
   text-decoration: none;
   font-size: 0.9rem;
   font-weight: 600;
 }
 
-.mobile-password-toggle {
-  position: absolute;
-  right: 15px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  color: #64748b;
-  font-size: 20px;
-  padding: 5px;
-  cursor: pointer;
+/* Form Bottom */
+.form-bottom {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
+  gap: 20px;
+  margin-top: 25px;
 }
 
-.mobile-remember {
-  margin: 20px 0 25px;
-}
-
-.mobile-remember label {
+.checkbox-label {
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-size: 0.95rem;
-  color: #475569;
   cursor: pointer;
+  gap: 12px;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
   font-weight: 500;
 }
 
-.mobile-remember input[type="checkbox"] {
+.remember-checkbox {
+  display: none;
+}
+
+.checkbox-custom {
   width: 20px;
   height: 20px;
-  border: 2px solid #cbd5e1;
-  border-radius: 6px;
-  cursor: pointer;
-  appearance: none;
-  position: relative;
-}
-
-.mobile-remember input[type="checkbox"]:checked {
-  background-color: #2563eb;
-  border-color: #2563eb;
-}
-
-.mobile-remember input[type="checkbox"]:checked::after {
-  content: '✓';
-  position: absolute;
-  color: white;
-  font-size: 14px;
-  font-weight: bold;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-}
-
-/* Mobile Login Button */
-.mobile-login-button {
-  width: 100%;
-  padding: 20px 24px;
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
-  color: white;
-  border: none;
-  border-radius: 12px;
-  font-size: 1.1rem;
-  font-weight: 700;
-  cursor: pointer;
+  border: 2px solid var(--border-color);
+  border-radius: 5px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
   transition: all 0.3s ease;
-  margin-bottom: 25px;
-  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.2);
+  flex-shrink: 0;
 }
 
-.mobile-login-button:hover:not(:disabled) {
+.remember-checkbox:checked + .checkbox-custom {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.remember-checkbox:checked + .checkbox-custom::after {
+  content: '✓';
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.login-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px 32px;
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 140px;
+}
+
+.login-button:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+  box-shadow: 0 8px 15px rgba(37, 99, 235, 0.2);
 }
 
-.mobile-login-button:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-.mobile-login-button:disabled {
+.login-button:disabled {
   opacity: 0.7;
   cursor: not-allowed;
-  transform: none;
 }
 
-.mobile-spinner {
-  width: 24px;
-  height: 24px;
+.button-spinner {
+  width: 20px;
+  height: 20px;
   border: 3px solid rgba(255, 255, 255, 0.3);
   border-radius: 50%;
   border-top-color: white;
   animation: spin 1s linear infinite;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-/* Mobile Register Section */
-.mobile-register-section {
+/* Register Section */
+.register-section {
   display: flex;
   align-items: center;
-  gap: 15px;
-  padding: 20px;
-  background: #f8fafc;
-  border-radius: 12px;
-  margin: 20px 0;
-  border: 1px solid #e2e8f0;
+  gap: 20px;
+  padding: 25px;
+  background-color: #f8fafc;
+  border-radius: 14px;
+  margin-top: 30px;
+  border: 1px solid var(--border-color);
 }
 
-.mobile-register-icon {
+.register-icon {
   font-size: 24px;
-  color: #2563eb;
+  color: var(--primary-color);
   flex-shrink: 0;
 }
 
-.mobile-register-content {
-  flex: 1;
-}
-
-.mobile-register-content p {
-  color: #475569;
-  font-size: 0.95rem;
+.register-text {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
   margin-bottom: 8px;
   font-weight: 500;
 }
 
-.mobile-register-button {
+.register-button {
   display: inline-block;
-  padding: 12px 24px;
-  background: white;
-  color: #2563eb;
-  border: 2px solid #2563eb;
+  padding: 10px 24px;
+  background-color: white;
+  color: var(--primary-color);
+  border: 2px solid var(--primary-color);
   border-radius: 10px;
   text-decoration: none;
   font-weight: 700;
@@ -2223,29 +484,49 @@ body {
   transition: all 0.3s ease;
 }
 
-.mobile-register-button:hover {
-  background: #2563eb;
+.register-button:hover {
+  background-color: var(--primary-color);
   color: white;
   transform: translateY(-1px);
   box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);
 }
 
-/* Mobile Footer */
-.mobile-footer {
-  padding: 20px 15px;
+/* Footer */
+.login-footer {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-color);
   text-align: center;
-  color: #64748b;
-  font-size: 0.85rem;
-  background: #f8fafc;
-  border-top: 1px solid #e2e8f0;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  display: flex;
+  justify-content: space-between;
 }
 
-.mobile-footer p {
-  margin: 3px 0;
-  font-weight: 500;
+.footer-version {
+  font-weight: 700;
+  color: var(--text-primary);
 }
 
-/* ==================== DESKTOP CSS ==================== */
+/* Right Panel */
+.login-right-panel {
+  flex: 1;
+  padding: 40px 50px;
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.right-content {
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  justify-content: space-between;
+}
 
 /* Desktop Slider */
 .desktop-slider {
@@ -2264,14 +545,14 @@ body {
   display: flex;
   align-items: center;
   gap: 20px;
-  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.05);
+  border-left: 4px solid;
   opacity: 0.8;
-  transform: translateX(-10px);
+  transition: all 0.3s ease;
 }
 
 .desktop-slide.active {
   opacity: 1;
-  transform: translateX(0);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
@@ -2284,7 +565,6 @@ body {
   justify-content: center;
   background: rgba(255, 255, 255, 0.1);
   border-radius: 12px;
-  flex-shrink: 0;
 }
 
 .desktop-slide-content h3 {
@@ -2313,446 +593,80 @@ body {
   border-radius: 50%;
   border: none;
   cursor: pointer;
-  padding: 0;
-  transition: all 0.3s ease;
-  opacity: 0.5;
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .desktop-slider-dot.active {
-  opacity: 1;
-  transform: scale(1.3);
-}
-
-/* ==================== RESPONSIVE ==================== */
-
-@media (max-width: 768px) {
-  .mobile-login-page {
-    display: block;
-  }
-  
-  .login-page-wrapper,
-  .login-container,
-  .login-left-panel,
-  .login-right-panel {
-    display: none;
-  }
-}
-
-@media (min-width: 769px) {
-  .mobile-login-page {
-    display: none;
-  }
-}
-
-/* Small Mobile Adjustments */
-@media (max-width: 360px) {
-  .mobile-slide-content h3 {
-    font-size: 1.2rem;
-  }
-  
-  .mobile-slide-content p {
-    font-size: 0.8rem;
-  }
-  
-  .mobile-company-name {
-    font-size: 1.1rem;
-  }
-  
-  .mobile-company-tagline {
-    font-size: 0.8rem;
-  }
-}
-/* Error icon for field errors */
-.error-icon-small {
-  color: var(--danger-color);
-  font-size: 14px;
-  margin-right: 5px;
-  vertical-align: middle;
-}
-
-/* Mobile field error */
-.mobile-field-error {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--danger-color);
-  font-size: 0.8rem;
-  margin-top: 5px;
-  margin-bottom: 10px;
-  padding-left: 5px;
-  font-weight: 500;
-}
-
-.mobile-field-error .mobile-error-icon {
-  font-size: 14px;
-  flex-shrink: 0;
-}
-
-/* HTML5 validation styles */
-input:invalid:not(:focus):not(:placeholder-shown) {
-  border-color: var(--danger-color) !important;
-}
-
-input:invalid:focus {
-  border-color: var(--danger-color) !important;
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
-}
-
-/* Focus state for accessibility */
-input:focus-visible {
-  outline: 2px solid var(--primary-color);
-  outline-offset: 2px;
-}
-
-/* Required field indicator */
-.login-input:required + .floating-label::after,
-.mobile-input-group input:required::placeholder::after {
-  content: " *";
-  color: var(--danger-color);
-}
-
-/* Improved error message spacing */
-.field-error {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--danger-color);
-  font-size: 0.85rem;
-  margin-top: 8px;
-  animation: slideIn 0.3s ease;
-  font-weight: 500;
-  padding-left: 4px;
-}
-/* ==================== MOBILE CSS - OPTIMIZED SPACING ==================== */
-
-/* Mobile Login Page */
-.mobile-login-page {
-  min-height: 100vh;
   background: white;
-  padding: 0;
+}
+
+/* Stats Section */
+.stats-section {
   display: flex;
-  flex-direction: column;
-  overflow-x: hidden;
+  justify-content: space-between;
+  gap: 15px;
+  margin: 30px 0;
+  padding: 20px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
 }
 
-/* Mobile Slider Section - Height reduced */
-.mobile-slider-section {
-  height: 160px; /* 220px سے 160px کر دیا */
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  position: relative;
-  overflow: hidden;
-  flex-shrink: 0; /* Prevent stretching */
-}
-
-/* Mobile Header - Compact spacing */
-.mobile-header {
-  padding: 10px 15px 8px; /* Top: 10px, Bottom: 8px */
-  background: white;
-  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05);
-  flex-shrink: 0;
-}
-
-.mobile-logo-container {
-  display: flex;
-  align-items: center;
-  gap: 10px; /* 15px سے 10px کر دیا */
-}
-
-.mobile-company-logo {
-  width: 50px; /* 60px سے 50px کر دیا */
-  height: 50px;
-}
-
-.mobile-logo-fallback {
-  width: 50px;
-  height: 50px;
-  font-size: 18px; /* 20px سے 18px کر دیا */
-}
-
-.mobile-company-name {
-  font-size: 1.1rem; /* 1.3rem سے 1.1rem کر دیا */
-  line-height: 1.1;
-}
-
-.mobile-company-tagline {
-  font-size: 0.8rem; /* 0.9rem سے 0.8rem کر دیا */
-  margin: 2px 0 0 0;
-}
-
-/* Mobile Welcome - Compact */
-.mobile-welcome {
-  padding: 12px 15px 8px; /* Top: 12px, Bottom: 8px */
+.stat-item {
   text-align: center;
-  background: white;
-  flex-shrink: 0;
-}
-
-.mobile-welcome h2 {
-  font-size: 1.5rem; /* 1.8rem سے 1.5rem کر دیا */
-  margin-bottom: 4px; /* 8px سے 4px کر دیا */
-}
-
-.mobile-welcome p {
-  font-size: 0.9rem; /* 1rem سے 0.9rem کر دیا */
-}
-
-/* Mobile Login Card - Main content */
-.mobile-login-card {
   flex: 1;
-  padding: 15px; /* 20px سے 15px کر دیا */
-  background: white;
-  overflow-y: auto; /* Allow scrolling if needed */
 }
 
-/* Mobile Error - Compact */
-.mobile-error {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 12px; /* 12px 15px سے کم کیا */
-  margin-bottom: 15px; /* 20px سے 15px کر دیا */
-  font-size: 0.8rem; /* 0.85rem سے 0.8rem کر دیا */
+.stat-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 3px;
 }
 
-/* Mobile Login Form - Reduced spacing */
-.mobile-login-form {
-  margin-bottom: 15px; /* 25px سے 15px کر دیا */
+.stat-label {
+  font-size: 0.8rem;
+  color: #cbd5e1;
+  font-weight: 500;
+  text-transform: uppercase;
 }
 
-.mobile-input-group {
-  position: relative;
-  margin-bottom: 15px; /* 20px سے 15px کر دیا */
+/* Company Info */
+.company-info-section {
+  margin-top: auto;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.mobile-input-icon {
-  font-size: 18px; /* 20px سے 18px کر دیا */
-  left: 12px; /* 15px سے 12px کر دیا */
+.company-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: #ffffff;
+  text-align: center;
 }
 
-.mobile-input-group input {
-  padding: 16px 16px 16px 45px; /* Left padding: 55px سے 45px کر دیا */
-  font-size: 15px; /* 16px سے 15px کر دیا */
-  min-height: 52px; /* Reduced height */
+.company-description {
+  font-size: 0.9rem;
+  color: #e2e8f0;
+  line-height: 1.5;
+  text-align: center;
 }
 
-.mobile-password-header {
-  margin-bottom: 5px; /* 8px سے 5px کر دیا */
-}
+/* ==================== MOBILE CSS - PERFECT FIT ==================== */
 
-.mobile-forgot-password {
-  font-size: 0.85rem; /* 0.9rem سے 0.85rem کر دیا */
-}
-
-.mobile-password-toggle {
-  font-size: 18px; /* 20px سے 18px کر دیا */
-  right: 12px; /* 15px سے 12px کر دیا */
-}
-
-/* Mobile Remember - Compact */
-.mobile-remember {
-  margin: 15px 0 20px; /* 20px 0 25px سے کم کیا */
-}
-
-.mobile-remember label {
-  font-size: 0.9rem; /* 0.95rem سے 0.9rem کر دیا */
-  gap: 8px; /* 10px سے 8px کر دیا */
-}
-
-.mobile-remember input[type="checkbox"] {
-  width: 18px; /* 20px سے 18px کر دیا */
-  height: 18px;
-}
-
-/* Mobile Login Button - Optimized */
-.mobile-login-button {
-  padding: 18px 24px; /* 20px 24px سے کم کیا */
-  font-size: 1rem; /* 1.1rem سے 1rem کر دیا */
-  margin-bottom: 20px; /* 25px سے 20px کر دیا */
-  min-height: 56px; /* Fixed height */
-}
-
-.mobile-spinner {
-  width: 20px; /* 24px سے 20px کر دیا */
-  height: 20px;
-}
-
-/* Mobile Register Section - Compact */
-.mobile-register-section {
-  gap: 12px; /* 15px سے 12px کر دیا */
-  padding: 15px; /* 20px سے 15px کر دیا */
-  margin: 15px 0; /* 20px 0 سے کم کیا */
-}
-
-.mobile-register-icon {
-  font-size: 22px; /* 24px سے 22px کر دیا */
-}
-
-.mobile-register-content p {
-  font-size: 0.9rem; /* 0.95rem سے 0.9rem کر دیا */
-  margin-bottom: 6px; /* 8px سے 6px کر دیا */
-}
-
-.mobile-register-button {
-  padding: 10px 20px; /* 12px 24px سے کم کیا */
-  font-size: 0.85rem; /* 0.9rem سے 0.85rem کر دیا */
-}
-
-/* Mobile Footer - Compact */
-.mobile-footer {
-  padding: 15px; /* 20px سے 15px کر دیا */
-  font-size: 0.8rem; /* 0.85rem سے 0.8rem کر دیا */
-  flex-shrink: 0;
-}
-
-/* Slider Controls - Smaller */
-.mobile-slider-prev,
-.mobile-slider-next {
-  width: 36px; /* 40px سے 36px کر دیا */
-  height: 36px;
-  font-size: 18px; /* 20px سے 18px کر دیا */
-}
-
-.mobile-slider-prev {
-  left: 8px; /* 10px سے 8px کر دیا */
-}
-
-.mobile-slider-next {
-  right: 8px; /* 10px سے 8px کر دیا */
-}
-
-/* Slider Dots - Higher position */
-.mobile-slider-dots {
-  bottom: 12px; /* 20px سے 12px کر دیا */
-  gap: 6px; /* 8px سے 6px کر دیا */
-}
-
-.mobile-slider-dot {
-  width: 6px; /* 8px سے 6px کر دیا */
-  height: 6px;
-}
-
-/* Slide content - Compact */
-.mobile-slide {
-  padding: 15px; /* 20px سے 15px کر دیا */
-}
-
-.mobile-slide-icon {
-  width: 60px; /* 70px سے 60px کر دیا */
-  height: 60px;
-  font-size: 28px; /* 32px سے 28px کر دیا */
-  margin-bottom: 10px; /* 15px سے 10px کر دیا */
-}
-
-.mobile-slide-content h3 {
-  font-size: 1.2rem; /* 1.4rem سے 1.2rem کر دیا */
-  margin-bottom: 5px; /* 8px سے 5px کر دیا */
-}
-
-.mobile-slide-content p {
-  font-size: 0.85rem; /* 0.9rem سے 0.85rem کر دیا */
-  line-height: 1.3;
-}
-
-/* Field errors - Compact */
-.mobile-field-error {
-  font-size: 0.75rem; /* 0.8rem سے 0.75rem کر دیا */
-  margin-top: 3px; /* 5px سے 3px کر دیا */
-  margin-bottom: 8px; /* 10px سے 8px کر دیا */
-}
-
-/* ==================== VERY SMALL SCREENS (iPhone SE etc.) ==================== */
-@media (max-height: 700px) {
-  .mobile-slider-section {
-    height: 140px; /* Even smaller for very small screens */
-  }
-  
-  .mobile-input-group input {
-    padding: 14px 14px 14px 45px; /* Further reduced */
-    min-height: 48px;
-  }
-  
-  .mobile-login-button {
-    padding: 16px 20px;
-    min-height: 52px;
-    margin-bottom: 15px;
-  }
-  
-  .mobile-register-section {
-    padding: 12px;
-    margin: 12px 0;
-  }
-}
-
-@media (max-height: 600px) {
-  .mobile-slider-section {
-    display: none; /* Hide slider on very small screens */
-  }
-  
-  .mobile-header {
-    padding: 8px 15px 6px;
-  }
-  
-  .mobile-welcome {
-    padding: 8px 15px 6px;
-  }
-  
-  .mobile-login-card {
-    padding: 12px 15px;
-  }
-}
-/* Login.css - 100% Complete Final Version with Mobile Optimization */
-:root {
-  --primary-color: #2563eb;
-  --primary-dark: #1d4ed8;
-  --secondary-color: #64748b;
-  --success-color: #10b981;
-  --danger-color: #ef4444;
-  --warning-color: #f59e0b;
-  --background-light: #f8fafc;
-  --background-dark: #1e293b;
-  --text-primary: #1e293b;
-  --text-secondary: #64748b;
-  --border-color: #e2e8f0;
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-  --radius-sm: 0.375rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-  --transition: all 0.3s ease;
-}
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  min-height: 100vh;
-}
-
-/* ==================== MOBILE CSS - FULLY OPTIMIZED ==================== */
-
-/* Mobile Login Page */
 .mobile-login-page {
   min-height: 100vh;
   background: white;
-  padding: 0;
   display: flex;
   flex-direction: column;
   overflow-x: hidden;
 }
 
-/* Mobile Slider Section - Compact */
+/* Mobile Slider - SMALLER */
 .mobile-slider-section {
-  height: 150px;
+  height: 140px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   position: relative;
   overflow: hidden;
@@ -2763,12 +677,11 @@ body {
   position: relative;
   width: 100%;
   height: 100%;
-  overflow: hidden;
 }
 
 .mobile-slider-track {
   display: flex;
-  transition: transform 0.4s ease-in-out;
+  transition: transform 0.4s ease;
   height: 100%;
 }
 
@@ -2779,39 +692,35 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 12px;
+  padding: 10px;
   text-align: center;
   color: white;
 }
 
 .mobile-slide-icon {
-  width: 50px;
-  height: 50px;
-  border-radius: 15px;
+  width: 45px;
+  height: 45px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
-  margin-bottom: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  font-size: 22px;
+  margin-bottom: 6px;
 }
 
 .mobile-slide-content h3 {
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 700;
-  margin-bottom: 5px;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  margin-bottom: 3px;
 }
 
 .mobile-slide-content p {
   font-size: 0.75rem;
   opacity: 0.9;
-  line-height: 1.3;
-  max-width: 280px;
-  margin: 0 auto;
+  line-height: 1.2;
+  max-width: 250px;
 }
 
-/* Slider Controls */
 .mobile-slider-prev,
 .mobile-slider-next {
   position: absolute;
@@ -2819,64 +728,47 @@ body {
   transform: translateY(-50%);
   background: rgba(255, 255, 255, 0.15);
   border: none;
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  font-size: 16px;
+  font-size: 14px;
   cursor: pointer;
-  backdrop-filter: blur(5px);
-  z-index: 10;
-  transition: all 0.2s ease;
 }
 
-.mobile-slider-prev:hover,
-.mobile-slider-next:hover {
-  background: rgba(255, 255, 255, 0.25);
-}
+.mobile-slider-prev { left: 4px; }
+.mobile-slider-next { right: 4px; }
 
-.mobile-slider-prev {
-  left: 6px;
-}
-
-.mobile-slider-next {
-  right: 6px;
-}
-
-/* Slider Dots */
 .mobile-slider-dots {
   position: absolute;
-  bottom: 8px;
+  bottom: 6px;
   left: 0;
   right: 0;
   display: flex;
   justify-content: center;
-  gap: 5px;
-  z-index: 10;
+  gap: 4px;
 }
 
 .mobile-slider-dot {
-  width: 5px;
-  height: 5px;
+  width: 4px;
+  height: 4px;
   border-radius: 50%;
   border: none;
   background: rgba(255, 255, 255, 0.4);
   cursor: pointer;
   padding: 0;
-  transition: all 0.2s ease;
 }
 
 .mobile-slider-dot.active {
   background: white;
-  transform: scale(1.2);
 }
 
-/* Mobile Header - Very Compact */
+/* Mobile Header - VERY COMPACT */
 .mobile-header {
-  padding: 8px 12px;
+  padding: 8px 12px 6px;
   background: white;
   border-bottom: 1px solid #f1f5f9;
   flex-shrink: 0;
@@ -2889,36 +781,27 @@ body {
 }
 
 .mobile-company-logo {
-  width: 45px;
-  height: 45px;
+  width: 40px;
+  height: 40px;
   object-fit: contain;
-  border-radius: 10px;
+  border-radius: 8px;
 }
 
 .mobile-logo-fallback {
-  width: 45px;
-  height: 45px;
+  width: 40px;
+  height: 40px;
   background: linear-gradient(135deg, #2563eb, #1d4ed8);
-  border-radius: 10px;
+  border-radius: 8px;
   display: none;
   align-items: center;
   justify-content: center;
   color: white;
   font-weight: bold;
-  font-size: 16px;
-  font-family: 'Arial', sans-serif;
-}
-
-.mobile-logo-text {
-  letter-spacing: 0.5px;
-}
-
-.mobile-company-info {
-  flex: 1;
+  font-size: 14px;
 }
 
 .mobile-company-name {
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 700;
   color: #1e293b;
   margin: 0;
@@ -2926,44 +809,41 @@ body {
 }
 
 .mobile-company-tagline {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   color: #64748b;
   margin: 2px 0 0 0;
 }
 
-/* Mobile Welcome - Compact */
+/* Mobile Welcome - TINY */
 .mobile-welcome {
-  padding: 10px 12px 6px;
+  padding: 8px 12px 4px;
   text-align: center;
   background: white;
   flex-shrink: 0;
 }
 
 .mobile-welcome h2 {
-  font-size: 1.3rem;
+  font-size: 1.2rem;
   font-weight: 700;
   color: #1e293b;
-  margin-bottom: 3px;
+  margin-bottom: 2px;
 }
 
 .mobile-welcome p {
   font-size: 0.85rem;
   color: #64748b;
-  font-weight: 500;
 }
 
-/* Mobile Login Card - Main Content Area */
+/* Mobile Login Card - BUTTON ALWAYS VISIBLE */
 .mobile-login-card {
   flex: 1;
   padding: 12px;
   background: white;
   display: flex;
   flex-direction: column;
-  min-height: 0;
-  overflow-y: auto;
 }
 
-/* Mobile Error - Compact */
+/* Mobile Error */
 .mobile-error {
   display: flex;
   align-items: center;
@@ -2971,26 +851,20 @@ body {
   padding: 8px 10px;
   background: #fef2f2;
   border: 1px solid #fecaca;
-  border-radius: 8px;
-  margin-bottom: 12px;
+  border-radius: 6px;
+  margin-bottom: 8px;
   color: #dc2626;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   font-weight: 500;
   flex-shrink: 0;
 }
 
-.mobile-error svg {
-  flex-shrink: 0;
-  font-size: 14px;
-}
-
-/* Mobile Login Form - Tight Spacing */
+/* Mobile Login Form - COMPACT */
 .mobile-login-form {
   flex: 1;
   display: flex;
   flex-direction: column;
   margin-bottom: 8px;
-  min-height: 0;
 }
 
 .mobile-input-group {
@@ -3001,24 +875,23 @@ body {
 
 .mobile-input-icon {
   position: absolute;
-  left: 10px;
+  left: 12px;
   top: 50%;
   transform: translateY(-50%);
   color: #64748b;
-  font-size: 16px;
+  font-size: 18px;
   z-index: 1;
 }
 
 .mobile-input-group input {
   width: 100%;
-  padding: 14px 14px 14px 40px;
-  font-size: 14px;
+  padding: 14px 14px 14px 44px;
+  font-size: 15px;
   border: 1.5px solid #e2e8f0;
   border-radius: 10px;
   background: white;
-  transition: all 0.2s ease;
   font-weight: 500;
-  min-height: 46px;
+  min-height: 50px;
 }
 
 .mobile-input-group input:focus {
@@ -3027,15 +900,10 @@ body {
   box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
 }
 
-.mobile-input-group input::placeholder {
-  color: #94a3b8;
-  font-size: 13px;
-}
-
 .mobile-password-header {
   display: flex;
   justify-content: flex-end;
-  margin-bottom: 3px;
+  margin-bottom: 4px;
 }
 
 .mobile-forgot-password {
@@ -3047,45 +915,40 @@ body {
 
 .mobile-password-toggle {
   position: absolute;
-  right: 10px;
+  right: 12px;
   top: 50%;
   transform: translateY(-50%);
   background: none;
   border: none;
   color: #64748b;
-  font-size: 16px;
+  font-size: 18px;
   padding: 4px;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
-/* Mobile Remember - Compact */
+/* Mobile Remember */
 .mobile-remember {
-  margin: 10px 0 15px;
+  margin: 10px 0 12px;
   flex-shrink: 0;
 }
 
 .mobile-remember label {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 0.85rem;
+  gap: 8px;
+  font-size: 0.9rem;
   color: #475569;
   cursor: pointer;
-  font-weight: 500;
 }
 
 .mobile-remember input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   border: 1.5px solid #cbd5e1;
   border-radius: 4px;
   cursor: pointer;
   appearance: none;
   position: relative;
-  flex-shrink: 0;
 }
 
 .mobile-remember input[type="checkbox"]:checked {
@@ -3097,14 +960,14 @@ body {
   content: '✓';
   position: absolute;
   color: white;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: bold;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
 }
 
-/* Mobile Login Button - Fixed Position */
+/* Mobile Login Button - ALWAYS VISIBLE */
 .mobile-login-button {
   width: 100%;
   padding: 16px;
@@ -3112,50 +975,34 @@ body {
   color: white;
   border: none;
   border-radius: 10px;
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  transition: all 0.2s ease;
+  gap: 10px;
   margin-top: auto;
   margin-bottom: 10px;
-  min-height: 50px;
+  min-height: 52px;
   flex-shrink: 0;
-  box-shadow: 0 3px 10px rgba(37, 99, 235, 0.15);
-}
-
-.mobile-login-button:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 5px 12px rgba(37, 99, 235, 0.2);
-}
-
-.mobile-login-button:active:not(:disabled) {
-  transform: translateY(0);
 }
 
 .mobile-login-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-  transform: none;
 }
 
 .mobile-spinner {
-  width: 18px;
-  height: 18px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
   border-radius: 50%;
   border-top-color: white;
   animation: spin 1s linear infinite;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-/* Mobile Register Section - Compact */
+/* Mobile Register Section */
 .mobile-register-section {
   display: flex;
   align-items: center;
@@ -3163,7 +1010,7 @@ body {
   padding: 12px;
   background: #f8fafc;
   border-radius: 10px;
-  margin-top: 5px;
+  margin-top: 8px;
   border: 1px solid #e2e8f0;
   flex-shrink: 0;
 }
@@ -3174,15 +1021,10 @@ body {
   flex-shrink: 0;
 }
 
-.mobile-register-content {
-  flex: 1;
-}
-
 .mobile-register-content p {
   color: #475569;
   font-size: 0.85rem;
-  margin-bottom: 5px;
-  font-weight: 500;
+  margin-bottom: 6px;
 }
 
 .mobile-register-button {
@@ -3195,17 +1037,9 @@ body {
   text-decoration: none;
   font-weight: 700;
   font-size: 0.8rem;
-  transition: all 0.2s ease;
 }
 
-.mobile-register-button:hover {
-  background: #2563eb;
-  color: white;
-  transform: translateY(-1px);
-  box-shadow: 0 3px 8px rgba(37, 99, 235, 0.2);
-}
-
-/* Mobile Footer - Very Compact */
+/* Mobile Footer */
 .mobile-footer {
   padding: 10px 12px;
   text-align: center;
@@ -3221,92 +1055,24 @@ body {
   font-weight: 500;
 }
 
-/* Field errors - Very Compact */
+/* Mobile Field Error */
 .mobile-field-error {
-  display: flex;
-  align-items: center;
-  gap: 4px;
   color: var(--danger-color);
-  font-size: 0.7rem;
-  margin-top: 2px;
-  margin-bottom: 6px;
+  font-size: 0.75rem;
+  margin-top: 4px;
   padding-left: 4px;
   font-weight: 500;
   flex-shrink: 0;
 }
 
-.mobile-field-error .mobile-error-icon {
-  font-size: 12px;
-  flex-shrink: 0;
-}
-
-/* ==================== DESKTOP CSS (برای desktop ویو) ==================== */
-
-.login-page-wrapper {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 30px 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-.login-container {
-  display: flex;
-  width: 1200px;
-  height: 820px;
-  background: white;
-  border-radius: 20px;
-  overflow: hidden;
-  box-shadow: 
-    0 15px 30px rgba(0, 0, 0, 0.2),
-    0 8px 15px rgba(0, 0, 0, 0.1);
-  position: relative;
-  margin: auto;
-}
-
-/* Desktop کے لیے باقی CSS اسی طرح رہے گی */
-.book-spine {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 70px;
-  height: 100%;
-  background: 
-    linear-gradient(135deg,
-      #0f172a 0%,
-      #1e293b 25%,
-      #334155 50%,
-      #1e293b 75%,
-      #0f172a 100%
-    ),
-    linear-gradient(
-      90deg,
-      transparent 0%,
-      rgba(255, 255, 255, 0.05) 50%,
-      transparent 100%
-    );
-  z-index: 10;
-  overflow: hidden;
-  box-shadow: 
-    inset -4px 0 8px rgba(0, 0, 0, 0.5),
-    inset 4px 0 8px rgba(0, 0, 0, 0.5),
-    0 0 20px rgba(0, 0, 0, 0.3);
-}
-
-/* Desktop کے لیے باقی CSS... */
-
-/* ==================== RESPONSIVE BEHAVIOR ==================== */
+/* ==================== RESPONSIVE ==================== */
 
 @media (max-width: 768px) {
   .mobile-login-page {
     display: flex;
   }
   
-  .login-page-wrapper,
-  .login-container,
-  .login-left-panel,
-  .login-right-panel {
+  .login-page-wrapper {
     display: none;
   }
 }
@@ -3317,21 +1083,21 @@ body {
   }
 }
 
-/* Extra small screens adjustment */
-@media (max-height: 650px) {
+/* Extra small screens */
+@media (max-height: 600px) {
   .mobile-slider-section {
-    height: 120px;
+    height: 110px;
   }
   
   .mobile-slide-icon {
-    width: 40px;
-    height: 40px;
-    font-size: 20px;
-    margin-bottom: 5px;
+    width: 35px;
+    height: 35px;
+    font-size: 18px;
+    margin-bottom: 4px;
   }
   
   .mobile-slide-content h3 {
-    font-size: 1rem;
+    font-size: 0.9rem;
   }
   
   .mobile-slide-content p {
@@ -3339,49 +1105,37 @@ body {
   }
   
   .mobile-input-group input {
-    padding: 12px 12px 12px 36px;
-    min-height: 42px;
-    font-size: 13px;
+    padding: 12px 12px 12px 40px;
+    min-height: 46px;
+    font-size: 14px;
   }
   
   .mobile-login-button {
     padding: 14px;
-    font-size: 0.9rem;
-    min-height: 46px;
+    min-height: 48px;
+    font-size: 0.95rem;
   }
 }
 
-/* Landscape mode adjustment */
+/* Landscape mode */
 @media (max-width: 768px) and (orientation: landscape) {
   .mobile-slider-section {
     display: none;
   }
   
   .mobile-header {
-    padding: 6px 10px;
-  }
-  
-  .mobile-welcome {
     padding: 6px 10px 4px;
   }
   
-  .mobile-welcome h2 {
-    font-size: 1.1rem;
+  .mobile-welcome {
+    padding: 6px 10px 2px;
   }
   
   .mobile-login-card {
     padding: 8px 10px;
   }
   
-  .mobile-login-form {
-    margin-bottom: 5px;
-  }
-  
   .mobile-input-group {
     margin-bottom: 8px;
-  }
-  
-  .mobile-remember {
-    margin: 6px 0 10px;
   }
 }

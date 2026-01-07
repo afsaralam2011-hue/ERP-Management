@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { 
   FiUser, 
@@ -8,12 +8,17 @@ import {
   FiCheck,
   FiAlertCircle,
   FiEye,
-  FiEyeOff
+  FiEyeOff,
+  FiChevronLeft,
+  FiChevronRight,
+  FiShield,
+  FiTrendingUp,
+  FiCloud,
+  FiHome
 } from "react-icons/fi";
 import { createClient } from '@supabase/supabase-js';
 import "./Register.css";
 
-// سپر بیس کلائنٹ بنائیں
 const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
 const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
 
@@ -21,10 +26,41 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
-    detectSessionInUrl: true,
-    storage: window.localStorage
+    detectSessionInUrl: false
   }
 });
+
+// Mobile slides data
+const slidesData = [
+  {
+    id: 1,
+    title: "Production Control",
+    description: "Real-time manufacturing monitoring",
+    icon: <FiHome />,
+    color: "#3B82F6"
+  },
+  {
+    id: 2,
+    title: "Business Analytics",
+    description: "Data-driven decision making",
+    icon: <FiTrendingUp />,
+    color: "#10B981"
+  },
+  {
+    id: 3,
+    title: "Enterprise Security",
+    description: "Bank-level security protocols",
+    icon: <FiShield />,
+    color: "#8B5CF6"
+  },
+  {
+    id: 4,
+    title: "Cloud Platform",
+    description: "Access anywhere, anytime",
+    icon: <FiCloud />,
+    color: "#F59E0B"
+  }
+];
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -43,29 +79,39 @@ export default function Register() {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState("");
-  const [isFocused, setIsFocused] = useState({
-    name: false,
-    email: false,
-    password: false,
-    confirmPassword: false
-  });
+  const [isMobile, setIsMobile] = useState(false);
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [autoSlide, setAutoSlide] = useState(true);
+  const slideIntervalRef = useRef(null);
   
   const navigate = useNavigate();
 
-  // Check if input has value or is focused for floating labels
-  const shouldFloatLabel = (field) => {
-    return formData[field] || isFocused[field];
-  };
+  // Check mobile device
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
-  // Handle focus
-  const handleFocus = (field) => {
-    setIsFocused(prev => ({ ...prev, [field]: true }));
-  };
-
-  // Handle blur
-  const handleBlur = (field) => {
-    setIsFocused(prev => ({ ...prev, [field]: false }));
-  };
+  // Auto slide for mobile
+  useEffect(() => {
+    if (autoSlide && isMobile) {
+      slideIntervalRef.current = setInterval(() => {
+        setCurrentSlide((prev) => (prev + 1) % slidesData.length);
+      }, 3000);
+    }
+    
+    return () => {
+      if (slideIntervalRef.current) {
+        clearInterval(slideIntervalRef.current);
+      }
+    };
+  }, [autoSlide, isMobile]);
 
   // Handle input changes
   const handleChange = (e) => {
@@ -135,7 +181,7 @@ export default function Register() {
     return Object.keys(newErrors).length === 0;
   };
 
-  // Handle form submission with Supabase
+  // Handle form submission
   const handleRegister = async (e) => {
     e.preventDefault();
     
@@ -150,7 +196,7 @@ export default function Register() {
     try {
       console.log("Registration attempt with:", formData.email);
       
-      // Step 1: سپر بیس میں یوزر رجسٹر کریں
+      // Register user with Supabase
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email.trim(),
         password: formData.password,
@@ -163,12 +209,9 @@ export default function Register() {
         }
       });
 
-      console.log("Supabase signup response:", { authData, authError });
-
       if (authError) {
-        console.error("Signup error details:", authError);
+        console.error("Signup error:", authError);
         
-        // مختلف قسم کی ایررز کے لیے پیغامات
         if (authError.message.includes("already registered")) {
           setErrors({ general: "This email is already registered. Please try logging in." });
         } else if (authError.message.includes("password")) {
@@ -186,9 +229,9 @@ export default function Register() {
         return;
       }
 
-      // Step 2: یوزر پروفائل ٹیبل میں ریکارڈ بنائیں
+      // Create user profile
       try {
-        const { error: profileError } = await supabase
+        await supabase
           .from('profiles')
           .insert({
             id: authData.user.id,
@@ -197,22 +240,14 @@ export default function Register() {
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           });
-
-        if (profileError) {
-          console.error("Profile creation error:", profileError);
-          // پروفائل بنانے میں غلطی ہو تو بھی لاگ ان کرنے دیں
-          // یوزر بن چکا ہے تو مسئلہ نہیں
-        }
       } catch (profileErr) {
         console.warn("Profile creation warning:", profileErr);
       }
 
-      // Step 3: صارف کو پیغام دکھائیں
+      // Show success message
       if (authData.session) {
-        // اگر ایمیل کنفرمیشن کی ضرورت نہیں تو فوراً لاگ ان
         setSuccess("Account created successfully! Redirecting to dashboard...");
         
-        // یوزر کا ڈیٹا ذخیرہ کریں
         const user = {
           id: authData.user.id,
           email: authData.user.email,
@@ -224,30 +259,27 @@ export default function Register() {
         localStorage.setItem("user", JSON.stringify(user));
         localStorage.setItem("refresh_token", authData.session.refresh_token);
         
-        // ڈیش بورڈ پر ری ڈائریکٹ کریں
         setTimeout(() => {
           navigate("/dashboard", { replace: true });
         }, 1500);
         
       } else {
-        // ایمیل کنفرمیشن کی ضرورت ہے
-        setSuccess("Account created successfully! Please check your email to verify your account. You will be redirected to login page.");
+        setSuccess("Account created successfully! Please check your email to verify your account.");
         
-        // لاگ ان پیج پر ری ڈائریکٹ کریں
         setTimeout(() => {
           navigate("/login", { replace: true });
         }, 3000);
       }
 
     } catch (err) {
-      console.error("Unexpected registration error:", err);
+      console.error("Unexpected error:", err);
       setErrors({ general: "An unexpected error occurred. Please try again." });
     } finally {
       setLoading(false);
     }
   };
 
-  // Handle Enter key for form submission
+  // Handle Enter key
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') {
       handleRegister(e);
@@ -284,6 +316,311 @@ export default function Register() {
   // Calculate total strength bar width
   const strengthBarWidth = `${(passwordStrength / 4) * 100}%`;
 
+  // Mobile slider controls
+  const nextSlide = () => {
+    setAutoSlide(false);
+    setCurrentSlide((prev) => (prev + 1) % slidesData.length);
+    setTimeout(() => setAutoSlide(true), 5000);
+  };
+
+  const prevSlide = () => {
+    setAutoSlide(false);
+    setCurrentSlide((prev) => (prev - 1 + slidesData.length) % slidesData.length);
+    setTimeout(() => setAutoSlide(true), 5000);
+  };
+
+  const goToSlide = (index) => {
+    setAutoSlide(false);
+    setCurrentSlide(index);
+    setTimeout(() => setAutoSlide(true), 5000);
+  };
+
+  // MOBILE VIEW
+  if (isMobile) {
+    return (
+      <div className="mobile-register-page">
+        {/* Top Slider Section */}
+        <div className="mobile-slider-section">
+          <div className="mobile-slider-container">
+            <div 
+              className="mobile-slider-track"
+              style={{ transform: `translateX(-${currentSlide * 100}%)` }}
+            >
+              {slidesData.map((slide, index) => (
+                <div key={slide.id} className="mobile-slide">
+                  <div 
+                    className="mobile-slide-icon"
+                    style={{ backgroundColor: slide.color }}
+                  >
+                    {slide.icon}
+                  </div>
+                  <div className="mobile-slide-content">
+                    <h3>{slide.title}</h3>
+                    <p>{slide.description}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            <button className="mobile-slider-prev" onClick={prevSlide}>
+              <FiChevronLeft />
+            </button>
+            <button className="mobile-slider-next" onClick={nextSlide}>
+              <FiChevronRight />
+            </button>
+            
+            <div className="mobile-slider-dots">
+              {slidesData.map((_, index) => (
+                <button
+                  key={index}
+                  className={`mobile-slider-dot ${index === currentSlide ? 'active' : ''}`}
+                  onClick={() => goToSlide(index)}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Header */}
+        <div className="mobile-header">
+          <div className="mobile-logo-container">
+            <img
+              src="/images/logoA.png"
+              alt="PWI Logo"
+              className="mobile-company-logo"
+              onError={(e) => {
+                e.target.style.display = 'none';
+                e.target.nextElementSibling.style.display = 'flex';
+              }}
+            />
+            <div className="mobile-logo-fallback" aria-hidden="true">
+              <span className="mobile-logo-text">PWI</span>
+            </div>
+            <div className="mobile-company-info">
+              <h1 className="mobile-company-name">Pakistan Wire Industries</h1>
+              <p className="mobile-company-tagline">Enterprise Resource Planning</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Welcome */}
+        <div className="mobile-welcome">
+          <h2>Create Account</h2>
+          <p>Join PWI ERP System</p>
+        </div>
+
+        {/* Mobile Register Card */}
+        <div className="mobile-register-card">
+          {errors.general && (
+            <div className="mobile-error">
+              <FiAlertCircle />
+              <span>{errors.general}</span>
+            </div>
+          )}
+
+          {success && (
+            <div className="mobile-success">
+              <FiCheck />
+              <span>{success}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleRegister} className="mobile-register-form" noValidate>
+            {/* Name Field */}
+            <div className="mobile-input-group">
+              <FiUser className="mobile-input-icon" />
+              <input
+                name="name"
+                type="text"
+                value={formData.name}
+                onChange={handleChange}
+                onKeyPress={handleKeyPress}
+                placeholder="Full Name"
+                disabled={loading}
+                required
+              />
+            </div>
+            {errors.name && <div className="mobile-field-error">{errors.name}</div>}
+
+            {/* Email Field */}
+            <div className="mobile-input-group">
+              <FiMail className="mobile-input-icon" />
+              <input
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleChange}
+                onKeyPress={handleKeyPress}
+                placeholder="Email Address"
+                disabled={loading}
+                required
+              />
+            </div>
+            {errors.email && <div className="mobile-field-error">{errors.email}</div>}
+
+            {/* Password Field */}
+            <div className="mobile-input-group">
+              <FiLock className="mobile-input-icon" />
+              <input
+                name="password"
+                type={showPass.password ? "text" : "password"}
+                value={formData.password}
+                onChange={handleChange}
+                onKeyPress={handleKeyPress}
+                placeholder="Password"
+                disabled={loading}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => togglePasswordVisibility('password')}
+                className="mobile-password-toggle"
+                disabled={loading}
+              >
+                {showPass.password ? <FiEyeOff /> : <FiEye />}
+              </button>
+            </div>
+            {errors.password && <div className="mobile-field-error">{errors.password}</div>}
+
+            {/* Confirm Password Field */}
+            <div className="mobile-input-group">
+              <FiLock className="mobile-input-icon" />
+              <input
+                name="confirmPassword"
+                type={showPass.confirmPassword ? "text" : "password"}
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                onKeyPress={handleKeyPress}
+                placeholder="Confirm Password"
+                disabled={loading}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => togglePasswordVisibility('confirmPassword')}
+                className="mobile-password-toggle"
+                disabled={loading}
+              >
+                {showPass.confirmPassword ? <FiEyeOff /> : <FiEye />}
+              </button>
+            </div>
+            {errors.confirmPassword && <div className="mobile-field-error">{errors.confirmPassword}</div>}
+
+            {/* Password Strength */}
+            <div className="mobile-password-strength">
+              <div className="mobile-password-strength-label">
+                Password Strength:
+                <span className="mobile-strength-text" style={{ color: getStrengthColor() }}>
+                  {passwordStrength === 0 && " None"}
+                  {passwordStrength === 1 && " Weak"}
+                  {passwordStrength === 2 && " Fair"}
+                  {passwordStrength === 3 && " Good"}
+                  {passwordStrength === 4 && " Strong"}
+                </span>
+              </div>
+              
+              <div className="mobile-strength-bar">
+                <div 
+                  className="mobile-strength-fill"
+                  style={{
+                    width: strengthBarWidth,
+                    backgroundColor: getStrengthColor()
+                  }}
+                ></div>
+              </div>
+              
+              <div className="mobile-password-requirements">
+                <div className="mobile-requirement-item">
+                  <div className={`mobile-requirement-check ${formData.password.length >= 6 ? 'met' : ''}`}>
+                    {formData.password.length >= 6 ? "✓" : "•"}
+                  </div>
+                  <span>At least 6 characters</span>
+                </div>
+                <div className="mobile-requirement-item">
+                  <div className={`mobile-requirement-check ${/[A-Z]/.test(formData.password) ? 'met' : ''}`}>
+                    {/[A-Z]/.test(formData.password) ? "✓" : "•"}
+                  </div>
+                  <span>One uppercase letter</span>
+                </div>
+                <div className="mobile-requirement-item">
+                  <div className={`mobile-requirement-check ${/[0-9]/.test(formData.password) ? 'met' : ''}`}>
+                    {/[0-9]/.test(formData.password) ? "✓" : "•"}
+                  </div>
+                  <span>One number</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Terms & Conditions */}
+            <div className="mobile-terms">
+              <label>
+                <input
+                  type="checkbox"
+                  name="agreeTerms"
+                  checked={formData.agreeTerms}
+                  onChange={handleChange}
+                  disabled={loading}
+                />
+                <span>
+                  I agree to the{" "}
+                  <Link to="/terms" className="mobile-terms-link">
+                    Terms & Conditions
+                  </Link>{" "}
+                  and{" "}
+                  <Link to="/privacy" className="mobile-terms-link">
+                    Privacy Policy
+                  </Link>
+                </span>
+              </label>
+              {errors.agreeTerms && <div className="mobile-field-error">{errors.agreeTerms}</div>}
+            </div>
+
+            {/* Register Button */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="mobile-register-button"
+            >
+              {loading ? (
+                <>
+                  <div className="mobile-spinner"></div>
+                  <span>Creating Account...</span>
+                </>
+              ) : (
+                <>
+                  <span>Create Account</span>
+                  <FiArrowRight />
+                </>
+              )}
+            </button>
+          </form>
+
+          {/* Divider */}
+          <div className="mobile-divider">
+            <span>Already have an account?</span>
+          </div>
+
+          {/* Login Link */}
+          <div className="mobile-login-link-container">
+            <p className="mobile-login-text">
+              Already registered?{" "}
+              <Link to="/login" className="mobile-login-link">
+                Sign in here
+              </Link>
+            </p>
+          </div>
+        </div>
+
+        {/* Mobile Footer */}
+        <div className="mobile-footer">
+          <p>&copy; {new Date().getFullYear()} All rights reserved</p>
+          <p>ERP System v2.0</p>
+        </div>
+      </div>
+    );
+  }
+
+  // DESKTOP VIEW
   return (
     <div className="register-page-wrapper">
       <div className="register-container">
@@ -359,18 +696,13 @@ export default function Register() {
                       type="text"
                       value={formData.name}
                       onChange={handleChange}
-                      onFocus={() => handleFocus('name')}
-                      onBlur={() => handleBlur('name')}
                       onKeyPress={handleKeyPress}
                       className={`register-input ${errors.name ? 'input-error' : ''}`}
                       disabled={loading}
                       required
                       placeholder=" "
                     />
-                    <label 
-                      htmlFor="name" 
-                      className={`floating-label ${shouldFloatLabel('name') ? 'floating-label-float' : ''}`}
-                    >
+                    <label htmlFor="name" className="floating-label">
                       Full Name
                     </label>
                   </div>
@@ -391,18 +723,13 @@ export default function Register() {
                       type="email"
                       value={formData.email}
                       onChange={handleChange}
-                      onFocus={() => handleFocus('email')}
-                      onBlur={() => handleBlur('email')}
                       onKeyPress={handleKeyPress}
                       className={`register-input ${errors.email ? 'input-error' : ''}`}
                       disabled={loading}
                       required
                       placeholder=" "
                     />
-                    <label 
-                      htmlFor="email" 
-                      className={`floating-label ${shouldFloatLabel('email') ? 'floating-label-float' : ''}`}
-                    >
+                    <label htmlFor="email" className="floating-label">
                       Email Address
                     </label>
                   </div>
@@ -423,18 +750,13 @@ export default function Register() {
                       type={showPass.password ? "text" : "password"}
                       value={formData.password}
                       onChange={handleChange}
-                      onFocus={() => handleFocus('password')}
-                      onBlur={() => handleBlur('password')}
                       onKeyPress={handleKeyPress}
                       className={`register-input ${errors.password ? 'input-error' : ''}`}
                       disabled={loading}
                       required
                       placeholder=" "
                     />
-                    <label 
-                      htmlFor="password" 
-                      className={`floating-label ${shouldFloatLabel('password') ? 'floating-label-float' : ''}`}
-                    >
+                    <label htmlFor="password" className="floating-label">
                       Password
                     </label>
                     <button
@@ -463,8 +785,6 @@ export default function Register() {
                       type={showPass.confirmPassword ? "text" : "password"}
                       value={formData.confirmPassword}
                       onChange={handleChange}
-                      onFocus={() => handleFocus('confirmPassword')}
-                      onBlur={() => handleBlur('confirmPassword')}
                       onKeyPress={handleKeyPress}
                       className={`register-input ${errors.confirmPassword ? 'input-error' : ''} ${
                         formData.password && formData.confirmPassword && formData.password === formData.confirmPassword ? 'input-success' : ''
@@ -473,10 +793,7 @@ export default function Register() {
                       required
                       placeholder=" "
                     />
-                    <label 
-                      htmlFor="confirmPassword" 
-                      className={`floating-label ${shouldFloatLabel('confirmPassword') ? 'floating-label-float' : ''}`}
-                    >
+                    <label htmlFor="confirmPassword" className="floating-label">
                       Confirm Password
                     </label>
                     <button
