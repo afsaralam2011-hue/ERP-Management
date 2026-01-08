@@ -1,72 +1,133 @@
-import React, { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabaseClient';
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import {
+  FiMail,
+  FiArrowRight,
+  FiSun,
+  FiMoon,
+  FiAlertCircle,
+  FiCheckCircle
+} from "react-icons/fi";
+import { createClient } from "@supabase/supabase-js";
+import "./Login.css";
 
-const Users = () => {
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
+const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
+const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
+
+const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: false
+  }
+});
+
+export default function ForgotPassword() {
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [dark, setDark] = useState(true);
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    document.body.className = dark ? "dark" : "light";
+  }, [dark]);
 
-  const fetchUsers = async () => {
+  const handleReset = async (e) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+    setLoading(true);
+
     try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .order('createdAt', { ascending: false });
+      const { error } = await supabase.auth.resetPasswordForEmail(
+        email.trim(),
+        {
+          redirectTo: `${window.location.origin}/reset-password`
+        }
+      );
 
-      if (error) throw error;
-      setUsers(data);
-    } catch (error) {
-      console.error('Error fetching users:', error.message);
+      if (error) {
+        setError(error.message);
+        setLoading(false);
+        return;
+      }
+
+      setSuccess(
+        "Password reset email sent. Please check your inbox."
+      );
+    } catch (err) {
+      setError("Something went wrong. Try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  if (loading) return <div>Loading users...</div>;
-
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Users</h1>
-      
-      <div className="overflow-x-auto">
-        <table className="min-w-full bg-white border">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="py-2 px-4 border">ID</th>
-              <th className="py-2 px-4 border">Name</th>
-              <th className="py-2 px-4 border">Email</th>
-              <th className="py-2 px-4 border">Role</th>
-              <th className="py-2 px-4 border">Created At</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((user) => (
-              <tr key={user.id} className="hover:bg-gray-50">
-                <td className="py-2 px-4 border">{user.id.substring(0, 8)}...</td>
-                <td className="py-2 px-4 border">{user.name}</td>
-                <td className="py-2 px-4 border">{user.email}</td>
-                <td className="py-2 px-4 border">
-                  <span className={`px-2 py-1 rounded text-xs ${
-                    user.role === 'admin' 
-                      ? 'bg-red-100 text-red-800' 
-                      : 'bg-blue-100 text-blue-800'
-                  }`}>
-                    {user.role}
-                  </span>
-                </td>
-                <td className="py-2 px-4 border">
-                  {new Date(user.createdAt).toLocaleDateString()}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+    <div className="erp-bg">
+      <button className="theme-toggle" onClick={() => setDark(!dark)}>
+        {dark ? <FiSun /> : <FiMoon />}
+      </button>
+
+      <div className="bg-particles">
+        <span></span><span></span><span></span><span></span>
+      </div>
+
+      <div className="erp-login-card">
+        {/* Branding */}
+        <div className="erp-brand-inline">
+          <img src="/images/logoA.png" alt="PWI" />
+          <span>Pakistan Wire Industries</span>
+        </div>
+
+        <p className="erp-subtitle">
+          Reset your account password
+        </p>
+
+        {error && (
+          <div className="erp-error">
+            <FiAlertCircle /> {error}
+          </div>
+        )}
+
+        {success && (
+          <div
+            className="erp-error"
+            style={{
+              background: "rgba(34,197,94,0.2)",
+              color: "#bbf7d0"
+            }}
+          >
+            <FiCheckCircle /> {success}
+          </div>
+        )}
+
+        <form onSubmit={handleReset} className="erp-form">
+          <div className="erp-input">
+            <FiMail />
+            <input
+              type="email"
+              placeholder="Enter your registered email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+
+          <button className="erp-login-btn" disabled={loading}>
+            {loading ? "Sending Email..." : "Send Reset Link"}
+            <FiArrowRight />
+          </button>
+        </form>
+
+        <div className="erp-register">
+          <Link to="/login">Back to Login</Link>
+        </div>
+
+        <div className="erp-footer">
+          © {new Date().getFullYear()} Pakistan Wire Industries • ERP v2.0
+        </div>
       </div>
     </div>
   );
-};
-
-export default Users;
+}

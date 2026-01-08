@@ -1,1733 +1,194 @@
-/* COMPLETE REGISTER.CSS - PERFECTLY MATCHING REACT COMPONENT */
+/* REGISTER PAGE CSS WITH FLOATING PWI TEXTS */
 
-/* ===== DESKTOP VIEW ===== */
-.register-page {
+.erp-bg {
   min-height: 100vh;
-  background: #f8f9fa;
+  background: linear-gradient(135deg,#0f172a,#020617);
   display: flex;
-  justify-content: center;
   align-items: center;
-  padding: 20px;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-.register-container {
-  width: 1100px;
-  max-width: 95%;
-  height: 700px;
-  background: white;
-  border-radius: 16px;
+  justify-content: center;
+  position: relative;
   overflow: hidden;
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.08);
-  display: flex;
-  border: 1px solid #e9ecef;
+  font-family: "Inter", sans-serif;
 }
 
-/* LEFT PANEL - Registration Section */
-.left-panel {
-  flex: 1;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  padding: 60px 50px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  border-right: 1px solid #dee2e6;
-}
-
-.left-content {
-  max-width: 400px;
-  margin: 0 auto;
-  width: 100%;
-}
-
-.registration-title {
-  font-size: 36px;
-  margin-bottom: 40px;
-  color: #2c3e50;
-  font-weight: 800;
-  border-bottom: 3px solid #4CAF50;
-  padding-bottom: 15px;
-}
-
-.welcome-section {
-  margin-bottom: 30px;
-  padding: 25px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-}
-
-.welcome-title {
-  font-size: 24px;
-  margin-bottom: 10px;
-  color: #2c3e50;
+/* Floating PWI text items */
+.floating-pwi {
+  position: absolute;
+  font-size: 1.2rem;
   font-weight: 700;
+  opacity: 0.7;
+  pointer-events: none;
+  white-space: nowrap;
+  user-select: none;
+  animation: floatText 20s linear infinite;
 }
 
-.welcome-text {
-  font-size: 16px;
-  color: #5a6c7d;
-  line-height: 1.6;
+@keyframes floatText {
+  0% { opacity: 0.3; }
+  50% { opacity: 0.9; }
+  100% { opacity: 0.3; }
 }
 
-.hello-section {
-  margin-bottom: 40px;
-  padding: 25px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-}
-
-.hello-title {
-  font-size: 22px;
-  margin-bottom: 10px;
-  color: #2c3e50;
-  font-weight: 600;
-}
-
-.hello-text {
-  font-size: 16px;
-  color: #5a6c7d;
-  line-height: 1.6;
-}
-
-.login-redirect-button {
+/* Card */
+.erp-login-card {
   width: 100%;
-  padding: 16px;
-  background: #4CAF50;
-  color: white;
-  border: none;
-  border-radius: 10px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  text-decoration: none;
-  display: block;
-  text-align: center;
-  box-shadow: 0 5px 15px rgba(76, 175, 80, 0.2);
+  max-width: 420px;
+  padding: 2.5rem 2.2rem;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(18px);
+  border-radius: 18px;
+  box-shadow: 0 25px 60px rgba(0,0,0,0.6);
+  color: #e5e7eb;
+  z-index: 2;
+  animation: fadeInUp 0.8s ease;
 }
 
-.login-redirect-button:hover {
-  background: #45a049;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(76, 175, 80, 0.3);
+@keyframes fadeInUp {
+  from { opacity:0; transform: translateY(40px); }
+  to { opacity:1; transform: translateY(0); }
 }
 
-/* RIGHT PANEL - Registration Form */
-.right-panel {
-  flex: 1;
-  padding: 60px 50px;
+/* Brand inline */
+.erp-brand-inline {
   display: flex;
-  flex-direction: column;
+  align-items: center;
   justify-content: center;
-  background: white;
-  overflow-y: auto;
+  gap: 12px;
+  margin-bottom: 1.5rem;
 }
 
-.right-content {
-  max-width: 450px;
-  margin: 0 auto;
-  width: 100%;
-}
-
-/* PWI Header - PAKISTAN WIRE INDUSTRIES */
-.pwi-header {
-  text-align: center;
-  margin-bottom: 40px;
-}
-
-.pwi-logo-container {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 20px;
-}
-
-.pwi-logo {
-  width: 100px;
-  height: 100px;
+.erp-brand-inline img {
+  width: 42px;
+  height: 42px;
   object-fit: contain;
-  border-radius: 50%;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-  border: 3px solid white;
 }
 
-.pwi-logo-fallback {
-  width: 100px;
-  height: 100px;
-  background: #4CAF50;
-  border-radius: 50%;
-  display: none;
-  justify-content: center;
-  align-items: center;
-  box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+.erp-brand-inline span {
+  font-size: 1.1rem;
+  font-weight: 600;
+  white-space: nowrap;
+  color: #f8fafc;
 }
 
-.pwi-logo-text {
-  color: white;
-  font-size: 28px;
-  font-weight: bold;
-}
-
-.pwi-info {
+/* Subtitle */
+.erp-subtitle {
   text-align: center;
+  font-size: 0.95rem;
+  color: #cbd5f5;
+  margin-bottom: 1.8rem;
 }
 
-.pwi-name {
-  font-size: 28px;
-  color: #2c3e50;
-  margin-bottom: 8px;
-  font-weight: 800;
-}
-
-.pwi-tagline {
-  font-size: 14px;
-  color: #7f8c8d;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  font-weight: 500;
-}
-
-/* Register Form Container */
-.register-form-container {
-  background: #f8f9fa;
-  border-radius: 16px;
-  padding: 40px;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
-}
-
-.register-form-header {
-  text-align: center;
-  margin-bottom: 30px;
-}
-
-.register-form-header h2 {
-  font-size: 28px;
-  color: #2c3e50;
-  margin-bottom: 10px;
-  font-weight: 700;
-}
-
-.register-form-header p {
-  font-size: 16px;
-  color: #7f8c8d;
-}
-
-/* Error and Success Messages */
-.error-message {
-  background: #ffebee;
-  border-left: 4px solid #e74c3c;
-  border-radius: 10px;
-  padding: 16px 20px;
-  margin-bottom: 25px;
+/* Error / success */
+.erp-error {
   display: flex;
   align-items: center;
-  color: #c0392b;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.success-message {
-  background: #e8f5e9;
-  border-left: 4px solid #4CAF50;
+  gap: 8px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.2rem;
   border-radius: 10px;
-  padding: 16px 20px;
-  margin-bottom: 25px;
-  display: flex;
-  align-items: center;
-  color: #2e7d32;
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 0.85rem;
+  background: rgba(239, 68, 68, 0.18);
+  color: #fecaca;
 }
 
-.error-message svg,
-.success-message svg {
-  margin-right: 12px;
-  font-size: 20px;
+.erp-error.success {
+  background: rgba(34,197,94,0.18);
+  color: #bbf7d0;
 }
 
-/* Form Styles */
-.register-form {
+/* Form */
+.erp-form {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 1.2rem;
 }
 
-.form-group {
-  width: 100%;
-}
-
-.input-group {
+/* Input */
+.erp-input {
   position: relative;
-  width: 100%;
-}
-
-.input-icon {
-  position: absolute;
-  left: 18px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #95a5a6;
-  font-size: 20px;
-}
-
-.register-form input {
-  width: 100%;
-  padding: 16px 20px 16px 55px;
-  border: 2px solid #e0e0e0;
-  border-radius: 10px;
-  font-size: 16px;
-  background: white;
-  color: #2c3e50;
-  font-weight: 500;
-  transition: all 0.3s ease;
-}
-
-.register-form input:focus {
-  outline: none;
-  border-color: #4CAF50;
-  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
-}
-
-.register-form input::placeholder {
-  color: #b0bec5;
-}
-
-.password-toggle {
-  position: absolute;
-  right: 18px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  color: #95a5a6;
-  cursor: pointer;
-  font-size: 20px;
-  padding: 0;
-  transition: color 0.3s ease;
-}
-
-.password-toggle:hover {
-  color: #4CAF50;
-}
-
-.field-error {
-  color: #e74c3c;
-  font-size: 13px;
-  margin-top: 8px;
-  margin-left: 5px;
   display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-/* Terms & Conditions */
-.terms-group {
-  margin: 20px 0 25px;
-}
-
-.checkbox-container {
-  display: flex;
-  align-items: flex-start;
-  cursor: pointer;
-  font-size: 14px;
-  color: #2c3e50;
-  line-height: 1.5;
-  position: relative;
-  padding-left: 35px;
-}
-
-.checkbox-container input {
-  position: absolute;
-  opacity: 0;
-  cursor: pointer;
-}
-
-.checkmark {
-  position: absolute;
-  left: 0;
-  top: 2px;
-  height: 20px;
-  width: 20px;
-  background-color: #f1f2f6;
-  border-radius: 5px;
-  border: 2px solid #dfe4ea;
-  transition: all 0.3s ease;
-}
-
-.checkbox-container:hover input ~ .checkmark {
-  border-color: #4CAF50;
-  background-color: #e8f5e9;
-}
-
-.checkbox-container input:checked ~ .checkmark {
-  background-color: #4CAF50;
-  border-color: #4CAF50;
-}
-
-.checkmark:after {
-  content: "";
-  position: absolute;
-  display: none;
-}
-
-.checkbox-container input:checked ~ .checkmark:after {
-  display: block;
-}
-
-.checkbox-container .checkmark:after {
-  left: 6px;
-  top: 2px;
-  width: 6px;
-  height: 11px;
-  border: solid white;
-  border-width: 0 2px 2px 0;
-  transform: rotate(45deg);
-}
-
-.checkbox-text {
-  display: inline-block;
-  line-height: 1.5;
-}
-
-.terms-link {
-  color: #4CAF50;
-  text-decoration: none;
-  font-weight: 600;
-  transition: color 0.3s ease;
-}
-
-.terms-link:hover {
-  color: #2E7D32;
-  text-decoration: underline;
-}
-
-/* Submit Button */
-.submit-button {
-  width: 100%;
-  padding: 16px;
-  background: #4CAF50;
-  color: white;
-  border: none;
-  border-radius: 10px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  justify-content: center;
   align-items: center;
   gap: 10px;
+  background: rgba(255, 255, 255, 0.12);
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+}
+
+.erp-input svg {
+  color: #94a3b8;
+  font-size: 1.1rem;
+}
+
+.erp-input input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #f8fafc;
+  width: 100%;
+  font-size: 0.95rem;
+}
+
+.erp-input input::placeholder {
+  color: #94a3b8;
+}
+
+/* Button */
+.erp-login-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0.85rem;
+  margin-top: 0.5rem;
+  background: linear-gradient(135deg,#2563eb,#4f46e5);
+  border: none;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 5px 15px rgba(76, 175, 80, 0.2);
-  margin-top: 10px;
 }
 
-.submit-button:hover:not(:disabled) {
-  background: #45a049;
+.erp-login-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(76, 175, 80, 0.3);
+  box-shadow: 0 15px 35px rgba(37, 99, 235,0.45);
 }
 
-.submit-button:disabled {
-  opacity: 0.7;
+.erp-login-btn:disabled {
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
-.spinner {
-  width: 20px;
-  height: 20px;
-  border: 3px solid rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  border-top-color: white;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.button-icon {
-  font-size: 18px;
-}
-
-/* Login Link */
-.login-link {
+/* Links */
+.erp-register {
   text-align: center;
-  margin-top: 25px;
-  padding-top: 25px;
-  border-top: 1px solid #e0e0e0;
+  margin-top: 1.4rem;
+  font-size: 0.85rem;
 }
 
-.login-link p {
-  color: #5a6c7d;
-  font-size: 15px;
-}
-
-.login-link-text {
-  color: #4CAF50;
+.erp-register a {
+  color: #60a5fa;
   text-decoration: none;
-  font-weight: 600;
-  transition: color 0.3s ease;
+  font-weight: 500;
 }
 
-.login-link-text:hover {
-  color: #2E7D32;
+.erp-register a:hover {
   text-decoration: underline;
 }
 
 /* Footer */
-.register-footer {
+.erp-footer {
   text-align: center;
-  margin-top: 30px;
-  padding-top: 20px;
-  border-top: 1px solid #e0e0e0;
-  color: #7f8c8d;
-  font-size: 13px;
+  margin-top: 1.8rem;
+  font-size: 0.75rem;
+  color: #94a3b8;
 }
 
-.register-footer p {
-  margin: 5px 0;
-}
-
-/* ===== MOBILE VIEW ===== */
-.mobile-register-page {
-  min-height: 100vh;
-  background: #f8f9fa;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-/* Mobile Header with Logo */
-.mobile-header {
-  text-align: center;
-  padding: 30px 20px;
-  background: white;
-  border-bottom: 1px solid #e9ecef;
-}
-
-.mobile-logo-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 15px;
-}
-
-.mobile-company-logo {
-  width: 80px;
-  height: 80px;
-  object-fit: contain;
-  border-radius: 50%;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-}
-
-.mobile-logo-fallback {
-  width: 80px;
-  height: 80px;
-  background: #4CAF50;
-  border-radius: 50%;
-  display: none;
-  justify-content: center;
-  align-items: center;
-  box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
-}
-
-.mobile-logo-text {
-  color: white;
-  font-size: 24px;
-  font-weight: bold;
-}
-
-.mobile-company-info {
-  text-align: center;
-}
-
-.mobile-company-name {
-  font-size: 22px;
-  color: #2c3e50;
-  margin-bottom: 8px;
-  font-weight: 700;
-}
-
-.mobile-company-tagline {
-  font-size: 13px;
-  color: #7f8c8d;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  font-weight: 500;
-}
-
-/* Mobile Welcome */
-.mobile-welcome {
-  text-align: center;
-  padding: 25px 20px;
-  background: white;
-  margin-bottom: 1px;
-}
-
-.mobile-welcome h2 {
-  font-size: 24px;
-  color: #2c3e50;
-  margin-bottom: 8px;
-  font-weight: 700;
-}
-
-.mobile-welcome p {
-  font-size: 16px;
-  color: #7f8c8d;
-}
-
-/* Mobile Register Form Container */
-.mobile-register-card {
-  background: white;
-  padding: 25px 20px;
-  flex: 1;
-  overflow-y: auto;
-  padding-bottom: 100px;
-}
-
-/* Mobile Messages */
-.mobile-error {
-  background: #ffebee;
-  border-left: 4px solid #e74c3c;
-  border-radius: 10px;
-  padding: 15px 20px;
-  margin-bottom: 25px;
-  display: flex;
-  align-items: center;
-  color: #c0392b;
-  font-size: 14px;
-  font-weight: 500;
-  gap: 12px;
-}
-
-.mobile-success {
-  background: #e8f5e9;
-  border-left: 4px solid #4CAF50;
-  border-radius: 10px;
-  padding: 15px 20px;
-  margin-bottom: 25px;
-  display: flex;
-  align-items: center;
-  color: #2e7d32;
-  font-size: 14px;
-  font-weight: 500;
-  gap: 12px;
-}
-
-/* Mobile Form */
-.mobile-register-form {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.mobile-input-group {
-  width: 100%;
-}
-
-.mobile-input-group label {
-  display: block;
-  font-size: 14px;
-  color: #2c3e50;
-  margin-bottom: 8px;
-  font-weight: 600;
-}
-
-.mobile-input-wrapper {
-  position: relative;
-  width: 100%;
-}
-
-.mobile-input-icon {
-  position: absolute;
-  left: 15px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #95a5a6;
-  font-size: 20px;
-}
-
-.mobile-register-card input {
-  width: 100%;
-  padding: 16px 16px 16px 50px;
-  border: 2px solid #e0e0e0;
-  border-radius: 10px;
-  font-size: 16px;
-  background: white;
-  color: #2c3e50;
-  font-weight: 500;
-  transition: all 0.3s ease;
-}
-
-.mobile-register-card input:focus {
-  outline: none;
-  border-color: #4CAF50;
-  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
-}
-
-.mobile-password-toggle {
-  position: absolute;
-  right: 15px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  color: #95a5a6;
-  cursor: pointer;
-  font-size: 20px;
-  padding: 0;
-  transition: color 0.3s ease;
-}
-
-.mobile-password-toggle:hover {
-  color: #4CAF50;
-}
-
-.mobile-field-error {
-  color: #e74c3c;
-  font-size: 13px;
-  margin-top: 8px;
-  margin-left: 5px;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-/* Mobile Terms */
-.mobile-terms {
-  margin: 20px 0;
-  font-size: 14px;
-  color: #2c3e50;
-  line-height: 1.5;
-}
-
-.mobile-terms label {
-  display: flex;
-  align-items: flex-start;
-  cursor: pointer;
-}
-
-.mobile-terms input[type="checkbox"] {
-  margin-right: 10px;
-  margin-top: 3px;
-  width: 18px;
-  height: 18px;
-}
-
-.mobile-terms-link {
-  color: #4CAF50;
-  text-decoration: none;
-  font-weight: 600;
-  transition: color 0.3s ease;
-}
-
-.mobile-terms-link:hover {
-  color: #2E7D32;
-  text-decoration: underline;
-}
-
-/* Mobile Register Button - FIXED AT BOTTOM */
-.mobile-register-button {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  width: 100%;
-  padding: 18px;
-  background: #4CAF50;
-  color: white;
-  border: none;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-  z-index: 100;
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
-  transition: background 0.3s ease;
-}
-
-.mobile-register-button:hover:not(:disabled) {
-  background: #45a049;
-}
-
-.mobile-register-button:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-
-.mobile-spinner {
-  width: 20px;
-  height: 20px;
-  border: 3px solid rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  border-top-color: white;
-  animation: spin 1s linear infinite;
-}
-
-/* Mobile Login Link */
-.mobile-login-link-container {
-  text-align: center;
-  margin-top: 25px;
-  padding-top: 25px;
-  border-top: 1px solid #e0e0e0;
-}
-
-.mobile-login-text {
-  color: #5a6c7d;
-  font-size: 15px;
-}
-
-.mobile-login-link {
-  color: #4CAF50;
-  text-decoration: none;
-  font-weight: 600;
-  transition: color 0.3s ease;
-}
-
-.mobile-login-link:hover {
-  color: #2E7D32;
-  text-decoration: underline;
-}
-
-/* Mobile Footer */
-.mobile-footer {
-  text-align: center;
-  padding: 20px;
-  color: #7f8c8d;
-  font-size: 13px;
-  border-top: 1px solid #e0e0e0;
-  background: white;
-}
-
-.mobile-footer p {
-  margin: 5px 0;
-}
-
-/* ===== RESPONSIVE BREAKPOINTS ===== */
-
-/* Hide/Show Logic */
-@media (max-width: 768px) {
-  .register-page {
-    display: none !important;
+/* Responsive */
+@media (max-width: 480px) {
+  .erp-login-card {
+    padding: 2rem 1.5rem;
+    margin: 0 1rem;
   }
-
-  .mobile-register-page {
-    display: flex !important;
-  }
-}
-
-@media (min-width: 769px) {
-  .mobile-register-page {
-    display: none !important;
-  }
-
-  .register-page {
-    display: flex !important;
-  }
-}
-
-/* Tablet Styles */
-@media (max-width: 1024px) and (min-width: 769px) {
-  .register-container {
-    width: 95%;
-    max-width: 900px;
-    height: 650px;
-  }
-
-  .left-panel,
-  .right-panel {
-    padding: 40px 30px;
-  }
-}
-
-/* Mobile Adjustments for perfect fit */
-@media (max-width: 768px) {
-  html,
-  body {
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    overflow-x: hidden;
-  }
-
-  .mobile-register-page {
-    min-height: 100vh;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .mobile-register-card {
-    flex: 1;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    padding-bottom: 120px;
-  }
-
-  .mobile-register-button {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-  }
-
-  /* Ensure content fits perfectly */
-  .mobile-header {
-    flex-shrink: 0;
-  }
-
-  .mobile-welcome {
-    flex-shrink: 0;
-  }
-
-  .mobile-footer {
-    flex-shrink: 0;
-  }
-}
-
-/* Large Desktop */
-@media (min-width: 1200px) {
-  .register-container {
-    width: 1100px;
-    height: 700px;
-  }
-
-  .left-panel,
-  .right-panel {
-    padding: 60px 50px;
-  }
-}
-
-/* Fix for touch devices */
-@media (hover: none) and (pointer: coarse) {
-  .submit-button:hover,
-  .mobile-register-button:hover,
-  .login-redirect-button:hover {
-    transform: none;
-  }
-}
-
-/* Ensure no horizontal scroll on mobile */
-@media (max-width: 768px) {
-  .mobile-register-page {
-    overflow-x: hidden;
-  }
-
-  .mobile-register-card {
-    overflow-x: hidden;
-  }
-}
-/* COMPLETE REGISTER.CSS - FIXED FOR DESKTOP & MOBILE */
-
-/* ===== BASE RESET ===== */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-html, body, #root {
-  height: 100%;
-  width: 100%;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-/* ===== DESKTOP VIEW ===== */
-.register-page {
-  min-height: 100vh;
-  background: #f5f7fa;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 20px;
-}
-
-.register-container {
-  width: 1100px;
-  max-width: 90%;
-  height: 680px;
-  background: white;
-  border-radius: 20px;
-  overflow: hidden;
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
-  display: flex;
-  border: 1px solid #e1e5e9;
-}
-
-/* LEFT PANEL - PWI INFORMATION */
-.left-panel {
-  flex: 1;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  padding: 50px 40px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  border-right: 1px solid #dee2e6;
-}
-
-.left-content {
-  width: 100%;
-  max-width: 400px;
-  text-align: center;
-}
-
-/* PWI Logo and Info in LEFT PANEL for Desktop */
-.pwi-logo-container {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 30px;
-}
-
-.pwi-logo {
-  width: 120px;
-  height: 120px;
-  object-fit: contain;
-  border-radius: 50%;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  border: 4px solid white;
-}
-
-.pwi-logo-fallback {
-  width: 120px;
-  height: 120px;
-  background: linear-gradient(135deg, #4CAF50, #2E7D32);
-  border-radius: 50%;
-  display: none;
-  justify-content: center;
-  align-items: center;
-  box-shadow: 0 8px 20px rgba(76, 175, 80, 0.2);
-}
-
-.pwi-logo-text {
-  color: white;
-  font-size: 36px;
-  font-weight: bold;
-}
-
-.company-info {
-  text-align: center;
-  margin-bottom: 40px;
-}
-
-.company-name {
-  font-size: 32px;
-  color: #2c3e50;
-  margin-bottom: 10px;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-}
-
-.company-tagline {
-  font-size: 16px;
-  color: #4CAF50;
-  font-weight: 600;
-  margin-bottom: 8px;
-}
-
-.company-subtitle {
-  font-size: 14px;
-  color: #7f8c8d;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  font-weight: 500;
-}
-
-.welcome-section {
-  background: white;
-  border-radius: 15px;
-  padding: 30px;
-  margin-top: 20px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-}
-
-.welcome-title {
-  font-size: 22px;
-  color: #2c3e50;
-  margin-bottom: 15px;
-  font-weight: 700;
-}
-
-.welcome-text {
-  font-size: 16px;
-  color: #5a6c7d;
-  line-height: 1.6;
-  margin-bottom: 20px;
-}
-
-.login-redirect-button {
-  width: 100%;
-  padding: 16px;
-  background: #4CAF50;
-  color: white;
-  border: none;
-  border-radius: 10px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  text-decoration: none;
-  display: block;
-  text-align: center;
-  margin-top: 20px;
-  box-shadow: 0 5px 15px rgba(76, 175, 80, 0.2);
-}
-
-.login-redirect-button:hover {
-  background: #45a049;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(76, 175, 80, 0.3);
-}
-
-/* RIGHT PANEL - REGISTRATION FORM */
-.right-panel {
-  flex: 1;
-  padding: 50px 40px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  background: white;
-  overflow-y: auto;
-}
-
-.form-wrapper {
-  width: 100%;
-  max-width: 450px;
-  margin: 0 auto;
-}
-
-.form-header {
-  text-align: center;
-  margin-bottom: 40px;
-}
-
-.form-title {
-  font-size: 32px;
-  color: #2c3e50;
-  margin-bottom: 10px;
-  font-weight: 700;
-}
-
-.form-subtitle {
-  font-size: 16px;
-  color: #7f8c8d;
-}
-
-/* Form Styles */
-.register-form {
-  display: flex;
-  flex-direction: column;
-  gap: 25px;
-}
-
-.form-group {
-  width: 100%;
-}
-
-.input-group {
-  position: relative;
-  width: 100%;
-}
-
-.input-icon {
-  position: absolute;
-  left: 18px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #95a5a6;
-  font-size: 20px;
-  z-index: 2;
-}
-
-/* FIX: Ensure input text is visible and not behind anything */
-.register-form input {
-  width: 100%;
-  padding: 18px 20px 18px 55px;
-  border: 2px solid #e1e5e9;
-  border-radius: 12px;
-  font-size: 16px;
-  background: white;
-  color: #2c3e50 !important; /* Force text color */
-  font-weight: 500;
-  transition: all 0.3s ease;
-  position: relative;
-  z-index: 1;
-}
-
-/* Force text to be visible in input fields */
-.register-form input::placeholder {
-  color: #a0aec0 !important;
-  opacity: 1 !important;
-}
-
-.register-form input:focus {
-  outline: none;
-  border-color: #4CAF50;
-  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
-}
-
-.password-toggle {
-  position: absolute;
-  right: 18px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  color: #95a5a6;
-  cursor: pointer;
-  font-size: 20px;
-  padding: 0;
-  z-index: 2;
-}
-
-.password-toggle:hover {
-  color: #4CAF50;
-}
-
-.field-error {
-  color: #e74c3c;
-  font-size: 14px;
-  margin-top: 8px;
-  margin-left: 5px;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-/* Terms & Conditions */
-.terms-group {
-  margin: 25px 0 30px;
-}
-
-.checkbox-container {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  cursor: pointer;
-  font-size: 15px;
-  color: #2c3e50;
-}
-
-.checkbox-container input[type="checkbox"] {
-  width: 20px;
-  height: 20px;
-  border: 2px solid #d1d9e6;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.checkbox-container input[type="checkbox"]:checked {
-  background: #4CAF50;
-  border-color: #4CAF50;
-}
-
-.terms-link {
-  color: #4CAF50;
-  text-decoration: none;
-  font-weight: 600;
-}
-
-.terms-link:hover {
-  text-decoration: underline;
-}
-
-/* Submit Button */
-.submit-button {
-  width: 100%;
-  padding: 18px;
-  background: #4CAF50;
-  color: white;
-  border: none;
-  border-radius: 12px;
-  font-size: 17px;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 12px;
-  transition: all 0.3s ease;
-  box-shadow: 0 6px 18px rgba(76, 175, 80, 0.2);
-}
-
-.submit-button:hover:not(:disabled) {
-  background: #45a049;
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(76, 175, 80, 0.3);
-}
-
-.submit-button:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-
-.spinner {
-  width: 22px;
-  height: 22px;
-  border: 3px solid rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  border-top-color: white;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-/* Login Link */
-.login-link {
-  text-align: center;
-  margin-top: 30px;
-  padding-top: 25px;
-  border-top: 1px solid #e1e5e9;
-}
-
-.login-link p {
-  color: #5a6c7d;
-  font-size: 15px;
-}
-
-.login-link-text {
-  color: #4CAF50;
-  text-decoration: none;
-  font-weight: 600;
-}
-
-.login-link-text:hover {
-  text-decoration: underline;
-}
-
-/* Footer */
-.register-footer {
-  text-align: center;
-  margin-top: 30px;
-  padding-top: 20px;
-  border-top: 1px solid #e1e5e9;
-  color: #7f8c8d;
-  font-size: 14px;
-}
-
-.register-footer p {
-  margin: 5px 0;
-}
-
-/* Error and Success Messages */
-.error-message, .success-message {
-  border-radius: 12px;
-  padding: 16px 20px;
-  margin-bottom: 25px;
-  display: flex;
-  align-items: center;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.error-message {
-  background: #ffebee;
-  border-left: 4px solid #e74c3c;
-  color: #c0392b;
-}
-
-.success-message {
-  background: #e8f5e9;
-  border-left: 4px solid #4CAF50;
-  color: #2e7d32;
-}
-
-.error-message svg, .success-message svg {
-  margin-right: 12px;
-  font-size: 20px;
-}
-
-/* ===== MOBILE VIEW ===== */
-.mobile-register-page {
-  min-height: 100vh;
-  background: #f5f7fa;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-}
-
-/* Mobile Header */
-.mobile-header {
-  text-align: center;
-  padding: 30px 20px;
-  background: white;
-  border-bottom: 1px solid #e1e5e9;
-}
-
-.mobile-logo-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 15px;
-}
-
-.mobile-company-logo {
-  width: 90px;
-  height: 90px;
-  object-fit: contain;
-  border-radius: 50%;
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
-  border: 3px solid white;
-}
-
-.mobile-logo-fallback {
-  width: 90px;
-  height: 90px;
-  background: linear-gradient(135deg, #4CAF50, #2E7D32);
-  border-radius: 50%;
-  display: none;
-  justify-content: center;
-  align-items: center;
-}
-
-.mobile-logo-text {
-  color: white;
-  font-size: 28px;
-  font-weight: bold;
-}
-
-.mobile-company-info {
-  text-align: center;
-}
-
-.mobile-company-name {
-  font-size: 24px;
-  color: #2c3e50;
-  margin-bottom: 8px;
-  font-weight: 700;
-}
-
-.mobile-company-tagline {
-  font-size: 14px;
-  color: #4CAF50;
-  font-weight: 600;
-  margin-bottom: 5px;
-}
-
-.mobile-company-subtitle {
-  font-size: 12px;
-  color: #7f8c8d;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-}
-
-/* Mobile Welcome */
-.mobile-welcome {
-  text-align: center;
-  padding: 25px 20px;
-  background: white;
-  margin-bottom: 1px;
-}
-
-.mobile-welcome h2 {
-  font-size: 26px;
-  color: #2c3e50;
-  margin-bottom: 10px;
-  font-weight: 700;
-}
-
-.mobile-welcome p {
-  font-size: 16px;
-  color: #7f8c8d;
-}
-
-/* Mobile Form Container */
-.mobile-register-card {
-  background: white;
-  padding: 25px 20px;
-  flex: 1;
-  overflow-y: auto;
-  padding-bottom: 100px;
-}
-
-/* Mobile Messages */
-.mobile-error, .mobile-success {
-  border-radius: 12px;
-  padding: 16px 20px;
-  margin-bottom: 25px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.mobile-error {
-  background: #ffebee;
-  border-left: 4px solid #e74c3c;
-  color: #c0392b;
-}
-
-.mobile-success {
-  background: #e8f5e9;
-  border-left: 4px solid #4CAF50;
-  color: #2e7d32;
-}
-
-/* Mobile Form */
-.mobile-register-form {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.mobile-input-group {
-  width: 100%;
-}
-
-.mobile-input-group label {
-  display: block;
-  font-size: 14px;
-  color: #2c3e50;
-  margin-bottom: 8px;
-  font-weight: 600;
-}
-
-.mobile-input-wrapper {
-  position: relative;
-  width: 100%;
-}
-
-.mobile-input-icon {
-  position: absolute;
-  left: 16px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #95a5a6;
-  font-size: 20px;
-  z-index: 2;
-}
-
-/* FIX: Mobile input text visibility */
-.mobile-register-card input {
-  width: 100%;
-  padding: 16px 16px 16px 52px;
-  border: 2px solid #e1e5e9;
-  border-radius: 10px;
-  font-size: 16px;
-  background: white;
-  color: #2c3e50 !important;
-  font-weight: 500;
-  position: relative;
-  z-index: 1;
-}
-
-.mobile-register-card input:focus {
-  outline: none;
-  border-color: #4CAF50;
-  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
-}
-
-.mobile-password-toggle {
-  position: absolute;
-  right: 16px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  color: #95a5a6;
-  cursor: pointer;
-  font-size: 20px;
-  padding: 0;
-  z-index: 2;
-}
-
-.mobile-field-error {
-  color: #e74c3c;
-  font-size: 13px;
-  margin-top: 8px;
-  margin-left: 5px;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-/* Mobile Terms */
-.mobile-terms {
-  margin: 20px 0;
-  font-size: 14px;
-  color: #2c3e50;
-}
-
-.mobile-terms label {
-  display: flex;
-  align-items: flex-start;
-  cursor: pointer;
-}
-
-.mobile-terms input[type="checkbox"] {
-  margin-right: 10px;
-  margin-top: 3px;
-  width: 18px;
-  height: 18px;
-}
-
-.mobile-terms-link {
-  color: #4CAF50;
-  text-decoration: none;
-  font-weight: 600;
-}
-
-/* Mobile Register Button - Fixed at Bottom */
-.mobile-register-button {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  width: 100%;
-  padding: 18px;
-  background: #4CAF50;
-  color: white;
-  border: none;
-  font-size: 17px;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-  z-index: 1000;
-  box-shadow: 0 -3px 15px rgba(0, 0, 0, 0.1);
-  transition: background 0.3s ease;
-}
-
-.mobile-register-button:hover:not(:disabled) {
-  background: #45a049;
-}
-
-.mobile-register-button:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-
-.mobile-spinner {
-  width: 22px;
-  height: 22px;
-  border: 3px solid rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  border-top-color: white;
-  animation: spin 1s linear infinite;
-}
-
-/* Mobile Login Link */
-.mobile-login-link-container {
-  text-align: center;
-  margin-top: 30px;
-  padding-top: 25px;
-  border-top: 1px solid #e1e5e9;
-}
-
-.mobile-login-text {
-  color: #5a6c7d;
-  font-size: 15px;
-}
-
-.mobile-login-link {
-  color: #4CAF50;
-  text-decoration: none;
-  font-weight: 600;
-}
-
-/* Mobile Footer */
-.mobile-footer {
-  text-align: center;
-  padding: 20px;
-  color: #7f8c8d;
-  font-size: 13px;
-  border-top: 1px solid #e1e5e9;
-  background: white;
-}
-
-.mobile-footer p {
-  margin: 5px 0;
-}
-
-/* ===== RESPONSIVE BREAKPOINTS ===== */
-
-/* Hide/Show Logic for Desktop vs Mobile */
-@media (max-width: 768px) {
-  .register-page {
-    display: none !important;
-  }
-  
-  .mobile-register-page {
-    display: flex !important;
-    min-height: 100vh;
-    height: 100vh;
-  }
-  
-  .mobile-register-card {
-    flex: 1;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    padding-bottom: 120px;
-  }
-  
-  html, body {
-    overflow-x: hidden;
-  }
-}
-
-@media (min-width: 769px) {
-  .mobile-register-page {
-    display: none !important;
-  }
-  
-  .register-page {
-    display: flex !important;
-  }
-}
-
-/* Tablet Styles */
-@media (max-width: 1024px) and (min-width: 769px) {
-  .register-container {
-    width: 95%;
-    max-width: 1000px;
-    height: 650px;
-  }
-  
-  .left-panel, .right-panel {
-    padding: 40px 35px;
-  }
-}
-
-/* Large Desktop */
-@media (min-width: 1200px) {
-  .register-container {
-    width: 1100px;
-    height: 700px;
-  }
-}
-
-/* Fix for input text visibility */
-input:-webkit-autofill,
-input:-webkit-autofill:hover,
-input:-webkit-autofill:focus {
-  -webkit-text-fill-color: #2c3e50 !important;
-  -webkit-box-shadow: 0 0 0px 1000px white inset !important;
-  box-shadow: 0 0 0px 1000px white inset !important;
-  transition: background-color 5000s ease-in-out 0s;
-}
-
-/* Ensure all text is visible */
-input, button, textarea, select {
-  font-family: inherit;
-  font-size: inherit;
-  color: inherit;
-}
-
-/* Remove any blue tint from logo images */
-.pwi-logo, .mobile-company-logo {
-  filter: none !important;
 }
