@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { 
   FiUser, 
@@ -8,13 +8,7 @@ import {
   FiCheck,
   FiAlertCircle,
   FiEye,
-  FiEyeOff,
-  FiChevronLeft,
-  FiChevronRight,
-  FiShield,
-  FiTrendingUp,
-  FiCloud,
-  FiHome
+  FiEyeOff
 } from "react-icons/fi";
 import { createClient } from '@supabase/supabase-js';
 import "./Register.css";
@@ -29,38 +23,6 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     detectSessionInUrl: false
   }
 });
-
-// Mobile slides data
-const slidesData = [
-  {
-    id: 1,
-    title: "Production Control",
-    description: "Real-time manufacturing monitoring",
-    icon: <FiHome />,
-    color: "#3B82F6"
-  },
-  {
-    id: 2,
-    title: "Business Analytics",
-    description: "Data-driven decision making",
-    icon: <FiTrendingUp />,
-    color: "#10B981"
-  },
-  {
-    id: 3,
-    title: "Enterprise Security",
-    description: "Bank-level security protocols",
-    icon: <FiShield />,
-    color: "#8B5CF6"
-  },
-  {
-    id: 4,
-    title: "Cloud Platform",
-    description: "Access anywhere, anytime",
-    icon: <FiCloud />,
-    color: "#F59E0B"
-  }
-];
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -80,9 +42,6 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState("");
   const [isMobile, setIsMobile] = useState(false);
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const [autoSlide, setAutoSlide] = useState(true);
-  const slideIntervalRef = useRef(null);
   
   const navigate = useNavigate();
 
@@ -97,21 +56,6 @@ export default function Register() {
     
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
-
-  // Auto slide for mobile
-  useEffect(() => {
-    if (autoSlide && isMobile) {
-      slideIntervalRef.current = setInterval(() => {
-        setCurrentSlide((prev) => (prev + 1) % slidesData.length);
-      }, 3000);
-    }
-    
-    return () => {
-      if (slideIntervalRef.current) {
-        clearInterval(slideIntervalRef.current);
-      }
-    };
-  }, [autoSlide, isMobile]);
 
   // Handle input changes
   const handleChange = (e) => {
@@ -286,102 +230,11 @@ export default function Register() {
     }
   };
 
-  // Check password strength
-  const getPasswordStrength = () => {
-    if (!formData.password) return 0;
-    
-    let strength = 0;
-    if (formData.password.length >= 6) strength += 1;
-    if (/[A-Z]/.test(formData.password)) strength += 1;
-    if (/[0-9]/.test(formData.password)) strength += 1;
-    if (/[^A-Za-z0-9]/.test(formData.password)) strength += 1;
-    
-    return strength;
-  };
-
-  const passwordStrength = getPasswordStrength();
-
-  // Get password strength color
-  const getStrengthColor = () => {
-    switch(passwordStrength) {
-      case 0: return '#ef4444';
-      case 1: return '#ef4444';
-      case 2: return '#f59e0b';
-      case 3: return '#10b981';
-      case 4: return '#10b981';
-      default: return '#e2e8f0';
-    }
-  };
-
-  // Calculate total strength bar width
-  const strengthBarWidth = `${(passwordStrength / 4) * 100}%`;
-
-  // Mobile slider controls
-  const nextSlide = () => {
-    setAutoSlide(false);
-    setCurrentSlide((prev) => (prev + 1) % slidesData.length);
-    setTimeout(() => setAutoSlide(true), 5000);
-  };
-
-  const prevSlide = () => {
-    setAutoSlide(false);
-    setCurrentSlide((prev) => (prev - 1 + slidesData.length) % slidesData.length);
-    setTimeout(() => setAutoSlide(true), 5000);
-  };
-
-  const goToSlide = (index) => {
-    setAutoSlide(false);
-    setCurrentSlide(index);
-    setTimeout(() => setAutoSlide(true), 5000);
-  };
-
   // MOBILE VIEW
   if (isMobile) {
     return (
       <div className="mobile-register-page">
-        {/* Top Slider Section */}
-        <div className="mobile-slider-section">
-          <div className="mobile-slider-container">
-            <div 
-              className="mobile-slider-track"
-              style={{ transform: `translateX(-${currentSlide * 100}%)` }}
-            >
-              {slidesData.map((slide, index) => (
-                <div key={slide.id} className="mobile-slide">
-                  <div 
-                    className="mobile-slide-icon"
-                    style={{ backgroundColor: slide.color }}
-                  >
-                    {slide.icon}
-                  </div>
-                  <div className="mobile-slide-content">
-                    <h3>{slide.title}</h3>
-                    <p>{slide.description}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-            
-            <button className="mobile-slider-prev" onClick={prevSlide}>
-              <FiChevronLeft />
-            </button>
-            <button className="mobile-slider-next" onClick={nextSlide}>
-              <FiChevronRight />
-            </button>
-            
-            <div className="mobile-slider-dots">
-              {slidesData.map((_, index) => (
-                <button
-                  key={index}
-                  className={`mobile-slider-dot ${index === currentSlide ? 'active' : ''}`}
-                  onClick={() => goToSlide(index)}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Mobile Header */}
+        {/* Mobile Header with Logo */}
         <div className="mobile-header">
           <div className="mobile-logo-container">
             <img
@@ -409,7 +262,7 @@ export default function Register() {
           <p>Join PWI ERP System</p>
         </div>
 
-        {/* Mobile Register Card */}
+        {/* Mobile Register Form */}
         <div className="mobile-register-card">
           {errors.general && (
             <div className="mobile-error">
@@ -428,127 +281,94 @@ export default function Register() {
           <form onSubmit={handleRegister} className="mobile-register-form" noValidate>
             {/* Name Field */}
             <div className="mobile-input-group">
-              <FiUser className="mobile-input-icon" />
-              <input
-                name="name"
-                type="text"
-                value={formData.name}
-                onChange={handleChange}
-                onKeyPress={handleKeyPress}
-                placeholder="Full Name"
-                disabled={loading}
-                required
-              />
+              <label>Full Name</label>
+              <div className="mobile-input-wrapper">
+                <FiUser className="mobile-input-icon" />
+                <input
+                  name="name"
+                  type="text"
+                  value={formData.name}
+                  onChange={handleChange}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Enter your full name"
+                  disabled={loading}
+                  required
+                />
+              </div>
+              {errors.name && <div className="mobile-field-error">{errors.name}</div>}
             </div>
-            {errors.name && <div className="mobile-field-error">{errors.name}</div>}
 
             {/* Email Field */}
             <div className="mobile-input-group">
-              <FiMail className="mobile-input-icon" />
-              <input
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleChange}
-                onKeyPress={handleKeyPress}
-                placeholder="Email Address"
-                disabled={loading}
-                required
-              />
+              <label>Email</label>
+              <div className="mobile-input-wrapper">
+                <FiMail className="mobile-input-icon" />
+                <input
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Enter your email"
+                  disabled={loading}
+                  required
+                />
+              </div>
+              {errors.email && <div className="mobile-field-error">{errors.email}</div>}
             </div>
-            {errors.email && <div className="mobile-field-error">{errors.email}</div>}
 
             {/* Password Field */}
             <div className="mobile-input-group">
-              <FiLock className="mobile-input-icon" />
-              <input
-                name="password"
-                type={showPass.password ? "text" : "password"}
-                value={formData.password}
-                onChange={handleChange}
-                onKeyPress={handleKeyPress}
-                placeholder="Password"
-                disabled={loading}
-                required
-              />
-              <button
-                type="button"
-                onClick={() => togglePasswordVisibility('password')}
-                className="mobile-password-toggle"
-                disabled={loading}
-              >
-                {showPass.password ? <FiEyeOff /> : <FiEye />}
-              </button>
+              <label>Password</label>
+              <div className="mobile-input-wrapper">
+                <FiLock className="mobile-input-icon" />
+                <input
+                  name="password"
+                  type={showPass.password ? "text" : "password"}
+                  value={formData.password}
+                  onChange={handleChange}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Enter your password"
+                  disabled={loading}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => togglePasswordVisibility('password')}
+                  className="mobile-password-toggle"
+                  disabled={loading}
+                >
+                  {showPass.password ? <FiEyeOff /> : <FiEye />}
+                </button>
+              </div>
+              {errors.password && <div className="mobile-field-error">{errors.password}</div>}
             </div>
-            {errors.password && <div className="mobile-field-error">{errors.password}</div>}
 
             {/* Confirm Password Field */}
             <div className="mobile-input-group">
-              <FiLock className="mobile-input-icon" />
-              <input
-                name="confirmPassword"
-                type={showPass.confirmPassword ? "text" : "password"}
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                onKeyPress={handleKeyPress}
-                placeholder="Confirm Password"
-                disabled={loading}
-                required
-              />
-              <button
-                type="button"
-                onClick={() => togglePasswordVisibility('confirmPassword')}
-                className="mobile-password-toggle"
-                disabled={loading}
-              >
-                {showPass.confirmPassword ? <FiEyeOff /> : <FiEye />}
-              </button>
-            </div>
-            {errors.confirmPassword && <div className="mobile-field-error">{errors.confirmPassword}</div>}
-
-            {/* Password Strength */}
-            <div className="mobile-password-strength">
-              <div className="mobile-password-strength-label">
-                Password Strength:
-                <span className="mobile-strength-text" style={{ color: getStrengthColor() }}>
-                  {passwordStrength === 0 && " None"}
-                  {passwordStrength === 1 && " Weak"}
-                  {passwordStrength === 2 && " Fair"}
-                  {passwordStrength === 3 && " Good"}
-                  {passwordStrength === 4 && " Strong"}
-                </span>
+              <label>Confirm Password</label>
+              <div className="mobile-input-wrapper">
+                <FiLock className="mobile-input-icon" />
+                <input
+                  name="confirmPassword"
+                  type={showPass.confirmPassword ? "text" : "password"}
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Confirm your password"
+                  disabled={loading}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => togglePasswordVisibility('confirmPassword')}
+                  className="mobile-password-toggle"
+                  disabled={loading}
+                >
+                  {showPass.confirmPassword ? <FiEyeOff /> : <FiEye />}
+                </button>
               </div>
-              
-              <div className="mobile-strength-bar">
-                <div 
-                  className="mobile-strength-fill"
-                  style={{
-                    width: strengthBarWidth,
-                    backgroundColor: getStrengthColor()
-                  }}
-                ></div>
-              </div>
-              
-              <div className="mobile-password-requirements">
-                <div className="mobile-requirement-item">
-                  <div className={`mobile-requirement-check ${formData.password.length >= 6 ? 'met' : ''}`}>
-                    {formData.password.length >= 6 ? "✓" : "•"}
-                  </div>
-                  <span>At least 6 characters</span>
-                </div>
-                <div className="mobile-requirement-item">
-                  <div className={`mobile-requirement-check ${/[A-Z]/.test(formData.password) ? 'met' : ''}`}>
-                    {/[A-Z]/.test(formData.password) ? "✓" : "•"}
-                  </div>
-                  <span>One uppercase letter</span>
-                </div>
-                <div className="mobile-requirement-item">
-                  <div className={`mobile-requirement-check ${/[0-9]/.test(formData.password) ? 'met' : ''}`}>
-                    {/[0-9]/.test(formData.password) ? "✓" : "•"}
-                  </div>
-                  <span>One number</span>
-                </div>
-              </div>
+              {errors.confirmPassword && <div className="mobile-field-error">{errors.confirmPassword}</div>}
             </div>
 
             {/* Terms & Conditions */}
@@ -575,7 +395,6 @@ export default function Register() {
               {errors.agreeTerms && <div className="mobile-field-error">{errors.agreeTerms}</div>}
             </div>
 
-            {/* Register Button */}
             <button
               type="submit"
               disabled={loading}
@@ -595,17 +414,12 @@ export default function Register() {
             </button>
           </form>
 
-          {/* Divider */}
-          <div className="mobile-divider">
-            <span>Already have an account?</span>
-          </div>
-
           {/* Login Link */}
           <div className="mobile-login-link-container">
             <p className="mobile-login-text">
-              Already registered?{" "}
+              Already have an account?{" "}
               <Link to="/login" className="mobile-login-link">
-                Sign in here
+                Login here
               </Link>
             </p>
           </div>
@@ -620,145 +434,125 @@ export default function Register() {
     );
   }
 
-  // DESKTOP VIEW
+  // DESKTOP VIEW - New Improved Design
   return (
-    <div className="register-page-wrapper">
+    <div className="register-page">
       <div className="register-container">
-        {/* Book Spine Effect */}
-        <div className="book-spine">
-          <div className="book-spine-line"></div>
-          <div className="book-pages">
-            <div className="book-page"></div>
-            <div className="book-page"></div>
-            <div className="book-page"></div>
-            <div className="book-page"></div>
+        {/* Left Panel - Registration Section */}
+        <div className="left-panel">
+          <div className="left-content">
+            <h1 className="registration-title"># Registration</h1>
+            
+            <div className="welcome-section">
+              <h2 className="welcome-title">Welcome Back!</h2>
+              <p className="welcome-text">Although there are thousands?</p>
+            </div>
+            
+            <div className="hello-section">
+              <h2 className="hello-title">Hello, Welcome!</h2>
+              <p className="hello-text">Don't have an account?</p>
+            </div>
+            
+            <Link to="/login" className="login-redirect-button">
+              Login
+            </Link>
           </div>
         </div>
 
-        {/* Left Panel - Registration Form */}
-        <div className="register-left-panel">
-          <div className="register-content">
-            {/* Logo Section */}
-            <div className="logo-section">
-              <div className="logo-container">
+        {/* Right Panel - Registration Form */}
+        <div className="right-panel">
+          <div className="right-content">
+            {/* PWI Header */}
+            <div className="pwi-header">
+              <div className="pwi-logo-container">
                 <img
                   src="/images/logoA.png"
                   alt="PWI Logo"
-                  className="company-logo"
+                  className="pwi-logo"
                   onError={(e) => {
                     e.target.style.display = 'none';
                     e.target.nextElementSibling.style.display = 'flex';
                   }}
                 />
-                <div className="logo-fallback" aria-hidden="true">
-                  <span className="logo-text">PWI</span>
+                <div className="pwi-logo-fallback" aria-hidden="true">
+                  <span className="pwi-logo-text">PWI</span>
                 </div>
               </div>
-              <div className="company-info">
-                <h1 className="company-name">Pakistan Wire Industries</h1>
-                <p className="company-tagline">Enterprise Resource Planning</p>
+              <div className="pwi-info">
+                <h1 className="pwi-name">Pakistan Wire Industries</h1>
+                <p className="pwi-tagline">Enterprise Resource Planning</p>
               </div>
             </div>
 
-            {/* Welcome Section */}
-            <div className="welcome-section-left">
-              <h2 className="welcome-title">Create Account</h2>
-              <p className="welcome-subtitle">Join PWI ERP System</p>
-            </div>
-
-            {/* Registration Card */}
-            <div className="register-card">
-              {/* General Error Message */}
+            {/* Registration Form */}
+            <div className="register-form-container">
+              <div className="register-form-header">
+                <h2>Registration</h2>
+                <p>Create your account to continue</p>
+              </div>
+              
               {errors.general && (
-                <div className="error-container" role="alert">
-                  <FiAlertCircle className="error-icon" />
-                  <div className="error-message">{errors.general}</div>
+                <div className="error-message">
+                  <FiAlertCircle />
+                  <span>{errors.general}</span>
                 </div>
               )}
 
-              {/* Success Message */}
               {success && (
-                <div className="success-container">
-                  <FiCheck className="success-icon" />
-                  <div className="success-message">{success}</div>
+                <div className="success-message">
+                  <FiCheck />
+                  <span>{success}</span>
                 </div>
               )}
 
-              {/* Registration Form */}
               <form onSubmit={handleRegister} className="register-form" noValidate>
-                {/* Name Field */}
-                <div className="form-group floating-label-group">
-                  <div className="input-wrapper">
+                <div className="form-group">
+                  <div className="input-group">
                     <FiUser className="input-icon" />
                     <input
-                      id="name"
                       name="name"
                       type="text"
                       value={formData.name}
                       onChange={handleChange}
                       onKeyPress={handleKeyPress}
-                      className={`register-input ${errors.name ? 'input-error' : ''}`}
+                      placeholder="Full Name"
                       disabled={loading}
                       required
-                      placeholder=" "
                     />
-                    <label htmlFor="name" className="floating-label">
-                      Full Name
-                    </label>
                   </div>
-                  {errors.name && (
-                    <div className="field-error">
-                      {errors.name}
-                    </div>
-                  )}
+                  {errors.name && <div className="field-error">{errors.name}</div>}
                 </div>
 
-                {/* Email Field */}
-                <div className="form-group floating-label-group">
-                  <div className="input-wrapper">
+                <div className="form-group">
+                  <div className="input-group">
                     <FiMail className="input-icon" />
                     <input
-                      id="email"
                       name="email"
                       type="email"
                       value={formData.email}
                       onChange={handleChange}
                       onKeyPress={handleKeyPress}
-                      className={`register-input ${errors.email ? 'input-error' : ''}`}
+                      placeholder="Email Address"
                       disabled={loading}
                       required
-                      placeholder=" "
                     />
-                    <label htmlFor="email" className="floating-label">
-                      Email Address
-                    </label>
                   </div>
-                  {errors.email && (
-                    <div className="field-error">
-                      {errors.email}
-                    </div>
-                  )}
+                  {errors.email && <div className="field-error">{errors.email}</div>}
                 </div>
 
-                {/* Password Field */}
-                <div className="form-group floating-label-group">
-                  <div className="input-wrapper">
+                <div className="form-group">
+                  <div className="input-group">
                     <FiLock className="input-icon" />
                     <input
-                      id="password"
                       name="password"
                       type={showPass.password ? "text" : "password"}
                       value={formData.password}
                       onChange={handleChange}
                       onKeyPress={handleKeyPress}
-                      className={`register-input ${errors.password ? 'input-error' : ''}`}
+                      placeholder="Password"
                       disabled={loading}
                       required
-                      placeholder=" "
                     />
-                    <label htmlFor="password" className="floating-label">
-                      Password
-                    </label>
                     <button
                       type="button"
                       onClick={() => togglePasswordVisibility('password')}
@@ -768,34 +562,22 @@ export default function Register() {
                       {showPass.password ? <FiEyeOff /> : <FiEye />}
                     </button>
                   </div>
-                  {errors.password && (
-                    <div className="field-error">
-                      {errors.password}
-                    </div>
-                  )}
+                  {errors.password && <div className="field-error">{errors.password}</div>}
                 </div>
 
-                {/* Confirm Password Field */}
-                <div className="form-group floating-label-group">
-                  <div className="input-wrapper">
+                <div className="form-group">
+                  <div className="input-group">
                     <FiLock className="input-icon" />
                     <input
-                      id="confirmPassword"
                       name="confirmPassword"
                       type={showPass.confirmPassword ? "text" : "password"}
                       value={formData.confirmPassword}
                       onChange={handleChange}
                       onKeyPress={handleKeyPress}
-                      className={`register-input ${errors.confirmPassword ? 'input-error' : ''} ${
-                        formData.password && formData.confirmPassword && formData.password === formData.confirmPassword ? 'input-success' : ''
-                      }`}
+                      placeholder="Confirm Password"
                       disabled={loading}
                       required
-                      placeholder=" "
                     />
-                    <label htmlFor="confirmPassword" className="floating-label">
-                      Confirm Password
-                    </label>
                     <button
                       type="button"
                       onClick={() => togglePasswordVisibility('confirmPassword')}
@@ -804,74 +586,20 @@ export default function Register() {
                     >
                       {showPass.confirmPassword ? <FiEyeOff /> : <FiEye />}
                     </button>
-                    {formData.password && formData.confirmPassword && formData.password === formData.confirmPassword && (
-                      <FiCheck className="password-match-icon" />
-                    )}
                   </div>
-                  {errors.confirmPassword && (
-                    <div className="field-error">
-                      {errors.confirmPassword}
-                    </div>
-                  )}
+                  {errors.confirmPassword && <div className="field-error">{errors.confirmPassword}</div>}
                 </div>
 
-                {/* Password Strength Indicator */}
-                <div className="password-strength-container">
-                  <div className="password-strength-label">
-                    Password Strength:
-                    <span className="strength-text" style={{ color: getStrengthColor() }}>
-                      {passwordStrength === 0 && " None"}
-                      {passwordStrength === 1 && " Weak"}
-                      {passwordStrength === 2 && " Fair"}
-                      {passwordStrength === 3 && " Good"}
-                      {passwordStrength === 4 && " Strong"}
-                    </span>
-                  </div>
-                  
-                  <div className="strength-bar">
-                    <div 
-                      className="strength-fill"
-                      style={{
-                        width: strengthBarWidth,
-                        backgroundColor: getStrengthColor()
-                      }}
-                    ></div>
-                  </div>
-                  
-                  <div className="password-requirements">
-                    <div className="requirement-item">
-                      <div className={`requirement-check ${formData.password.length >= 6 ? 'met' : ''}`}>
-                        {formData.password.length >= 6 ? "✓" : "•"}
-                      </div>
-                      <span>At least 6 characters</span>
-                    </div>
-                    <div className="requirement-item">
-                      <div className={`requirement-check ${/[A-Z]/.test(formData.password) ? 'met' : ''}`}>
-                        {/[A-Z]/.test(formData.password) ? "✓" : "•"}
-                      </div>
-                      <span>One uppercase letter</span>
-                    </div>
-                    <div className="requirement-item">
-                      <div className={`requirement-check ${/[0-9]/.test(formData.password) ? 'met' : ''}`}>
-                        {/[0-9]/.test(formData.password) ? "✓" : "•"}
-                      </div>
-                      <span>One number</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Terms & Conditions */}
-                <div className="terms-container">
-                  <label className="checkbox-label">
+                <div className="terms-group">
+                  <label className="checkbox-container">
                     <input
                       type="checkbox"
                       name="agreeTerms"
-                      className="remember-checkbox"
                       checked={formData.agreeTerms}
                       onChange={handleChange}
                       disabled={loading}
                     />
-                    <span className="checkbox-custom"></span>
+                    <span className="checkmark"></span>
                     <span className="checkbox-text">
                       I agree to the{" "}
                       <Link to="/terms" className="terms-link">
@@ -883,123 +611,42 @@ export default function Register() {
                       </Link>
                     </span>
                   </label>
-                  {errors.agreeTerms && (
-                    <div className="field-error">
-                      {errors.agreeTerms}
-                    </div>
-                  )}
+                  {errors.agreeTerms && <div className="field-error">{errors.agreeTerms}</div>}
                 </div>
 
-                {/* Submit Button */}
                 <button
                   type="submit"
                   disabled={loading}
-                  className="register-button"
+                  className="submit-button"
                 >
                   {loading ? (
                     <>
-                      <div className="button-spinner"></div>
+                      <div className="spinner"></div>
                       <span>Creating Account...</span>
                     </>
                   ) : (
                     <>
-                      <span>Create Account</span>
+                      <span>Register</span>
                       <FiArrowRight className="button-icon" />
                     </>
                   )}
                 </button>
               </form>
 
-              {/* Divider */}
-              <div className="divider">
-                <span>Already have an account?</span>
-              </div>
-
-              {/* Login Link */}
-              <div className="login-link-container">
-                <p className="login-text">
-                  Already registered?{" "}
-                  <Link to="/login" className="login-link">
-                    Sign in here
+              <div className="login-link">
+                <p>
+                  Already have an account?{" "}
+                  <Link to="/login" className="login-link-text">
+                    Login here
                   </Link>
                 </p>
               </div>
             </div>
 
             {/* Footer */}
-            <footer className="register-footer">
-              <p>&copy; {new Date().getFullYear()} All rights reserved</p>
-              <p className="footer-version">ERP System v2.0</p>
-            </footer>
-          </div>
-        </div>
-
-        {/* Right Panel - Features */}
-        <div className="register-right-panel">
-          <div className="right-content">
-            {/* Welcome Section */}
-            <div className="welcome-section-right">
-              <h2 className="welcome-title-right">Manufacturing Excellence</h2>
-              <p className="welcome-subtitle-right">Optimize your production workflow</p>
-            </div>
-
-            {/* Features List */}
-            <div className="features-list">
-              <div className="feature-item">
-                <div className="feature-icon">⚙️</div>
-                <div className="feature-content">
-                  <h3>Production Control</h3>
-                  <p>Real-time manufacturing monitoring</p>
-                </div>
-              </div>
-
-              <div className="feature-item">
-                <div className="feature-icon">📈</div>
-                <div className="feature-content">
-                  <h3>Business Analytics</h3>
-                  <p>Data-driven decision making</p>
-                </div>
-              </div>
-
-              <div className="feature-item">
-                <div className="feature-icon">🔐</div>
-                <div className="feature-content">
-                  <h3>Enterprise Security</h3>
-                  <p>Bank-level security protocols</p>
-                </div>
-              </div>
-
-              <div className="feature-item">
-                <div className="feature-icon">🚀</div>
-                <div className="feature-content">
-                  <h3>Cloud Platform</h3>
-                  <p>Access anywhere, anytime</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Stats Section */}
-            <div className="stats-section">
-              <div className="stat-item">
-                <div className="stat-value">99.9%</div>
-                <div className="stat-label">Uptime</div>
-              </div>
-              <div className="stat-item">
-                <div className="stat-value">500+</div>
-                <div className="stat-label">Users</div>
-              </div>
-              <div className="stat-item">
-                <div className="stat-value">24/7</div>
-                <div className="stat-label">Support</div>
-              </div>
-            </div>
-
-            {/* Company Info */}
-            <div className="company-section">
-              <h3 className="company-title">Pakistan Wire Industries</h3>
-              <p className="company-description">
-                Leading manufacturer of quality wires with decades of industry expertise
-              </p>
+            <div className="register-footer">
+              <p>&copy; {new Date().getFullYear()} Pakistan Wire Industries. All rights reserved.</p>
+              <p>ERP System v2.0</p>
             </div>
           </div>
         </div>

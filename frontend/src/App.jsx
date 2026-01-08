@@ -1,4 +1,4 @@
-// src/App.jsx - COMPLETE UPDATED VERSION
+// src/App.jsx - COMPLETE UPDATED VERSION WITH FORGOT PASSWORD & RESET PASSWORD
 import React, { useEffect, useState } from "react";
 import {
   BrowserRouter as Router,
@@ -12,6 +12,8 @@ import {
 // ========== AUTH PAGES ==========
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
+import ForgotPassword from "./pages/auth/ForgotPassword";
+import ResetPassword from "./pages/auth/ResetPassword"; // نیا ایمپورٹ
 
 // ========== MAIN DASHBOARD ==========
 import Dashboard from "./pages/dashboard/Dashboard";
@@ -69,10 +71,6 @@ import FlatteningInventoryLedger from "./components/FlatteningInventoryLedger";
 // ========== LAYOUT ==========
 import Layout from "./components/common/Layout";
 
-// ========== AUTH CONTEXT / HOOKS ==========
-// Import your auth context or hooks if available
-// import { useAuth } from "./contexts/AuthContext";
-
 function AppWrapper() {
   const [isAppReady, setIsAppReady] = useState(false);
   const navigate = useNavigate();
@@ -81,7 +79,6 @@ function AppWrapper() {
   useEffect(() => {
     console.log("AppWrapper mounted, current path:", location.pathname);
 
-    // Function to mark React app as loaded
     const markAppLoaded = () => {
       if (window.reactAppLoaded) {
         window.reactAppLoaded();
@@ -89,9 +86,7 @@ function AppWrapper() {
       }
     };
 
-    // Function to check authentication status
     const checkAuthStatus = () => {
-      // Check for auth token in localStorage or sessionStorage
       const token = localStorage.getItem("authToken") || 
                    sessionStorage.getItem("authToken") ||
                    localStorage.getItem("userToken");
@@ -108,7 +103,6 @@ function AppWrapper() {
       };
     };
 
-    // Function to handle app-ready event
     const handleAppReady = (event) => {
       console.log("App-ready event received:", event.detail);
       
@@ -117,15 +111,13 @@ function AppWrapper() {
 
       console.log("Current path:", currentPath, "Is authenticated:", auth.isAuthenticated);
 
-      // If already authenticated, go to dashboard
       if (auth.isAuthenticated) {
-        if (currentPath === "/" || currentPath === "/login") {
+        if (currentPath === "/" || currentPath === "/login" || currentPath === "/register" || currentPath === "/forgot-password" || currentPath === "/reset-password") {
           console.log("User is authenticated, redirecting to dashboard");
           navigate("/dashboard", { replace: true });
         }
       } else {
-        // Not authenticated
-        if (currentPath !== "/login" && currentPath !== "/register") {
+        if (currentPath !== "/login" && currentPath !== "/register" && currentPath !== "/forgot-password" && currentPath !== "/reset-password") {
           console.log("User not authenticated, redirecting to login");
           navigate("/login", { replace: true });
         }
@@ -134,15 +126,11 @@ function AppWrapper() {
       setIsAppReady(true);
     };
 
-    // Function to initialize app
     const initializeApp = () => {
       console.log("Initializing React app...");
 
-      // Mark React app as loaded
       markAppLoaded();
 
-      // Check if we should handle navigation immediately
-      // (if welcome screen already finished or was skipped)
       const welcomeScreenSkipped = localStorage.getItem("pwi_welcome_skipped") === "true";
       const lastWelcomeDate = localStorage.getItem("pwi_last_welcome_date");
       const today = new Date().toDateString();
@@ -150,38 +138,33 @@ function AppWrapper() {
       console.log("Welcome screen skipped:", welcomeScreenSkipped, "Last welcome date:", lastWelcomeDate);
 
       if (welcomeScreenSkipped || lastWelcomeDate === today) {
-        // Welcome screen already handled, check auth and navigate
         const auth = checkAuthStatus();
         const currentPath = location.pathname;
 
         if (auth.isAuthenticated) {
-          if (currentPath === "/" || currentPath === "/login") {
+          if (currentPath === "/" || currentPath === "/login" || currentPath === "/register" || currentPath === "/forgot-password" || currentPath === "/reset-password") {
             navigate("/dashboard", { replace: true });
           }
         } else {
-          if (currentPath !== "/login" && currentPath !== "/register") {
+          if (currentPath !== "/login" && currentPath !== "/register" && currentPath !== "/forgot-password" && currentPath !== "/reset-password") {
             navigate("/login", { replace: true });
           }
         }
       }
 
-      // Listen for app-ready event from welcome screen
       window.addEventListener("app-ready", handleAppReady);
 
-      // Also provide a global function for welcome screen to trigger
       window.triggerReactNavigation = () => {
         console.log("Manual trigger from welcome screen");
         handleAppReady({ detail: { source: "manual" } });
       };
 
-      // Cleanup
       return () => {
         window.removeEventListener("app-ready", handleAppReady);
         delete window.triggerReactNavigation;
       };
     };
 
-    // Initialize with a small delay to ensure DOM is ready
     const initTimer = setTimeout(initializeApp, 100);
 
     return () => {
@@ -191,10 +174,9 @@ function AppWrapper() {
     };
   }, [navigate, location]);
 
-  // Show loading state while app is initializing
   if (!isAppReady && (location.pathname === "/" || location.pathname === "")) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-100 flex items-center justify-center">
+      <div className="min-h-screen bg-linear-to-br from-blue-50 to-gray-100 flex items-center justify-center">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600 mb-4"></div>
           <h2 className="text-xl font-semibold text-gray-700 mb-2">
@@ -217,6 +199,8 @@ function AppContent() {
       {/* ========== AUTH ROUTES ========== */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} /> {/* نیا route */}
       
       {/* ========== MAIN DASHBOARD ROUTE ========== */}
       <Route
