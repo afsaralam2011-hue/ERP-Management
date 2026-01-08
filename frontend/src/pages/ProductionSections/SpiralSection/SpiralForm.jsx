@@ -12,7 +12,7 @@ const SpiralForm = () => {
   const navigate = useNavigate();
   
   const [formData, setFormData] = useState({
-    section_name: 'Spiral Section',
+    section_name: 'Spiral',
     machine_id: '',
     machine_no: '',
     item_code: '',

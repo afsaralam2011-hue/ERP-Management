@@ -29,7 +29,7 @@ const SpiralMultiEntryForm = () => {
   ]);
 
   const [commonData, setCommonData] = useState({
-    section_name: 'Spiral Section',
+    section_name: 'Spiral',
     machine_id: '',
     machine_no: '',
     operator_name: '',

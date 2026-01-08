@@ -5,8 +5,15 @@ import {
   FiEyeOff, 
   FiLock, 
   FiMail, 
-  FiArrowRight,
-  FiAlertCircle
+  FiArrowRight, 
+  FiUserPlus,
+  FiAlertCircle,
+  FiChevronLeft,
+  FiChevronRight,
+  FiHome,
+  FiShield,
+  FiTrendingUp,
+  FiCloud
 } from "react-icons/fi";
 import { createClient } from '@supabase/supabase-js';
 import "./Login.css";
@@ -22,6 +29,37 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   }
 });
 
+const slidesData = [
+  {
+    id: 1,
+    title: "Production Excellence",
+    description: "Streamline your manufacturing process",
+    icon: <FiHome />,
+    color: "#3B82F6"
+  },
+  {
+    id: 2,
+    title: "Business Analytics",
+    description: "Data-driven insights for decision making",
+    icon: <FiTrendingUp />,
+    color: "#10B981"
+  },
+  {
+    id: 3,
+    title: "Enterprise Security",
+    description: "Bank-level security for your data",
+    icon: <FiShield />,
+    color: "#8B5CF6"
+  },
+  {
+    id: 4,
+    title: "Cloud Platform",
+    description: "Access your ERP anytime, anywhere",
+    icon: <FiCloud />,
+    color: "#F59E0B"
+  }
+];
+
 export default function Login() {
   const [formData, setFormData] = useState({
     email: "",
@@ -36,12 +74,14 @@ export default function Login() {
   });
   const [loading, setLoading] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [autoSlide, setAutoSlide] = useState(true);
+  const slideIntervalRef = useRef(null);
   const emailInputRef = useRef(null);
   const passwordInputRef = useRef(null);
   const navigate = useNavigate();
   const formRef = useRef(null);
 
-  // موبائل ڈیوائس چیک کریں
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth <= 768);
@@ -53,7 +93,20 @@ export default function Login() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Remember Me ایمیل
+  useEffect(() => {
+    if (autoSlide && isMobile) {
+      slideIntervalRef.current = setInterval(() => {
+        setCurrentSlide((prev) => (prev + 1) % slidesData.length);
+      }, 3000);
+    }
+    
+    return () => {
+      if (slideIntervalRef.current) {
+        clearInterval(slideIntervalRef.current);
+      }
+    };
+  }, [autoSlide, isMobile]);
+
   useEffect(() => {
     const savedUser = localStorage.getItem("user");
     if (savedUser) {
@@ -70,7 +123,6 @@ export default function Login() {
     }
   }, []);
 
-  // HTML5 built-in validation کے ساتھ فارم والیڈیشن
   const validateForm = () => {
     const newErrors = {
       email: "",
@@ -79,7 +131,6 @@ export default function Login() {
     };
     let hasError = false;
 
-    // Email validation
     if (!formData.email.trim()) {
       newErrors.email = "Email is required";
       hasError = true;
@@ -88,7 +139,6 @@ export default function Login() {
       hasError = true;
     }
 
-    // Password validation
     if (!formData.password) {
       newErrors.password = "Password is required";
       hasError = true;
@@ -108,7 +158,6 @@ export default function Login() {
       [name]: type === 'checkbox' ? checked : value
     }));
     
-    // فیلڈ پر توجہ دینے پر خامی چھپائیں
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: "" }));
     }
@@ -120,9 +169,7 @@ export default function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
     
-    // HTML5 validation چیک کریں
     if (!validateForm()) {
-      // Focus on first error field
       if (errors.email) {
         emailInputRef.current?.focus();
       } else if (errors.password) {
@@ -196,21 +243,35 @@ export default function Login() {
     }
   };
 
-  // فیلڈ پر توجہ دینے پر خامی چھپائیں
   const handleInputFocus = (fieldName) => {
     if (errors[fieldName]) {
       setErrors(prev => ({ ...prev, [fieldName]: "" }));
     }
   };
 
-  // Form submission with HTML5 validation
+  const nextSlide = () => {
+    setAutoSlide(false);
+    setCurrentSlide((prev) => (prev + 1) % slidesData.length);
+    setTimeout(() => setAutoSlide(true), 5000);
+  };
+
+  const prevSlide = () => {
+    setAutoSlide(false);
+    setCurrentSlide((prev) => (prev - 1 + slidesData.length) % slidesData.length);
+    setTimeout(() => setAutoSlide(true), 5000);
+  };
+
+  const goToSlide = (index) => {
+    setAutoSlide(false);
+    setCurrentSlide(index);
+    setTimeout(() => setAutoSlide(true), 5000);
+  };
+
   const handleFormSubmit = (e) => {
     e.preventDefault();
     
-    // Check HTML5 validity
     const form = formRef.current;
     if (!form.checkValidity()) {
-      // Show custom error messages
       validateForm();
       return;
     }
@@ -222,7 +283,47 @@ export default function Login() {
   if (isMobile) {
     return (
       <div className="mobile-login-page">
-        {/* Mobile Header with Logo */}
+        <div className="mobile-slider-section">
+          <div className="mobile-slider-container">
+            <div 
+              className="mobile-slider-track"
+              style={{ transform: `translateX(-${currentSlide * 100}%)` }}
+            >
+              {slidesData.map((slide, index) => (
+                <div key={slide.id} className="mobile-slide">
+                  <div 
+                    className="mobile-slide-icon"
+                    style={{ backgroundColor: slide.color }}
+                  >
+                    {slide.icon}
+                  </div>
+                  <div className="mobile-slide-content">
+                    <h3>{slide.title}</h3>
+                    <p>{slide.description}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            <button className="mobile-slider-prev" onClick={prevSlide}>
+              <FiChevronLeft />
+            </button>
+            <button className="mobile-slider-next" onClick={nextSlide}>
+              <FiChevronRight />
+            </button>
+            
+            <div className="mobile-slider-dots">
+              {slidesData.map((_, index) => (
+                <button
+                  key={index}
+                  className={`mobile-slider-dot ${index === currentSlide ? 'active' : ''}`}
+                  onClick={() => goToSlide(index)}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+
         <div className="mobile-header">
           <div className="mobile-logo-container">
             <img
@@ -244,15 +345,18 @@ export default function Login() {
           </div>
         </div>
 
-        {/* Mobile Welcome */}
         <div className="mobile-welcome">
           <h2>Welcome Back</h2>
           <p>Sign in to your account</p>
         </div>
 
-        {/* Mobile Login Form - صرف ایک فارم */}
-        <div className="mobile-login-content">
-          <div className="mobile-login-card">
+        <div className="mobile-login-card">
+          <form 
+            ref={formRef}
+            onSubmit={handleFormSubmit} 
+            className="mobile-login-form"
+            noValidate
+          >
             {errors.general && (
               <div className="mobile-error">
                 <FiAlertCircle />
@@ -260,107 +364,86 @@ export default function Login() {
               </div>
             )}
 
-            <form 
-              id="mobile-login-form"
-              ref={formRef}
-              onSubmit={handleFormSubmit} 
-              className="mobile-login-form"
-              noValidate
-            >
-              <div className="mobile-input-group">
-                <label>Email</label>
-                <div className="mobile-input-wrapper">
-                  <FiMail className="mobile-input-icon" />
-                  <input
-                    ref={emailInputRef}
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    onFocus={() => handleInputFocus('email')}
-                    onKeyPress={handleKeyPress}
-                    placeholder="Enter your email"
-                    disabled={loading}
-                    required
-                  />
-                </div>
-                {errors.email && (
-                  <div className="mobile-field-error">
-                    <FiAlertCircle className="mobile-error-icon" />
-                    <span>{errors.email}</span>
-                  </div>
-                )}
-              </div>
-
-              <div className="mobile-input-group">
-                <div className="mobile-password-header">
-                  <label>Password</label>
-                  <Link to="/forgot-password" className="mobile-forgot-password">
-                    Forgot Password?
-                  </Link>
-                </div>
-                <div className="mobile-input-wrapper">
-                  <FiLock className="mobile-input-icon" />
-                  <input
-                    ref={passwordInputRef}
-                    type={showPass ? "text" : "password"}
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    onFocus={() => handleInputFocus('password')}
-                    onKeyPress={handleKeyPress}
-                    placeholder="Enter your password"
-                    disabled={loading}
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPass(!showPass)}
-                    className="mobile-password-toggle"
-                    disabled={loading}
-                  >
-                    {showPass ? <FiEyeOff /> : <FiEye />}
-                  </button>
-                </div>
-                {errors.password && (
-                  <div className="mobile-field-error">
-                    <FiAlertCircle className="mobile-error-icon" />
-                    <span>{errors.password}</span>
-                  </div>
-                )}
-              </div>
-
-              <div className="mobile-remember">
-                <label>
-                  <input
-                    type="checkbox"
-                    name="rememberMe"
-                    checked={formData.rememberMe}
-                    onChange={handleChange}
-                    disabled={loading}
-                  />
-                  <span>Keep me signed in</span>
-                </label>
-              </div>
-            </form>
-
-            {/* Mobile Register Link */}
-            <div className="mobile-register-section">
-              <p className="mobile-register-text">
-                Don't have an account?{" "}
-                <Link to="/register" className="mobile-register-link">
-                  Create Account
-                </Link>
-              </p>
+            <div className="mobile-input-group">
+              <FiMail className="mobile-input-icon" />
+              <input
+                ref={emailInputRef}
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                onFocus={() => handleInputFocus('email')}
+                onKeyPress={handleKeyPress}
+                placeholder="Email Address"
+                disabled={loading}
+                required
+                pattern="[^@\s]+@[^@\s]+\.[^@\s]+"
+                title="Please enter a valid email address"
+                aria-describedby={errors.email ? "email-error" : undefined}
+              />
             </div>
-          </div>
-        </div>
+            {errors.email && (
+              <div id="email-error" className="mobile-field-error">
+                <FiAlertCircle className="mobile-error-icon" />
+                <span>{errors.email}</span>
+              </div>
+            )}
 
-        {/* Fixed Bottom Section with Login Button and Footer */}
-        <div className="mobile-fixed-bottom">
+            <div className="mobile-input-group">
+              <div className="mobile-password-header">
+                <Link to="/forgot-password" className="mobile-forgot-password">
+                  Forgot Password?
+                </Link>
+              </div>
+              <FiLock className="mobile-input-icon" />
+              <input
+                ref={passwordInputRef}
+                type={showPass ? "text" : "password"}
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                onFocus={() => handleInputFocus('password')}
+                onKeyPress={handleKeyPress}
+                placeholder="Password"
+                disabled={loading}
+                required
+                minLength="6"
+                title="Password must be at least 6 characters"
+                aria-describedby={errors.password ? "password-error" : undefined}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPass(!showPass)}
+                className="mobile-password-toggle"
+                disabled={loading}
+              >
+                {showPass ? <FiEyeOff /> : <FiEye />}
+              </button>
+            </div>
+            {errors.password && (
+              <div id="password-error" className="mobile-field-error">
+                <FiAlertCircle className="mobile-error-icon" />
+                <span>{errors.password}</span>
+              </div>
+            )}
+
+            <div className="mobile-remember">
+              <label>
+                <input
+                  type="checkbox"
+                  name="rememberMe"
+                  checked={formData.rememberMe}
+                  onChange={handleChange}
+                  disabled={loading}
+                />
+                <span>Keep me signed in</span>
+              </label>
+            </div>
+          </form>
+
           <button
-            type="submit"
-            form="mobile-login-form"
+            type="button"
+            onClick={handleLogin}
             disabled={loading}
             className="mobile-login-button"
           >
@@ -376,201 +459,254 @@ export default function Login() {
               </>
             )}
           </button>
+        </div>
 
-          {/* Mobile Footer */}
-          <div className="mobile-footer">
-            <p>&copy; {new Date().getFullYear()} All rights reserved</p>
-            <p>ERP System v2.0</p>
-          </div>
+        <div className="mobile-footer">
+          <p>&copy; {new Date().getFullYear()} All rights reserved</p>
+          <p>ERP System v2.0</p>
         </div>
       </div>
     );
   }
 
-  // Desktop View - صرف ایک کام کرنے والا فارم
+  // Desktop View
   return (
-    <div className="new-login-page">
-      <div className="new-login-container">
-        {/* Left Panel - Registration Section */}
-        <div className="new-left-panel">
-          <div className="new-left-content">
-            <h1 className="new-registration-title"># Registration</h1>
-            
-            <div className="new-welcome-section">
-              <h2 className="new-welcome-title">Welcome Back!</h2>
-              <p className="new-welcome-text">Although there are thousands?</p>
-            </div>
-            
-            <div className="new-hello-section">
-              <h2 className="new-hello-title">Hello, Welcome!</h2>
-              <p className="new-hello-text">Don't have an account?</p>
-            </div>
-            
-            <Link to="/register" className="new-register-button">
-              Register
-            </Link>
+    <div className="login-page-wrapper">
+      <div className="login-container">
+        <div className="book-spine">
+          <div className="book-spine-line"></div>
+          <div className="book-pages">
+            <div className="book-page"></div>
+            <div className="book-page"></div>
+            <div className="book-page"></div>
+            <div className="book-page"></div>
           </div>
         </div>
 
-        {/* Right Panel - Login Section */}
-        <div className="new-right-panel">
-          <div className="new-right-content">
-            {/* PWI Header */}
-            <div className="new-pwi-header">
-              <div className="new-pwi-logo-container">
+        <div className="login-left-panel">
+          <div className="login-content">
+            <div className="logo-section">
+              <div className="logo-container">
                 <img
                   src="/images/logoA.png"
                   alt="PWI Logo"
-                  className="new-pwi-logo"
+                  className="company-logo"
                   onError={(e) => {
                     e.target.style.display = 'none';
                     e.target.nextElementSibling.style.display = 'flex';
                   }}
                 />
-                <div className="new-pwi-logo-fallback" aria-hidden="true">
-                  <span className="new-pwi-logo-text">PWI</span>
+                <div className="logo-fallback" aria-hidden="true">
+                  <span className="logo-text">PWI</span>
                 </div>
               </div>
-              <div className="new-pwi-info">
-                <h1 className="new-pwi-name">Pakistan Wire Industries</h1>
-                <p className="new-pwi-tagline">Enterprise Resource Planning</p>
+              <div className="company-info">
+                <h1 className="company-name">Pakistan Wire Industries</h1>
+                <p className="company-tagline">Enterprise Resource Planning</p>
               </div>
             </div>
 
-            {/* Login Form Section - صرف ایک فارم */}
-            <div className="new-login-forms-section">
-              {/* Main Login Form */}
-              <div className="new-login-form-container">
-                <div className="new-login-form-title">Login</div>
-                
-                {errors.general && (
-                  <div className="new-error-container" role="alert">
-                    <FiAlertCircle className="new-error-icon" />
-                    <div className="new-error-message">{errors.general}</div>
-                  </div>
-                )}
+            <div className="welcome-section-left">
+              <h2 className="welcome-title">Welcome Back</h2>
+              <p className="welcome-subtitle">Sign in to your account</p>
+            </div>
 
-                <form 
-                  ref={formRef}
-                  onSubmit={handleFormSubmit} 
-                  className="new-login-form"
-                  noValidate
-                >
-                  <div className="new-form-group">
-                    <label className="new-form-label">Email</label>
-                    <div className="new-input-wrapper">
-                      <FiMail className="new-input-icon" />
-                      <input
-                        ref={emailInputRef}
-                        type="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleChange}
-                        onFocus={() => handleInputFocus('email')}
-                        onKeyPress={handleKeyPress}
-                        className={`new-login-input ${errors.email ? 'new-input-error' : ''}`}
-                        disabled={loading}
-                        required
-                        placeholder="Enter your email"
-                      />
-                    </div>
-                    {errors.email && (
-                      <div className="new-field-error">
-                        <FiAlertCircle className="new-error-icon-small" />
-                        <span>{errors.email}</span>
-                      </div>
-                    )}
-                  </div>
+            <div className="login-card">
+              {errors.general && (
+                <div className="error-container" role="alert">
+                  <FiAlertCircle className="error-icon" />
+                  <div className="error-message">{errors.general}</div>
+                </div>
+              )}
 
-                  <div className="new-form-group">
-                    <div className="new-form-label-row">
-                      <label className="new-form-label">Password</label>
-                      <Link to="/forgot-password" className="new-forgot-password">
-                        Forgot Password?
-                      </Link>
-                    </div>
-                    <div className="new-input-wrapper">
-                      <FiLock className="new-input-icon" />
-                      <input
-                        ref={passwordInputRef}
-                        type={showPass ? "text" : "password"}
-                        name="password"
-                        value={formData.password}
-                        onChange={handleChange}
-                        onFocus={() => handleInputFocus('password')}
-                        onKeyPress={handleKeyPress}
-                        className={`new-login-input ${errors.password ? 'new-input-error' : ''}`}
-                        disabled={loading}
-                        required
-                        placeholder="Enter your password"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPass(!showPass)}
-                        className="new-password-toggle"
-                        disabled={loading}
-                      >
-                        {showPass ? <FiEyeOff /> : <FiEye />}
-                      </button>
-                    </div>
-                    {errors.password && (
-                      <div className="new-field-error">
-                        <FiAlertCircle className="new-error-icon-small" />
-                        <span>{errors.password}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="new-form-bottom">
-                    <label className="new-checkbox-label">
-                      <input
-                        type="checkbox"
-                        name="rememberMe"
-                        className="new-remember-checkbox"
-                        checked={formData.rememberMe}
-                        onChange={handleChange}
-                        disabled={loading}
-                      />
-                      <span className="new-checkbox-custom"></span>
-                      <span className="new-checkbox-text">Remember me</span>
-                    </label>
-
-                    <button
-                      type="submit"
+              <form 
+                ref={formRef}
+                onSubmit={handleFormSubmit} 
+                className="login-form"
+                noValidate
+              >
+                <div className="form-group floating-label-group">
+                  <div className="input-wrapper">
+                    <FiMail className="input-icon" />
+                    <input
+                      ref={emailInputRef}
+                      id="email"
+                      name="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      onFocus={() => handleInputFocus('email')}
+                      onKeyPress={handleKeyPress}
+                      className={`login-input ${errors.email ? 'input-error' : ''}`}
                       disabled={loading}
-                      className="new-login-submit-button"
+                      required
+                      pattern="[^@\s]+@[^@\s]+\.[^@\s]+"
+                      title="Please enter a valid email address"
+                      placeholder=" "
+                      aria-describedby={errors.email ? "email-error" : undefined}
+                    />
+                    <label htmlFor="email" className="floating-label">
+                      Email Address
+                    </label>
+                  </div>
+                  {errors.email && (
+                    <div id="email-error" className="field-error">
+                      <FiAlertCircle className="error-icon-small" />
+                      <span>{errors.email}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="form-group floating-label-group">
+                  <div className="form-label-row">
+                    <Link to="/forgot-password" className="forgot-password">
+                      Forgot Password?
+                    </Link>
+                  </div>
+                  <div className="input-wrapper">
+                    <FiLock className="input-icon" />
+                    <input
+                      ref={passwordInputRef}
+                      id="password"
+                      name="password"
+                      type={showPass ? "text" : "password"}
+                      value={formData.password}
+                      onChange={handleChange}
+                      onFocus={() => handleInputFocus('password')}
+                      onKeyPress={handleKeyPress}
+                      className={`login-input ${errors.password ? 'input-error' : ''}`}
+                      disabled={loading}
+                      required
+                      minLength="6"
+                      title="Password must be at least 6 characters"
+                      placeholder=" "
+                      aria-describedby={errors.password ? "password-error" : undefined}
+                    />
+                    <label htmlFor="password" className="floating-label">
+                      Password
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setShowPass(!showPass)}
+                      className="password-toggle"
+                      disabled={loading}
                     >
-                      {loading ? (
-                        <>
-                          <div className="new-button-spinner"></div>
-                          <span>Logging in...</span>
-                        </>
-                      ) : (
-                        <>
-                          <span>Login</span>
-                          <FiArrowRight className="new-button-icon" />
-                        </>
-                      )}
+                      {showPass ? <FiEyeOff /> : <FiEye />}
                     </button>
                   </div>
-                </form>
-              </div>
+                  {errors.password && (
+                    <div id="password-error" className="field-error">
+                      <FiAlertCircle className="error-icon-small" />
+                      <span>{errors.password}</span>
+                    </div>
+                  )}
+                </div>
 
-              {/* Register Link */}
-              <div className="new-register-link-section">
-                <p className="new-register-link-text">
-                  Don't have an account?{" "}
-                  <Link to="/register" className="new-register-link">
+                <div className="form-bottom">
+                  <label className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      name="rememberMe"
+                      className="remember-checkbox"
+                      checked={formData.rememberMe}
+                      onChange={handleChange}
+                      disabled={loading}
+                    />
+                    <span className="checkbox-custom"></span>
+                    <span className="checkbox-text">Keep me signed in</span>
+                  </label>
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="login-button"
+                  >
+                    {loading ? (
+                      <>
+                        <div className="button-spinner"></div>
+                        <span>Signing in...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Sign In</span>
+                        <FiArrowRight className="button-icon" />
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+
+              <div className="register-section">
+                <div className="register-icon">
+                  <FiUserPlus />
+                </div>
+                <div className="register-content">
+                  <p className="register-text">New to PWI ERP?</p>
+                  <Link to="/register" className="register-button">
                     Create Account
                   </Link>
-                </p>
+                </div>
               </div>
             </div>
 
-            {/* Footer */}
-            <div className="new-login-footer">
-              <p>&copy; {new Date().getFullYear()} Pakistan Wire Industries. All rights reserved.</p>
-              <p>ERP System v2.0</p>
+            <footer className="login-footer">
+              <p>&copy; {new Date().getFullYear()} All rights reserved</p>
+              <p className="footer-version">ERP System v2.0</p>
+            </footer>
+          </div>
+        </div>
+
+        <div className="login-right-panel">
+          <div className="right-content">
+            <div className="pwi-title-container">
+              <h1 className="pwi-main-title">Pakistan Wire Industries</h1>
+              <p className="pwi-subtitle">Enterprise Resource Planning System</p>
+            </div>
+            
+            <div className="desktop-slider">
+              <div className="desktop-slider-track">
+                {slidesData.map((slide, index) => (
+                  <div 
+                    key={slide.id} 
+                    className={`desktop-slide ${index === currentSlide ? 'active' : ''}`}
+                    style={{ 
+                      backgroundColor: `${slide.color}15`,
+                      borderLeft: `4px solid ${slide.color}`
+                    }}
+                  >
+                    <div 
+                      className="desktop-slide-icon"
+                      style={{ color: slide.color }}
+                    >
+                      {slide.icon}
+                    </div>
+                    <div className="desktop-slide-content">
+                      <h3>{slide.title}</h3>
+                      <p>{slide.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="desktop-slider-dots">
+                {slidesData.map((_, index) => (
+                  <button
+                    key={index}
+                    className={`desktop-slider-dot ${index === currentSlide ? 'active' : ''}`}
+                    onClick={() => goToSlide(index)}
+                    style={{ 
+                      backgroundColor: index === currentSlide ? slidesData[currentSlide].color : '#CBD5E1'
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div className="company-info-section">
+              <h3 className="company-title">Pakistan Wire Industries</h3>
+              <p className="company-description">
+                Leading manufacturer of quality wires with decades of industry expertise
+              </p>
             </div>
           </div>
         </div>

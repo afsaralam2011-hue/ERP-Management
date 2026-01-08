@@ -5,54 +5,33 @@ import {
   FaCheckCircle,
   FaChartLine,
   FaDatabase,
-  FaSpinner,
   FaCalendarAlt,
   FaCogs,
   FaArrowUp,
-  FaArrowDown,
-  FaCheck,
-  FaTimes,
   FaWarehouse,
   FaCut,
   FaBoxOpen,
   FaShieldAlt,
   FaBuilding,
-  FaListAlt,
   FaBullseye,
-  FaTrophy,
-  FaRocket,
-  FaStar,
-  FaBolt,
   FaSyncAlt,
   FaSun,
   FaMoon,
   FaClock,
-  FaFileAlt,
-  FaChartBar,
-  FaFileExport,
-  FaFilter,
-  FaClipboardList,
-  FaEye,
-  FaTable,
-  FaSitemap,
-  FaDownload,
-  FaHistory,
-  FaPrint,
   FaFileDownload,
-  FaEye as FaView,
-  FaTimesCircle,
-  FaExclamationTriangle,
-  FaRegCalendarCheck,
-  FaRegClock,
-  FaTachometerAlt,
-  FaCalculator,
-  FaWhatsapp,
-  FaUser,
+  FaSitemap,
+  FaPrint,
   FaFileExcel,
   FaCopy,
   FaDesktop,
   FaUsers,
   FaTimes as FaClose,
+  FaWhatsapp,
+  FaUser,
+  FaTachometerAlt,
+  FaRegCalendarCheck,
+  FaRegClock,
+  FaCommentAlt,
 } from "react-icons/fa";
 import { supabase } from "../../supabaseClient";
 import * as XLSX from "xlsx";
@@ -123,7 +102,7 @@ const DailyProductionReport = () => {
     []
   );
 
-  // Get department icon and color - FIXED: Moved to top
+  // Get department icon and color
   const getDepartmentInfo = useCallback(
     (deptName) => {
       const dept = departments.find((d) => d.name === deptName);
@@ -136,7 +115,83 @@ const DailyProductionReport = () => {
     [departments]
   );
 
-  // Calculate all data correctly function (same as ProductionMetrics)
+  // Get efficiency color based on percentage
+  const getEfficiencyColor = useCallback((efficiency) => {
+    const eff = parseFloat(efficiency) || 0;
+    if (eff >= 80) return "#10b981"; // Green
+    if (eff >= 70) return "#f59e0b"; // Yellow
+    return "#ef4444"; // Red
+  }, []);
+
+  // Get efficiency background color
+  const getEfficiencyBgColor = useCallback((efficiency) => {
+    const eff = parseFloat(efficiency) || 0;
+    if (eff >= 80) return "#d1fae5"; // Green
+    if (eff >= 70) return "#fef3c7"; // Yellow
+    return "#fee2e2"; // Red
+  }, []);
+
+  // Calculate efficiency for individual item
+  const calculateItemEfficiency = useCallback((production, target) => {
+    if (target === 0) return 0;
+    return parseFloat(((production / target) * 100).toFixed(1));
+  }, []);
+
+  // Format data for table display with remarks
+  const formatDataForTable = useCallback(
+    (deptData, deptInfo) => {
+      if (!deptData || !deptInfo) return [];
+
+      const tableData = [];
+      const { dailyData, shiftData, machineData } = deptData;
+
+      // Get today's data
+      const todayData = dailyData.length > 0 ? dailyData[0] : null;
+
+      if (todayData && shiftData.length > 0) {
+        shiftData.forEach((shift) => {
+          // Find machines for this shift
+          const shiftMachines = machineData.filter((machine) =>
+            machine.shifts.includes(shift.name)
+          );
+
+          shiftMachines.forEach((machine) => {
+            const efficiency = calculateItemEfficiency(
+              machine.production,
+              machine.target
+            );
+            const operator =
+              machine.operators.length > 0
+                ? machine.operators[0]
+                : shift.operators.length > 0
+                ? shift.operators[0]
+                : "Not Available";
+
+            tableData.push({
+              id: `${shift.name}_${machine.name}`,
+              department: deptInfo.name,
+              section: deptInfo.name.replace(" Section", ""),
+              shift: shift.name,
+              production_quantity: machine.production,
+              target_quantity: machine.target,
+              quantity_unit: deptInfo.unit,
+              date: date.toISOString().split("T")[0],
+              operator: operator,
+              machine: machine.name,
+              efficiency: efficiency,
+              entries: machine.entries,
+              remarks: machine.remarks || "No Remarks",
+            });
+          });
+        });
+      }
+
+      return tableData;
+    },
+    [date, calculateItemEfficiency]
+  );
+
+  // Calculate all data correctly function
   const calculateAllDataCorrectly = useCallback(
     (records) => {
       const combinationMap = {};
@@ -166,6 +221,7 @@ const DailyProductionReport = () => {
           parseFloat(record.production_quantity) ||
           parseFloat(record.production) ||
           0;
+        const remarks = record.remarks || record.comment || "No Remarks";
 
         const combinationKey = `${machine}_${shift}_${dateStr}`;
         const shiftKey = `${shift}`.trim();
@@ -181,6 +237,7 @@ const DailyProductionReport = () => {
             production: 0,
             entries: 0,
             operator: operator,
+            remarks: remarks,
           };
         }
         combinationMap[combinationKey].production += production;
@@ -231,6 +288,7 @@ const DailyProductionReport = () => {
             lastActive: recordDate,
             machineNumber: parseInt(machine.replace(/[^0-9]/g, "")) || 0,
             operators: new Set(),
+            remarks: remarks,
           };
         } else if (recordDate > machineMap[machineKey].lastActive) {
           machineMap[machineKey].lastActive = recordDate;
@@ -292,28 +350,6 @@ const DailyProductionReport = () => {
           const machineCount = shift.machines.size;
           const dayCount = shift.days.size;
 
-          let status = "good";
-          let statusColor = "#10b981";
-
-          if (efficiency >= 100) {
-            status = "excellent";
-            statusColor = "#10b981";
-          } else if (efficiency >= 80) {
-            status = "good";
-            statusColor = "#10b981";
-          } else if (efficiency >= 60) {
-            status = "average";
-            statusColor = "#f59e0b";
-          } else {
-            status = "poor";
-            statusColor = "#ef4444";
-          }
-
-          const avgTargetPerCombination =
-            shift.combinations > 0
-              ? (shift.target / shift.combinations).toFixed(0)
-              : 0;
-
           return {
             name: shift.shiftName,
             production: shift.production,
@@ -329,9 +365,7 @@ const DailyProductionReport = () => {
             daysCount: dayCount,
             combinationsCount: shift.combinations,
             entries: shift.entries,
-            avgTargetPerCombo: avgTargetPerCombination,
-            status,
-            statusColor,
+            avgTargetPerCombo: shift.combinations > 0 ? (shift.target / shift.combinations).toFixed(0) : 0,
             icon: getShiftIcon(shift.shiftName),
           };
         })
@@ -387,36 +421,13 @@ const DailyProductionReport = () => {
             machine.target > 0
               ? (machine.production / machine.target) * 100
               : 0;
-          const daysSinceActive = machine.lastActive
-            ? Math.floor(
-                (new Date() - machine.lastActive) / (1000 * 60 * 60 * 24)
-              )
-            : 999;
 
-          let status = "running";
-          let statusColor = "#10b981";
-
-          if (efficiency >= 80) {
-            status = "good";
-            statusColor = "#10b981";
-          } else if (efficiency >= 70) {
-            status = "average";
-            statusColor = "#f59e0b";
-          } else {
-            status = "poor";
-            statusColor = "#ef4444";
-          }
-
-          if (daysSinceActive > 7) {
-            status = "down";
-            statusColor = "#ef4444";
-          } else if (daysSinceActive > 1) {
-            status = "idle";
-            statusColor = "#f59e0b";
-          } else if (machine.production === 0) {
-            status = "maintenance";
-            statusColor = "#8b5cf6";
-          }
+          // Remove unused variable daysSinceActive
+          // const daysSinceActive = machine.lastActive
+          //   ? Math.floor(
+          //       (new Date() - machine.lastActive) / (1000 * 60 * 60 * 24)
+          //     )
+          //   : 999;
 
           return {
             name: machine.machineName,
@@ -427,8 +438,7 @@ const DailyProductionReport = () => {
             operators: [...machine.operators],
             workingDays: machine.days.size,
             entries: machine.entries,
-            status,
-            statusColor,
+            remarks: machine.remarks,
             lastActive: machine.lastActive
               ? machine.lastActive.toLocaleDateString("en-US", {
                   weekday: "short",
@@ -471,7 +481,7 @@ const DailyProductionReport = () => {
     return <FaClock />;
   };
 
-  // Fetch actual production data
+  // Fetch actual production data with remarks
   const fetchActualData = useCallback(async () => {
     try {
       setLoading(true);
@@ -487,7 +497,7 @@ const DailyProductionReport = () => {
       const dateStr = date.toISOString().split("T")[0];
       const allData = {};
 
-      // Fetch data for all departments
+      // Fetch data for all departments with remarks
       for (const dept of departments) {
         const { data: productionRecords, error } = await supabase
           .from(dept.tableName)
@@ -533,8 +543,10 @@ const DailyProductionReport = () => {
           (d) => d.name === selectedDepartment
         );
         if (selectedDept && allData[selectedDept.name]) {
-          const deptData = allData[selectedDept.name];
-          const formattedData = formatDataForTable(deptData, selectedDept);
+          const formattedData = formatDataForTable(
+            allData[selectedDept.name],
+            selectedDept
+          );
           setProductionData(formattedData);
         }
       }
@@ -546,114 +558,7 @@ const DailyProductionReport = () => {
     } finally {
       setLoading(false);
     }
-  }, [date, selectedDepartment, departments, calculateAllDataCorrectly]);
-
-  // Format data for table display
-  const formatDataForTable = useCallback(
-    (deptData, deptInfo) => {
-      if (!deptData || !deptInfo) return [];
-
-      const tableData = [];
-      const { dailyData, shiftData, machineData } = deptData;
-
-      // Get today's data
-      const todayData = dailyData.length > 0 ? dailyData[0] : null;
-
-      if (todayData && shiftData.length > 0) {
-        shiftData.forEach((shift) => {
-          // Find machines for this shift
-          const shiftMachines = machineData.filter((machine) =>
-            machine.shifts.includes(shift.name)
-          );
-
-          shiftMachines.forEach((machine) => {
-            const efficiency = calculateItemEfficiency(
-              machine.production,
-              machine.target
-            );
-            const operator =
-              machine.operators.length > 0
-                ? machine.operators[0]
-                : shift.operators.length > 0
-                ? shift.operators[0]
-                : "Not Available";
-
-            tableData.push({
-              id: `${shift.name}_${machine.name}`,
-              department: deptInfo.name,
-              section: deptInfo.name.replace(" Section", ""),
-              shift: shift.name,
-              production_quantity: machine.production,
-              target_quantity: machine.target,
-              quantity_unit: deptInfo.unit,
-              date: date.toISOString().split("T")[0],
-              operator: operator,
-              machine: machine.name,
-              status: getMachineStatus(machine),
-              efficiency: efficiency,
-              entries: machine.entries,
-              statusColor: getStatusColor(getMachineStatus(machine)),
-            });
-          });
-        });
-      }
-
-      return tableData;
-    },
-    [date]
-  );
-
-  // Get machine status
-  const getMachineStatus = useCallback((machine) => {
-    const efficiency = parseFloat(machine.efficiency);
-    if (efficiency === 0) return "pending";
-    if (efficiency >= 100) return "completed";
-    if (efficiency >= 80) return "good";
-    if (efficiency >= 60) return "in-progress";
-    return "maintenance";
-  }, []);
-
-  // Get status color
-  const getStatusColor = useCallback((status) => {
-    switch (status) {
-      case "completed":
-        return "#10b981";
-      case "good":
-        return "#10b981";
-      case "in-progress":
-        return "#f59e0b";
-      case "pending":
-        return "#6b7280";
-      case "maintenance":
-        return "#ef4444";
-      default:
-        return "#6b7280";
-    }
-  }, []);
-
-  // Get status text
-  const getStatusText = useCallback((status) => {
-    switch (status) {
-      case "completed":
-        return "Completed";
-      case "good":
-        return "Good";
-      case "in-progress":
-        return "In Progress";
-      case "pending":
-        return "Pending";
-      case "maintenance":
-        return "Maintenance";
-      default:
-        return status;
-    }
-  }, []);
-
-  // Calculate efficiency for individual item
-  const calculateItemEfficiency = useCallback((production, target) => {
-    if (target === 0) return 0;
-    return parseFloat(((production / target) * 100).toFixed(1));
-  }, []);
+  }, [date, selectedDepartment, departments, calculateAllDataCorrectly, formatDataForTable]);
 
   // Get selected department data
   const getSelectedDepartmentData = useCallback(() => {
@@ -951,7 +856,7 @@ const DailyProductionReport = () => {
     getSelectedDepartmentData,
   ]);
 
-  // Export to Excel
+  // Export to Excel with remarks
   const handleExportExcel = useCallback(() => {
     const data = getSelectedDepartmentData();
 
@@ -967,7 +872,7 @@ const DailyProductionReport = () => {
       Unit: item.quantity_unit,
       "Efficiency (%)": item.efficiency,
       Entries: item.entries,
-      Status: getStatusText(item.status),
+      Remarks: item.remarks,
       Date: item.date,
     }));
 
@@ -984,7 +889,7 @@ const DailyProductionReport = () => {
       Unit: "Total",
       "Efficiency (%)": totals.efficiency,
       Entries: totals.records,
-      Status: totals.efficiency >= 100 ? "Met Target" : "Below Target",
+      Remarks: "Summary",
       Date: date.toISOString().split("T")[0],
     });
 
@@ -1003,7 +908,7 @@ const DailyProductionReport = () => {
       workbook,
       `production-report-${date.toISOString().split("T")[0]}.xlsx`
     );
-  }, [getSelectedDepartmentData, calculateTotals, date, getStatusText]);
+  }, [getSelectedDepartmentData, calculateTotals, date]);
 
   // Format last refresh time
   const formatLastRefresh = useCallback(() => {
@@ -1748,7 +1653,7 @@ const DailyProductionReport = () => {
             padding: "20px",
             borderRadius: "10px",
             boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
-            borderLeft: "4px solid #f59e0b",
+            borderLeft: `4px solid ${getEfficiencyColor(totals.efficiency)}`,
             position: "relative",
             overflow: "hidden",
             transition: "all 0.3s ease",
@@ -1770,7 +1675,7 @@ const DailyProductionReport = () => {
               top: "-20px",
               width: "80px",
               height: "80px",
-              backgroundColor: "#f59e0b10",
+              backgroundColor: `${getEfficiencyColor(totals.efficiency)}10`,
               borderRadius: "50%",
             }}
           ></div>
@@ -1791,12 +1696,7 @@ const DailyProductionReport = () => {
             style={{
               fontSize: "32px",
               fontWeight: "bold",
-              color:
-                totals.efficiency >= 100
-                  ? "#10b981"
-                  : totals.efficiency >= 90
-                  ? "#f59e0b"
-                  : "#ef4444",
+              color: getEfficiencyColor(totals.efficiency),
               marginBottom: "5px",
             }}
           >
@@ -2199,13 +2099,16 @@ const DailyProductionReport = () => {
                           color: "#1e293b",
                         }}
                       >
-                        Status
+                        Remarks
                       </th>
                     </tr>
                   </thead>
                   <tbody>
                     {shiftGroups[shift].map((item, index) => {
                       const deptInfo = getDepartmentInfo(item.department);
+                      const efficiencyColor = getEfficiencyColor(item.efficiency);
+                      const efficiencyBgColor = getEfficiencyBgColor(item.efficiency);
+                      
                       return (
                         <tr
                           key={item.id}
@@ -2315,7 +2218,6 @@ const DailyProductionReport = () => {
                           >
                             <span
                               style={{
-                                display: "inline-block",
                                 padding: "4px 12px",
                                 backgroundColor:
                                   item.quantity_unit === "kg"
@@ -2341,20 +2243,9 @@ const DailyProductionReport = () => {
                           >
                             <span
                               style={{
-                                display: "inline-block",
                                 padding: "4px 12px",
-                                backgroundColor:
-                                  item.efficiency >= 100
-                                    ? "#d1fae5"
-                                    : item.efficiency >= 90
-                                    ? "#fef3c7"
-                                    : "#fee2e2",
-                                color:
-                                  item.efficiency >= 100
-                                    ? "#059669"
-                                    : item.efficiency >= 90
-                                    ? "#d97706"
-                                    : "#dc2626",
+                                backgroundColor: efficiencyBgColor,
+                                color: efficiencyColor,
                                 borderRadius: "20px",
                                 fontSize: "12px",
                                 fontWeight: "600",
@@ -2377,7 +2268,6 @@ const DailyProductionReport = () => {
                           >
                             <span
                               style={{
-                                display: "inline-block",
                                 padding: "4px 12px",
                                 backgroundColor: "#f3f4f6",
                                 color: "#374151",
@@ -2393,21 +2283,37 @@ const DailyProductionReport = () => {
                             style={{
                               padding: "12px",
                               textAlign: "center",
+                              maxWidth: "200px",
+                              wordWrap: "break-word",
                             }}
                           >
-                            <span
+                            <div
                               style={{
-                                display: "inline-block",
-                                padding: "4px 12px",
-                                backgroundColor: item.statusColor + "20",
-                                color: item.statusColor,
-                                borderRadius: "20px",
-                                fontSize: "12px",
-                                fontWeight: "600",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "8px",
+                                justifyContent: "center",
                               }}
                             >
-                              {getStatusText(item.status)}
-                            </span>
+                              <FaCommentAlt style={{ color: "#6b7280", flexShrink: 0 }} />
+                              <span
+                                style={{
+                                  fontSize: "12px",
+                                  color: "#4b5563",
+                                  backgroundColor: "#f9fafb",
+                                  padding: "6px 10px",
+                                  borderRadius: "6px",
+                                  border: "1px solid #e5e7eb",
+                                  textAlign: "left",
+                                  maxWidth: "180px",
+                                  whiteSpace: "normal",
+                                  wordBreak: "break-word",
+                                }}
+                                title={item.remarks}
+                              >
+                                {item.remarks}
+                              </span>
+                            </div>
                           </td>
                         </tr>
                       );
@@ -2623,6 +2529,8 @@ const DailyProductionReport = () => {
                   const totals = calculateDepartmentTotals(dept.name);
                   const hasData =
                     totals.totalProduction > 0 || totals.totalTarget > 0;
+                  const efficiencyColor = getEfficiencyColor(totals.efficiency);
+                  const efficiencyBgColor = getEfficiencyBgColor(totals.efficiency);
 
                   return (
                     <tr
@@ -2670,7 +2578,6 @@ const DailyProductionReport = () => {
                           maximumFractionDigits: dept.unit === "Meter" ? 1 : 0,
                         })}
                       </td>
-                      // Line 2153 کے قریب کا درست کوڈ
                       <td
                         style={{
                           padding: "12px",
@@ -2690,20 +2597,9 @@ const DailyProductionReport = () => {
                       >
                         <span
                           style={{
-                            display: "inline-block",
                             padding: "4px 12px",
-                            backgroundColor:
-                              totals.efficiency >= 100
-                                ? "#d1fae5"
-                                : totals.efficiency >= 90
-                                ? "#fef3c7"
-                                : "#fee2e2",
-                            color:
-                              totals.efficiency >= 100
-                                ? "#059669"
-                                : totals.efficiency >= 90
-                                ? "#d97706"
-                                : "#dc2626",
+                            backgroundColor: efficiencyBgColor,
+                            color: efficiencyColor,
                             borderRadius: "20px",
                             fontSize: "12px",
                             fontWeight: "600",
@@ -2736,7 +2632,6 @@ const DailyProductionReport = () => {
                       >
                         <span
                           style={{
-                            display: "inline-block",
                             padding: "4px 12px",
                             backgroundColor:
                               dept.unit === "kg" ? "#dbeafe" : "#ede9fe",
@@ -2757,7 +2652,6 @@ const DailyProductionReport = () => {
                       >
                         <span
                           style={{
-                            display: "inline-block",
                             padding: "4px 12px",
                             backgroundColor: hasData ? "#d1fae5" : "#f3f4f6",
                             color: hasData ? "#059669" : "#6b7280",
@@ -2866,7 +2760,7 @@ const DailyProductionReport = () => {
               flexShrink: 0,
             }}
           >
-            <FaCalculator size={24} />
+            <FaCheckCircle size={24} />
           </div>
           <div style={{ flex: 1 }}>
             <h4
@@ -2931,7 +2825,7 @@ const DailyProductionReport = () => {
                   <FaCheckCircle
                     style={{ marginRight: "6px", color: "#10b981" }}
                   />
-                  Machine Efficiency:
+                  Efficiency Formula:
                 </strong>
                 <span style={{ color: "#6b7280" }}>
                   <span style={{ color: "#10b981" }}>≥80% Green</span>,
@@ -2947,11 +2841,11 @@ const DailyProductionReport = () => {
                     marginBottom: "5px",
                   }}
                 >
-                  <FaUser style={{ marginRight: "6px", color: "#3b82f6" }} />
-                  Operator Data:
+                  <FaCommentAlt style={{ marginRight: "6px", color: "#3b82f6" }} />
+                  Remarks Data:
                 </strong>
                 <span style={{ color: "#6b7280" }}>
-                  Now showing actual operator names from database
+                  Now showing actual remarks/comments from database
                 </span>
               </div>
             </div>
