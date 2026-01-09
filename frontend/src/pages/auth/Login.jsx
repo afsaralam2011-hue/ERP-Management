@@ -1,5 +1,3 @@
-// src/pages/auth/Login.jsx
-
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import {
@@ -29,21 +27,29 @@ export default function Login() {
   const [remember, setRemember] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // =========================
+  // THEME HANDLING (Persistent)
+  // =========================
   const [theme, setTheme] = useState("dark");
 
-  /* =========================
-     THEME HANDLING
-  ========================= */
+  // Load saved theme from localStorage on mount
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme) setTheme(savedTheme);
+  }, []);
+
+  // Apply theme to document & save in localStorage
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("theme", theme);
   }, [theme]);
 
-  const toggleTheme = () =>
-    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
+  const toggleTheme = () => setTheme(prev => (prev === "dark" ? "light" : "dark"));
 
-  /* =========================
-     LOGIN
-  ========================= */
+  // =========================
+  // LOGIN
+  // =========================
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
@@ -73,19 +79,10 @@ export default function Login() {
     }
   };
 
-  /* =========================
-     BACKGROUND PWI TEXTS
-  ========================= */
-  const colors = [
-    "#FA5C5C",
-    "#FD8A6B",
-    "#FBEF76",
-    "#FF0087",
-    "#FFD41D",
-    "#6AECE1",
-    "#FFFFFF"
-  ];
-
+  // =========================
+  // BACKGROUND PWI TEXTS
+  // =========================
+  const colors = ["#FA5C5C", "#FD8A6B", "#FBEF76", "#FF0087", "#FFD41D", "#6AECE1", "#FFFFFF"];
   const bgItems = Array.from({ length: 25 });
 
   return (
@@ -109,7 +106,7 @@ export default function Login() {
 
       {/* THEME TOGGLE */}
       <button className="theme-toggle" onClick={toggleTheme}>
-        {theme === "dark" ? <FiSun /> : <FiMoon />}
+        {theme === "dark" ? <FiSun className="theme-icon" /> : <FiMoon className="theme-icon" />}
       </button>
 
       {/* LOGIN CARD */}

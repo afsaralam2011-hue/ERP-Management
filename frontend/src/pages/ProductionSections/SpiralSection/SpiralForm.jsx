@@ -2,8 +2,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
   FiSave, FiX, FiArrowLeft,
-  FiSettings, FiCheck, FiAlertCircle,
-  FiCheckCircle, FiTarget, FiTrendingUp
+   FiCheck, FiAlertCircle,
+  FiCheckCircle, FiTarget, FiTrendingUp,
+  FiPlusCircle, FiRefreshCw
 } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../../supabaseClient';
@@ -11,7 +12,8 @@ import { supabase } from '../../../supabaseClient';
 const SpiralForm = () => {
   const navigate = useNavigate();
   
-  const [formData, setFormData] = useState({
+  // Initial form state
+  const initialFormData = {
     section_name: 'Spiral',
     machine_id: '',
     machine_no: '',
@@ -30,13 +32,19 @@ const SpiralForm = () => {
     users_name: '',
     shift_code: '',
     shift_name: '',
+    target_qty: '',
     remarks: ''
-  });
+  };
+
+  const [formData, setFormData] = useState(initialFormData);
 
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [duplicateError, setDuplicateError] = useState('');
+  
+  // Success message state
+  const [successMessage, setSuccessMessage] = useState('');
   
   // Track which fields have been filled
   const [filledFields, setFilledFields] = useState({});
@@ -100,6 +108,36 @@ const SpiralForm = () => {
     
     fetchCurrentUser();
   }, []);
+
+  // Function to clear the form after successful submission
+  const clearForm = () => {
+    // Clear all fields except section_name, users_name, and unit
+    setFormData({
+      ...initialFormData,
+      section_name: 'Spiral',
+      users_name: currentUser,
+      unit: 'Meter'
+    });
+    
+    // Clear all filled fields
+    setFilledFields({
+      section_name: true,
+      users_name: true
+    });
+    
+    // Clear errors
+    setErrors({});
+    
+    // Clear duplicate error
+    setDuplicateError('');
+    
+    // Reset calculated fields
+    setCalculatedWeight(0);
+    setCalculatedEfficiency(0);
+    
+    // Reset current target
+    setCurrentTarget(null);
+  };
 
   // Fetch today's machine entries to track completion
   const fetchTodayEntries = useCallback(async (shiftCode = null) => {
@@ -457,12 +495,14 @@ const SpiralForm = () => {
         setFormData(prev => ({
           ...prev,
           machine_id: '',
-          machine_no: ''
+          machine_no: '',
+          target_qty: ''
         }));
         setFilledFields(prev => ({
           ...prev,
           machine_id: false,
-          machine_no: false
+          machine_no: false,
+          target_qty: false
         }));
       }
     } else {
@@ -481,14 +521,17 @@ const SpiralForm = () => {
       
       setCurrentTarget(target || null);
       
-      if (target && target.machine_no !== formData.machine_no) {
+      if (target) {
+        // Update form data with target information
         setFormData(prev => ({
           ...prev,
-          machine_no: target.machine_no
+          machine_no: target.machine_no,
+          target_qty: target.target_qty || ''
         }));
         setFilledFields(prev => ({
           ...prev,
-          machine_no: true
+          machine_no: true,
+          target_qty: !!target.target_qty
         }));
       }
     } else {
@@ -565,13 +608,16 @@ const SpiralForm = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     
-    // Clear duplicate error when user changes data
+    // Clear duplicate error and success message when user changes data
     if (duplicateError) {
       setDuplicateError('');
     }
+    if (successMessage) {
+      setSuccessMessage('');
+    }
     
     // Mark field as filled if it has value
-    if (value && value.trim() !== '') {
+    if (value && value.toString().trim() !== '') {
       setFilledFields(prev => ({
         ...prev,
         [name]: true
@@ -590,28 +636,39 @@ const SpiralForm = () => {
         shift_code: value,
         shift_name: selectedShift ? selectedShift.shift_name : '',
         machine_id: '',
-        machine_no: ''
+        machine_no: '',
+        target_qty: ''
       }));
       // Mark shift_name as filled if shift selected
       if (value) {
         setFilledFields(prev => ({
           ...prev,
-          shift_name: true
+          shift_name: true,
+          target_qty: false
         }));
       }
     } 
     else if (name === 'machine_id') {
       const selectedMachine = filteredMachines.find(m => m.machine_id === value);
-      setFormData(prev => ({
-        ...prev,
-        machine_id: value,
-        machine_no: selectedMachine ? selectedMachine.machine_no : ''
-      }));
-      // Mark machine_no as filled if machine selected
-      if (value && selectedMachine) {
+      if (selectedMachine) {
+        setFormData(prev => ({
+          ...prev,
+          machine_id: value,
+          machine_no: selectedMachine.machine_no,
+          target_qty: selectedMachine.target_qty || ''
+        }));
+        // Mark machine_no and target_qty as filled if machine selected
         setFilledFields(prev => ({
           ...prev,
-          machine_no: true
+          machine_no: true,
+          target_qty: !!selectedMachine.target_qty
+        }));
+      } else {
+        setFormData(prev => ({
+          ...prev,
+          [name]: value,
+          machine_no: '',
+          target_qty: ''
         }));
       }
     }
@@ -658,6 +715,13 @@ const SpiralForm = () => {
         setOperators(prev => [...prev, value].sort());
       }
     }
+    else if (name === 'target_qty') {
+      // Allow manual entry of target_qty if needed
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
     else {
       setFormData(prev => ({
         ...prev,
@@ -682,7 +746,7 @@ const SpiralForm = () => {
       isFilled,
       hasError,
       // Required fields validation
-      isRequired: ['machine_id', 'item_code', 'production_quantity', 'shift_code', 'operator_name'].includes(fieldName)
+      isRequired: ['machine_id', 'item_code', 'production_quantity', 'shift_code', 'operator_name', 'target_qty'].includes(fieldName)
     };
   };
 
@@ -755,6 +819,11 @@ const SpiralForm = () => {
     }
     if (!formData.shift_code) newErrors.shift_code = 'Shift is required';
     if (!formData.operator_name.trim()) newErrors.operator_name = 'Operator name is required';
+    if (!formData.target_qty) {
+      newErrors.target_qty = 'Target quantity is required';
+    } else if (isNaN(formData.target_qty) || formData.target_qty <= 0) {
+      newErrors.target_qty = 'Please enter a valid target quantity';
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -790,6 +859,7 @@ const SpiralForm = () => {
         operator_name: formData.operator_name.trim(),
         production_quantity: parseFloat(formData.production_quantity),
         per_meter_wt: parseFloat(formData.per_meter_wt) || 0,
+        target_qty: parseFloat(formData.target_qty) || 0,
         weight: calculatedWeight,
         unit: 'Meter',
         efficiency: calculatedEfficiency,
@@ -816,8 +886,14 @@ const SpiralForm = () => {
       );
       setMachineCompletion(completion);
       
-      alert('Spiral section record created successfully!');
-      navigate('/production-sections/spiral');
+      // Show success message
+      setSuccessMessage(`✅ Record saved successfully for ${formData.machine_id} - ${formData.operator_name}!`);
+      
+      // Clear the form after 1 second (to show success message)
+      setTimeout(() => {
+        clearForm();
+        setSuccessMessage('');
+      }, 1500);
       
     } catch (error) {
       console.error('Error submitting form:', error);
@@ -835,31 +911,14 @@ const SpiralForm = () => {
 
   const handleReset = () => {
     if (window.confirm('Reset all fields to default?')) {
-      setFormData(prev => ({
-        ...prev,
-        machine_id: '',
-        machine_no: '',
-        item_code: '',
-        item_name: '',
-        raw_material_flatsize: '',
-        material_type: '',
-        wire_size: '',
-        finishedproductname: '',
-        operator_name: '',
-        production_quantity: '',
-        per_meter_wt: '',
-        shift_code: '',
-        shift_name: '',
-        remarks: ''
-      }));
-      setErrors({});
-      setDuplicateError('');
-      setFilteredMachines([]);
-      setCurrentTarget(null);
-      setCalculatedWeight(0);
-      setCalculatedEfficiency(0);
-      setFilledFields({});
+      clearForm();
     }
+  };
+
+  // Add New Entry button functionality (same as reset but with different message)
+  const handleAddNew = () => {
+    clearForm();
+    setSuccessMessage('');
   };
 
   // Function to get machine status icon
@@ -961,6 +1020,47 @@ const SpiralForm = () => {
           Note: Only one entry per machine per shift per day is allowed
         </p>
       </div>
+
+      {/* Success Message */}
+      {successMessage && (
+        <div style={{
+          background: '#d1fae5',
+          border: '2px solid #10b981',
+          borderRadius: '6px',
+          padding: '12px 15px',
+          marginBottom: '20px',
+          color: '#065f46',
+          fontSize: '14px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '10px',
+          animation: 'fadeIn 0.5s ease'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <FiCheckCircle size={20} />
+            <div>
+              <strong style={{ fontSize: '15px' }}>Success!</strong>
+              <div style={{ marginTop: '3px' }}>{successMessage}</div>
+              <div style={{ fontSize: '12px', marginTop: '5px', color: '#047857' }}>
+                Form cleared. Ready for next entry...
+              </div>
+            </div>
+          </div>
+          <button
+            onClick={() => setSuccessMessage('')}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: '#065f46',
+              cursor: 'pointer',
+              fontSize: '14px'
+            }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* Machine Completion Tracker - TOP BAR */}
       {formData.shift_code && (
@@ -1410,21 +1510,57 @@ const SpiralForm = () => {
                 </div>
               </div>
 
-              {/* Target Display */}
+              {/* Target Quantity */}
               <div>
-                <label style={labelStyle}>Shift Target</label>
-                <div style={{
-                  padding: '12px 15px',
-                  borderRadius: '6px',
-                  border: currentTarget ? '2px solid #10b981' : '1px solid #e5e7eb',
-                  background: currentTarget ? '#d1fae5' : '#f8fafc',
-                  fontSize: currentTarget ? '15px' : '14px',
-                  color: currentTarget ? '#065f46' : '#9ca3af',
-                  fontWeight: currentTarget ? '600' : '500'
+                <label style={labelStyle}>
+                  Target Quantity *
+                  {getFieldStatus('target_qty', formData.target_qty).hasError && (
+                    <FiAlertCircle style={{ marginLeft: '5px', color: '#ef4444' }} size={14} />
+                  )}
+                  {getFieldStatus('target_qty', formData.target_qty).isFilled && (
+                    <FiCheck style={{ marginLeft: '5px', color: '#10b981' }} size={14} />
+                  )}
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type="number"
+                    name="target_qty"
+                    value={formData.target_qty}
+                    onChange={handleChange}
+                    placeholder="Auto-filled from targets"
+                    min="0.01"
+                    step="0.01"
+                    disabled={!formData.machine_id}
+                    style={{
+                      ...inputStyle(getFieldStatus('target_qty', formData.target_qty).hasError),
+                      ...getFieldStyle('target_qty', formData.target_qty),
+                      paddingRight: '70px',
+                      opacity: formData.machine_id ? 1 : 0.6,
+                      cursor: formData.machine_id ? 'text' : 'not-allowed',
+                      background: formData.machine_id ? 
+                        (getFieldStatus('target_qty', formData.target_qty).isFilled ? '#d1fae5' : '#f8fafc') : '#f3f4f6'
+                    }}
+                  />
+                  <div style={{
+                    position: 'absolute',
+                    right: '15px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    color: getFieldStatus('target_qty', formData.target_qty).isFilled ? '#065f46' : '#6b7280',
+                    fontWeight: '500',
+                    fontSize: getFieldStatus('target_qty', formData.target_qty).isFilled ? '14px' : '13px'
+                  }}>
+                    Meter
+                  </div>
+                </div>
+                {errors.target_qty && <ErrorText text={errors.target_qty} />}
+                <div style={{ 
+                  fontSize: '11px', 
+                  color: '#6b7280', 
+                  marginTop: '5px',
+                  fontStyle: 'italic'
                 }}>
-                  {currentTarget 
-                    ? `${currentTarget.target_qty.toLocaleString()} ${currentTarget.uom || 'Meter'}`
-                    : 'Select Shift and Machine'}
+                  Auto-filled from targets table when machine is selected
                 </div>
               </div>
             </div>
@@ -1902,25 +2038,47 @@ const SpiralForm = () => {
             paddingTop: '20px',
             borderTop: '2px solid #e5e7eb'
           }}>
-            <button
-              type="button"
-              onClick={handleReset}
-              style={{
-                background: 'transparent',
-                border: '2px solid #d1d5db',
-                padding: '10px 20px',
-                borderRadius: '6px',
-                color: '#6b7280',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                fontWeight: '600',
-                fontSize: '14px'
-              }}
-            >
-              <FiSettings size={16} /> Reset
-            </button>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button
+                type="button"
+                onClick={handleReset}
+                style={{
+                  background: 'transparent',
+                  border: '2px solid #d1d5db',
+                  padding: '10px 20px',
+                  borderRadius: '6px',
+                  color: '#6b7280',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  fontWeight: '600',
+                  fontSize: '14px'
+                }}
+              >
+                <FiRefreshCw size={16} /> Reset
+              </button>
+
+              <button
+                type="button"
+                onClick={handleAddNew}
+                style={{
+                  background: 'transparent',
+                  border: '2px solid #60a5fa',
+                  padding: '10px 20px',
+                  borderRadius: '6px',
+                  color: '#2563eb',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  fontWeight: '600',
+                  fontSize: '14px'
+                }}
+              >
+                <FiPlusCircle size={16} /> New Entry
+              </button>
+            </div>
 
             <div style={{ display: 'flex', gap: '12px' }}>
               <button
@@ -1957,7 +2115,8 @@ const SpiralForm = () => {
                   alignItems: 'center',
                   gap: '8px',
                   fontSize: '14px',
-                  fontWeight: '600'
+                  fontWeight: '600',
+                  minWidth: '140px'
                 }}
               >
                 {isSubmitting ? (
@@ -1974,7 +2133,7 @@ const SpiralForm = () => {
                   </>
                 ) : (
                   <>
-                    <FiSave size={16} /> Save Record
+                    <FiSave size={16} /> Save & Continue
                   </>
                 )}
               </button>
@@ -1993,6 +2152,11 @@ const SpiralForm = () => {
           0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
           70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(59, 130, 246, 0); }
           100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+        }
+        
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(-10px); }
+          to { opacity: 1; transform: translateY(0); }
         }
         
         /* Mobile Responsive Styles */
@@ -2018,6 +2182,22 @@ const SpiralForm = () => {
           
           div[style*="grid-template-columns: repeat(auto-fill, minmax(150px, 1fr))"] {
             grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)) !important;
+          }
+          
+          /* Form actions mobile adjustments */
+          div[style*="justify-content: space-between"] {
+            flex-direction: column !important;
+            gap: 15px !important;
+          }
+          
+          div[style*="display: flex; gap: 12px"] {
+            width: 100%;
+            justify-content: space-between;
+          }
+          
+          button {
+            flex: 1;
+            text-align: center;
           }
         }
         
@@ -2060,7 +2240,7 @@ const SpiralForm = () => {
         }
         
         div[style*="overflow-y: auto"]::-webkit-scrollbar-thumb:hover {
-          background: #94a3b8;
+          background: '#94a3b8';
         }
       `}</style>
     </div>
