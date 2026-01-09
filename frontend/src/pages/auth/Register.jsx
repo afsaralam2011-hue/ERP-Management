@@ -53,7 +53,7 @@ export default function Register() {
       id: i,
       text: "PWI",
       color: colors[Math.floor(Math.random() * colors.length)],
-      x: Math.random() * 100, // percentage
+      x: Math.random() * 100,
       y: Math.random() * 100,
       rotate: Math.random() * 360,
       speedX: (Math.random() - 0.5) * 0.3,
@@ -112,19 +112,36 @@ export default function Register() {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signUp({
+      // 1️⃣ Sign up the user
+      const { data: userData, error: signUpError } = await supabase.auth.signUp({
         email: email.trim(),
         password,
         options: {
           data: {
-            name,
+            full_name: name, // use full_name in user_metadata
             role: "user"
           }
         }
       });
 
-      if (error) {
-        setError(error.message);
+      if (signUpError) {
+        setError(signUpError.message);
+        setLoading(false);
+        return;
+      }
+
+      // 2️⃣ Upsert into profiles table
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .upsert({
+          id: userData.user.id,   // Auth user ID
+          full_name: name,        // match your column name
+          email,
+          role: "user"
+        });
+
+      if (profileError) {
+        setError(profileError.message);
         setLoading(false);
         return;
       }

@@ -1,6 +1,6 @@
-// File: src/pages/auth/Login.jsx
+// src/pages/auth/Login.jsx
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import {
   FiMail,
@@ -8,21 +8,17 @@ import {
   FiEye,
   FiEyeOff,
   FiArrowRight,
-  FiAlertCircle
+  FiAlertCircle,
+  FiSun,
+  FiMoon
 } from "react-icons/fi";
 import { createClient } from "@supabase/supabase-js";
 import "./Login.css";
 
-const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
-const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
-
-const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: false
-  }
-});
+const supabase = createClient(
+  process.env.REACT_APP_SUPABASE_URL,
+  process.env.REACT_APP_SUPABASE_ANON_KEY
+);
 
 export default function Login() {
   const navigate = useNavigate();
@@ -33,7 +29,21 @@ export default function Login() {
   const [remember, setRemember] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [theme, setTheme] = useState("dark");
 
+  /* =========================
+     THEME HANDLING
+  ========================= */
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+  }, [theme]);
+
+  const toggleTheme = () =>
+    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
+
+  /* =========================
+     LOGIN
+  ========================= */
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
@@ -47,70 +57,70 @@ export default function Login() {
 
       if (error) {
         setError("Invalid email or password");
-        setLoading(false);
         return;
       }
 
       if (data?.session) {
         const storage = remember ? localStorage : sessionStorage;
-
         storage.setItem("token", data.session.access_token);
-        storage.setItem(
-          "user",
-          JSON.stringify({
-            id: data.user.id,
-            email: data.user.email,
-            name: data.user.email.split("@")[0],
-            role: "user"
-          })
-        );
-
+        storage.setItem("user", JSON.stringify(data.user));
         navigate("/dashboard", { replace: true });
       }
-    } catch (err) {
+    } catch {
       setError("Login failed. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  // Colors for background PWI elements
-  const bgColors = ["#FA5C5C", "#FD8A6B", "#FBEF76", "#FF0087", "#FFD41D", "#6AECE1", "#FFFFFF"];
-  const numTexts = 25;
-  const bgTexts = Array.from({ length: numTexts }, (_, i) => ({
-    id: i,
-    color: bgColors[i % bgColors.length],
-    style: {
-      top: `${Math.random() * 90}%`,
-      left: `${Math.random() * 90}%`,
-      animationDuration: `${5 + Math.random() * 10}s`,
-      fontSize: `${14 + Math.random() * 20}px`,
-      transform: `rotate(${Math.random() * 360}deg)`
-    }
-  }));
+  /* =========================
+     BACKGROUND PWI TEXTS
+  ========================= */
+  const colors = [
+    "#FA5C5C",
+    "#FD8A6B",
+    "#FBEF76",
+    "#FF0087",
+    "#FFD41D",
+    "#6AECE1",
+    "#FFFFFF"
+  ];
+
+  const bgItems = Array.from({ length: 25 });
 
   return (
     <div className="erp-bg">
-      {/* Background floating PWI texts */}
-      {bgTexts.map((txt) => (
+      {/* Floating PWI background */}
+      {bgItems.map((_, i) => (
         <span
-          key={txt.id}
+          key={i}
           className="bg-pwi"
-          style={{ ...txt.style, color: txt.color }}
+          style={{
+            color: colors[i % colors.length],
+            top: `${Math.random() * 90}%`,
+            left: `${Math.random() * 90}%`,
+            animationDuration: `${6 + Math.random() * 10}s`,
+            fontSize: `${14 + Math.random() * 18}px`
+          }}
         >
           PWI
         </span>
       ))}
 
+      {/* THEME TOGGLE */}
+      <button className="theme-toggle" onClick={toggleTheme}>
+        {theme === "dark" ? <FiSun /> : <FiMoon />}
+      </button>
+
+      {/* LOGIN CARD */}
       <div className="erp-login-card glass">
-        {/* LOGO + NAME (SINGLE LINE) */}
         <div className="erp-brand-inline">
-          <img src="/images/logo.png" alt="PWI" />
+          <img src="/images/logoA.png" alt="PWI" />
           <span>Pakistan Wire Industries</span>
         </div>
 
-        <h2 className="erp-title">Welcome Back</h2>
-        <p className="erp-subtitle">Sign in to your ERP account</p>
+        <h2 className="erp-title">Welcome to PWI ERP System</h2>
+        <p className="erp-subtitle">Enterprise Resource Planning</p>
 
         {error && (
           <div className="erp-error">
@@ -123,7 +133,7 @@ export default function Login() {
             <FiMail />
             <input
               type="email"
-              placeholder="Email address"
+              placeholder="Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -175,7 +185,7 @@ export default function Login() {
         </div>
 
         <div className="erp-footer">
-          © {new Date().getFullYear()} Pakistan Wire Industries • ERP v2.0
+          © {new Date().getFullYear()} Pakistan Wire Industries
         </div>
       </div>
     </div>
