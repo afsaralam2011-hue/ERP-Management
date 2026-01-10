@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
   <head>
     <meta charset="utf-8" />
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
@@ -7,7 +7,7 @@
     <!-- Viewport for Mobile Optimization -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, minimum-scale=1.0" />
     
-    <!-- Theme Color -->
+    <!-- Theme Color - Will be updated by JavaScript -->
     <meta name="theme-color" content="#005461" />
     
     <!-- PWA Settings -->
@@ -36,6 +36,11 @@
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    
+    <!-- Theme System CSS -->
+    <link rel="stylesheet" href="%PUBLIC_URL%/theme-variables.css">
+    <link rel="stylesheet" href="%PUBLIC_URL%/light-theme.css">
+    <link rel="stylesheet" href="%PUBLIC_URL%/dark-theme.css">
     
     <title>Pakistan Wire Industries</title>
     
@@ -80,8 +85,8 @@
           sans-serif;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
-        background-color: #f8fafc;
-        color: #1e293b;
+        background-color: var(--bg-primary);
+        color: var(--text-primary);
         line-height: 1.5;
         height: 100%;
         overflow-x: hidden;
@@ -101,7 +106,7 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background: linear-gradient(135deg, #005461, #018790);
+        background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -150,7 +155,7 @@
         font-size: 3rem;
         font-weight: bold;
         margin: 2rem 0;
-        color: #00B7B5;
+        color: var(--color-secondary);
         text-shadow: 0 2px 10px rgba(0, 183, 181, 0.3);
         animation: countdownPulse 1s infinite;
       }
@@ -166,7 +171,7 @@
       
       .progress-fill {
         height: 100%;
-        background: linear-gradient(90deg, #00B7B5, #00d4d2);
+        background: linear-gradient(90deg, var(--color-secondary), var(--color-secondary-light));
         width: 0%;
         transition: width 0.3s ease;
         border-radius: 4px;
@@ -179,7 +184,7 @@
         justify-content: center;
         align-items: center;
         height: 100vh;
-        background: linear-gradient(135deg, #005461, #018790);
+        background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
         color: white;
       }
       
@@ -191,6 +196,46 @@
         border-top-color: white;
         animation: spin 1s linear infinite;
         margin-bottom: 20px;
+      }
+      
+      /* Theme Toggle Button Styles */
+      .theme-toggle-button {
+        background: var(--btn-primary-bg);
+        color: var(--btn-primary-text);
+        border: none;
+        border-radius: 12px;
+        padding: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 44px;
+        height: 44px;
+      }
+      
+      .theme-toggle-button:hover {
+        background: var(--btn-primary-hover);
+        transform: translateY(-2px);
+      }
+      
+      /* Theme Change Notification */
+      .theme-change-notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        padding: 12px 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px var(--shadow-color);
+        z-index: 9999;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border: 1px solid var(--border-color);
+        animation: slideIn 0.3s ease, fadeOut 0.3s ease 2s forwards;
       }
       
       /* Animations */
@@ -214,6 +259,26 @@
       @keyframes fadeIn {
         from { opacity: 0; transform: translateY(20px); }
         to { opacity: 1; transform: translateY(0); }
+      }
+      
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateX(100%);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+      
+      @keyframes fadeOut {
+        from {
+          opacity: 1;
+        }
+        to {
+          opacity: 0;
+        }
       }
       
       /* Welcome screen elements animation */
@@ -284,6 +349,17 @@
         .countdown-timer {
           font-size: 2rem;
         }
+      }
+      
+      /* Dark theme adjustments for welcome screen */
+      [data-theme="dark"] .welcome-screen {
+        background: linear-gradient(135deg, #00363d, #005461);
+        color: #f1f5f9;
+      }
+      
+      [data-theme="dark"] .app-loading {
+        background: linear-gradient(135deg, #00363d, #005461);
+        color: #f1f5f9;
       }
     </style>
     
@@ -386,6 +462,17 @@
         </span>
       </button>
       
+      <!-- Theme Toggle Button for Welcome Screen -->
+      <div class="mt-8">
+        <button 
+          id="welcome-theme-toggle"
+          class="px-6 py-2 bg-white/10 hover:bg-white/20 text-white font-medium rounded-lg transition-all duration-300 backdrop-blur-sm border border-white/20 hover:border-white/40 hover:shadow-md flex items-center gap-2"
+        >
+          <span id="theme-icon">🌙</span>
+          <span id="theme-text">Switch Theme</span>
+        </button>
+      </div>
+      
       <div class="mt-10 text-sm opacity-70">
         <p>ERP System v2.0 | © 2024 Pakistan Wire Industries</p>
         <p class="mt-1" style="font-size: 0.8rem;">All Rights Reserved</p>
@@ -409,6 +496,9 @@
     <!-- Main App Container -->
     <div id="root"></div>
     
+    <!-- Theme Toggle Script -->
+    <script src="%PUBLIC_URL%/theme-toggle.js"></script>
+    
     <!-- Main Script -->
     <script>
       // Global variables
@@ -429,7 +519,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, #00B7B5, #005461);
+            background: linear-gradient(135deg, var(--color-secondary), var(--color-primary));
             border-radius: 50%;
             color: white;
             font-size: 3rem;
@@ -676,7 +766,7 @@
           
           // Change color when 5 seconds remain
           if (timeLeft <= 5) {
-            countdownElement.style.color = '#ff6b6b';
+            countdownElement.style.color = 'var(--color-error)';
             countdownElement.style.animation = 'none';
           }
           
@@ -685,6 +775,73 @@
             triggerAppNavigation();
           }
         }, 1000);
+      }
+      
+      // Function to setup theme toggle for welcome screen
+      function setupWelcomeThemeToggle() {
+        const welcomeThemeToggle = document.getElementById('welcome-theme-toggle');
+        const themeIcon = document.getElementById('theme-icon');
+        const themeText = document.getElementById('theme-text');
+        
+        if (!welcomeThemeToggle) return;
+        
+        // Function to update welcome screen theme button
+        function updateWelcomeThemeButton(theme) {
+          if (theme === 'dark') {
+            themeIcon.textContent = '☀️';
+            themeText.textContent = 'Light Mode';
+          } else {
+            themeIcon.textContent = '🌙';
+            themeText.textContent = 'Dark Mode';
+          }
+        }
+        
+        // Get current theme
+        const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+        updateWelcomeThemeButton(currentTheme);
+        
+        // Add click event
+        welcomeThemeToggle.addEventListener('click', function() {
+          // Toggle theme using global function if available
+          if (window.toggleTheme) {
+            const newTheme = window.toggleTheme();
+            updateWelcomeThemeButton(newTheme);
+          } else {
+            // Fallback toggle
+            const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            
+            // Apply theme
+            document.documentElement.setAttribute('data-theme', newTheme);
+            updateWelcomeThemeButton(newTheme);
+            
+            // Save to localStorage
+            try {
+              localStorage.setItem('pwi_theme', newTheme);
+            } catch (e) {
+              console.error('Error saving theme:', e);
+            }
+            
+            // Show notification
+            const notification = document.createElement('div');
+            notification.className = 'theme-change-notification';
+            notification.innerHTML = `
+              <span>Switched to ${newTheme === 'dark' ? 'Dark' : 'Light'} theme</span>
+            `;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+              if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+              }
+            }, 2300);
+          }
+        });
+        
+        // Listen for theme changes from theme manager
+        window.addEventListener('theme-change', (event) => {
+          updateWelcomeThemeButton(event.detail.theme);
+        });
       }
       
       // Function to initialize welcome screen
@@ -697,6 +854,9 @@
           triggerAppNavigation();
           return;
         }
+        
+        // Setup theme toggle for welcome screen
+        setupWelcomeThemeToggle();
         
         // Start background music
         startBackgroundMusic();
@@ -721,7 +881,8 @@
           let clickTimer;
           
           welcomeScreen.addEventListener('click', function(e) {
-            if (e.target.id !== 'skip-button') {
+            if (e.target.id !== 'skip-button' && e.target.id !== 'welcome-theme-toggle' && 
+                e.target.parentElement.id !== 'welcome-theme-toggle') {
               clickCount++;
               
               if (clickCount === 1) {

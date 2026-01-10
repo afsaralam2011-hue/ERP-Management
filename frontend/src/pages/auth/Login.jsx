@@ -112,11 +112,11 @@ export default function Login() {
       {/* LOGIN CARD */}
       <div className="erp-login-card glass">
         <div className="erp-brand-inline">
-          <img src="/images/logoA.png" alt="PWI" />
-          <span>Pakistan Wire Industries</span>
+          <img src="/images/logo.png" alt="PWI" />
+          <h3>Pakistan Wire Industries</h3>
         </div>
-
-        <h2 className="erp-title">Welcome to PWI ERP System</h2>
+        
+        <h1 className="erp-title">Welcome to PWI ERP System</h1>
         <p className="erp-subtitle">Enterprise Resource Planning</p>
 
         {error && (

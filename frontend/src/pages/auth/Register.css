@@ -36,8 +36,8 @@
   padding: 2.5rem 2.2rem;
   background: rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(18px);
-  border-radius: 18px;
-  box-shadow: 0 25px 60px rgba(0,0,0,0.6);
+  border-radius: 50px;
+  box-shadow: 0 25px 60px lab(33.31% 47.36 -81.7 / 0.507);
   color: #e5e7eb;
   z-index: 2;
   animation: fadeInUp 0.8s ease;
@@ -54,12 +54,13 @@
   align-items: center;
   justify-content: center;
   gap: 12px;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0rem;
 }
 
 .erp-brand-inline img {
   width: 42px;
   height: 42px;
+  border-radius: 12px;
   object-fit: contain;
 }
 
@@ -75,7 +76,7 @@
   text-align: center;
   font-size: 0.95rem;
   color: #cbd5f5;
-  margin-bottom: 1.8rem;
+  margin-bottom: 0rem;
 }
 
 /* Error / success */
@@ -83,8 +84,8 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 0.75rem 1rem;
-  margin-bottom: 1.2rem;
+  padding: 0.75rem 0rem;
+  margin-bottom: 1rem;
   border-radius: 10px;
   font-size: 0.85rem;
   background: rgba(239, 68, 68, 0.18);
@@ -100,7 +101,7 @@
 .erp-form {
   display: flex;
   flex-direction: column;
-  gap: 1.2rem;
+  gap: .5rem;
 }
 
 /* Input */
@@ -108,10 +109,10 @@
   position: relative;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 1px;
   background: rgba(255, 255, 255, 0.12);
-  padding: 0.75rem 1rem;
-  border-radius: 12px;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
 }
 
 .erp-input svg {
@@ -137,10 +138,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 5px;
   padding: 0.85rem;
-  margin-top: 0.5rem;
-  background: linear-gradient(135deg,#2563eb,#4f46e5);
+  margin-top: 0.1rem;
+  background: linear-gradient(135deg,lch(42.79% 27.36 196.4),oklab(44.094% -0.0708 -0.02385));
   border: none;
   border-radius: 12px;
   font-size: 0.95rem;
@@ -151,19 +152,19 @@
 }
 
 .erp-login-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 15px 35px rgba(37, 99, 235,0.45);
+  transform: translateY(-1px);
+  box-shadow: 0 15px 35px #02297c73;
 }
 
 .erp-login-btn:disabled {
-  opacity: 0.6;
+  opacity: 0.2;
   cursor: not-allowed;
 }
 
 /* Links */
 .erp-register {
   text-align: center;
-  margin-top: 1.4rem;
+  margin-top: 0rem;
   font-size: 0.85rem;
 }
 
@@ -180,7 +181,7 @@
 /* Footer */
 .erp-footer {
   text-align: center;
-  margin-top: 1.8rem;
+  margin-top: 0rem;
   font-size: 0.75rem;
   color: #94a3b8;
 }

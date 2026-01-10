@@ -1,0 +1,85 @@
+/* light-theme.css */
+
+/* Light Theme - Default */
+[data-theme="light"],
+:root {
+  /* Background Colors */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  --bg-tertiary: #f1f5f9;
+  
+  /* Text Colors */
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --text-tertiary: #94a3b8;
+  
+  /* Border Colors */
+  --border-color: #e2e8f0;
+  --shadow-color: rgba(0, 0, 0, 0.1);
+  
+  /* Card & Surface Colors */
+  --card-bg: #ffffff;
+  --card-border: #e2e8f0;
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  
+  /* Input Colors */
+  --input-bg: #ffffff;
+  --input-border: #cbd5e1;
+  --input-text: #1e293b;
+  --input-placeholder: #94a3b8;
+  
+  /* Button Colors */
+  --btn-primary-bg: var(--color-primary);
+  --btn-primary-text: #ffffff;
+  --btn-primary-hover: var(--color-primary-dark);
+  
+  --btn-secondary-bg: var(--bg-secondary);
+  --btn-secondary-text: var(--text-primary);
+  --btn-secondary-hover: var(--bg-tertiary);
+  
+  /* Header Colors */
+  --header-bg: #ffffff;
+  --header-text: var(--text-primary);
+  --header-border: var(--border-color);
+  
+  /* Sidebar Colors */
+  --sidebar-bg: #f8fafc;
+  --sidebar-text: var(--text-primary);
+  --sidebar-hover: #e2e8f0;
+  --sidebar-active: var(--color-primary-light);
+  
+  /* Table Colors */
+  --table-header-bg: #f8fafc;
+  --table-row-even: #ffffff;
+  --table-row-odd: #f8fafc;
+  --table-border: #e2e8f0;
+  
+  /* Modal Colors */
+  --modal-bg: #ffffff;
+  --modal-overlay: rgba(0, 0, 0, 0.5);
+  --modal-border: var(--border-color);
+}
+
+/* Apply Light Theme Colors */
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+/* Welcome Screen for Light Theme */
+.welcome-screen {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
+  color: white;
+}
+
+/* Loading States */
+.app-loading {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
+  color: white;
+}
+
+/* Noscript Container */
+.noscript-container {
+  background: hsl(359, 80%, 33%);
+  color: white;
+}
