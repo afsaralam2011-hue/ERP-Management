@@ -61,7 +61,7 @@ const PVCSmartForm = () => {
   
   // Side Panel States
   const [showSidePanel, setShowSidePanel] = useState(false);
-  const [sidePanelContent, setSidePanelContent] = useState('summary');
+  const [_sidePanelContent, setSidePanelContent] = useState('summary');
   const [currentMachineDetails, setCurrentMachineDetails] = useState(null);
 
   // ==================== STYLE VARIABLES ====================

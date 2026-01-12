@@ -1,0 +1,44 @@
+// ThemeContext.jsx
+// Location: src/contexts/ThemeContext.jsx
+// Purpose: Global theme context to manage multiple color themes
+
+import React, { createContext, useState, useContext, useEffect } from "react";
+
+// ========================
+// Color palette (International standard colors)
+// ========================
+const themes = {
+  default: { background: "#E7E6E6", text: "#000000" },
+  blue: { background: "#00B0F0", text: "#FFFFFF" },
+  dark: { background: "#002060", text: "#FFFFFF" },
+  red: { background: "#C00000", text: "#FFFFFF" },
+  yellow: { background: "#FFC000", text: "#000000" },
+  orange: { background: "#ED7D31", text: "#FFFFFF" },
+  gray: { background: "#44546A", text: "#FFFFFF" },
+};
+
+const ThemeContext = createContext();
+
+export const useTheme = () => useContext(ThemeContext);
+
+export const ThemeProvider = ({ children }) => {
+  const [currentTheme, setCurrentTheme] = useState(themes.default);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("theme");
+    if (stored && themes[stored]) setCurrentTheme(themes[stored]);
+  }, []);
+
+  const changeTheme = (themeName) => {
+    if (themes[themeName]) {
+      setCurrentTheme(themes[themeName]);
+      localStorage.setItem("theme", themeName);
+    }
+  };
+
+  return (
+    <ThemeContext.Provider value={{ currentTheme, changeTheme, themes }}>
+      {children}
+    </ThemeContext.Provider>
+  );
+};
