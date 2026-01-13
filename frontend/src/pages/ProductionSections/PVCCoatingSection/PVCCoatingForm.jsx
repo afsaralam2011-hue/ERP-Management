@@ -1,15 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { 
   FiSave, FiArrowLeft, FiPackage, FiLayers, 
   FiUser, FiHash, FiDroplet, FiDatabase, 
-  FiTarget, FiCheck, FiAlertCircle, FiRefreshCw,
+  FiCheck, FiAlertCircle, FiRefreshCw,
   FiEdit2, FiClipboard, FiTrendingUp, FiFilter,
   FiX, FiRefreshCw as FiClear,
   FiMoon, FiSun, FiCoffee
 } from 'react-icons/fi';
 import { supabase } from '../../../supabaseClient';
 import "./PVCCoatingForm.css";
+
 const PVCCoatingForm = () => {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -18,56 +19,8 @@ const PVCCoatingForm = () => {
   // ✅ تھیم اسٹیٹ
   const [theme, setTheme] = useState('light'); // 'light', 'dark', 'cream'
 
-  // ✅ تھیم کلرز
-  const themeColors = {
-    light: {
-      bgPrimary: '#faf5ff',
-      bgHeader: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
-      bgCard: '#ffffff',
-      bgInput: '#f9fafb',
-      textPrimary: '#1f2937',
-      textSecondary: '#6b7280',
-      textWhite: '#ffffff',
-      border: '#d1d5db',
-      success: '#10b981',
-      error: '#ef4444',
-      warning: '#f59e0b',
-      primary: '#8b5cf6'
-    },
-    dark: {
-      bgPrimary: '#0f172a',
-      bgHeader: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
-      bgCard: '#1e293b',
-      bgInput: '#334155',
-      textPrimary: '#f1f5f9',
-      textSecondary: '#cbd5e1',
-      textWhite: '#ffffff',
-      border: '#475569',
-      success: '#10b981',
-      error: '#ef4444',
-      warning: '#f59e0b',
-      primary: '#8b5cf6'
-    },
-    cream: {
-      bgPrimary: '#fffaf0',
-      bgHeader: 'linear-gradient(135deg, #d97706 0%, #b45309 100%)',
-      bgCard: '#fef3c7',
-      bgInput: '#fde68a',
-      textPrimary: '#1f2937',
-      textSecondary: '#6b7280',
-      textWhite: '#ffffff',
-      border: '#f59e0b',
-      success: '#10b981',
-      error: '#ef4444',
-      warning: '#d97706',
-      primary: '#d97706'
-    }
-  };
-
-  const colors = themeColors[theme];
-
-  // ✅ INITIAL FORM STATE
-  const initialFormState = {
+  // ✅ INITIAL FORM STATE - useMemo میں wrap کریں
+  const initialFormState = useMemo(() => ({
     section_name: 'PVC',
     targets_id: '',
     machine_id: '',
@@ -89,7 +42,7 @@ const PVCCoatingForm = () => {
     users_name: '',
     uom: 'Meter',
     remarks: ''
-  };
+  }), []);
 
   const [formData, setFormData] = useState(initialFormState);
   const [items, setItems] = useState([]);
@@ -101,19 +54,19 @@ const PVCCoatingForm = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
   const [selectedTarget, setSelectedTarget] = useState(null);
   const [selectedShift, setSelectedShift] = useState(null);
   const [selectedMachine, setSelectedMachine] = useState(null);
   const [validationErrors, setValidationErrors] = useState({});
+  const [dataLoaded, setDataLoaded] = useState(false);
 
   // ✅ تھیم سوئچ
-  const toggleTheme = () => {
+  const toggleTheme = useCallback(() => {
     const themes = ['light', 'dark', 'cream'];
     const currentIndex = themes.indexOf(theme);
     const nextIndex = (currentIndex + 1) % themes.length;
     setTheme(themes[nextIndex]);
-  };
+  }, [theme]);
 
   // ✅ 1. USER AUTO-FILL
   useEffect(() => {
@@ -121,7 +74,6 @@ const PVCCoatingForm = () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
-          setCurrentUser(session.user);
           const userName = session.user.email?.split('@')[0] || 'User';
           setFormData(prev => ({ ...prev, users_name: userName }));
         }
@@ -132,13 +84,103 @@ const PVCCoatingForm = () => {
     getUser();
   }, []);
 
-  // ✅ 2. FETCH ALL DATA
-  useEffect(() => {
-    fetchAllData();
-    if (isEditMode) fetchRecord();
-  }, [id]);
+  // ✅ 5. HANDLE SHIFT SELECTION - تمام dependencies کو remove کریں
+  const handleShiftSelection = useCallback((shiftObj, allTargets) => {
+    if (!shiftObj) {
+      setSelectedShift(null);
+      setSelectedMachine(null);
+      setSelectedTarget(null);
+      setFilteredMachines([]);
+      setFilteredTargets([]);
+      
+      setFormData(prev => ({
+        ...prev,
+        shift_code: '',
+        shift_name: '',
+        targets_id: '',
+        machine_id: '',
+        machine_no: '',
+        target_qty: '',
+        uom: ''
+      }));
+      return;
+    }
+    
+    setSelectedShift(shiftObj);
+    setFormData(prev => ({
+      ...prev,
+      shift_code: shiftObj.shift_code,
+      shift_name: shiftObj.shift_name || shiftObj.shift_code,
+      targets_id: '',
+      machine_id: '',
+      machine_no: '',
+      target_qty: '',
+      uom: ''
+    }));
+    
+    // GET MACHINES FOR SELECTED SHIFT
+    if (!shiftObj.shift_code) {
+      setFilteredMachines([]);
+    } else {
+      const targetsForShift = allTargets.filter(target => target.shift_code === shiftObj.shift_code);
+      
+      const uniqueMachines = [];
+      const machineMap = new Map();
+      
+      targetsForShift.forEach(target => {
+        if (target.machine_id) {
+          const machineKey = `${target.machine_id}_${target.machine_no || ''}`;
+          if (!machineMap.has(machineKey)) {
+            machineMap.set(machineKey, true);
+            uniqueMachines.push({
+              machine_id: target.machine_id,
+              machine_no: target.machine_no || '',
+              displayText: target.machine_no ? 
+                `${target.machine_id} (${target.machine_no})` : 
+                target.machine_id
+            });
+          }
+        }
+      });
+      
+      setFilteredMachines(uniqueMachines);
+    }
+    
+    setFilteredTargets([]);
+    setSelectedMachine(null);
+    setSelectedTarget(null);
+    setValidationErrors(prev => ({ ...prev, machine_id: '', targets_id: '' }));
+  }, []);
 
-  const fetchAllData = async () => {
+  // ✅ FETCH RECORD FUNCTION - allShifts اور allTargets کو parameters کے طور پر پاس کریں
+  const fetchRecord = useCallback(async (id, allShifts, allTargets) => {
+    try {
+      const { data, error } = await supabase
+        .from('pvcsection')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) throw error;
+      if (data) {
+        setFormData(data);
+        if (data.shift_code) {
+          const shiftObj = allShifts.find(s => s.shift_code === data.shift_code);
+          if (shiftObj) handleShiftSelection(shiftObj, allTargets);
+        }
+        if (data.targets_id) {
+          const targetObj = allTargets.find(t => t.id === data.targets_id);
+          if (targetObj) setSelectedTarget(targetObj);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching record:', error);
+      setError('Failed to load record: ' + error.message);
+    }
+  }, [handleShiftSelection]);
+
+  // ✅ FETCH ALL DATA
+  const fetchAllData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -172,120 +214,39 @@ const PVCCoatingForm = () => {
       if (targetsError) throw targetsError;
       setAllTargets(targetsData || []);
 
+      setDataLoaded(true);
+      
+      // Edit mode میں record fetch کریں
+      if (isEditMode && id) {
+        await fetchRecord(id, shiftsData || [], targetsData || []);
+      }
+
     } catch (error) {
       console.error('Error fetching data:', error);
       setError('Data loading error: ' + error.message);
     } finally {
       setLoading(false);
     }
-  };
+  }, [isEditMode, id, fetchRecord]);
 
-  const fetchRecord = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('pvcsection')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-      if (error) throw error;
-      if (data) {
-        setFormData(data);
-        if (data.shift_code) {
-          const shiftObj = allShifts.find(s => s.shift_code === data.shift_code);
-          if (shiftObj) handleShiftSelection(shiftObj);
-        }
-        if (data.targets_id) {
-          const targetObj = allTargets.find(t => t.id === data.targets_id);
-          if (targetObj) setSelectedTarget(targetObj);
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching record:', error);
-      setError('Failed to load record: ' + error.message);
+  // ✅ 2. FETCH ALL DATA ON MOUNT - ایک ہی بار fetch کریں
+  useEffect(() => {
+    if (!dataLoaded) {
+      fetchAllData();
     }
-  };
-
-  // ✅ 3. GET MACHINES FOR SELECTED SHIFT
-  const getMachinesForShift = (shiftCode) => {
-    if (!shiftCode) return [];
-    const targetsForShift = allTargets.filter(target => target.shift_code === shiftCode);
-    
-    const uniqueMachines = [];
-    const machineMap = new Map();
-    
-    targetsForShift.forEach(target => {
-      if (target.machine_id) {
-        const machineKey = `${target.machine_id}_${target.machine_no || ''}`;
-        if (!machineMap.has(machineKey)) {
-          machineMap.set(machineKey, true);
-          uniqueMachines.push({
-            machine_id: target.machine_id,
-            machine_no: target.machine_no || '',
-            displayText: target.machine_no ? 
-              `${target.machine_id} (${target.machine_no})` : 
-              target.machine_id
-          });
-        }
-      }
-    });
-    
-    return uniqueMachines;
-  };
+  }, [dataLoaded, fetchAllData]);
 
   // ✅ 4. GET TARGETS FOR SELECTED MACHINE AND SHIFT
-  const getTargetsForMachineAndShift = (machineId, shiftCode) => {
+  const getTargetsForMachineAndShift = useCallback((machineId, shiftCode) => {
     if (!machineId || !shiftCode) return [];
     return allTargets.filter(target => 
       target.machine_id === machineId && 
       target.shift_code === shiftCode
     );
-  };
-
-  // ✅ 5. HANDLE SHIFT SELECTION
-  const handleShiftSelection = (shiftObj) => {
-    if (!shiftObj) {
-      setSelectedShift(null);
-      setSelectedMachine(null);
-      setSelectedTarget(null);
-      setFilteredMachines([]);
-      setFilteredTargets([]);
-      
-      setFormData(prev => ({
-        ...prev,
-        shift_code: '',
-        shift_name: '',
-        targets_id: '',
-        machine_id: '',
-        machine_no: '',
-        target_qty: '',
-        uom: ''
-      }));
-      return;
-    }
-    
-    setSelectedShift(shiftObj);
-    setFormData(prev => ({
-      ...prev,
-      shift_code: shiftObj.shift_code,
-      shift_name: shiftObj.shift_name || shiftObj.shift_code,
-      targets_id: '',
-      machine_id: '',
-      machine_no: '',
-      target_qty: '',
-      uom: ''
-    }));
-    
-    const machines = getMachinesForShift(shiftObj.shift_code);
-    setFilteredMachines(machines);
-    setFilteredTargets([]);
-    setSelectedMachine(null);
-    setSelectedTarget(null);
-    setValidationErrors(prev => ({ ...prev, machine_id: '', targets_id: '' }));
-  };
+  }, [allTargets]);
 
   // ✅ 6. HANDLE MACHINE SELECTION
-  const handleMachineSelection = (machineId) => {
+  const handleMachineSelection = useCallback((machineId) => {
     if (!machineId || !selectedShift) return;
     
     const selectedMachineObj = filteredMachines.find(m => m.machine_id === machineId);
@@ -308,13 +269,13 @@ const PVCCoatingForm = () => {
       setSelectedTarget(null);
       setValidationErrors(prev => ({ ...prev, targets_id: '' }));
     }
-  };
+  }, [filteredMachines, getTargetsForMachineAndShift, selectedShift]);
 
   // ✅ 7. HANDLE TARGET SELECTION
-  const handleTargetSelection = (targetId) => {
+  const handleTargetSelection = useCallback((targetId) => {
     if (!targetId || !selectedShift || !selectedMachine) return;
     
-    const selectedTargetObj = filteredTargets.find(t => t.id == targetId);
+    const selectedTargetObj = filteredTargets.find(t => t.id === targetId);
     if (selectedTargetObj) {
       setSelectedTarget(selectedTargetObj);
       setFormData(prev => ({
@@ -325,7 +286,7 @@ const PVCCoatingForm = () => {
         unit: selectedTargetObj.uom || 'Meter'
       }));
     }
-  };
+  }, [filteredTargets, selectedMachine, selectedShift]);
 
   // ✅ 8. AUTOMATIC WEIGHT CALCULATION
   useEffect(() => {
@@ -338,6 +299,7 @@ const PVCCoatingForm = () => {
         setFormData(prev => ({ ...prev, weight: calculatedWeight }));
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData.production_quantity, formData.per_meter_wt]);
 
   // ✅ 9. EFFICIENCY CALCULATION
@@ -366,7 +328,7 @@ const PVCCoatingForm = () => {
   }, [formData.production_quantity, selectedTarget]);
 
   // ✅ 10. HANDLE ITEM SELECTION
-  const handleItemChange = (e) => {
+  const handleItemChange = useCallback((e) => {
     const itemCode = e.target.value;
     setValidationErrors(prev => ({ ...prev, item_code: '' }));
     
@@ -397,18 +359,18 @@ const PVCCoatingForm = () => {
         unit: 'Meter'
       }));
     }
-  };
+  }, [items]);
 
-  const handleChange = (e) => {
+  const handleChange = useCallback((e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     if (validationErrors[name]) {
       setValidationErrors(prev => ({ ...prev, [name]: '' }));
     }
-  };
+  }, [validationErrors]);
 
   // ✅ 11. CLEAR FORM FUNCTION
-  const clearForm = () => {
+  const clearForm = useCallback(() => {
     setFormData({
       ...initialFormState,
       users_name: formData.users_name,
@@ -421,7 +383,8 @@ const PVCCoatingForm = () => {
     setValidationErrors({});
     setError(null);
     setSuccess(false);
-  };
+    setDataLoaded(false);
+  }, [formData.users_name, initialFormState]);
 
   // ✅ 12. HANDLE FORM SUBMIT
   const handleSubmit = async (e) => {
@@ -491,99 +454,35 @@ const PVCCoatingForm = () => {
 
   if (loading) {
     return (
-      <div style={{ 
-        display: 'flex', 
-        flexDirection: 'column', 
-        alignItems: 'center', 
-        justifyContent: 'center', 
-        minHeight: '100vh',
-        background: colors.bgPrimary
-      }}>
-        <div style={{ 
-          width: '50px', 
-          height: '50px', 
-          border: `3px solid ${colors.border}`, 
-          borderTopColor: colors.primary, 
-          borderRadius: '50%', 
-          animation: 'spin 1s linear infinite' 
-        }} />
-        <p style={{ marginTop: '20px', color: colors.textSecondary }}>Loading form data...</p>
+      <div className="loading-container">
+        <div className="loading-spinner" />
+        <p className="loading-text">Loading form data...</p>
       </div>
     );
   }
 
   return (
-    <div style={{ 
-      minHeight: '100vh',
-      background: colors.bgPrimary,
-      color: colors.textPrimary,
-      padding: '0',
-      margin: '0',
-      width: '100vw',
-      maxWidth: '100%',
-      overflowX: 'hidden'
-    }}>
-      {/* ✅ HEADER - ONE LINE */}
-      <div style={{ 
-        background: colors.bgHeader,
-        color: colors.textWhite,
-        padding: '15px 20px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: '15px',
-        width: '100%',
-        boxSizing: 'border-box'
-      }}>
+    <div className={`pvc-coating-form-container theme-${theme}`}>
+      {/* ✅ HEADER */}
+      <div className="form-header">
         {/* Left side: Back button + Icon + Title */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flex: 1 }}>
+        <div className="header-left">
           <button
             onClick={() => navigate('/production-sections/pvc-coating')}
-            style={{
-              background: 'rgba(255,255,255,0.2)',
-              border: 'none',
-              color: 'white',
-              padding: '8px 12px',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              fontWeight: '600',
-              fontSize: '13px'
-            }}
+            className="back-button-small"
           >
             <FiArrowLeft size={14} /> 
           </button>
 
-          <div style={{
-            width: '40px',
-            height: '40px',
-            background: 'rgba(255,255,255,0.2)',
-            borderRadius: '8px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}>
+          <div className="header-icon">
             <FiLayers size={20} />
           </div>
 
           <div>
-            <h1 style={{ 
-              margin: '0', 
-              fontSize: '18px', 
-              color: 'white', 
-              fontWeight: '700',
-              whiteSpace: 'nowrap'
-            }}>
+            <h1 className="header-title">
               {isEditMode ? 'Edit PVC Record' : 'New PVC Entry'}
             </h1>
-            <p style={{ 
-              margin: '0', 
-              color: 'rgba(255,255,255,0.9)', 
-              fontSize: '12px',
-              whiteSpace: 'nowrap'
-            }}>
+            <p className="header-subtitle">
               PVC Coating Section
             </p>
           </div>
@@ -592,19 +491,7 @@ const PVCCoatingForm = () => {
         {/* Right side: Theme Toggle Button */}
         <button
           onClick={toggleTheme}
-          style={{
-            background: 'rgba(255,255,255,0.2)',
-            border: 'none',
-            color: 'white',
-            padding: '8px',
-            borderRadius: '6px',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: '40px',
-            height: '40px'
-          }}
+          className="theme-toggle-button"
           title={`Theme: ${theme} (Click to change)`}
         >
           {theme === 'light' && <FiSun size={18} />}
@@ -614,24 +501,10 @@ const PVCCoatingForm = () => {
       </div>
 
       {/* Refresh Button */}
-      <div style={{ padding: '15px 20px 0' }}>
+      <div className="refresh-button-container">
         <button
           onClick={fetchAllData}
-          style={{
-            background: colors.success,
-            border: 'none',
-            color: 'white',
-            padding: '10px 15px',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '8px',
-            fontSize: '14px',
-            fontWeight: '600',
-            width: '100%'
-          }}
+          className="refresh-button-primary"
         >
           <FiRefreshCw size={14} /> Refresh Data
         </button>
@@ -639,20 +512,11 @@ const PVCCoatingForm = () => {
 
       {/* Messages */}
       {success && (
-        <div style={{
-          background: colors.success,
-          color: 'white',
-          padding: '15px 20px',
-          margin: '15px 20px',
-          borderRadius: '8px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '15px'
-        }}>
+        <div className="success-message-container">
           <FiCheck size={20} />
           <div style={{ flex: 1 }}>
-            <strong style={{ fontSize: '16px' }}>{success}</strong>
-            <div style={{ fontSize: '14px', opacity: '0.9' }}>
+            <strong className="success-message-title">{success}</strong>
+            <div className="success-message-subtitle">
               {isEditMode ? 'Redirecting...' : 'Form will clear automatically...'}
             </div>
           </div>
@@ -660,19 +524,10 @@ const PVCCoatingForm = () => {
       )}
 
       {error && (
-        <div style={{
-          background: '#fee2e2',
-          color: '#dc2626',
-          padding: '15px 20px',
-          margin: '15px 20px',
-          borderRadius: '8px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '15px'
-        }}>
+        <div className="error-message-container">
           <FiAlertCircle size={20} />
           <div style={{ flex: 1 }}>
-            <strong style={{ fontSize: '16px' }}>Error</strong>
+            <strong className="error-message-title">Error</strong>
             <div style={{ fontSize: '14px' }}>{error}</div>
           </div>
         </div>
@@ -680,55 +535,24 @@ const PVCCoatingForm = () => {
 
       {/* Form */}
       <form onSubmit={handleSubmit}>
-        <div style={{ padding: '20px', paddingBottom: '90px' }}>
+        <div className="form-content">
           
           {/* Section 1: ITEM SELECTION */}
-          <div style={{ 
-            marginBottom: '25px',
-            background: colors.bgCard,
-            borderRadius: '10px',
-            padding: '15px'
-          }}>
-            <div style={{
-              background: colors.primary,
-              color: 'white',
-              padding: '10px 15px',
-              borderRadius: '6px',
-              marginBottom: '15px',
-              fontSize: '13px',
-              fontWeight: '600',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
-            }}>
+          <div className="form-section-card">
+            <div className="section-header-primary">
               <FiPackage size={14} /> ITEM DETAILS
             </div>
 
             {/* Item Selection */}
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{
-                display: 'block',
-                marginBottom: '8px',
-                fontWeight: '600',
-                color: colors.textPrimary,
-                fontSize: '14px'
-              }}>
+            <div className="form-group">
+              <label className="form-label">
                 <FiHash size={14} /> Select Item *
               </label>
               <select
                 value={formData.item_code}
                 onChange={handleItemChange}
                 required
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  borderRadius: '8px',
-                  border: `1px solid ${colors.border}`,
-                  background: colors.bgInput,
-                  fontSize: '14px',
-                  color: colors.textPrimary,
-                  boxSizing: 'border-box'
-                }}
+                className={`form-control ${validationErrors.item_code ? 'has-error' : ''}`}
               >
                 <option value="">Select PVC Item ({items.length} available)</option>
                 {items.map((item, index) => (
@@ -738,7 +562,7 @@ const PVCCoatingForm = () => {
                 ))}
               </select>
               {validationErrors.item_code && (
-                <div style={{ color: colors.error, fontSize: '12px', marginTop: '5px' }}>
+                <div className="error-text">
                   {validationErrors.item_code}
                 </div>
               )}
@@ -746,40 +570,29 @@ const PVCCoatingForm = () => {
 
             {/* Item Details */}
             {formData.item_code && (
-              <div style={{ 
-                display: 'grid', 
-                gridTemplateColumns: '1fr 1fr', 
-                gap: '10px',
-                marginBottom: '15px'
-              }}>
+              <div className="item-details-grid">
                 <div>
-                  <div style={{ color: colors.textSecondary, fontWeight: '600', fontSize: '12px' }}>Item Name</div>
-                  <div style={{ color: colors.textPrimary, fontSize: '14px', marginTop: '5px' }}>{formData.item_name}</div>
+                  <div className="detail-item-label">Item Name</div>
+                  <div className="detail-item-value">{formData.item_name}</div>
                 </div>
                 <div>
-                  <div style={{ color: colors.textSecondary, fontWeight: '600', fontSize: '12px' }}>Material</div>
-                  <div style={{ color: colors.textPrimary, fontSize: '14px', marginTop: '5px' }}>{formData.material_type}</div>
+                  <div className="detail-item-label">Material</div>
+                  <div className="detail-item-value">{formData.material_type}</div>
                 </div>
                 <div>
-                  <div style={{ color: colors.textSecondary, fontWeight: '600', fontSize: '12px' }}>Spiral Size</div>
-                  <div style={{ color: colors.textPrimary, fontSize: '14px', marginTop: '5px' }}>{formData.raw_material_Spiralsize || 'N/A'}</div>
+                  <div className="detail-item-label">Spiral Size</div>
+                  <div className="detail-item-value">{formData.raw_material_Spiralsize || 'N/A'}</div>
                 </div>
                 <div>
-                  <div style={{ color: colors.textSecondary, fontWeight: '600', fontSize: '12px' }}>Per Meter Wt</div>
-                  <div style={{ color: colors.textPrimary, fontSize: '14px', marginTop: '5px' }}>{formData.per_meter_wt || 'N/A'} KG/M</div>
+                  <div className="detail-item-label">Per Meter Wt</div>
+                  <div className="detail-item-value">{formData.per_meter_wt || 'N/A'} KG/M</div>
                 </div>
               </div>
             )}
 
             {/* Production Quantity */}
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{
-                display: 'block',
-                marginBottom: '8px',
-                fontWeight: '600',
-                color: colors.textPrimary,
-                fontSize: '14px'
-              }}>
+            <div className="form-group">
+              <label className="form-label">
                 <FiEdit2 size={14} /> Production Quantity (Meter) *
               </label>
               <input
@@ -790,34 +603,19 @@ const PVCCoatingForm = () => {
                 required
                 step="0.01"
                 min="0"
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  borderRadius: '8px',
-                  border: `1px solid ${validationErrors.production_quantity ? colors.error : colors.border}`,
-                  background: colors.bgInput,
-                  fontSize: '14px',
-                  color: colors.textPrimary,
-                  boxSizing: 'border-box'
-                }}
+                className={`form-control ${validationErrors.production_quantity ? 'has-error' : ''}`}
                 placeholder="Enter production quantity"
               />
               {validationErrors.production_quantity && (
-                <div style={{ color: colors.error, fontSize: '12px', marginTop: '5px' }}>
+                <div className="error-text">
                   {validationErrors.production_quantity}
                 </div>
               )}
             </div>
 
             {/* Per Meter Weight */}
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{
-                display: 'block',
-                marginBottom: '8px',
-                fontWeight: '600',
-                color: colors.textPrimary,
-                fontSize: '14px'
-              }}>
+            <div className="form-group">
+              <label className="form-label">
                 <FiDroplet size={14} /> Per Meter Weight (KG/M)
               </label>
               <input
@@ -827,29 +625,14 @@ const PVCCoatingForm = () => {
                 value={formData.per_meter_wt}
                 onChange={handleChange}
                 min="0"
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  borderRadius: '8px',
-                  border: `1px solid ${colors.border}`,
-                  background: colors.bgInput,
-                  fontSize: '14px',
-                  color: colors.textPrimary,
-                  boxSizing: 'border-box'
-                }}
+                className="form-control"
                 placeholder="KG/M"
               />
             </div>
 
             {/* Total Weight */}
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{
-                display: 'block',
-                marginBottom: '8px',
-                fontWeight: '600',
-                color: colors.textPrimary,
-                fontSize: '14px'
-              }}>
+            <div className="form-group">
+              <label className="form-label">
                 <FiDatabase size={14} /> Total Weight (KG)
               </label>
               <input
@@ -858,70 +641,36 @@ const PVCCoatingForm = () => {
                 name="weight"
                 value={formData.weight}
                 readOnly
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  borderRadius: '8px',
-                  border: `1px solid ${colors.border}`,
-                  background: colors.bgPrimary,
-                  fontSize: '14px',
-                  color: colors.textSecondary,
-                  boxSizing: 'border-box'
-                }}
+                className="form-control readonly"
                 placeholder="Auto-calculated"
               />
             </div>
           </div>
 
           {/* Section 2: SHIFT → MACHINE → TARGET */}
-          <div style={{ 
-            marginBottom: '25px',
-            background: colors.bgCard,
-            borderRadius: '10px',
-            padding: '15px'
-          }}>
-            <div style={{
-              background: colors.primary,
-              color: 'white',
-              padding: '10px 15px',
-              borderRadius: '6px',
-              marginBottom: '15px',
-              fontSize: '13px',
-              fontWeight: '600',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
-            }}>
+          <div className="form-section-card">
+            <div className="section-header-primary">
               <FiFilter size={14} /> SHIFT → MACHINE → TARGET
             </div>
 
             {/* STEP 1: Shift Selection */}
-            <div style={{ marginBottom: '15px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                <div style={{ width: '20px', height: '20px', background: colors.primary, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '11px', fontWeight: 'bold' }}>1</div>
-                <label style={{ fontWeight: '600', color: colors.textPrimary, fontSize: '14px' }}>Select Shift *</label>
+            <div className="form-group">
+              <div className="step-indicator">
+                <div className="step-circle step-1">1</div>
+                <label className="form-label">Select Shift *</label>
               </div>
               <select
                 value={selectedShift?.shift_code || ''}
                 onChange={(e) => {
                   const shiftCode = e.target.value;
-                  if (!shiftCode) handleShiftSelection(null);
+                  if (!shiftCode) handleShiftSelection(null, allTargets);
                   else {
                     const shiftObj = allShifts.find(s => s.shift_code === shiftCode);
-                    if (shiftObj) handleShiftSelection(shiftObj);
+                    if (shiftObj) handleShiftSelection(shiftObj, allTargets);
                   }
                 }}
                 required
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  borderRadius: '8px',
-                  border: `1px solid ${validationErrors.shift_code ? colors.error : colors.border}`,
-                  background: colors.bgInput,
-                  fontSize: '14px',
-                  color: colors.textPrimary,
-                  boxSizing: 'border-box'
-                }}
+                className={`form-control ${validationErrors.shift_code ? 'has-error' : ''}`}
               >
                 <option value="">Select Shift ({allShifts.length} available)</option>
                 {allShifts.map((shift, index) => (
@@ -931,7 +680,7 @@ const PVCCoatingForm = () => {
                 ))}
               </select>
               {validationErrors.shift_code && (
-                <div style={{ color: colors.error, fontSize: '12px', marginTop: '5px' }}>
+                <div className="error-text">
                   {validationErrors.shift_code}
                 </div>
               )}
@@ -939,27 +688,17 @@ const PVCCoatingForm = () => {
 
             {/* STEP 2: Machine Selection */}
             {selectedShift && (
-              <div style={{ marginBottom: '15px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                  <div style={{ width: '20px', height: '20px', background: colors.success, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '11px', fontWeight: 'bold' }}>2</div>
-                  <label style={{ fontWeight: '600', color: colors.textPrimary, fontSize: '14px' }}>Select Machine *</label>
+              <div className="form-group">
+                <div className="step-indicator">
+                  <div className="step-circle step-2">2</div>
+                  <label className="form-label">Select Machine *</label>
                 </div>
                 <select
                   value={selectedMachine?.machine_id || ''}
                   onChange={(e) => handleMachineSelection(e.target.value)}
                   required={!!selectedShift}
                   disabled={!selectedShift || filteredMachines.length === 0}
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    borderRadius: '8px',
-                    border: `1px solid ${validationErrors.machine_id ? colors.error : colors.border}`,
-                    background: colors.bgInput,
-                    fontSize: '14px',
-                    color: colors.textPrimary,
-                    boxSizing: 'border-box',
-                    opacity: !selectedShift || filteredMachines.length === 0 ? 0.6 : 1
-                  }}
+                  className="form-control"
                 >
                   <option value="">
                     {filteredMachines.length === 0 ? 'No machines available' : `Select Machine (${filteredMachines.length})`}
@@ -975,27 +714,17 @@ const PVCCoatingForm = () => {
 
             {/* STEP 3: Target Selection */}
             {selectedMachine && (
-              <div style={{ marginBottom: '15px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                  <div style={{ width: '20px', height: '20px', background: colors.warning, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '11px', fontWeight: 'bold' }}>3</div>
-                  <label style={{ fontWeight: '600', color: colors.textPrimary, fontSize: '14px' }}>Select Target *</label>
+              <div className="form-group">
+                <div className="step-indicator">
+                  <div className="step-circle step-3">3</div>
+                  <label className="form-label">Select Target *</label>
                 </div>
                 <select
                   value={selectedTarget?.id || ''}
                   onChange={(e) => handleTargetSelection(e.target.value)}
                   required={!!selectedMachine}
                   disabled={!selectedMachine || filteredTargets.length === 0}
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    borderRadius: '8px',
-                    border: `1px solid ${validationErrors.targets_id ? colors.error : colors.border}`,
-                    background: colors.bgInput,
-                    fontSize: '14px',
-                    color: colors.textPrimary,
-                    boxSizing: 'border-box',
-                    opacity: !selectedMachine || filteredTargets.length === 0 ? 0.6 : 1
-                  }}
+                  className={`form-control ${validationErrors.targets_id ? 'has-error' : ''}`}
                 >
                   <option value="">
                     {filteredTargets.length === 0 ? 'No targets available' : `Select Target (${filteredTargets.length})`}
@@ -1007,7 +736,7 @@ const PVCCoatingForm = () => {
                   ))}
                 </select>
                 {validationErrors.targets_id && (
-                  <div style={{ color: colors.error, fontSize: '12px', marginTop: '5px' }}>
+                  <div className="error-text">
                     {validationErrors.targets_id}
                   </div>
                 )}
@@ -1016,60 +745,28 @@ const PVCCoatingForm = () => {
           </div>
 
           {/* Section 3: PERSONNEL & EFFICIENCY */}
-          <div style={{ 
-            marginBottom: '25px',
-            background: colors.bgCard,
-            borderRadius: '10px',
-            padding: '15px'
-          }}>
-            <div style={{
-              background: colors.primary,
-              color: 'white',
-              padding: '10px 15px',
-              borderRadius: '6px',
-              marginBottom: '15px',
-              fontSize: '13px',
-              fontWeight: '600',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
-            }}>
+          <div className="form-section-card">
+            <div className="section-header-primary">
               <FiUser size={14} /> PERSONNEL & EFFICIENCY
             </div>
 
             {/* Efficiency Display */}
-            <div style={{ 
-              background: formData.efficiency >= 80 ? '#d1fae5' : 
-                        formData.efficiency >= 60 ? '#fef3c7' : '#fee2e2',
-              borderRadius: '10px',
-              padding: '15px',
-              marginBottom: '15px',
-              textAlign: 'center'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginBottom: '8px' }}>
+            <div className={`efficiency-display ${
+              formData.efficiency >= 80 ? 'efficiency-high' : 
+              formData.efficiency >= 60 ? 'efficiency-medium' : 'efficiency-low'
+            }`}>
+              <div className="efficiency-header">
                 <FiTrendingUp size={18} />
-                <div style={{ fontSize: '14px', color: '#6b7280', fontWeight: '600' }}>PRODUCTION EFFICIENCY</div>
+                <div className="efficiency-title">PRODUCTION EFFICIENCY</div>
               </div>
-              <div style={{ 
-                fontSize: '28px', 
-                color: formData.efficiency >= 80 ? '#059669' : 
-                      formData.efficiency >= 60 ? '#d97706' : '#dc2626', 
-                fontWeight: 'bold',
-                marginBottom: '5px'
-              }}>
+              <div className="efficiency-value">
                 {formData.efficiency}%
               </div>
             </div>
 
             {/* Operator Name */}
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{
-                display: 'block',
-                marginBottom: '8px',
-                fontWeight: '600',
-                color: colors.textPrimary,
-                fontSize: '14px'
-              }}>
+            <div className="form-group">
+              <label className="form-label">
                 <FiUser size={14} /> Operator Name *
               </label>
               <input
@@ -1078,34 +775,19 @@ const PVCCoatingForm = () => {
                 value={formData.operator_name}
                 onChange={handleChange}
                 required
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  borderRadius: '8px',
-                  border: `1px solid ${validationErrors.operator_name ? colors.error : colors.border}`,
-                  background: colors.bgInput,
-                  fontSize: '14px',
-                  color: colors.textPrimary,
-                  boxSizing: 'border-box'
-                }}
+                className={`form-control ${validationErrors.operator_name ? 'has-error' : ''}`}
                 placeholder="Enter operator name"
               />
               {validationErrors.operator_name && (
-                <div style={{ color: colors.error, fontSize: '12px', marginTop: '5px' }}>
+                <div className="error-text">
                   {validationErrors.operator_name}
                 </div>
               )}
             </div>
 
             {/* Current User */}
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{
-                display: 'block',
-                marginBottom: '8px',
-                fontWeight: '600',
-                color: colors.textPrimary,
-                fontSize: '14px'
-              }}>
+            <div className="form-group">
+              <label className="form-label">
                 <FiUser size={14} /> Entered By
               </label>
               <input
@@ -1113,28 +795,13 @@ const PVCCoatingForm = () => {
                 name="users_name"
                 value={formData.users_name}
                 readOnly
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  borderRadius: '8px',
-                  border: `1px solid ${colors.border}`,
-                  background: colors.bgPrimary,
-                  fontSize: '14px',
-                  color: colors.textSecondary,
-                  boxSizing: 'border-box'
-                }}
+                className="form-control readonly"
               />
             </div>
 
             {/* Remarks */}
-            <div>
-              <label style={{
-                display: 'block',
-                marginBottom: '8px',
-                fontWeight: '600',
-                color: colors.textPrimary,
-                fontSize: '14px'
-              }}>
+            <div className="form-group">
+              <label className="form-label">
                 <FiClipboard size={14} /> Remarks *
               </label>
               <textarea
@@ -1143,22 +810,11 @@ const PVCCoatingForm = () => {
                 onChange={handleChange}
                 required
                 rows="3"
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  borderRadius: '8px',
-                  border: `1px solid ${validationErrors.remarks ? colors.error : colors.border}`,
-                  background: colors.bgInput,
-                  fontSize: '14px',
-                  color: colors.textPrimary,
-                  resize: 'vertical',
-                  boxSizing: 'border-box',
-                  minHeight: '80px'
-                }}
+                className={`form-textarea ${validationErrors.remarks ? 'has-error' : ''}`}
                 placeholder="Enter any remarks or notes"
               />
               {validationErrors.remarks && (
-                <div style={{ color: colors.error, fontSize: '12px', marginTop: '5px' }}>
+                <div className="error-text">
                   {validationErrors.remarks}
                 </div>
               )}
@@ -1167,37 +823,11 @@ const PVCCoatingForm = () => {
         </div>
 
         {/* Mobile Bottom Bar */}
-        <div style={{
-          position: 'fixed',
-          bottom: '0',
-          left: '0',
-          right: '0',
-          background: colors.bgCard,
-          padding: '12px 15px',
-          display: 'flex',
-          gap: '8px',
-          borderTop: `1px solid ${colors.border}`,
-          zIndex: 1000
-        }}>
+        <div className="mobile-bottom-bar">
           <button
             type="button"
             onClick={clearForm}
-            style={{
-              flex: 1,
-              padding: '12px 8px',
-              borderRadius: '8px',
-              background: '#fef3c7',
-              color: '#d97706',
-              border: 'none',
-              fontSize: '14px',
-              fontWeight: '600',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '6px',
-              cursor: 'pointer',
-              minHeight: '44px'
-            }}
+            className="bottom-bar-button clear"
           >
             <FiClear size={14} /> Clear
           </button>
@@ -1205,22 +835,7 @@ const PVCCoatingForm = () => {
           <button
             type="button"
             onClick={() => navigate('/production-sections/pvc-coating')}
-            style={{
-              flex: 1,
-              padding: '12px 8px',
-              borderRadius: '8px',
-              background: '#fee2e2',
-              color: '#dc2626',
-              border: 'none',
-              fontSize: '14px',
-              fontWeight: '600',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '6px',
-              cursor: 'pointer',
-              minHeight: '44px'
-            }}
+            className="bottom-bar-button cancel"
           >
             <FiX size={14} /> Cancel
           </button>
@@ -1228,56 +843,12 @@ const PVCCoatingForm = () => {
           <button
             type="submit"
             disabled={saving}
-            style={{
-              flex: 1,
-              padding: '12px 8px',
-              borderRadius: '8px',
-              background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.primary}88 100%)`,
-              color: 'white',
-              border: 'none',
-              fontSize: '14px',
-              fontWeight: '600',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '6px',
-              cursor: saving ? 'not-allowed' : 'pointer',
-              opacity: saving ? 0.7 : 1,
-              minHeight: '44px'
-            }}
+            className="bottom-bar-button save"
           >
             {saving ? 'Saving...' : <><FiSave size={14} /> Save</>}
           </button>
         </div>
       </form>
-
-      <style>{`
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-        
-        body, html {
-          margin: 0;
-          padding: 0;
-          width: 100%;
-          overflow-x: hidden;
-        }
-        
-        * {
-          box-sizing: border-box;
-        }
-        
-        select:focus, input:focus, textarea:focus {
-          outline: none;
-          border-color: ${colors.primary} !important;
-        }
-        
-        /* Hide scrollbar but keep functionality */
-        ::-webkit-scrollbar {
-          width: 0px;
-        }
-      `}</style>
     </div>
   );
 };

@@ -8,8 +8,7 @@ import {
 
 /* ========== THEME CONTEXT & STYLES ========== */
 import { ThemeProvider } from "./contexts/ThemeContext";
-import "./styles/theme.css";
-
+import './output.css';
 /* ========== COMMON COMPONENTS ========== */
 // Header کو یہاں سے remove کریں - Layout میں ہے
 import Layout from "./components/common/Layout";
@@ -22,7 +21,6 @@ import ForgotPassword from "./pages/auth/ForgotPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
 
 /* ========== SETTINGS PAGES ========== */
-import Settings from "./components/Settings";
 import ThemeSettings from "./pages/Settings/ThemeSettings";
 
 /* ========== DASHBOARDS ========== */
@@ -78,7 +76,6 @@ function App() {
     <ThemeProvider>
       <Router>
         <div className="App">
-          {/* ❌ Header کو یہاں سے REMOVE کریں - Layout میں ہے */}
           
           <main>
             <Routes>
@@ -101,14 +98,7 @@ function App() {
                 />
 
                 {/* ========== SETTINGS ROUTES ========== */}
-                <Route 
-                  path="/settings" 
-                  element={
-                    <Layout title="Settings" subtitle="System Configuration">
-                      <Settings />
-                    </Layout>
-                  } 
-                />
+                
                 <Route 
                   path="/settings/theme" 
                   element={

@@ -1,6 +1,5 @@
 // Header.jsx - COMPLETE FINAL VERSION
-
-
+//D:\ERP-Management\frontend\src\components\Header\Header.jsx
 import React, { useEffect, useRef } from "react";
 import { FiBell, FiSettings, FiLogOut, FiUser } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";

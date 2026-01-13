@@ -4,12 +4,14 @@
   "private": true,
   "proxy": "http://localhost:5000",
   "dependencies": {
+    "@craco/craco": "^7.1.0",
     "@fontsource/inter": "^5.2.8",
     "@fortawesome/free-solid-svg-icons": "^7.1.0",
     "@fortawesome/react-fontawesome": "^3.1.1",
     "@react-pdf/renderer": "^4.3.2",
     "@supabase/supabase-js": "^2.89.0",
     "@tailwindcss/cli": "^4.1.18",
+    "@tailwindcss/postcss": "^4.1.18",
     "axios": "^1.13.2",
     "framer-motion": "^12.25.0",
     "jspdf-autotable": "^5.0.2",
@@ -28,10 +30,10 @@
     "eslint-plugin-react-hooks": "^4.6.2"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "vercel-build": "react-scripts build",
-    "test": "react-scripts test",
+  "start": "craco start",      
+  "build": "craco build",      
+  "test": "craco test",         
+  "vercel-build": "craco build", 
     "eject": "react-scripts eject",
     "dev:all": "concurrently \"npm start\" \"cd ../backend && npm run dev\""
   },
@@ -68,3 +70,4 @@
   "license": "ISC",
   "type": "commonjs"
 }
+
