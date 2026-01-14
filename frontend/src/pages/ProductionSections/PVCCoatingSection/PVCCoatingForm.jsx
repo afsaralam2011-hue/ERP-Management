@@ -65,7 +65,7 @@ const PVCCoatingForm = () => {
     setTheme(themes[nextIndex]);
   }, [theme]);
 
-  // ✅ SEND WHATSAPP MESSAGE - USING WHATSAPP:// PROTOCOL
+  // ✅ SEND WHATSAPP MESSAGE - IMPROVED VERSION
   const sendWhatsAppMessage = useCallback((recordData) => {
     const {
       production_date,
@@ -83,7 +83,7 @@ const PVCCoatingForm = () => {
       remarks
     } = recordData;
 
-    // WhatsApp message with emojis
+    // WhatsApp message with emojis - using same format as your working code
     const message = `📊 *PVC PRODUCTION ENTRY*
 
 📅 *Production Date:* ${production_date}
@@ -103,32 +103,29 @@ const PVCCoatingForm = () => {
 
     const encodedMessage = encodeURIComponent(message);
     
-    // WhatsApp Number (Replace with your number)
-    const whatsappNumber = "923001234567";
-    
-    // Try WhatsApp protocol first
-    const whatsappUrl = `whatsapp://send?phone=${whatsappNumber}&text=${encodedMessage}`;
+    // Create WhatsApp URL - using whatsapp:// protocol like your code
+    const whatsappUrl = `whatsapp://send?text=${encodedMessage}`;
     
     try {
       // Try to open WhatsApp Desktop directly
       window.location.href = whatsappUrl;
       
-      // Fallback mechanism
+      // Fallback mechanism - if WhatsApp doesn't open
       setTimeout(() => {
         if (document.hasFocus()) {
           // WhatsApp didn't open, show options
           const confirmResult = window.confirm(
-            'WhatsApp Desktop is not opening.\n\nChoose an option:\n1. Click OK to copy message\n2. Click Cancel to try Web WhatsApp'
+            'WhatsApp Desktop is not opening.\n\nChoose an option:\n1. Click OK to copy message to clipboard\n2. Click Cancel to try Web WhatsApp'
           );
           
           if (confirmResult) {
             // Copy to clipboard
             navigator.clipboard.writeText(message).then(() => {
-              alert('Message copied to clipboard!\nPlease paste in WhatsApp.');
+              alert('Message copied to clipboard!\nPlease paste in WhatsApp Desktop.');
             });
           } else {
             // Try Web WhatsApp
-            const webWhatsappUrl = `https://web.whatsapp.com/send?phone=${whatsappNumber}&text=${encodedMessage}`;
+            const webWhatsappUrl = `https://web.whatsapp.com/send?text=${encodedMessage}`;
             window.open(webWhatsappUrl, '_blank');
           }
         }
@@ -154,7 +151,7 @@ const PVCCoatingForm = () => {
         if (session?.user) {
           const userName = session.user.email?.split('@')[0] || 'User';
           
-          // ✅ Entry date is today (fixed, cannot change)
+          // ✅ Entry date is today (fixed, cannot change) - ALWAYS SET
           const today = new Date();
           const todayStr = today.toISOString().split('T')[0];
           
@@ -163,11 +160,11 @@ const PVCCoatingForm = () => {
           yesterday.setDate(yesterday.getDate() - 1);
           const yesterdayStr = yesterday.toISOString().split('T')[0];
           
-          // ✅ یہاں users_name اور entry_date کو صحیح طور پر set کریں
+          // ✅ ALWAYS SET users_name and entry_date
           setFormData(prev => ({ 
             ...prev, 
-            users_name: userName, // ✅ یہ auto-filled ہوگا
-            entry_date: todayStr, // ✅ Fixed entry date
+            users_name: userName, // ✅ Auto-filled from login
+            entry_date: todayStr, // ✅ Auto-filled today's date
             production_date: yesterdayStr // User can change
           }));
         }
@@ -178,7 +175,7 @@ const PVCCoatingForm = () => {
     initialize();
   }, []);
 
-  // ✅ FETCH PVC RECORD - WITH users_name AND entry_date FIXED
+  // ✅ FETCH PVC RECORD - FIXED
   const fetchPvcRecord = useCallback(async (recordId, targetsData) => {
     try {
       const { data, error } = await supabase
@@ -207,15 +204,12 @@ const PVCCoatingForm = () => {
           }
         };
         
-        // ✅ Get current user for users_name
-        const { data: { session } } = await supabase.auth.getSession();
-        const currentUserName = session?.user?.email?.split('@')[0] || 'User';
-        
+        // ✅ Ensure users_name and entry_date are always set
         const recordWithDefaults = {
           ...data,
-          users_name: data.users_name || currentUserName, // ✅ users_name set کریں
-          production_date: formatDateString(data.production_date) || formatDateString(data.entry_date) || new Date().toISOString().split('T')[0],
-          entry_date: formatDateString(data.entry_date) || new Date().toISOString().split('T')[0]
+          users_name: data.users_name || (await supabase.auth.getSession())?.data?.session?.user?.email?.split('@')[0] || 'User',
+          entry_date: formatDateString(data.entry_date) || new Date().toISOString().split('T')[0],
+          production_date: formatDateString(data.production_date) || formatDateString(data.entry_date) || new Date().toISOString().split('T')[0]
         };
         
         setFormData(recordWithDefaults);
@@ -445,7 +439,7 @@ const PVCCoatingForm = () => {
       if (targetObj) {
         setFormData(prev => ({
           ...prev,
-          targets_id: targetObj.id,
+          targets_id: targetObj.targets_id,
           target_qty: targetObj.target_qty || '',
           uom: targetObj.uom || 'Meter',
           unit: targetObj.uom || 'Meter'
@@ -557,12 +551,16 @@ const PVCCoatingForm = () => {
     }
   }, [formData.production_quantity, formData.target_qty, formData.efficiency]);
 
-  // ✅ CLEAR FORM - WITH users_name PRESERVED
-  const clearForm = useCallback(() => {
+  // ✅ CLEAR FORM - FIXED
+  const clearForm = useCallback(async () => {
     const today = new Date().toISOString().split('T')[0];
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
     const yesterdayStr = yesterday.toISOString().split('T')[0];
+    
+    // Get current user name
+    const { data: { session } } = await supabase.auth.getSession();
+    const userName = session?.user?.email?.split('@')[0] || 'User';
     
     setFormData({
       section_name: 'PVC',
@@ -583,10 +581,10 @@ const PVCCoatingForm = () => {
       weight: '',
       unit: 'Meter',
       efficiency: 0,
-      users_name: formData.users_name, // ✅ users_name preserve کریں
+      users_name: userName, // ✅ Auto-filled from login
       uom: 'Meter',
       remarks: '',
-      entry_date: today, // ✅ Fixed entry date
+      entry_date: today, // ✅ Auto-filled today's date
       production_date: yesterdayStr,
       unique_date_shift_machine_item: ''
     });
@@ -596,9 +594,9 @@ const PVCCoatingForm = () => {
     setSuccess(false);
     setDuplicateCheck(null);
     setInitialLoadDone(false);
-  }, [formData.users_name]);
+  }, []);
 
-  // ✅ HANDLE SUBMIT - FIXED users_name AND entry_date SAVING
+  // ✅ HANDLE SUBMIT - FIXED
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -612,6 +610,8 @@ const PVCCoatingForm = () => {
     if (!formData.operator_name) errors.operator_name = 'Operator name is required';
     if (!formData.remarks) errors.remarks = 'Remarks are required';
     if (!formData.production_date) errors.production_date = 'Production date is required';
+    if (!formData.users_name) errors.users_name = 'User name is required';
+    if (!formData.entry_date) errors.entry_date = 'Entry date is required';
     
     setValidationErrors(errors);
     
@@ -663,15 +663,10 @@ const PVCCoatingForm = () => {
         }
       };
 
-      // ✅ دونوں تاریخوں کو format کریں
       const entryDate = formatDateForSupabase(formData.entry_date);
       const productionDate = formatDateForSupabase(formData.production_date);
 
-      // ✅ Get current user name again to be sure
-      const { data: { session } } = await supabase.auth.getSession();
-      const currentUserName = session?.user?.email?.split('@')[0] || 'User';
-
-      // ✅ recordData میں users_name اور entry_date بھی شامل کریں
+      // ✅ Ensure users_name and entry_date are always included
       const recordData = {
         section_name: 'PVC',
         targets_id: formData.targets_id,
@@ -690,10 +685,10 @@ const PVCCoatingForm = () => {
         per_meter_wt: parseFloat(formData.per_meter_wt) || 0,
         weight: parseFloat(formData.weight) || 0,
         efficiency: parseFloat(formData.efficiency) || 0,
-        users_name: currentUserName, // ✅ Current user name
+        users_name: formData.users_name, // ✅ Always included
         uom: formData.uom,
         remarks: formData.remarks,
-        entry_date: entryDate, // ✅ Entry date
+        entry_date: entryDate, // ✅ Always included
         production_date: productionDate,
         unique_date_shift_machine_item: uniqueKey,
         updated_at: new Date().toISOString()
@@ -743,20 +738,6 @@ const PVCCoatingForm = () => {
         setError('❌ DUPLICATE ENTRY! Database rejected this entry because a duplicate already exists.');
       } else if (error.message.includes('duplicate')) {
         setError('❌ DUPLICATE ENTRY! This combination already exists in database.');
-      } else if (error.message.includes('column') && (error.message.includes('entry_date') || error.message.includes('users_name'))) {
-        setError(`❌ DATABASE COLUMNS MISSING!
-        
-        Required columns are missing in database.
-        
-        Please run this SQL in Supabase:
-        
-        ALTER TABLE pvcsection 
-        ADD COLUMN IF NOT EXISTS entry_date DATE DEFAULT now();
-        
-        ALTER TABLE pvcsection 
-        ADD COLUMN IF NOT EXISTS users_name TEXT;
-        
-        Then refresh this page.`);
       } else if (error.message.includes('date') || error.message.includes('Date')) {
         setError(`❌ DATE ERROR! 
         
@@ -821,7 +802,7 @@ const PVCCoatingForm = () => {
               onChange={(e) => setSendWhatsApp(e.target.checked)}
             />
             <FiMessageCircle size={16} />
-            <span>Send WhatsApp message after save</span>
+            <span>Send WhatsApp message to number after save</span>
           </label>
         </div>
         
@@ -914,7 +895,7 @@ const PVCCoatingForm = () => {
                 <FiCalendar size={14} /> Entry Date
               </label>
               <div className="readonly-display">
-                <span className="display-value">{formData.entry_date}</span>
+                <span className="display-value">{formData.entry_date || 'Loading...'}</span>
                 <div className="display-hint">(Auto-filled, cannot change)</div>
               </div>
             </div>
@@ -1163,7 +1144,7 @@ const PVCCoatingForm = () => {
                 <FiUser size={14} /> Entered By
               </label>
               <div className="readonly-display">
-                <span className="display-value">{formData.users_name}</span>
+                <span className="display-value">{formData.users_name || 'Loading...'}</span>
                 <div className="display-hint">(Auto-filled from login)</div>
               </div>
             </div>
