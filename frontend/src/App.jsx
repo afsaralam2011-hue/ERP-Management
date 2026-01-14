@@ -96,9 +96,9 @@ function App() {
                     </Layout>
                   }
                 />
-
-                {/* ========== SETTINGS ROUTES ========== */}
                 
+                {/* ========== SETTINGS ROUTES ========== */}
+
                 <Route 
                   path="/settings/theme" 
                   element={

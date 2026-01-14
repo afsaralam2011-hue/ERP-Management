@@ -1,0 +1,73 @@
+{
+  "name": "erp-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "proxy": "http://localhost:5000",
+  "dependencies": {
+    "@craco/craco": "^7.1.0",
+    "@fontsource/inter": "^5.2.8",
+    "@fortawesome/free-solid-svg-icons": "^7.1.0",
+    "@fortawesome/react-fontawesome": "^3.1.1",
+    "@react-pdf/renderer": "^4.3.2",
+    "@supabase/supabase-js": "^2.89.0",
+    "@tailwindcss/cli": "^4.1.18",
+    "@tailwindcss/postcss": "^4.1.18",
+    "axios": "^1.13.2",
+    "framer-motion": "^12.25.0",
+    "jspdf-autotable": "^5.0.2",
+    "pdf-lib": "^1.17.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-icons": "^5.5.0",
+    "react-router-dom": "^7.11.0",
+    "react-scripts": "^5.0.1",
+    "recharts": "^3.6.0",
+    "tailwindcss": "^4.1.18",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "eslint-plugin-react-hooks": "^4.6.2"
+  },
+ "scripts": {
+  "start": "craco start",      
+  "build": "craco build",      
+  "test": "craco test",         
+  "vercel-build": "craco build", 
+    "eject": "react-scripts eject",
+    "dev:all": "concurrently \"npm start\" \"cd ../backend && npm run dev\"" 
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ],
+    "plugins": [
+      "react-hooks"
+    ],
+    "rules": {
+      "unicode-bom": "off",
+      "react-hooks/rules-of-hooks": "error",
+      "react-hooks/exhaustive-deps": "warn"
+    }
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "description": "React-based frontend for the Devine Water ERP Management System.",
+  "main": "eslint.config.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs"
+}
+

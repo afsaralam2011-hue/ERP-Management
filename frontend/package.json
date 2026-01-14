@@ -30,12 +30,20 @@
     "eslint-plugin-react-hooks": "^4.6.2"
   },
   "scripts": {
-  "start": "craco start",      
-  "build": "craco build",      
-  "test": "craco test",         
-  "vercel-build": "craco build", 
+    "start": "craco start",
+    "build": "craco build",
+    "test": "craco test",
+    "vercel-build": "craco build",
     "eject": "react-scripts eject",
-    "dev:all": "concurrently \"npm start\" \"cd ../backend && npm run dev\""
+    
+    "tailwind:watch": "tailwindcss -i ./src/index.css -o ./src/output.css --watch",
+    "tailwind:build": "tailwindcss -i ./src/index.css -o ./src/output.css --minify",
+    
+    "dev:all": "concurrently \"npm start\" \"cd ../backend && npm run dev\"",
+    
+    "dev:full": "concurrently \"npm run tailwind:watch\" \"npm start\" \"cd ../backend && npm run dev\"",
+    
+    "dev": "npm run dev:full"
   },
   "eslintConfig": {
     "extends": [
@@ -70,4 +78,3 @@
   "license": "ISC",
   "type": "commonjs"
 }
-
