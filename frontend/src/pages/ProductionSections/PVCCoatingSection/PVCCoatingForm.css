@@ -891,3 +891,71 @@
   background: var(--bg-card);
   color: var(--text-primary);
 }
+/* PVCCoatingForm.css میں شامل کریں */
+
+/* Edit Form Specific Styles */
+.edit-form-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.reset-button {
+  padding: 8px 16px;
+  background-color: #ffc107;
+  color: #000;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.reset-button:hover {
+  background-color: #e0a800;
+  transform: translateY(-2px);
+}
+
+.original-data-info {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.original-data-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.original-data-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.original-data-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.original-label {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.original-value {
+  font-size: 14px;
+  font-weight: 500;
+}
