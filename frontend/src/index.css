@@ -1,3 +1,6 @@
+/* ========== TAILWIND CSS v4 ========== */
+@import "tailwindcss";
+
 /* ========== COMPLETE CSS FILE - MERGED & OPTIMIZED ========== */
 /* This file contains all styles from App.css, index.css and Theme Variables */
 
@@ -50,8 +53,17 @@ body, html {
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
 }
 
-/* Theme Classes */
-.theme-purple {
+/* Apply Theme to Body */
+body {
+  background-color: var(--background-color);
+  color: var(--text-color);
+  transition: background-color 0.3s ease, color 0.3s ease;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* Theme Classes for Body */
+body.theme-purple {
   --primary-color: #8b5cf6;
   --secondary-color: #7c3aed;
   --light-color: #f5f3ff;
@@ -60,9 +72,10 @@ body, html {
   --background-color: #faf5ff;
   --text-color: #1f2937;
   --card-bg: #ffffff;
+  --border-color: #e5e7eb;
 }
 
-.theme-blue {
+body.theme-blue {
   --primary-color: #3b82f6;
   --secondary-color: #2563eb;
   --light-color: #eff6ff;
@@ -71,9 +84,10 @@ body, html {
   --background-color: #f0f9ff;
   --text-color: #1f2937;
   --card-bg: #ffffff;
+  --border-color: #e5e7eb;
 }
 
-.theme-green {
+body.theme-green {
   --primary-color: #10b981;
   --secondary-color: #059669;
   --light-color: #ecfdf5;
@@ -82,9 +96,10 @@ body, html {
   --background-color: #f0fdf4;
   --text-color: #1f2937;
   --card-bg: #ffffff;
+  --border-color: #e5e7eb;
 }
 
-.theme-red {
+body.theme-red {
   --primary-color: #ef4444;
   --secondary-color: #dc2626;
   --light-color: #fef2f2;
@@ -93,9 +108,10 @@ body, html {
   --background-color: #fef2f2;
   --text-color: #1f2937;
   --card-bg: #ffffff;
+  --border-color: #e5e7eb;
 }
 
-.theme-dark {
+body.theme-dark {
   --primary-color: #6b7280;
   --secondary-color: #4b5563;
   --light-color: #374151;
@@ -107,7 +123,7 @@ body, html {
   --border-color: #374151;
 }
 
-.theme-light {
+body.theme-light {
   --primary-color: #6b7280;
   --secondary-color: #9ca3af;
   --light-color: #f9fafb;
@@ -117,15 +133,6 @@ body, html {
   --text-color: #111827;
   --card-bg: #f9fafb;
   --border-color: #e5e7eb;
-}
-
-/* Apply Theme to Body */
-body {
-  background-color: var(--background-color);
-  color: var(--text-color);
-  transition: background-color 0.3s ease, color 0.3s ease;
-  line-height: 1.6;
-  min-height: 100vh;
 }
 
 /* ========== LOGO STYLES ========== */
@@ -178,7 +185,7 @@ body {
 
 /* ========== SELECTION ========== */
 ::selection {
-  background-color: rgba(var(--primary-color-rgb), 0.3);
+  background-color: rgba(139, 92, 246, 0.3);
   color: var(--text-color);
 }
 
@@ -191,106 +198,6 @@ body {
   outline: 2px solid var(--primary-color);
   outline-offset: 2px;
 }
-
-/* ========== UTILITY CLASSES ========== */
-.text-center { text-align: center; }
-.text-left { text-align: left; }
-.text-right { text-align: right; }
-.text-primary { color: var(--primary-color); }
-.text-secondary { color: var(--secondary-color); }
-.text-success { color: var(--success-color); }
-.text-warning { color: var(--warning-color); }
-.text-danger { color: var(--danger-color); }
-.text-info { color: var(--info-color); }
-
-.hidden { display: none !important; }
-.block { display: block; }
-.inline-block { display: inline-block; }
-.flex { display: flex; }
-.inline-flex { display: inline-flex; }
-.grid { display: grid; }
-
-.items-center { align-items: center; }
-.items-start { align-items: flex-start; }
-.items-end { align-items: flex-end; }
-.justify-center { justify-content: center; }
-.justify-between { justify-content: space-between; }
-.justify-around { justify-content: space-around; }
-.justify-end { justify-content: flex-end; }
-.justify-start { justify-content: flex-start; }
-
-.flex-col { flex-direction: column; }
-.flex-row { flex-direction: row; }
-.flex-wrap { flex-wrap: wrap; }
-.flex-nowrap { flex-wrap: nowrap; }
-
-.gap-1 { gap: 0.25rem; }
-.gap-2 { gap: 0.5rem; }
-.gap-3 { gap: 0.75rem; }
-.gap-4 { gap: 1rem; }
-.gap-5 { gap: 1.25rem; }
-.gap-6 { gap: 1.5rem; }
-.gap-8 { gap: 2rem; }
-
-.p-1 { padding: 0.25rem; }
-.p-2 { padding: 0.5rem; }
-.p-3 { padding: 0.75rem; }
-.p-4 { padding: 1rem; }
-.p-5 { padding: 1.25rem; }
-.p-6 { padding: 1.5rem; }
-
-.m-1 { margin: 0.25rem; }
-.m-2 { margin: 0.5rem; }
-.m-3 { margin: 0.75rem; }
-.m-4 { margin: 1rem; }
-.m-5 { margin: 1.25rem; }
-.m-6 { margin: 1.5rem; }
-
-.w-full { width: 100%; }
-.h-full { height: 100%; }
-.w-screen { width: 100vw; }
-.h-screen { height: 100vh; }
-
-.rounded { border-radius: 0.375rem; }
-.rounded-md { border-radius: 0.5rem; }
-.rounded-lg { border-radius: 0.75rem; }
-.rounded-xl { border-radius: 1rem; }
-.rounded-full { border-radius: 9999px; }
-
-.shadow-sm { box-shadow: var(--shadow-sm); }
-.shadow-md { box-shadow: var(--shadow-md); }
-.shadow-lg { box-shadow: var(--shadow-lg); }
-.shadow-xl { box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
-
-.bg-primary { background-color: var(--primary-color); }
-.bg-secondary { background-color: var(--secondary-color); }
-.bg-success { background-color: var(--success-color); }
-.bg-warning { background-color: var(--warning-color); }
-.bg-danger { background-color: var(--danger-color); }
-.bg-info { background-color: var(--info-color); }
-.bg-light { background-color: var(--light-color); }
-.bg-dark { background-color: var(--dark-color); }
-
-.border { border: 1px solid var(--border-color); }
-.border-t { border-top: 1px solid var(--border-color); }
-.border-b { border-bottom: 1px solid var(--border-color); }
-.border-l { border-left: 1px solid var(--border-color); }
-.border-r { border-right: 1px solid var(--border-color); }
-
-.font-bold { font-weight: 700; }
-.font-semibold { font-weight: 600; }
-.font-medium { font-weight: 500; }
-.font-normal { font-weight: 400; }
-.font-light { font-weight: 300; }
-
-.text-xs { font-size: 0.75rem; }
-.text-sm { font-size: 0.875rem; }
-.text-base { font-size: 1rem; }
-.text-lg { font-size: 1.125rem; }
-.text-xl { font-size: 1.25rem; }
-.text-2xl { font-size: 1.5rem; }
-.text-3xl { font-size: 1.875rem; }
-.text-4xl { font-size: 2.25rem; }
 
 /* ========== ANIMATIONS ========== */
 @keyframes fadeIn {
@@ -353,10 +260,6 @@ body {
   box-shadow: var(--shadow-md);
   border: 1px solid var(--border-color);
   margin-bottom: 1rem;
-}
-
-.read-the-docs {
-  color: #888;
 }
 
 /* ========== FORM STYLES ========== */
@@ -508,71 +411,6 @@ table tr:last-child td {
   border-bottom: none;
 }
 
-/* ========== THEME SWITCHER STYLES ========== */
-.theme-switcher {
-  position: relative;
-  display: inline-block;
-}
-
-.theme-toggle-btn {
-  background: var(--primary-color);
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  border: none;
-  cursor: pointer;
-  font-size: 0.875rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  transition: all 0.2s ease;
-}
-
-.theme-toggle-btn:hover {
-  background: var(--secondary-color);
-  transform: translateY(-1px);
-}
-
-.theme-dropdown {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  margin-top: 0.5rem;
-  background: var(--card-bg);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  box-shadow: var(--shadow-lg);
-  min-width: 120px;
-  z-index: 1000;
-  display: none;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.theme-switcher:hover .theme-dropdown {
-  display: flex;
-}
-
-.theme-option {
-  padding: 0.75rem 1rem;
-  background: transparent;
-  border: none;
-  text-align: left;
-  cursor: pointer;
-  color: var(--text-color);
-  transition: background-color 0.2s ease;
-  font-size: 0.875rem;
-}
-
-.theme-option:hover {
-  background: var(--light-color);
-}
-
-.theme-option.active {
-  background: var(--primary-color);
-  color: white;
-}
-
 /* ========== LAYOUT STYLES ========== */
 .container {
   width: 100%;
@@ -597,31 +435,6 @@ table tr:last-child td {
   margin-top: auto;
 }
 
-/* ========== CARD VARIATIONS ========== */
-.card-horizontal {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-}
-
-.card-vertical {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.card-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--gradient-bg);
-  color: white;
-  font-size: 1.5rem;
-}
-
 /* ========== LOADING SPINNER ========== */
 .spinner {
   border: 3px solid var(--light-color);
@@ -637,79 +450,7 @@ table tr:last-child td {
   100% { transform: rotate(360deg); }
 }
 
-/* ========== BADGE STYLES ========== */
-.badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.badge-primary {
-  background: var(--light-color);
-  color: var(--primary-color);
-}
-
-.badge-success {
-  background: rgba(16, 185, 129, 0.1);
-  color: var(--success-color);
-}
-
-.badge-warning {
-  background: rgba(245, 158, 11, 0.1);
-  color: var(--warning-color);
-}
-
-.badge-danger {
-  background: rgba(239, 68, 68, 0.1);
-  color: var(--danger-color);
-}
-
-/* ========== PRINT STYLES ========== */
-@media print {
-  .no-print {
-    display: none !important;
-  }
-  
-  body {
-    background: white !important;
-    color: black !important;
-  }
-  
-  table {
-    border-collapse: collapse;
-    width: 100%;
-  }
-  
-  table th, table td {
-    border: 1px solid #ddd;
-    padding: 8px;
-  }
-  
-  table th {
-    background: #f4f4f4 !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-  
-  .modal {
-    position: static;
-    background: none;
-  }
-  
-  .modal-body {
-    box-shadow: none;
-    border: 1px solid #ddd;
-  }
-}
-
 /* ========== RESPONSIVE DESIGN ========== */
-/* Desktop - Default styles already defined */
-
 /* Tablet (768px - 1024px) */
 @media (max-width: 1024px) {
   .container {
@@ -764,29 +505,6 @@ table tr:last-child td {
     width: 100%;
     justify-content: center;
   }
-  
-  .theme-dropdown {
-    position: fixed;
-    top: auto;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    width: 100%;
-    max-width: 100%;
-    border-radius: 1rem 1rem 0 0;
-    margin: 0;
-  }
-  
-  .card-horizontal {
-    flex-direction: column;
-    text-align: center;
-  }
-  
-  .card-icon {
-    width: 40px;
-    height: 40px;
-    font-size: 1.25rem;
-  }
 }
 
 /* Small Mobile (< 480px) */
@@ -794,22 +512,6 @@ table tr:last-child td {
   .logo {
     height: 4em;
     padding: 1em;
-  }
-  
-  .text-lg {
-    font-size: 1.125rem;
-  }
-  
-  .text-xl {
-    font-size: 1.25rem;
-  }
-  
-  .text-2xl {
-    font-size: 1.375rem;
-  }
-  
-  .text-3xl {
-    font-size: 1.5rem;
   }
   
   .modal {
@@ -824,63 +526,6 @@ table tr:last-child td {
   .inp {
     padding: 0.625rem;
     font-size: 0.875rem;
-  }
-  
-  .badge {
-    padding: 0.125rem 0.5rem;
-    font-size: 0.625rem;
-  }
-}
-
-/* Large Desktop (> 1440px) */
-@media (min-width: 1440px) {
-  .container {
-    max-width: 1400px;
-  }
-}
-
-/* ========== MOBILE-FIRST UTILITIES ========== */
-.mobile-only {
-  display: none;
-}
-
-.desktop-only {
-  display: block;
-}
-
-@media (max-width: 767px) {
-  .mobile-only {
-    display: block;
-  }
-  
-  .desktop-only {
-    display: none;
-  }
-}
-
-/* ========== TOUCH FRIENDLY ========== */
-@media (hover: none) and (pointer: coarse) {
-  .btn, .theme-option, .inp {
-    min-height: 44px;
-    min-width: 44px;
-  }
-  
-  table th, table td {
-    padding: 0.75rem 0.5rem;
-  }
-  
-  .modal-body {
-    padding: 1rem;
-  }
-}
-
-/* ========== DARK MODE SUPPORT ========== */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme]) {
-    --background-color: #111827;
-    --text-color: #f9fafb;
-    --card-bg: #1f2937;
-    --border-color: #374151;
   }
 }
 
@@ -906,326 +551,12 @@ table tr:last-child td {
   border: 0;
 }
 
-/* ========== CLEANUP ========== */
-[style*="#646cff"],
-[style*="#61dafb"],
-[style*="#3b82f6"],
-[style*="rgb(100, 108, 255)"],
-[style*="rgb(97, 218, 251)"],
-[style*="rgb(59, 130, 246)"],
-[style*="#8b5cf6"],
-[style*="#7c3aed"] {
-  color: var(--primary-color) !important;
-  background-color: var(--primary-color) !important;
-  border-color: var(--primary-color) !important;
-}
-
-/* ========== PERFORMANCE OPTIMIZATIONS ========== */
-img {
-  max-width: 100%;
-  height: auto;
-  display: block;
-}
-
-/* ========== PVC COATING PAGE SPECIFIC ========== */
-.pvc-coating-container {
-  width: 100%;
-  min-height: 100vh;
-  background: var(--background-color);
-  padding: 1rem;
-}
-
-/* Header Section */
-.header-section {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 1rem;
-  margin-bottom: 2rem;
-}
-
-/* Mobile Entry Buttons */
-.mobile-entry-buttons {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: var(--card-bg);
-  border-top: 1px solid var(--border-color);
-  padding: 0.75rem;
-  display: none;
-  justify-content: center;
-  gap: 0.5rem;
-  z-index: 90;
-  box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-}
-
-@media (max-width: 767px) {
-  .mobile-entry-buttons {
-    display: flex;
+/* ========== DARK MODE SUPPORT ========== */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --background-color: #111827;
+    --text-color: #f9fafb;
+    --card-bg: #1f2937;
+    --border-color: #374151;
   }
-  
-  .header-section {
-    flex-direction: column;
-  }
-  
-  .header-actions {
-    width: 100%;
-    overflow-x: auto;
-    padding-bottom: 0.5rem;
-  }
-}
-
-/* Table Responsive */
-@media (max-width: 767px) {
-  .production-table {
-    font-size: 0.75rem;
-  }
-  
-  .action-buttons {
-    flex-direction: column;
-    gap: 0.25rem;
-  }
-  
-  .action-buttons .btn {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.625rem;
-  }
-}
-
-/* Grid Layouts */
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1rem;
-  margin: 1.5rem 0;
-}
-
-@media (max-width: 767px) {
-  .stats-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.dashboard-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 1rem;
-  margin: 1.5rem 0;
-}
-
-@media (max-width: 767px) {
-  .dashboard-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* Report Section */
-.report-section {
-  background: var(--card-bg);
-  border-radius: 1rem;
-  padding: 1.5rem;
-  margin: 1.5rem 0;
-  border: 1px solid var(--border-color);
-}
-
-@media (max-width: 767px) {
-  .report-section {
-    padding: 1rem;
-    margin: 1rem 0;
-  }
-  
-  .report-actions {
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-}
-/* index.css میں یہ classes شامل کریں */
-
-/* Theme Classes for Body */
-body.theme-purple {
-  --primary-color: #8b5cf6;
-  --secondary-color: #7c3aed;
-  --background-color: #faf5ff;
-  --text-color: #1f2937;
-  --card-bg: #ffffff;
-  --border-color: #e5e7eb;
-}
-
-body.theme-blue {
-  --primary-color: #3b82f6;
-  --secondary-color: #2563eb;
-  --background-color: #f0f9ff;
-  --text-color: #1f2937;
-  --card-bg: #ffffff;
-  --border-color: #e5e7eb;
-}
-
-body.theme-green {
-  --primary-color: #10b981;
-  --secondary-color: #059669;
-  --background-color: #f0fdf4;
-  --text-color: #1f2937;
-  --card-bg: #ffffff;
-  --border-color: #e5e7eb;
-}
-
-body.theme-red {
-  --primary-color: #ef4444;
-  --secondary-color: #dc2626;
-  --background-color: #fef2f2;
-  --text-color: #1f2937;
-  --card-bg: #ffffff;
-  --border-color: #e5e7eb;
-}
-
-body.theme-dark {
-  --primary-color: #6b7280;
-  --secondary-color: #4b5563;
-  --background-color: #111827;
-  --text-color: #f9fafb;
-  --card-bg: #1f2937;
-  --border-color: #374151;
-}
-
-body.theme-light {
-  --primary-color: #6b7280;
-  --secondary-color: #9ca3af;
-  --background-color: #ffffff;
-  --text-color: #111827;
-  --card-bg: #f9fafb;
-  --border-color: #e5e7eb;
-}
-/* ========== LOGO STYLES - FIXED (THEME INDEPENDENT) ========== */
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-  filter: drop-shadow(0 0 2em rgba(100, 108, 255, 0.4)) !important; /* Fixed purple-ish color */
-}
-
-.logo:hover {
-  filter: drop-shadow(0 0 2em rgba(0, 135, 144, 0.6)) !important; /* Fixed teal color on hover */
-}
-
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em rgba(0, 183, 181, 0.6)) !important; /* Fixed teal color */
-}
-
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
-}
-/* src/index.css میں نیچے اضافی کریں */
-
-/* Force all text to use theme color */
-* {
-  color: var(--text);
-}
-
-/* Remove any hardcoded colors */
-h1, h2, h3, h4, h5, h6,
-p, span, div, label, td, th {
-  color: inherit;
-}
-
-/* Theme specific overrides */
-body.theme-dark * {
-  color: var(--text) !important;
-}
-
-body.theme-light * {
-  color: var(--text) !important;
-}
-
-/* Ensure buttons use theme colors */
-.btn, .theme-btn, .primary-btn, .export-btn, .refresh-btn,
-.report-btn, .clear-btn, .print-btn, .export-report-btn,
-.whatsapp-share-btn, .close-report-btn, .view-btn,
-.edit-btn, .delete-btn, .whatsapp-btn {
-  color: inherit;
-}
-
-/* Fix for active theme button text */
-.theme-btn.active {
-  color: #ffffff !important;
-}
-/* src/index.css میں آخر میں یہ شامل کریں */
-
-/* Remove ALL gaps and borders globally */
-body, html {
-  margin: 0;
-  padding: 0;
-  border: none;
-  outline: none;
-}
-
-/* Remove gaps from all containers */
-.container, .grid, .flex {
-  gap: 0 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-}
-
-/* Remove all borders */
-[class*="border"],
-[class*="gap"],
-[style*="border"],
-[style*="gap"] {
-  border: none !important;
-  gap: 0 !important;
-}
-
-/* Specific component fixes */
-.card, .panel, .section, .box {
-  border: none !important;
-  margin: 0.5rem 0 !important;
-  padding: 1rem !important;
-}
-
-/* Table fixes */
-table {
-  border: none !important;
-  border-collapse: collapse !important;
-}
-
-th, td {
-  border: none !important;
-  border-bottom: 1px solid rgba(0,0,0,0.1) !important;
-}
-
-/* Theme specific fixes */
-[data-theme="dark"] {
-  --border: transparent !important;
-}
-
-[data-theme="light"] {
-  --border: transparent !important;
-}
-
-/* Ensure no gaps in flex/grid layouts */
-.flex > * + * {
-  margin-left: 0 !important;
-}
-
-.grid > * + * {
-  margin: 0 !important;
-}
-
-/* Button fixes */
-button, .btn {
-  margin: 0.25rem !important;
-  padding: 0.5rem 1rem !important;
 }
