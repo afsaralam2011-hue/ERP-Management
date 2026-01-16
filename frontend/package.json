@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "proxy": "http://localhost:5000",
+  "engines": {
+    "node": "18.x",
+    "npm": "9.x"
+  },
   "dependencies": {
     "@craco/craco": "^7.1.0",
     "@fontsource/inter": "^5.2.8",
@@ -31,9 +35,9 @@
   },
   "scripts": {
     "start": "craco start",
-    "build": "craco build",
+    "build": "craco build --max-old-space-size=4096",
     "test": "craco test",
-    "vercel-build": "craco build",
+    "vercel-build": "npm install && npm run build",
     "eject": "react-scripts eject",
     
     "tailwind:watch": "tailwindcss -i ./src/index.css -o ./src/output.css --watch",
@@ -56,7 +60,8 @@
     "rules": {
       "unicode-bom": "off",
       "react-hooks/rules-of-hooks": "error",
-      "react-hooks/exhaustive-deps": "warn"
+      "react-hooks/exhaustive-deps": "warn",
+      "no-unused-vars": "warn"
     }
   },
   "browserslist": {
