@@ -4,9 +4,7 @@ module.exports = {
   style: {
     postcss: {
       plugins: [
-        // Tailwind v3 کے لیے - یہ سب سے بہتر ہے
-        require('tailwindcss'),
-        require('autoprefixer'),
+        require('@tailwindcss/postcss')
       ],
     },
   },
@@ -35,9 +33,10 @@ module.exports = {
       return webpackConfig;
     }
   },
-  babel: {
-    plugins: [
-      ['@babel/plugin-proposal-private-property-in-object', { loose: true }]
-    ]
-  }
+  // REMOVE THIS ENTIRE babel SECTION
+  // babel: {
+  //   plugins: [
+  //     ['@babel/plugin-proposal-private-property-in-object', { loose: true }]
+  //   ]
+  // }
 };
