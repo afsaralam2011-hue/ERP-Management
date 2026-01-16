@@ -1802,7 +1802,7 @@ const PVCcoatingPage = () => {
   );
 };
 
-// ✅ Styles Object (CSS-in-JS)
+
 const styles = {
   container: {
     width: '100vw',
