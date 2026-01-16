@@ -1,22 +1,26 @@
 // src/pages/ProductionSections/PVCCoatingSection/PVCCoatingMultiEntryForm.jsx
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
-  FiSave, FiArrowLeft, FiPackage, FiLayers, 
-  FiTool, FiUser, FiClock, FiHash, FiBox, 
-  FiCheckSquare, FiDroplet, FiDatabase, FiX,
-  FiTarget, FiPercent, FiCheck, FiAlertCircle, 
-  FiRefreshCw, FiEdit2, FiSettings, FiClipboard,
-  FiTrendingUp, FiPlus, FiTrash2, FiList, FiGrid,
-  FiActivity, FiTarget as FiTargetIcon
+  FiSave, FiArrowLeft, FiPackage, 
+  FiTool, FiUser, FiClock, 
+  FiCheck, FiAlertCircle, 
+  FiRefreshCw, FiPlus, FiTrash2,
+  FiActivity, FiTarget, FiClipboard, FiX,
+  FiCalendar, FiHash, FiShare2, FiCopy, FiSmartphone,
+  FiMonitor, FiMoon, FiSun, FiCoffee, FiMessageCircle,
+  FiTrendingUp, FiDatabase, FiDroplet, FiLayers
 } from 'react-icons/fi';
 import { supabase } from '../../../supabaseClient';
+import './PVCCoatingMultiEntryForm.css';
 
 const PVCCoatingMultiEntryForm = () => {
   const navigate = useNavigate();
+  const formRef = useRef(null);
   
+  const [theme, setTheme] = useState('light');
   const [formData, setFormData] = useState({
-    section_name: 'pvcsection',
+    section_name: 'PVC',
     targets_id: '',
     machine_id: '',
     machine_no: '',
@@ -24,7 +28,11 @@ const PVCCoatingMultiEntryForm = () => {
     shift_name: '',
     operator_name: '',
     users_name: '',
-    remarks: ''
+    remarks: '',
+    target_qty: '',
+    entry_date: new Date().toISOString().split('T')[0],
+    production_date: new Date().toISOString().split('T')[0],
+    unique_date_shift_machine_item: ''
   });
 
   const [entries, setEntries] = useState([
@@ -32,7 +40,7 @@ const PVCCoatingMultiEntryForm = () => {
       id: Date.now(),
       item_code: '',
       item_name: '',
-      raw_material_flatsize: '',
+      raw_material_Spiralsize: '',
       material_type: 'PVC',
       finishedproductname: '',
       production_quantity: '',
@@ -45,14 +53,28 @@ const PVCCoatingMultiEntryForm = () => {
 
   const [items, setItems] = useState([]);
   const [targets, setTargets] = useState([]);
-  const [machineTarget, setMachineTarget] = useState(null);
+  const [shifts, setShifts] = useState([]);
+  const [machines, setMachines] = useState([]);
+  const [selectedTarget, setSelectedTarget] = useState(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
   const [validationErrors, setValidationErrors] = useState({});
   const [entryErrors, setEntryErrors] = useState([]);
+  const [existingEntries, setExistingEntries] = useState([]);
+  const [showWhatsAppPopup, setShowWhatsAppPopup] = useState(false);
+  const [whatsappMessage, setWhatsappMessage] = useState('');
+  const [whatsappPreview, setWhatsappPreview] = useState('');
+  const [sendWhatsApp, setSendWhatsApp] = useState(true);
+
+  // ✅ THEME TOGGLE
+  const toggleTheme = useCallback(() => {
+    const themes = ['light', 'dark', 'cream'];
+    const currentIndex = themes.indexOf(theme);
+    const nextIndex = (currentIndex + 1) % themes.length;
+    setTheme(themes[nextIndex]);
+  }, [theme]);
 
   // ✅ USER AUTO-FILL
   useEffect(() => {
@@ -60,7 +82,6 @@ const PVCCoatingMultiEntryForm = () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
-          setCurrentUser(session.user);
           const userName = session.user.email?.split('@')[0] || 'User';
           setFormData(prev => ({ ...prev, users_name: userName }));
         }
@@ -71,7 +92,7 @@ const PVCCoatingMultiEntryForm = () => {
     getUser();
   }, []);
 
-  // ✅ FETCH DATA
+  // ✅ FETCH ALL DATA
   useEffect(() => {
     fetchAllData();
   }, []);
@@ -81,7 +102,6 @@ const PVCCoatingMultiEntryForm = () => {
       setLoading(true);
       setError(null);
       
-      // 1. ✅ pvcitem TABLE
       const { data: itemsData, error: itemsError } = await supabase
         .from('pvcitem')
         .select('*')
@@ -90,15 +110,30 @@ const PVCCoatingMultiEntryForm = () => {
       if (itemsError) throw new Error(`pvcitem table: ${itemsError.message}`);
       setItems(itemsData || []);
 
-      // 2. ✅ targets TABLE
       const { data: targetsData, error: targetsError } = await supabase
         .from('targets')
         .select('*')
-        .eq('section_name', 'pvcsection')
-        .order('machine_id');
+        .eq('section_name', 'PVC')
+        .order('shift_code');
 
       if (targetsError) throw new Error(`targets table: ${targetsError.message}`);
       setTargets(targetsData || []);
+
+      if (targetsData) {
+        const uniqueShifts = Array.from(
+          new Set(targetsData.map(target => target.shift_code))
+        ).map(shiftCode => {
+          const target = targetsData.find(t => t.shift_code === shiftCode);
+          return {
+            shift_code: shiftCode,
+            shift_name: target?.shift_name || shiftCode
+          };
+        }).filter(shift => shift.shift_code);
+        
+        setShifts(uniqueShifts);
+      }
+
+      await checkExistingEntries();
 
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -108,21 +143,100 @@ const PVCCoatingMultiEntryForm = () => {
     }
   };
 
-  // ✅ HANDLE TARGET SELECTION - MACHINE & SHIFT AUTO-FETCH
-  const handleTargetChange = (targetId) => {
-    const target = targets.find(t => t.id == targetId);
-    
-    if (target) {
-      setMachineTarget(target);
+  // ✅ CHECK EXISTING ENTRIES
+  const checkExistingEntries = async () => {
+    try {
+      const today = new Date().toISOString().split('T')[0];
       
-      // Update form data with target, machine, and shift details
+      const { data, error } = await supabase
+        .from('pvcsection')
+        .select('item_code, shift_code, machine_id, production_date')
+        .eq('production_date', today);
+
+      if (error) throw error;
+      
+      setExistingEntries(data || []);
+    } catch (error) {
+      console.error('Error checking existing entries:', error);
+    }
+  };
+
+  // ✅ CHECK IF ENTRY ALREADY EXISTS
+  const isEntryDuplicate = (itemCode) => {
+    if (!formData.shift_code || !formData.machine_id || !formData.production_date) {
+      return false;
+    }
+
+    return existingEntries.some(entry => 
+      entry.item_code === itemCode &&
+      entry.shift_code === formData.shift_code &&
+      entry.machine_id === formData.machine_id &&
+      entry.production_date === formData.production_date
+    );
+  };
+
+  // ✅ HANDLE SHIFT SELECTION
+  const handleShiftChange = (shiftCode) => {
+    if (!shiftCode) {
       setFormData(prev => ({
         ...prev,
-        targets_id: target.id,
-        machine_id: target.machine_id || '',
-        machine_no: target.machine_no || target.machine_id || '',
-        shift_code: target.shift_code || '',
-        shift_name: target.shift_name || target.shift_code || ''
+        shift_code: '',
+        shift_name: '',
+        targets_id: '',
+        machine_id: '',
+        machine_no: '',
+        target_qty: ''
+      }));
+      setMachines([]);
+      setSelectedTarget(null);
+      return;
+    }
+
+    const shift = shifts.find(s => s.shift_code === shiftCode);
+    
+    const shiftMachines = targets.filter(target => 
+      target.shift_code === shiftCode && target.section_name === 'PVC'
+    );
+    
+    setMachines(shiftMachines);
+    
+    setFormData(prev => ({
+      ...prev,
+      shift_code: shiftCode,
+      shift_name: shift?.shift_name || shiftCode,
+      targets_id: '',
+      machine_id: '',
+      machine_no: '',
+      target_qty: ''
+    }));
+    setSelectedTarget(null);
+  };
+
+  // ✅ HANDLE MACHINE SELECTION
+  const handleMachineChange = (machineId) => {
+    if (!machineId) {
+      setFormData(prev => ({
+        ...prev,
+        targets_id: '',
+        machine_id: '',
+        machine_no: '',
+        target_qty: ''
+      }));
+      setSelectedTarget(null);
+      return;
+    }
+
+    const target = machines.find(m => m.machine_id === machineId);
+    
+    if (target) {
+      setSelectedTarget(target);
+      
+      setFormData(prev => ({
+        ...prev,
+        targets_id: target.targets_id,
+        machine_id: target.machine_id,
+        machine_no: target.machine_no || target.machine_id,
+        target_qty: target.target_qty || ''
       }));
     }
   };
@@ -133,7 +247,7 @@ const PVCCoatingMultiEntryForm = () => {
       id: Date.now() + Math.random(),
       item_code: '',
       item_name: '',
-      raw_material_flatsize: '',
+      raw_material_Spiralsize: '',
       material_type: 'PVC',
       finishedproductname: '',
       production_quantity: '',
@@ -158,12 +272,11 @@ const PVCCoatingMultiEntryForm = () => {
       if (entry.id === id) {
         const updatedEntry = { ...entry, [field]: value };
 
-        // If item_code changed, auto-fill item details
         if (field === 'item_code' && value) {
           const item = items.find(i => i.item_code === value);
           if (item) {
             updatedEntry.item_name = item.item_name || '';
-            updatedEntry.raw_material_flatsize = item.raw_material_flatsize || '';
+            updatedEntry.raw_material_Spiralsize = item.raw_material_Spiralsize || '';
             updatedEntry.material_type = item.material_type || 'PVC';
             updatedEntry.finishedproductname = item.finishedproductname || '';
             updatedEntry.per_meter_wt = item.per_meter_wt || '';
@@ -171,7 +284,6 @@ const PVCCoatingMultiEntryForm = () => {
           }
         }
 
-        // Calculate weight if production quantity or per meter weight changes
         if ((field === 'production_quantity' || field === 'per_meter_wt') && 
             updatedEntry.production_quantity && updatedEntry.per_meter_wt) {
           const production = parseFloat(updatedEntry.production_quantity) || 0;
@@ -192,17 +304,26 @@ const PVCCoatingMultiEntryForm = () => {
     }, 0);
   };
 
-  // ✅ CALCULATE TOTAL EFFICIENCY
+  // ✅ CALCULATE TOTAL EFFICIENCY WITH COLOR LOGIC
   const calculateTotalEfficiency = () => {
     const totalProduction = calculateTotalProduction();
     
-    if (!machineTarget || !machineTarget.target_qty || parseFloat(machineTarget.target_qty) <= 0) {
-      return 0;
+    if (!selectedTarget || !selectedTarget.target_qty || parseFloat(selectedTarget.target_qty) <= 0) {
+      return { efficiency: 0, color: 'low' };
     }
 
-    const targetQty = parseFloat(machineTarget.target_qty);
+    const targetQty = parseFloat(selectedTarget.target_qty);
     const efficiency = (totalProduction / targetQty) * 100;
-    return Math.min(100, parseFloat(efficiency.toFixed(2)));
+    const calculatedEfficiency = Math.min(100, parseFloat(efficiency.toFixed(2)));
+    
+    let color = 'low';
+    if (calculatedEfficiency >= 80) {
+      color = 'high';
+    } else if (calculatedEfficiency >= 70) {
+      color = 'medium';
+    }
+    
+    return { efficiency: calculatedEfficiency, color };
   };
 
   // ✅ VALIDATE FORM
@@ -210,16 +331,21 @@ const PVCCoatingMultiEntryForm = () => {
     const errors = {};
     const entryErrs = [];
 
-    // Validate main form
-    if (!formData.targets_id) errors.targets_id = 'Target selection is required';
-    if (!formData.shift_code) errors.shift_code = 'Shift is required';
+    if (!formData.shift_code) errors.shift_code = 'Shift selection is required';
+    if (!formData.machine_id) errors.machine_id = 'Machine selection is required';
     if (!formData.operator_name) errors.operator_name = 'Operator name is required';
     if (!formData.remarks) errors.remarks = 'Remarks are required';
+    if (!formData.production_date) errors.production_date = 'Production date is required';
 
-    // Validate each entry
     entries.forEach((entry, index) => {
       const entryError = {};
-      if (!entry.item_code) entryError.item_code = 'Item is required';
+      
+      if (!entry.item_code) {
+        entryError.item_code = 'Item is required';
+      } else if (isEntryDuplicate(entry.item_code)) {
+        entryError.item_code = 'This item already entered for selected shift, machine and date';
+      }
+      
       if (!entry.production_quantity || parseFloat(entry.production_quantity) <= 0)
         entryError.production_quantity = 'Production quantity is required';
       if (!entry.per_meter_wt) entryError.per_meter_wt = 'Per meter weight is required';
@@ -235,12 +361,51 @@ const PVCCoatingMultiEntryForm = () => {
     return Object.keys(errors).length === 0 && entryErrs.length === 0;
   };
 
+  // ✅ GENERATE UNIQUE KEY
+  const generateUniqueKey = (itemCode) => {
+    return `${formData.production_date}_${formData.shift_code}_${formData.machine_id}_${itemCode}`;
+  };
+
+  // ✅ GENERATE WHATSAPP MESSAGE
+  const generateWhatsAppMessage = () => {
+    const totals = calculateTotals();
+    const efficiencyData = calculateTotalEfficiency();
+    const today = new Date();
+    const formattedDate = today.toLocaleDateString('en-GB');
+    
+    let message = `📊 *PVC PRODUCTION ENTRY (MULTI-ITEM)*\n\n`;
+    message += `📅 *Production Date:* ${formData.production_date}\n`;
+    message += `🕐 *Shift:* ${formData.shift_code} - ${formData.shift_name}\n`;
+    message += `🏭 *Machine:* ${formData.machine_id} ${formData.machine_no ? `(${formData.machine_no})` : ''}\n`;
+    message += `👤 *Operator:* ${formData.operator_name}\n`;
+    message += `🎯 *Target:* ${formData.target_qty} Meter\n\n`;
+    message += `📦 *Items Produced (${entries.length}):*\n`;
+    
+    entries.forEach((entry, index) => {
+      message += `${index + 1}. ${entry.item_code} - ${entry.item_name.substring(0, 20)}\n`;
+      message += `   📏 Quantity: ${entry.production_quantity} Meter\n`;
+      message += `   ⚖️ Weight: ${entry.weight} KG\n\n`;
+    });
+    
+    message += `📊 *SUMMARY:*\n`;
+    message += `📈 Total Production: ${totals.totalProduction.toFixed(2)} Meter\n`;
+    message += `⚖️ Total Weight: ${totals.totalWeight.toFixed(2)} KG\n`;
+    message += `📊 Efficiency: ${efficiencyData.efficiency.toFixed(2)}%\n\n`;
+    message += `📝 *Remarks:* ${formData.remarks}\n`;
+    message += `👤 *Entered By:* ${formData.users_name}\n`;
+    message += `📅 *Entry Date:* ${formattedDate}\n\n`;
+    message += `✅ *Multi-Entry Completed Successfully*`;
+    
+    setWhatsappPreview(message);
+    return encodeURIComponent(message);
+  };
+
   // ✅ SUBMIT FORM
   const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (!validateForm()) {
-      setError('Please fill all required fields in all entries');
+      setError('Please fix all errors before submitting');
       return;
     }
     
@@ -252,18 +417,35 @@ const PVCCoatingMultiEntryForm = () => {
         ...formData,
         item_code: entry.item_code,
         item_name: entry.item_name,
-        raw_material_flatsize: entry.raw_material_flatsize,
+        raw_material_Spiralsize: entry.raw_material_Spiralsize,
         material_type: entry.material_type,
         finishedproductname: entry.finishedproductname,
         production_quantity: parseFloat(entry.production_quantity) || 0,
         per_meter_wt: parseFloat(entry.per_meter_wt) || 0,
         weight: parseFloat(entry.weight) || 0,
         unit: entry.unit,
-        efficiency: calculateTotalEfficiency(),
+        efficiency: calculateTotalEfficiency().efficiency,
         targets_id: formData.targets_id,
+        target_qty: parseFloat(formData.target_qty) || 0,
+        unique_date_shift_machine_item: generateUniqueKey(entry.item_code),
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }));
+
+      const duplicates = records.filter(record => 
+        existingEntries.some(existing => 
+          existing.item_code === record.item_code &&
+          existing.shift_code === record.shift_code &&
+          existing.machine_id === record.machine_id &&
+          existing.production_date === record.production_date
+        )
+      );
+
+      if (duplicates.length > 0) {
+        setError(`Cannot save: ${duplicates.length} item(s) already exist for selected shift, machine and date`);
+        setSaving(false);
+        return;
+      }
 
       const { error } = await supabase
         .from('pvcsection')
@@ -272,14 +454,91 @@ const PVCCoatingMultiEntryForm = () => {
       if (error) throw error;
       
       setSuccess(`${records.length} records created successfully!`);
-      setTimeout(() => navigate('/production-sections/pvc-coating'), 3000);
+      
+      if (sendWhatsApp) {
+        const message = generateWhatsAppMessage();
+        const whatsappUrl = `whatsapp://send?text=${message}`;
+        
+        try {
+          window.location.href = whatsappUrl;
+          
+          setTimeout(() => {
+            if (document.hasFocus()) {
+              const confirmResult = window.confirm(
+                'WhatsApp Desktop is not opening.\n\nChoose an option:\n1. Click OK to copy message to clipboard\n2. Click Cancel to try Web WhatsApp'
+              );
+              
+              if (confirmResult) {
+                navigator.clipboard.writeText(whatsappPreview).then(() => {
+                  alert('Message copied to clipboard!\nPlease paste in WhatsApp Desktop.');
+                });
+              } else {
+                const webWhatsappUrl = `https://web.whatsapp.com/send?text=${message}`;
+                window.open(webWhatsappUrl, '_blank');
+              }
+            }
+          }, 1000);
+          
+        } catch (error) {
+          console.error('Error opening WhatsApp:', error);
+          
+          if (window.confirm('Could not open WhatsApp. Copy message to clipboard?')) {
+            navigator.clipboard.writeText(whatsappPreview).then(() => {
+              alert('Message copied to clipboard. Please paste in WhatsApp.');
+            });
+          }
+        }
+      }
+
+      setTimeout(() => {
+        clearForm();
+        setSuccess(false);
+      }, 2000);
 
     } catch (error) {
       console.error('Error saving records:', error);
       setError('Failed to save: ' + error.message);
-    } finally {
       setSaving(false);
     }
+  };
+
+  // ✅ CLEAR FORM
+  const clearForm = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    const userName = session?.user?.email?.split('@')[0] || 'User';
+    
+    setFormData({
+      section_name: 'PVC',
+      targets_id: '',
+      machine_id: '',
+      machine_no: '',
+      shift_code: '',
+      shift_name: '',
+      operator_name: '',
+      users_name: userName,
+      remarks: '',
+      target_qty: '',
+      entry_date: new Date().toISOString().split('T')[0],
+      production_date: new Date().toISOString().split('T')[0],
+      unique_date_shift_machine_item: ''
+    });
+    setEntries([{
+      id: Date.now(),
+      item_code: '',
+      item_name: '',
+      raw_material_Spiralsize: '',
+      material_type: 'PVC',
+      finishedproductname: '',
+      production_quantity: '',
+      per_meter_wt: '',
+      weight: '',
+      unit: 'Meter',
+      efficiency: 0
+    }]);
+    setSelectedTarget(null);
+    setMachines([]);
+    setValidationErrors({});
+    setEntryErrors([]);
   };
 
   // ✅ CALCULATE TOTALS
@@ -293,338 +552,212 @@ const PVCCoatingMultiEntryForm = () => {
 
   if (loading) {
     return (
-      <div style={{ 
-        display: 'flex', 
-        flexDirection: 'column', 
-        alignItems: 'center', 
-        justifyContent: 'center', 
-        minHeight: '400px' 
-      }}>
-        <div style={{ 
-          width: '50px', 
-          height: '50px', 
-          border: '3px solid #f3f4f6', 
-          borderTopColor: '#8b5cf6', 
-          borderRadius: '50%', 
-          animation: 'spin 1s linear infinite' 
-        }} />
-        <p style={{ marginTop: '20px', color: '#6b7280' }}>Loading form data...</p>
+      <div className="loading-container">
+        <div className="loading-spinner"></div>
+        <p className="loading-text">Loading...</p>
       </div>
     );
   }
 
   const totals = calculateTotals();
-  const totalEfficiency = calculateTotalEfficiency();
+  const efficiencyData = calculateTotalEfficiency();
+  const isMobile = window.innerWidth < 768;
 
   return (
-    <div style={{ 
-      minHeight: '100vh', 
-      backgroundColor: '#f8fafc',
-      padding: '20px'
-    }}>
-      {/* Header */}
-      <div style={{ marginBottom: '25px' }}>
+    <div className={`pvc-form-container theme-${theme}`}>
+      {/* SINGLE LINE HEADER WITH THEME TOGGLE */}
+      <div className="single-line-header">
         <button
           onClick={() => navigate('/production-sections/pvc-coating')}
-          style={{
-            backgroundColor: 'white',
-            border: '2px solid #8b5cf6',
-            color: '#8b5cf6',
-            padding: '10px 20px',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            marginBottom: '15px',
-            fontWeight: '600',
-            fontSize: '14px',
-            transition: 'all 0.3s'
-          }}
-          onMouseEnter={(e) => {
-            e.target.style.backgroundColor = '#8b5cf6';
-            e.target.style.color = 'white';
-          }}
-          onMouseLeave={(e) => {
-            e.target.style.backgroundColor = 'white';
-            e.target.style.color = '#8b5cf6';
-          }}
+          className="header-back-btn glass-btn"
+          title="Go back"
         >
-          <FiArrowLeft /> Back to PVC Coating
+          <FiArrowLeft size={20} />
         </button>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-          <div style={{
-            width: '60px',
-            height: '60px',
-            backgroundColor: '#8b5cf6',
-            borderRadius: '12px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'white'
-          }}>
-            <FiGrid size={28} />
-          </div>
-          <div>
-            <h1 style={{ margin: '0 0 5px 0', fontSize: '24px', color: '#1f2937', fontWeight: '700' }}>
-              PVC Coating Multi-Entry Form
-            </h1>
-            <p style={{ margin: '0', color: '#6b7280', fontSize: '14px' }}>
-              Add multiple items with ONE machine target • Batch Entry System
-            </p>
-          </div>
+        
+        <div className="header-icon-wrapper">
+          <FiTarget size={22} className="header-icon" />
         </div>
+        
+        <div className="header-text-content">
+          <h1 className="header-main-title">PVC Multi-Entry Form</h1>
+          <p className="header-sub-title">Shift → Machine → Target • No Duplicates</p>
+        </div>
+        
+        <button
+          onClick={toggleTheme}
+          className="header-theme-btn glass-btn"
+          title={`Theme: ${theme}`}
+        >
+          {theme === 'light' && <FiSun size={18} />}
+          {theme === 'dark' && <FiMoon size={18} />}
+          {theme === 'cream' && <FiCoffee size={18} />}
+        </button>
       </div>
 
-      {/* Refresh Button */}
-      <div style={{ marginBottom: '20px', display: 'flex', gap: '10px' }}>
+      {/* WHATSAPP OPTION LINE */}
+      <div className="whatsapp-option-line">
+        <div className="whatsapp-toggle">
+          <label className="toggle-label glass-btn">
+            <input
+              type="checkbox"
+              checked={sendWhatsApp}
+              onChange={(e) => setSendWhatsApp(e.target.checked)}
+              className="toggle-checkbox"
+            />
+            <FiMessageCircle size={16} className="toggle-icon" />
+            <span className="toggle-text">Send WhatsApp message after save</span>
+          </label>
+        </div>
+        
         <button
           onClick={fetchAllData}
-          style={{
-            backgroundColor: '#10b981',
-            border: 'none',
-            color: 'white',
-            padding: '10px 20px',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            fontSize: '14px',
-            fontWeight: '600'
-          }}
+          className="refresh-button-primary glass-btn"
+          title="Refresh all data"
         >
           <FiRefreshCw size={14} /> Refresh Data
         </button>
         
-        <div style={{
-          backgroundColor: '#f0f9ff',
-          padding: '10px 15px',
-          borderRadius: '8px',
-          fontSize: '14px',
-          color: '#0369a1',
-          fontWeight: '600',
-          border: '1px solid #bae6fd'
-        }}>
-          <FiList style={{ marginRight: '8px' }} />
-          Total Items: {items.length} | Total Targets: {targets.length}
+        <div className="info-badge glass-badge">
+          <FiHash size={16} className="badge-icon" />
+          <span className="badge-text">Items: {items.length}</span>
         </div>
       </div>
 
       {/* Messages */}
       {success && (
-        <div style={{
-          backgroundColor: '#d1fae5',
-          border: '2px solid #10b981',
-          color: '#065f46',
-          padding: '15px 20px',
-          borderRadius: '10px',
-          marginBottom: '20px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '15px'
-        }}>
-          <FiCheck size={20} />
-          <div>
-            <strong style={{ fontSize: '16px' }}>{success}</strong>
-            <div style={{ fontSize: '14px', opacity: '0.9' }}>Redirecting to PVC Coating page...</div>
+        <div className="success-message-container glass-success">
+          <FiCheck size={20} className="success-icon" />
+          <div className="success-content">
+            <strong className="success-message-title">{success}</strong>
+            <div className="success-message-subtitle">
+              {sendWhatsApp && ' WhatsApp message sent!'}
+            </div>
           </div>
         </div>
       )}
 
       {error && (
-        <div style={{
-          backgroundColor: '#fee2e2',
-          border: '2px solid #ef4444',
-          color: '#dc2626',
-          padding: '15px 20px',
-          borderRadius: '10px',
-          marginBottom: '20px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '15px'
-        }}>
-          <FiAlertCircle size={20} />
-          <div>
-            <strong style={{ fontSize: '16px' }}>Error</strong>
-            <div style={{ fontSize: '14px' }}>{error}</div>
+        <div className="error-message-container glass-error">
+          <FiAlertCircle size={20} className="error-icon" />
+          <div className="error-content">
+            <strong className="error-message-title">Error</strong>
+            <div className="error-message-text">{error}</div>
           </div>
         </div>
       )}
 
-      {/* Target & Machine Card */}
-      <div style={{
-        backgroundColor: 'white',
-        border: '2px solid #8b5cf6',
-        borderRadius: '12px',
-        padding: '25px',
-        marginBottom: '25px',
-        boxShadow: '0 4px 12px rgba(139, 92, 246, 0.1)'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '20px' }}>
-          <div style={{
-            width: '50px',
-            height: '50px',
-            backgroundColor: '#8b5cf6',
-            borderRadius: '10px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'white'
-          }}>
-            <FiTargetIcon size={24} />
-          </div>
-          <div style={{ flex: 1 }}>
-            <h2 style={{ margin: '0 0 5px 0', fontSize: '20px', fontWeight: '700', color: '#1f2937' }}>
-              Target & Machine Selection
-            </h2>
-            <p style={{ margin: '0', color: '#6b7280', fontSize: '14px' }}>
-              Select target and machine/shift will auto-fill • One target for all items
-            </p>
-          </div>
+      {/* Date Selection */}
+      <div className="form-section-card glass-card">
+        <div className="section-header-primary">
+          <FiCalendar size={14} className="header-icon" /> DATE SELECTION
         </div>
-
-        {/* Target Selection */}
-        <div style={{ marginBottom: '20px' }}>
-          <label style={{
-            display: 'block',
-            marginBottom: '10px',
-            fontWeight: '600',
-            color: '#374151',
-            fontSize: '16px'
-          }}>
-            <FiTargetIcon style={{ marginRight: '8px', color: '#8b5cf6' }} />
-            Select Target *
+        
+        <div className="form-group">
+          <label className="form-label">
+            <FiCalendar size={14} className="label-icon" /> Production Date *
           </label>
-          <select
-            value={formData.targets_id}
-            onChange={(e) => handleTargetChange(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '14px',
-              borderRadius: '10px',
-              border: '2px solid #d1d5db',
-              backgroundColor: 'white',
-              fontSize: '16px',
-              color: '#1f2937',
-              fontWeight: '500',
-              transition: 'all 0.3s'
-            }}
-            onFocus={(e) => e.target.style.borderColor = '#8b5cf6'}
-            onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
-          >
-            <option value="">Select Target ({targets.length} available)</option>
-            {targets.map((target, index) => (
-              <option key={index} value={target.id}>
-                Machine: {target.machine_id} 
-                {target.machine_no ? ` (${target.machine_no})` : ''}
-                {target.shift_code ? ` | Shift: ${target.shift_code}` : ''}
-                {target.target_qty ? ` | Target: ${target.target_qty}` : ''}
-              </option>
-            ))}
-          </select>
-          {validationErrors.targets_id && (
-            <div style={{ color: '#ef4444', fontSize: '14px', marginTop: '8px' }}>
-              {validationErrors.targets_id}
-            </div>
+          <input
+            type="date"
+            value={formData.production_date}
+            onChange={(e) => setFormData(prev => ({ 
+              ...prev, 
+              production_date: e.target.value,
+              entry_date: new Date().toISOString().split('T')[0]
+            }))}
+            className={`form-control glass-input ${validationErrors.production_date ? 'has-error' : ''}`}
+            max={new Date().toISOString().split('T')[0]}
+          />
+          {validationErrors.production_date && (
+            <div className="error-text">{validationErrors.production_date}</div>
           )}
         </div>
 
-        {/* Machine & Shift Display */}
-        {machineTarget && (
-          <div style={{
-            backgroundColor: '#f8fafc',
-            border: '2px solid #e5e7eb',
-            borderRadius: '10px',
-            padding: '20px',
-            marginBottom: '20px'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '15px' }}>
-              <div style={{
-                width: '40px',
-                height: '40px',
-                backgroundColor: '#8b5cf6',
-                borderRadius: '8px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'white'
-              }}>
-                <FiTool size={20} />
-              </div>
-              <div style={{ flex: 1 }}>
-                <h3 style={{ margin: '0 0 5px 0', fontSize: '18px', fontWeight: '700', color: '#1f2937' }}>
-                  Machine & Shift Details
-                </h3>
-                <p style={{ margin: '0', fontSize: '14px', color: '#6b7280' }}>
-                  Auto-filled from selected target
-                </p>
-              </div>
-            </div>
+        {/* ✅ ENTRY DATE - Display only */}
+        <div className="form-group">
+          <label className="form-label">
+            <FiCalendar size={14} className="label-icon" /> Entry Date
+          </label>
+          <div className="readonly-display glass-display">
+            <span className="display-value">{formData.entry_date || 'Loading...'}</span>
+            <div className="display-hint">(Auto-filled, cannot change)</div>
+          </div>
+        </div>
+      </div>
 
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
-              gap: '15px'
-            }}>
-              <div style={{
-                backgroundColor: 'white',
-                border: '1px solid #e5e7eb',
-                borderRadius: '8px',
-                padding: '15px',
-                textAlign: 'center'
-              }}>
-                <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '8px' }}>
-                  Machine ID
+      {/* Step-by-Step Selection Card */}
+      <div className="form-section-card glass-card">
+        <div className="section-header-primary">
+          <FiClock size={14} className="header-icon" /> STEP SELECTION
+        </div>
+
+        {/* Step 1: Shift Selection */}
+        <div className="form-group">
+          <div className="step-indicator">
+            <div className="step-circle step-1 glass-step">1</div>
+            <label className="form-label">Select Shift *</label>
+          </div>
+          
+          <select
+            value={formData.shift_code}
+            onChange={(e) => handleShiftChange(e.target.value)}
+            className={`form-control glass-input ${validationErrors.shift_code ? 'has-error' : ''}`}
+          >
+            <option value="">Select Shift ({shifts.length})</option>
+            {shifts.map((shift, index) => (
+              <option key={index} value={shift.shift_code}>
+                {shift.shift_code} - {shift.shift_name}
+              </option>
+            ))}
+          </select>
+          {validationErrors.shift_code && (
+            <div className="error-text">{validationErrors.shift_code}</div>
+          )}
+        </div>
+
+        {/* Step 2: Machine Selection */}
+        {formData.shift_code && (
+          <div className="form-group">
+            <div className="step-indicator">
+              <div className="step-circle step-2 glass-step">2</div>
+              <label className="form-label">Select Machine *</label>
+            </div>
+            
+            <select
+              value={formData.machine_id}
+              onChange={(e) => handleMachineChange(e.target.value)}
+              className={`form-control glass-input ${validationErrors.machine_id ? 'has-error' : ''}`}
+            >
+              <option value="">Select Machine ({machines.length})</option>
+              {machines.map((machine, index) => (
+                <option key={index} value={machine.machine_id}>
+                  Machine {machine.machine_id}
+                </option>
+              ))}
+            </select>
+            {validationErrors.machine_id && (
+              <div className="error-text">{validationErrors.machine_id}</div>
+            )}
+          </div>
+        )}
+
+        {/* Target Display */}
+        {selectedTarget && (
+          <div className="form-group">
+            <div className="step-indicator">
+              <div className="step-circle step-3 glass-step">✓</div>
+              <label className="form-label">Target Information</label>
+            </div>
+            <div className="target-display glass-target">
+              <div className="target-grid">
+                <div className="target-item">
+                  <div className="target-label">Machine</div>
+                  <div className="target-value">{selectedTarget.machine_id}</div>
                 </div>
-                <div style={{ fontSize: '20px', fontWeight: '700', color: '#1f2937' }}>
-                  {machineTarget.machine_id}
-                </div>
-              </div>
-              
-              <div style={{
-                backgroundColor: 'white',
-                border: '1px solid #e5e7eb',
-                borderRadius: '8px',
-                padding: '15px',
-                textAlign: 'center'
-              }}>
-                <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '8px' }}>
-                  Machine No
-                </div>
-                <div style={{ fontSize: '20px', fontWeight: '700', color: '#1f2937' }}>
-                  {machineTarget.machine_no || machineTarget.machine_id}
-                </div>
-              </div>
-              
-              <div style={{
-                backgroundColor: 'white',
-                border: '1px solid #e5e7eb',
-                borderRadius: '8px',
-                padding: '15px',
-                textAlign: 'center'
-              }}>
-                <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '8px' }}>
-                  Shift Code
-                </div>
-                <div style={{ fontSize: '20px', fontWeight: '700', color: '#1f2937' }}>
-                  {machineTarget.shift_code || 'N/A'}
-                </div>
-              </div>
-              
-              <div style={{
-                backgroundColor: '#fef3c7',
-                border: '1px solid #f59e0b',
-                borderRadius: '8px',
-                padding: '15px',
-                textAlign: 'center'
-              }}>
-                <div style={{ fontSize: '14px', color: '#92400e', marginBottom: '8px' }}>
-                  Target Quantity
-                </div>
-                <div style={{ fontSize: '20px', fontWeight: '700', color: '#92400e' }}>
-                  {machineTarget.target_qty || 0} {machineTarget.uom || 'Meter'}
+                
+                <div className="target-item target-qty glass-highlight">
+                  <div className="target-label">Target</div>
+                  <div className="target-value target-highlight">{selectedTarget.target_qty || 0}</div>
                 </div>
               </div>
             </div>
@@ -633,132 +766,20 @@ const PVCCoatingMultiEntryForm = () => {
       </div>
 
       {/* Main Form */}
-      <form onSubmit={handleSubmit} style={{
-        backgroundColor: 'white',
-        borderRadius: '12px',
-        border: '2px solid #e5e7eb',
-        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
-        padding: '30px',
-        marginBottom: '30px'
-      }}>
+      <form ref={formRef} onSubmit={handleSubmit} className="main-form">
         
-        {/* Shift & Operator Section */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-          gap: '30px',
-          marginBottom: '30px'
-        }}>
+        {/* Operator & User Details */}
+        <div className="details-grid">
           
-          {/* Shift Details */}
-          <div>
-            <div style={{
-              backgroundColor: '#d1fae5',
-              border: '2px solid #10b981',
-              color: '#065f46',
-              padding: '12px 15px',
-              borderRadius: '8px',
-              marginBottom: '20px',
-              fontSize: '14px',
-              fontWeight: '600',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px'
-            }}>
-              <FiClock size={16} /> SHIFT DETAILS
-            </div>
-
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{
-                display: 'block',
-                marginBottom: '8px',
-                fontWeight: '600',
-                color: '#374151',
-                fontSize: '14px'
-              }}>
-                <FiClock size={14} style={{ color: '#10b981', marginRight: '8px' }} />
-                Shift Code *
-              </label>
-              <input
-                type="text"
-                value={formData.shift_code}
-                readOnly
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  borderRadius: '8px',
-                  border: `2px solid ${formData.shift_code ? '#10b981' : '#ef4444'}`,
-                  backgroundColor: formData.shift_code ? '#f0fdf4' : '#fef2f2',
-                  fontSize: '14px',
-                  color: '#1f2937',
-                  fontWeight: '500',
-                  transition: 'all 0.3s'
-                }}
-              />
-              {validationErrors.shift_code && (
-                <div style={{ color: '#ef4444', fontSize: '12px', marginTop: '5px' }}>
-                  {validationErrors.shift_code}
-                </div>
-              )}
-            </div>
-
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{
-                display: 'block',
-                marginBottom: '8px',
-                fontWeight: '600',
-                color: '#374151',
-                fontSize: '14px'
-              }}>
-                <FiClock size={14} style={{ color: '#6b7280', marginRight: '8px' }} />
-                Shift Name
-              </label>
-              <input
-                type="text"
-                value={formData.shift_name}
-                readOnly
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  borderRadius: '8px',
-                  border: '2px solid #d1d5db',
-                  backgroundColor: '#f9fafb',
-                  fontSize: '14px',
-                  color: '#1f2937',
-                  fontWeight: '500'
-                }}
-              />
-            </div>
-          </div>
-
           {/* Operator Details */}
-          <div>
-            <div style={{
-              backgroundColor: '#fef3c7',
-              border: '2px solid #f59e0b',
-              color: '#92400e',
-              padding: '12px 15px',
-              borderRadius: '8px',
-              marginBottom: '20px',
-              fontSize: '14px',
-              fontWeight: '600',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px'
-            }}>
-              <FiUser size={16} /> OPERATOR DETAILS
+          <div className="form-section-card glass-card operator-card">
+            <div className="section-header-primary">
+              <FiUser size={14} className="header-icon" /> OPERATOR DETAILS
             </div>
 
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{
-                display: 'block',
-                marginBottom: '8px',
-                fontWeight: '600',
-                color: '#374151',
-                fontSize: '14px'
-              }}>
-                <FiUser size={14} style={{ color: '#f59e0b', marginRight: '8px' }} />
-                Operator Name *
+            <div className="form-group">
+              <label className="form-label">
+                <FiUser size={14} className="label-icon" /> Operator Name *
               </label>
               <input
                 type="text"
@@ -766,39 +787,18 @@ const PVCCoatingMultiEntryForm = () => {
                 value={formData.operator_name}
                 onChange={(e) => setFormData(prev => ({ ...prev, operator_name: e.target.value }))}
                 required
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  borderRadius: '8px',
-                  border: `2px solid ${formData.operator_name ? '#10b981' : '#ef4444'}`,
-                  backgroundColor: formData.operator_name ? '#f0fdf4' : '#fef2f2',
-                  fontSize: '14px',
-                  color: '#1f2937',
-                  fontWeight: '500',
-                  transition: 'all 0.3s'
-                }}
+                className={`form-control glass-input ${validationErrors.operator_name ? 'has-error' : ''}`}
                 placeholder="Enter operator name"
-                onFocus={(e) => e.target.style.borderColor = '#8b5cf6'}
-                onBlur={(e) => e.target.style.borderColor = formData.operator_name ? '#10b981' : '#ef4444'}
               />
               {validationErrors.operator_name && (
-                <div style={{ color: '#ef4444', fontSize: '12px', marginTop: '5px' }}>
-                  {validationErrors.operator_name}
-                </div>
+                <div className="error-text">{validationErrors.operator_name}</div>
               )}
             </div>
 
             {/* Remarks */}
-            <div>
-              <label style={{
-                display: 'block',
-                marginBottom: '8px',
-                fontWeight: '600',
-                color: '#374151',
-                fontSize: '14px'
-              }}>
-                <FiClipboard size={14} style={{ color: '#8b5cf6', marginRight: '8px' }} />
-                Remarks *
+            <div className="form-group">
+              <label className="form-label">
+                <FiClipboard size={14} className="label-icon" /> Remarks *
               </label>
               <textarea
                 name="remarks"
@@ -806,148 +806,80 @@ const PVCCoatingMultiEntryForm = () => {
                 onChange={(e) => setFormData(prev => ({ ...prev, remarks: e.target.value }))}
                 required
                 rows="3"
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  borderRadius: '8px',
-                  border: `2px solid ${formData.remarks ? '#10b981' : '#ef4444'}`,
-                  backgroundColor: formData.remarks ? '#f0fdf4' : '#fef2f2',
-                  fontSize: '14px',
-                  color: '#1f2937',
-                  fontWeight: '500',
-                  transition: 'all 0.3s',
-                  resize: 'vertical'
-                }}
-                placeholder="Enter remarks for all entries"
-                onFocus={(e) => e.target.style.borderColor = '#8b5cf6'}
-                onBlur={(e) => e.target.style.borderColor = formData.remarks ? '#10b981' : '#ef4444'}
+                className={`form-textarea glass-textarea ${validationErrors.remarks ? 'has-error' : ''}`}
+                placeholder="Enter remarks"
               />
               {validationErrors.remarks && (
-                <div style={{ color: '#ef4444', fontSize: '12px', marginTop: '5px' }}>
-                  {validationErrors.remarks}
-                </div>
+                <div className="error-text">{validationErrors.remarks}</div>
               )}
+            </div>
+          </div>
+
+          {/* User Details */}
+          <div className="form-section-card glass-card user-card">
+            <div className="section-header-primary">
+              <FiUser size={14} className="header-icon" /> USER DETAILS
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">
+                <FiUser size={14} className="label-icon" /> User Name
+              </label>
+              <div className="readonly-display glass-display">
+                <span className="display-value">{formData.users_name || 'Loading...'}</span>
+                <div className="display-hint">(Auto-filled from login)</div>
+              </div>
+            </div>
+
+            {/* Entry Date - Already shown above */}
+            <div className="form-group">
+              <label className="form-label">
+                <FiCalendar size={14} className="label-icon" /> Entry Date
+              </label>
+              <div className="readonly-display glass-display">
+                <span className="display-value">{formData.entry_date || 'Loading...'}</span>
+                <div className="display-hint">(Auto-filled today's date)</div>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Entries Section */}
-        <div style={{ marginBottom: '30px' }}>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '20px'
-          }}>
-            <div style={{
-              backgroundColor: '#8b5cf6',
-              border: '2px solid #7c3aed',
-              color: 'white',
-              padding: '12px 15px',
-              borderRadius: '8px',
-              fontSize: '14px',
-              fontWeight: '600',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px'
-            }}>
-              <FiPackage size={16} /> ITEM ENTRIES ({entries.length})
+        <div className="form-section-card glass-card">
+          <div className="entries-header">
+            <div className="section-header-primary entries-title">
+              <FiPackage size={14} className="header-icon" /> ITEMS ({entries.length})
             </div>
             
             <button
               type="button"
               onClick={addEntryRow}
-              style={{
-                backgroundColor: '#8b5cf6',
-                border: 'none',
-                color: 'white',
-                padding: '10px 20px',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                fontSize: '14px',
-                fontWeight: '600',
-                transition: 'all 0.3s'
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.backgroundColor = '#7c3aed';
-                e.target.style.transform = 'translateY(-2px)';
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.backgroundColor = '#8b5cf6';
-                e.target.style.transform = 'translateY(0)';
-              }}
+              className="add-item-btn glass-btn-primary"
+              title="Add new item row"
             >
-              <FiPlus /> Add New Item
+              <FiPlus size={14} className="btn-icon" /> Add Item
             </button>
           </div>
 
           {/* Entries List */}
           {entries.map((entry, index) => {
             const entryError = entryErrors.find(err => err.index === index);
+            const isDuplicate = isEntryDuplicate(entry.item_code);
             
             return (
-              <div key={entry.id} style={{
-                backgroundColor: '#f8fafc',
-                border: '2px solid #e5e7eb',
-                borderRadius: '10px',
-                padding: '20px',
-                marginBottom: '15px',
-                position: 'relative',
-                transition: 'all 0.3s'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = '#8b5cf6';
-                e.currentTarget.style.boxShadow = '0 4px 12px rgba(139, 92, 246, 0.1)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = '#e5e7eb';
-                e.currentTarget.style.boxShadow = 'none';
-              }}
-              >
+              <div key={entry.id} className={`entry-card ${isDuplicate ? 'duplicate glass-error' : 'glass-card'}`}>
                 
                 {/* Entry Header */}
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  marginBottom: '15px'
-                }}>
-                  <div style={{ 
-                    backgroundColor: '#8b5cf6', 
-                    color: 'white', 
-                    padding: '5px 12px',
-                    borderRadius: '20px',
-                    fontSize: '12px',
-                    fontWeight: '600'
-                  }}>
-                    Entry #{index + 1}
+                <div className="entry-header">
+                  <div className={`entry-number ${isDuplicate ? 'duplicate' : 'glass-badge'}`}>
+                    Item #{index + 1}
                   </div>
                   {entries.length > 1 && (
                     <button
                       type="button"
                       onClick={() => removeEntryRow(entry.id)}
-                      style={{
-                        backgroundColor: '#fee2e2',
-                        border: '1px solid #ef4444',
-                        color: '#dc2626',
-                        width: '32px',
-                        height: '32px',
-                        borderRadius: '8px',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        transition: 'all 0.3s'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.target.style.backgroundColor = '#fecaca';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.target.style.backgroundColor = '#fee2e2';
-                      }}
+                      className="remove-btn glass-btn-danger"
+                      title="Remove this item"
                     >
                       <FiTrash2 size={14} />
                     </button>
@@ -955,173 +887,91 @@ const PVCCoatingMultiEntryForm = () => {
                 </div>
 
                 {/* Entry Form */}
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-                  gap: '15px'
-                }}>
+                <div className="entry-form">
                   
                   {/* Item Selection */}
-                  <div>
-                    <label style={{
-                      display: 'block',
-                      marginBottom: '8px',
-                      fontWeight: '600',
-                      color: '#374151',
-                      fontSize: '13px'
-                    }}>
-                      Item *
-                    </label>
+                  <div className="form-group">
+                    <label className="form-label">Item *</label>
                     <select
                       value={entry.item_code}
                       onChange={(e) => handleEntryChange(entry.id, 'item_code', e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '10px',
-                        borderRadius: '6px',
-                        border: `2px solid ${entry.item_code ? '#10b981' : '#ef4444'}`,
-                        backgroundColor: entry.item_code ? '#f0fdf4' : '#fef2f2',
-                        fontSize: '13px',
-                        color: '#1f2937',
-                        transition: 'all 0.3s'
-                      }}
-                      onFocus={(e) => e.target.style.borderColor = '#8b5cf6'}
-                      onBlur={(e) => e.target.style.borderColor = entry.item_code ? '#10b981' : '#ef4444'}
+                      className={`form-control glass-input ${isDuplicate ? 'has-error' : ''}`}
                     >
                       <option value="">Select Item</option>
                       {items.map((item, idx) => (
                         <option key={idx} value={item.item_code}>
-                          {item.item_code} - {item.item_name}
+                          {item.item_code} - {item.item_name.substring(0, 15)}...
                         </option>
                       ))}
                     </select>
-                    {entryError?.errors.item_code && (
-                      <div style={{ color: '#ef4444', fontSize: '11px', marginTop: '3px' }}>
-                        {entryError.errors.item_code}
+                    {(entryError?.errors.item_code || isDuplicate) && (
+                      <div className="error-text">
+                        {entryError?.errors.item_code || 'Duplicate entry detected'}
                       </div>
                     )}
                   </div>
 
                   {/* Production Quantity */}
-                  <div>
-                    <label style={{
-                      display: 'block',
-                      marginBottom: '8px',
-                      fontWeight: '600',
-                      color: '#374151',
-                      fontSize: '13px'
-                    }}>
-                      Production Qty *
-                    </label>
+                  <div className="form-group">
+                    <label className="form-label">Qty (Meter) *</label>
                     <input
                       type="number"
                       step="0.01"
                       min="0"
                       value={entry.production_quantity}
                       onChange={(e) => handleEntryChange(entry.id, 'production_quantity', e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '10px',
-                        borderRadius: '6px',
-                        border: `2px solid ${entry.production_quantity ? '#10b981' : '#ef4444'}`,
-                        backgroundColor: entry.production_quantity ? '#f0fdf4' : '#fef2f2',
-                        fontSize: '13px',
-                        color: '#1f2937',
-                        transition: 'all 0.3s'
-                      }}
-                      placeholder="Meter"
-                      onFocus={(e) => e.target.style.borderColor = '#8b5cf6'}
-                      onBlur={(e) => e.target.style.borderColor = entry.production_quantity ? '#10b981' : '#ef4444'}
+                      className={`form-control glass-input ${entryError?.errors.production_quantity ? 'has-error' : ''}`}
+                      placeholder="Enter quantity in meters"
                     />
                     {entryError?.errors.production_quantity && (
-                      <div style={{ color: '#ef4444', fontSize: '11px', marginTop: '3px' }}>
-                        {entryError.errors.production_quantity}
-                      </div>
+                      <div className="error-text">{entryError.errors.production_quantity}</div>
                     )}
                   </div>
 
                   {/* Per Meter Weight */}
-                  <div>
-                    <label style={{
-                      display: 'block',
-                      marginBottom: '8px',
-                      fontWeight: '600',
-                      color: '#374151',
-                      fontSize: '13px'
-                    }}>
-                      Per Meter Wt (KG/M) *
-                    </label>
+                  <div className="form-group">
+                    <label className="form-label">Wt (KG/M) *</label>
                     <input
                       type="number"
                       step="0.001"
                       min="0"
                       value={entry.per_meter_wt}
                       onChange={(e) => handleEntryChange(entry.id, 'per_meter_wt', e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '10px',
-                        borderRadius: '6px',
-                        border: `2px solid ${entry.per_meter_wt ? '#10b981' : '#ef4444'}`,
-                        backgroundColor: entry.per_meter_wt ? '#f0fdf4' : '#fef2f2',
-                        fontSize: '13px',
-                        color: '#1f2937',
-                        transition: 'all 0.3s'
-                      }}
-                      onFocus={(e) => e.target.style.borderColor = '#8b5cf6'}
-                      onBlur={(e) => e.target.style.borderColor = entry.per_meter_wt ? '#10b981' : '#ef4444'}
+                      className={`form-control glass-input ${entryError?.errors.per_meter_wt ? 'has-error' : ''}`}
+                      placeholder="Weight per meter"
                     />
                     {entryError?.errors.per_meter_wt && (
-                      <div style={{ color: '#ef4444', fontSize: '11px', marginTop: '3px' }}>
-                        {entryError.errors.per_meter_wt}
-                      </div>
+                      <div className="error-text">{entryError.errors.per_meter_wt}</div>
                     )}
                   </div>
                 </div>
 
-                {/* Item Details Display */}
+                {/* Item Details */}
                 {entry.item_code && (
-                  <div style={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: 'repeat(4, 1fr)', 
-                    gap: '10px',
-                    marginTop: '15px',
-                    fontSize: '12px'
-                  }}>
-                    <div style={{
-                      backgroundColor: '#f0f9ff',
-                      border: '1px solid #bae6fd',
-                      borderRadius: '6px',
-                      padding: '8px'
-                    }}>
-                      <div style={{ color: '#0369a1', fontWeight: '600' }}>Item</div>
-                      <div style={{ color: '#1e293b' }}>{entry.item_name}</div>
+                  <div className="item-details-display glass-display">
+                    <div className="detail-row">
+                      <span className="detail-label">
+                        <FiPackage size={12} className="detail-icon" /> Item:
+                      </span>
+                      <span className="detail-value item-name">{entry.item_code} - {entry.item_name.substring(0, 12)}...</span>
                     </div>
-                    <div style={{
-                      backgroundColor: '#f0f9ff',
-                      border: '1px solid #bae6fd',
-                      borderRadius: '6px',
-                      padding: '8px'
-                    }}>
-                      <div style={{ color: '#0369a1', fontWeight: '600' }}>Material</div>
-                      <div style={{ color: '#1e293b' }}>{entry.material_type}</div>
+                    <div className="detail-row">
+                      <span className="detail-label">
+                        <FiTool size={12} className="detail-icon" /> Spiral:
+                      </span>
+                      <span className="detail-value">{entry.raw_material_Spiralsize || 'N/A'}</span>
                     </div>
-                    <div style={{
-                      backgroundColor: '#ecfdf5',
-                      border: '1px solid #a7f3d0',
-                      borderRadius: '6px',
-                      padding: '8px'
-                    }}>
-                      <div style={{ color: '#065f46', fontWeight: '600' }}>Total Weight</div>
-                      <div style={{ color: '#1e293b', fontWeight: '600' }}>{entry.weight || '0'} KG</div>
+                    <div className="detail-row">
+                      <span className="detail-label">
+                        <FiDroplet size={12} className="detail-icon" /> Weight:
+                      </span>
+                      <span className="detail-value weight-value">{entry.weight || '0.00'} KG</span>
                     </div>
-                    <div style={{
-                      backgroundColor: '#fef3c7',
-                      border: '1px solid #f59e0b',
-                      borderRadius: '6px',
-                      padding: '8px'
-                    }}>
-                      <div style={{ color: '#92400e', fontWeight: '600' }}>Unit</div>
-                      <div style={{ color: '#1e293b', fontWeight: '600' }}>{entry.unit}</div>
+                    <div className="detail-row">
+                      <span className="detail-label">
+                        <FiDatabase size={12} className="detail-icon" /> Unit:
+                      </span>
+                      <span className="detail-value unit-value">{entry.unit}</span>
                     </div>
                   </div>
                 )}
@@ -1130,256 +980,92 @@ const PVCCoatingMultiEntryForm = () => {
           })}
         </div>
 
-        {/* Efficiency & Target Summary Card */}
-        {machineTarget && (
-          <div style={{
-            backgroundColor: 'white',
-            border: '2px solid #3b82f6',
-            borderRadius: '12px',
-            padding: '25px',
-            marginBottom: '25px',
-            boxShadow: '0 4px 12px rgba(59, 130, 246, 0.1)'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '20px' }}>
-              <div style={{
-                width: '50px',
-                height: '50px',
-                backgroundColor: '#3b82f6',
-                borderRadius: '10px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'white'
-              }}>
-                <FiActivity size={24} />
-              </div>
-              <div style={{ flex: 1 }}>
-                <h2 style={{ margin: '0 0 5px 0', fontSize: '20px', fontWeight: '700', color: '#1f2937' }}>
-                  Target & Efficiency Summary
-                </h2>
-                <p style={{ margin: '0', fontSize: '14px', color: '#6b7280' }}>
-                  Based on selected machine target
-                </p>
-              </div>
+        {/* Target Summary */}
+        {selectedTarget && (
+          <div className="form-section-card glass-card summary-card">
+            <div className="section-header-primary">
+              <FiActivity size={14} className="header-icon" /> PRODUCTION SUMMARY
             </div>
-
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
-              gap: '20px'
-            }}>
-              <div style={{
-                backgroundColor: '#f8fafc',
-                border: '2px solid #e5e7eb',
-                borderRadius: '10px',
-                padding: '20px',
-                textAlign: 'center'
-              }}>
-                <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '10px' }}>
-                  Machine Target
-                </div>
-                <div style={{ fontSize: '28px', fontWeight: '700', color: '#92400e' }}>
-                  {machineTarget.target_qty || 0}
-                </div>
-                <div style={{ fontSize: '14px', color: '#6b7280', marginTop: '5px' }}>
-                  {machineTarget.uom || 'Meter'}
-                </div>
+            
+            <div className="summary-grid">
+              <div className="summary-item glass-summary">
+                <div className="summary-label">Target</div>
+                <div className="summary-value target-summary">{selectedTarget.target_qty || 0}</div>
+                <div className="summary-unit">Meter</div>
               </div>
 
-              <div style={{
-                backgroundColor: '#f0fdf4',
-                border: '2px solid #10b981',
-                borderRadius: '10px',
-                padding: '20px',
-                textAlign: 'center'
-              }}>
-                <div style={{ fontSize: '14px', color: '#065f46', marginBottom: '10px' }}>
-                  Total Production
-                </div>
-                <div style={{ fontSize: '28px', fontWeight: '700', color: '#065f46' }}>
-                  {totals.totalProduction.toFixed(2)}
-                </div>
-                <div style={{ fontSize: '14px', color: '#065f46', marginTop: '5px', opacity: '0.8' }}>
-                  Meter
-                </div>
+              <div className="summary-item glass-summary production-item">
+                <div className="summary-label">Production</div>
+                <div className="summary-value production-summary">{totals.totalProduction.toFixed(2)}</div>
+                <div className="summary-unit">Meter</div>
               </div>
 
-              <div style={{
-                backgroundColor: '#f0f9ff',
-                border: '2px solid #0ea5e9',
-                borderRadius: '10px',
-                padding: '20px',
-                textAlign: 'center'
-              }}>
-                <div style={{ fontSize: '14px', color: '#0369a1', marginBottom: '10px' }}>
-                  Total Weight
-                </div>
-                <div style={{ fontSize: '28px', fontWeight: '700', color: '#0369a1' }}>
-                  {totals.totalWeight.toFixed(2)}
-                </div>
-                <div style={{ fontSize: '14px', color: '#0369a1', marginTop: '5px', opacity: '0.8' }}>
-                  KG
-                </div>
+              <div className="summary-item glass-summary weight-summary">
+                <div className="summary-label">Weight</div>
+                <div className="summary-value weight-total">{totals.totalWeight.toFixed(2)}</div>
+                <div className="summary-unit">KG</div>
               </div>
 
-              <div style={{
-                backgroundColor: totalEfficiency >= 80 ? '#f0fdf4' : 
-                          totalEfficiency >= 60 ? '#fef3c7' : '#fef2f2',
-                border: `2px solid ${totalEfficiency >= 80 ? '#10b981' : 
-                        totalEfficiency >= 60 ? '#f59e0b' : '#ef4444'}`,
-                borderRadius: '10px',
-                padding: '20px',
-                textAlign: 'center'
-              }}>
-                <div style={{ 
-                  fontSize: '14px', 
-                  color: totalEfficiency >= 80 ? '#065f46' : 
-                        totalEfficiency >= 60 ? '#92400e' : '#dc2626',
-                  marginBottom: '10px' 
-                }}>
-                  Overall Efficiency
+              <div className={`summary-item glass-summary efficiency-item efficiency-${efficiencyData.color}`}>
+                <div className="summary-label">
+                  <FiTrendingUp size={12} className="summary-icon" /> Efficiency
                 </div>
-                <div style={{ 
-                  fontSize: '28px', 
-                  fontWeight: '700', 
-                  color: totalEfficiency >= 80 ? '#065f46' : 
-                        totalEfficiency >= 60 ? '#92400e' : '#dc2626'
-                }}>
-                  {totalEfficiency.toFixed(2)}%
-                </div>
-                <div style={{ 
-                  fontSize: '14px', 
-                  color: totalEfficiency >= 80 ? '#065f46' : 
-                        totalEfficiency >= 60 ? '#92400e' : '#dc2626',
-                  marginTop: '5px', 
-                  opacity: '0.8' 
-                }}>
-                  Based on total production vs target
+                <div className="summary-value efficiency-value">{efficiencyData.efficiency.toFixed(2)}%</div>
+                <div className="summary-unit">
+                  {efficiencyData.color === 'high' ? 'Excellent' : 
+                   efficiencyData.color === 'medium' ? 'Good' : 'Needs Improvement'}
                 </div>
               </div>
             </div>
           </div>
         )}
-
-        {/* Form Actions */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          paddingTop: '20px',
-          borderTop: '2px solid #e5e7eb'
-        }}>
-          <button
-            type="button"
-            onClick={() => navigate('/production-sections/pvc-coating')}
-            style={{
-              backgroundColor: 'white',
-              border: '2px solid #e5e7eb',
-              padding: '12px 24px',
-              borderRadius: '8px',
-              color: '#6b7280',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              fontWeight: '600',
-              fontSize: '14px',
-              transition: 'all 0.3s'
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.backgroundColor = '#f3f4f6';
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.backgroundColor = 'white';
-            }}
-          >
-            <FiX /> Cancel
-          </button>
-
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <button
-              type="button"
-              onClick={addEntryRow}
-              style={{
-                backgroundColor: '#10b981',
-                border: '2px solid #059669',
-                padding: '12px 24px',
-                borderRadius: '8px',
-                color: 'white',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                fontWeight: '600',
-                fontSize: '14px',
-                transition: 'all 0.3s'
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.backgroundColor = '#059669';
-                e.target.style.transform = 'translateY(-2px)';
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.backgroundColor = '#10b981';
-                e.target.style.transform = 'translateY(0)';
-              }}
-            >
-              <FiPlus /> Add Another Item
-            </button>
-
-            <button
-              type="submit"
-              disabled={saving}
-              style={{
-                backgroundColor: saving ? '#c4b5fd' : '#8b5cf6',
-                border: '2px solid #7c3aed',
-                padding: '12px 32px',
-                borderRadius: '8px',
-                color: 'white',
-                cursor: saving ? 'not-allowed' : 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-                fontWeight: '600',
-                fontSize: '15px',
-                transition: 'all 0.3s'
-              }}
-              onMouseEnter={(e) => {
-                if (!saving) {
-                  e.target.style.backgroundColor = '#7c3aed';
-                  e.target.style.transform = 'translateY(-2px)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!saving) {
-                  e.target.style.backgroundColor = '#8b5cf6';
-                  e.target.style.transform = 'translateY(0)';
-                }
-              }}
-            >
-              {saving ? 'Saving...' : <><FiSave /> Save All ({entries.length}) Items</>}
-            </button>
-          </div>
-        </div>
       </form>
 
-      <style>{`
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
+      {/* Mobile Bottom Bar */}
+      <div className="mobile-bottom-bar glass-bar">
+        <button
+          type="button"
+          onClick={clearForm}
+          className="bottom-bar-button clear glass-btn-warning"
+          title="Clear all form data"
+        >
+          <FiRefreshCw size={16} className="btn-icon" /> Clear
+        </button>
         
-        select, input, textarea {
-          font-size: 14px !important;
-          font-weight: 500 !important;
-          transition: all 0.3s ease;
-        }
+        <button
+          type="button"
+          onClick={() => navigate('/production-sections/pvc-coating')}
+          className="bottom-bar-button cancel glass-btn-secondary"
+          title="Cancel and go back"
+        >
+          <FiX size={16} className="btn-icon" /> Cancel
+        </button>
         
-        select:focus, input:focus, textarea:focus {
-          outline: none;
-          border-color: #8b5cf6 !important;
-          box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
-        }
-      `}</style>
+        <button
+          type="submit"
+          onClick={handleSubmit}
+          disabled={saving || entries.some(entry => isEntryDuplicate(entry.item_code))}
+          className={`bottom-bar-button save ${entries.some(entry => isEntryDuplicate(entry.item_code)) ? 'glass-btn-warning' : 'glass-btn-primary'}`}
+          title={entries.some(entry => isEntryDuplicate(entry.item_code)) ? "Fix duplicate entries first" : "Save all items"}
+        >
+          {saving ? (
+            <>
+              <div className="btn-spinner"></div>
+              Saving...
+            </>
+          ) : entries.some(entry => isEntryDuplicate(entry.item_code)) ? (
+            <>
+              <FiAlertCircle size={16} className="btn-icon" />
+              Fix Duplicates
+            </>
+          ) : (
+            <>
+              <FiSave size={16} className="btn-icon" />
+              Save All
+            </>
+          )}
+        </button>
+      </div>
     </div>
   );
 };

@@ -48,13 +48,15 @@ const PVCcoatingPage = () => {
   const [filterDate, setFilterDate] = useState("");
   const [showReport, setShowReport] = useState(false);
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
+  const [showExportOptions, setShowExportOptions] = useState(false);
   const [whatsAppMessage, setWhatsAppMessage] = useState("");
-  const [products, setProducts] = useState([]);
 
   const [reportData, setReportData] = useState({
     date: "",
     formattedDate: "",
     itemWise: {},
+    productWise: {},
+    machineWise: {},
     shiftWise: {},
     totalProduction: 0,
     totalWeight: 0,
@@ -94,7 +96,7 @@ const PVCcoatingPage = () => {
       setRecords(data || []);
       
       // Extract unique products
-      const uniqueProducts = [...new Set(data.map(r => r.finishedproductname).filter(Boolean))];
+      const uniqueProducts = [...new Set(data.map(r => r.raw_material_Spiralsize).filter(Boolean))];
       setProducts(uniqueProducts);
     } catch (error) {
       console.error("Error:", error);
@@ -276,7 +278,7 @@ const PVCcoatingPage = () => {
     // ✅ **Product-wise حساب**
     const productWise = {};
     lastEntryRecords.forEach(record => {
-      const product = record.finishedproductname || 'N/A';
+      const product = record.raw_material_Spiralsize || 'N/A';
       if (!productWise[product]) {
         productWise[product] = { 
           production: 0,
@@ -346,6 +348,9 @@ const PVCcoatingPage = () => {
     return '#ef4444';
   };
 
+  // Get unique values for filters
+  const [products, setProducts] = useState([]);
+
   // ✅ Filter records function
   const filteredRecords = records.filter(record => {
     const matchesSearch = 
@@ -354,7 +359,7 @@ const PVCcoatingPage = () => {
       (record.operator_name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
       (record.users_name?.toLowerCase() || "").includes(searchTerm.toLowerCase());
     
-    const matchesProduct = !filterProduct || record.finishedproductname === filterProduct;
+    const matchesProduct = !filterProduct || record.raw_material_Spiralsize === filterProduct;
 
     const recordDate = record.production_date || new Date(record.created_at).toISOString().split("T")[0];
     const matchesDate = !filterDate || recordDate === filterDate;
@@ -455,6 +460,8 @@ const PVCcoatingPage = () => {
       date: filterDate,
       formattedDate,
       itemWise,
+      productWise: itemWise,
+      machineWise: {},
       shiftWise,
       totalProduction,
       totalWeight,
@@ -468,7 +475,7 @@ const PVCcoatingPage = () => {
   // ✅ Print Report Function - DYNAMIC SHIFT
   const handlePrintReport = () => {
     if (!reportData || reportData.recordCount === 0) {
-      alert("No report data to print");
+      alert("No report data to print. Please generate report first.");
       return;
     }
 
@@ -769,7 +776,7 @@ const PVCcoatingPage = () => {
     setWhatsAppMessage("");
   };
 
-  // ✅ Excel Export Function
+  // ✅ Excel Export Functions
   const handleExportExcel = () => {
     if (filteredRecords.length === 0) {
       alert("No records to export");
@@ -797,7 +804,7 @@ const PVCcoatingPage = () => {
       ...filteredRecords.map((record) => [
         record.id,
         `"${record.item_name || ""}"`,
-        `"${record.finishedproductname || ""}"`,
+        `"${record.raw_material_Spiralsize || ""}"`,
         `"${record.machine_no || ""}"`,
         `"${record.production_date || ""}"`,
         `"${record.shift_name || ""}"`,
@@ -830,7 +837,7 @@ const PVCcoatingPage = () => {
 
   const handleExportReport = () => {
     if (!reportData || reportData.recordCount === 0) {
-      alert("No report data to export");
+      alert("No report data to export. Please generate report first.");
       return;
     }
 
@@ -918,6 +925,28 @@ const PVCcoatingPage = () => {
     a.click();
     document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
+  };
+
+  // ✅ Delete Function
+  const handleDeleteRecord = async (recordId) => {
+    if (!window.confirm(`Are you sure you want to delete record #${recordId}?`)) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("pvcsection")
+        .delete()
+        .eq("id", recordId);
+
+      if (error) throw error;
+
+      alert(`Record #${recordId} deleted successfully!`);
+      fetchData(); // Refresh data
+    } catch (error) {
+      console.error("Error deleting record:", error);
+      alert("Error deleting record. Please try again.");
+    }
   };
 
   // Pagination
@@ -1467,45 +1496,59 @@ const PVCcoatingPage = () => {
                 <FiX /> Clear Filters
               </button>
             </div>
-
-            {/* ✅ WhatsApp اور Print بٹن صرف جب report generate ہو جائے */}
-            {showReport && reportData.recordCount > 0 && (
-              <>
-                <div style={styles.filterGroup}>
-                  <button
-                    onClick={() => setShowWhatsAppModal(true)}
-                    style={styles.whatsappBtn}
-                  >
-                    <FaWhatsapp /> WhatsApp
-                  </button>
-                </div>
-
-                <div style={styles.filterGroup}>
-                  <button
-                    onClick={handlePrintReport}
-                    style={styles.printBtn}
-                  >
-                    <FiPrinter /> Print
-                  </button>
-                </div>
-              </>
-            )}
           </div>
         </div>
       </div>
 
-      {/* ✅ Show Report Actions if report is generated */}
+      {/* ✅ Show Report Actions Only When Report is Generated */}
       {showReport && reportData.recordCount > 0 && (
-        <div style={styles.reportActions}>
-          <button onClick={handleExportReport} style={styles.excelBtn}>
-            <FiDownload /> Export Report Excel
-          </button>
-          <button onClick={handleExportExcel} style={styles.excelBtn}>
-            <FiDownload /> Export Records Excel
-          </button>
-          <span style={{color: 'var(--text-secondary)', fontSize: '12px'}}>
-            Report for: {reportData.formattedDate} | Records: {reportData.recordCount}
-          </span>
+        <div style={styles.reportActionsSection}>
+          <div style={styles.reportActionsHeader}>
+            <h3 style={{margin: 0, fontSize: '14px'}}>
+              Report Generated: {reportData.formattedDate}
+            </h3>
+            <span style={{color: 'var(--text-secondary)', fontSize: '12px'}}>
+              Records: {reportData.recordCount} | 
+              Production: {formatInteger(reportData.totalProduction)}M | 
+              Efficiency: {Math.round(reportData.avgEfficiency)}%
+            </span>
+          </div>
+          
+          <div style={styles.reportActionsButtons}>
+            <div style={styles.exportDropdown}>
+              <button 
+                onClick={() => setShowExportOptions(!showExportOptions)}
+                style={styles.exportMainBtn}
+              >
+                <FiDownload /> Export Options
+              </button>
+              
+              {showExportOptions && (
+                <div style={styles.exportOptions}>
+                  <button onClick={handleExportReport} style={styles.exportOption}>
+                    <FiDownload /> Export Report Excel
+                  </button>
+                  <button onClick={handleExportExcel} style={styles.exportOption}>
+                    <FiDownload /> Export Records Excel
+                  </button>
+                </div>
+              )}
+            </div>
+            
+            <button
+              onClick={() => setShowWhatsAppModal(true)}
+              style={styles.whatsappBtnAction}
+            >
+              <FaWhatsapp /> WhatsApp
+            </button>
+            
+            <button
+              onClick={handlePrintReport}
+              style={styles.printBtnAction}
+            >
+              <FiPrinter /> Print
+            </button>
+          </div>
         </div>
       )}
 
@@ -1577,7 +1620,7 @@ const PVCcoatingPage = () => {
                           {record.item_name || "N/A"}
                         </div>
                         <div style={styles.itemProduct}>
-                          {record.finishedproductname || "N/A"}
+                          {record.raw_material_Spiralsize || "N/A"}
                         </div>
                       </div>
                     </td>
@@ -1695,11 +1738,7 @@ const PVCcoatingPage = () => {
                         </button>
                         <button 
                           title="Delete"
-                          onClick={() => {
-                            if (window.confirm(`Delete record #${record.id}?`)) {
-                              alert("Delete feature will be implemented");
-                            }
-                          }}
+                          onClick={() => handleDeleteRecord(record.id)}
                           className="action-button delete"
                           style={{
                             ...styles.deleteButton,
