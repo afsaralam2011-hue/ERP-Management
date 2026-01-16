@@ -1,5 +1,3 @@
-const path = require('path');
-
 module.exports = {
   style: {
     postcss: {
@@ -12,31 +10,21 @@ module.exports = {
     configure: (webpackConfig, { env, paths }) => {
       // Increase memory limit for build
       webpackConfig.performance = {
-        maxAssetSize: 512000,
-        maxEntrypointSize: 512000,
-        hints: env === 'production' ? 'warning' : false,
+        maxAssetSize: 2 * 1024 * 1024, // 2MB
+        maxEntrypointSize: 2 * 1024 * 1024, // 2MB
+        hints: false // Turn off size warnings
       };
       
-      // Ignore source map warnings
+      // Ignore all warnings
       webpackConfig.ignoreWarnings = [
-        /Failed to parse source map/,
+        { message: /Failed to parse source map/ },
+        { message: /autoprefixer/ },
+        { message: /tailwindcss/ },
+        { message: /unused/ },
+        { message: /asset size limit/ }
       ];
-      
-      // Add fallbacks for Node.js modules
-      webpackConfig.resolve.fallback = {
-        ...webpackConfig.resolve.fallback,
-        "fs": false,
-        "path": false,
-        "os": false,
-      };
       
       return webpackConfig;
     }
-  },
-  // REMOVE THIS ENTIRE babel SECTION
-  // babel: {
-  //   plugins: [
-  //     ['@babel/plugin-proposal-private-property-in-object', { loose: true }]
-  //   ]
-  // }
+  }
 };

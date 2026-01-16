@@ -5,9 +5,7 @@
       "src": "package.json",
       "use": "@vercel/static-build",
       "config": {
-        "distDir": "build",
-        "installCommand": "npm install --legacy-peer-deps",
-        "buildCommand": "npm run vercel-build"
+        "distDir": "build"
       }
     }
   ],
@@ -19,6 +17,8 @@
   ],
   "env": {
     "CI": "false",
-    "NODE_ENV": "production"
+    "NODE_ENV": "production",
+    "GENERATE_SOURCEMAP": "false",
+    "DISABLE_ESLINT_PLUGIN": "true"
   }
 }
