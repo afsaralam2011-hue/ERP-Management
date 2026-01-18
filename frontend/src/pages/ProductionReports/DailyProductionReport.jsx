@@ -1,5 +1,4 @@
-// src/pages/ProductionReports/DailyProductionReport.jsx
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import {
   FaIndustry,
   FaCheckCircle,
@@ -32,9 +31,12 @@ import {
   FaRegCalendarCheck,
   FaRegClock,
   FaCommentAlt,
+  FaChevronDown,
+  FaWeightHanging,
 } from "react-icons/fa";
 import { supabase } from "../../supabaseClient";
 import * as XLSX from "xlsx";
+import styles from "./DailyProductionReport.module.css";
 
 const DailyProductionReport = () => {
   const [date, setDate] = useState(new Date());
@@ -47,62 +49,74 @@ const DailyProductionReport = () => {
   const [whatsappNumber, setWhatsappNumber] = useState("923001234567");
   const [showWhatsAppPopup, setShowWhatsAppPopup] = useState(false);
   const [copiedToClipboard, setCopiedToClipboard] = useState(false);
+  const [showDepartmentDropdown, setShowDepartmentDropdown] = useState(false);
 
   const departments = useMemo(
     () => [
       {
         id: 1,
         name: "Raw Material Section",
+        shortName: "Raw Material",
         icon: <FaWarehouse />,
         color: "#f59e0b",
         tableName: "raw_material_log",
         unit: "KG",
+        isRawMaterial: true,
       },
       {
         id: 2,
         name: "Flatting Section",
+        shortName: "Flatting",
         icon: <FaIndustry />,
         color: "#3b82f6",
         tableName: "flatteningsection",
         unit: "KG",
+        isRawMaterial: false,
       },
       {
         id: 3,
         name: "Spiral Section",
+        shortName: "Spiral",
         icon: <FaCogs />,
         color: "#8b5cf6",
         tableName: "spiralsection",
         unit: "Meter",
+        isRawMaterial: false,
       },
       {
         id: 4,
         name: "PVC Coating Section",
+        shortName: "PVC Coating",
         icon: <FaShieldAlt />,
         color: "#10b981",
         tableName: "pvcsection",
         unit: "Meter",
+        isRawMaterial: false,
       },
       {
         id: 5,
         name: "Cutting & Packing Section",
+        shortName: "Cutting & Packing",
         icon: <FaCut />,
         color: "#ec4899",
         tableName: "cuttingpacking",
         unit: "Meter",
+        isRawMaterial: false,
       },
       {
         id: 6,
         name: "Finishing Goods Section",
+        shortName: "Finishing Goods",
         icon: <FaBoxOpen />,
         color: "#06b6d4",
         tableName: "finishinggoods",
         unit: "Meter",
+        isRawMaterial: false,
       },
     ],
     []
   );
 
-  // Get department icon and color
   const getDepartmentInfo = useCallback(
     (deptName) => {
       const dept = departments.find((d) => d.name === deptName);
@@ -110,34 +124,51 @@ const DailyProductionReport = () => {
         icon: dept?.icon || <FaIndustry />,
         color: dept?.color || "#3b82f6",
         unit: dept?.unit || "Unit",
+        isRawMaterial: dept?.isRawMaterial || false,
       };
     },
     [departments]
   );
 
-  // Get efficiency color based on percentage
+  const getSelectedDepartmentDisplay = useCallback(() => {
+    if (selectedDepartment === "all") {
+      return {
+        name: "All Departments",
+        icon: <FaSitemap />,
+        color: "#6b7280",
+        shortName: "All Departments",
+        isRawMaterial: false,
+      };
+    }
+    const dept = departments.find((d) => d.name === selectedDepartment);
+    return dept || { 
+      name: "All Departments", 
+      icon: <FaSitemap />, 
+      color: "#6b7280", 
+      shortName: "All Departments",
+      isRawMaterial: false,
+    };
+  }, [selectedDepartment, departments]);
+
   const getEfficiencyColor = useCallback((efficiency) => {
     const eff = parseFloat(efficiency) || 0;
-    if (eff >= 80) return "#10b981"; // Green
-    if (eff >= 70) return "#f59e0b"; // Yellow
-    return "#ef4444"; // Red
+    if (eff >= 80) return "#10b981";
+    if (eff >= 70) return "#f59e0b";
+    return "#ef4444";
   }, []);
 
-  // Get efficiency background color
   const getEfficiencyBgColor = useCallback((efficiency) => {
     const eff = parseFloat(efficiency) || 0;
-    if (eff >= 80) return "#d1fae5"; // Green
-    if (eff >= 70) return "#fef3c7"; // Yellow
-    return "#fee2e2"; // Red
+    if (eff >= 80) return "#d1fae5";
+    if (eff >= 70) return "#fef3c7";
+    return "#fee2e2";
   }, []);
 
-  // Calculate efficiency for individual item
   const calculateItemEfficiency = useCallback((production, target) => {
     if (target === 0) return 0;
     return parseFloat(((production / target) * 100).toFixed(1));
   }, []);
 
-  // Format data for table display with remarks
   const formatDataForTable = useCallback(
     (deptData, deptInfo) => {
       if (!deptData || !deptInfo) return [];
@@ -145,12 +176,10 @@ const DailyProductionReport = () => {
       const tableData = [];
       const { dailyData, shiftData, machineData } = deptData;
 
-      // Get today's data
       const todayData = dailyData.length > 0 ? dailyData[0] : null;
 
       if (todayData && shiftData.length > 0) {
         shiftData.forEach((shift) => {
-          // Find machines for this shift
           const shiftMachines = machineData.filter((machine) =>
             machine.shifts.includes(shift.name)
           );
@@ -170,7 +199,7 @@ const DailyProductionReport = () => {
             tableData.push({
               id: `${shift.name}_${machine.name}`,
               department: deptInfo.name,
-              section: deptInfo.name.replace(" Section", ""),
+              section: deptInfo.shortName,
               shift: shift.name,
               production_quantity: machine.production,
               target_quantity: machine.target,
@@ -181,6 +210,7 @@ const DailyProductionReport = () => {
               efficiency: efficiency,
               entries: machine.entries,
               remarks: machine.remarks || "No Remarks",
+              isRawMaterial: deptInfo.isRawMaterial,
             });
           });
         });
@@ -191,9 +221,8 @@ const DailyProductionReport = () => {
     [date, calculateItemEfficiency]
   );
 
-  // Calculate all data correctly function
   const calculateAllDataCorrectly = useCallback(
-    (records) => {
+    (records, isRawMaterial = false) => {
       const combinationMap = {};
       const shiftMap = {};
       const machineMap = {};
@@ -205,7 +234,6 @@ const DailyProductionReport = () => {
         const recordDate = new Date(record.created_at);
         const dateStr = recordDate.toISOString().split("T")[0];
 
-        // Only process records for selected date
         const selectedDateStr = date.toISOString().split("T")[0];
         if (dateStr !== selectedDateStr) return;
 
@@ -215,12 +243,33 @@ const DailyProductionReport = () => {
           record.shift_name || record.shift || record.shift_no || "unknown";
         const operator =
           record.operator_name || record.operator || "Not Available";
-        const target =
-          parseFloat(record.target_qty) || parseFloat(record.target) || 0;
-        const production =
-          parseFloat(record.production_quantity) ||
-          parseFloat(record.production) ||
-          0;
+        
+        // RAW MATERIAL کے لیے الگ calculation
+        let target, production;
+        
+        if (isRawMaterial) {
+          // Raw Material کے لیے: production = weight, target = target_weight
+          production = 
+            parseFloat(record.weight) || 
+            parseFloat(record.weight_received) || 
+            0;
+          target = 
+            parseFloat(record.target_weight) || 
+            parseFloat(record.target_qty) || 
+            parseFloat(record.target) || 
+            0;
+        } else {
+          // باقی ڈیپارٹمنٹ کے لیے عام calculation
+          target = 
+            parseFloat(record.target_qty) || 
+            parseFloat(record.target) || 
+            0;
+          production = 
+            parseFloat(record.production_quantity) || 
+            parseFloat(record.production) || 
+            0;
+        }
+        
         const remarks = record.remarks || record.comment || "No Remarks";
 
         const combinationKey = `${machine}_${shift}_${dateStr}`;
@@ -240,8 +289,12 @@ const DailyProductionReport = () => {
             remarks: remarks,
           };
         }
+        
         combinationMap[combinationKey].production += production;
         combinationMap[combinationKey].entries += 1;
+        
+        combinationMap[combinationKey].operator = operator;
+        combinationMap[combinationKey].remarks = remarks;
 
         if (!shiftMap[shiftKey]) {
           shiftMap[shiftKey] = {
@@ -257,10 +310,13 @@ const DailyProductionReport = () => {
           };
         }
 
+        shiftMap[shiftKey].production += production;
+        shiftMap[shiftKey].entries += 1;
+
         if (!shiftMap[shiftKey].machineDays[machine]) {
           shiftMap[shiftKey].machineDays[machine] = new Set();
         }
-
+        
         const machineDayKey = `${machine}_${dateStr}`;
         if (!shiftMap[shiftKey].machineDays[machine].has(machineDayKey)) {
           shiftMap[shiftKey].target += target;
@@ -268,10 +324,8 @@ const DailyProductionReport = () => {
           shiftMap[shiftKey].combinations += 1;
         }
 
-        shiftMap[shiftKey].production += production;
         shiftMap[shiftKey].machines.add(machine);
         shiftMap[shiftKey].days.add(dateStr);
-        shiftMap[shiftKey].entries += 1;
         if (operator && operator !== "Not Available") {
           shiftMap[shiftKey].operators.add(operator);
         }
@@ -294,23 +348,25 @@ const DailyProductionReport = () => {
           machineMap[machineKey].lastActive = recordDate;
         }
 
+        machineMap[machineKey].production += production;
+        machineMap[machineKey].entries += 1;
+
         if (!machineMap[machineKey].shiftDays[shift]) {
           machineMap[machineKey].shiftDays[shift] = new Set();
         }
-
+        
         const shiftDayKey = `${shift}_${dateStr}`;
         if (!machineMap[machineKey].shiftDays[shift].has(shiftDayKey)) {
           machineMap[machineKey].target += target;
           machineMap[machineKey].shiftDays[shift].add(shiftDayKey);
         }
 
-        machineMap[machineKey].production += production;
         machineMap[machineKey].shifts.add(shift);
         machineMap[machineKey].days.add(dateStr);
-        machineMap[machineKey].entries += 1;
         if (operator && operator !== "Not Available") {
           machineMap[machineKey].operators.add(operator);
         }
+        machineMap[machineKey].remarks = remarks;
 
         if (!dailyMap[dayKey]) {
           dailyMap[dayKey] = {
@@ -322,33 +378,48 @@ const DailyProductionReport = () => {
             combinations: 0,
             entries: 0,
             operators: new Set(),
+            combinationSet: new Set(),
           };
         }
 
-        if (!dailyMap[dayKey].combinationsSet) {
-          dailyMap[dayKey].combinationsSet = new Set();
-        }
-        if (!dailyMap[dayKey].combinationsSet.has(combinationKey)) {
+        dailyMap[dayKey].production += production;
+        dailyMap[dayKey].entries += 1;
+
+        if (!dailyMap[dayKey].combinationSet.has(combinationKey)) {
           dailyMap[dayKey].target += target;
           dailyMap[dayKey].combinations += 1;
-          dailyMap[dayKey].combinationsSet.add(combinationKey);
+          dailyMap[dayKey].combinationSet.add(combinationKey);
         }
 
-        dailyMap[dayKey].production += production;
         dailyMap[dayKey].shifts.add(shift);
         dailyMap[dayKey].machines.add(machine);
-        dailyMap[dayKey].entries += 1;
         if (operator && operator !== "Not Available") {
           dailyMap[dayKey].operators.add(operator);
         }
       });
 
+      const processedMachineData = Object.values(combinationMap).map((combo) => {
+        const efficiency = calculateItemEfficiency(combo.production, combo.target);
+        
+        return {
+          name: combo.machine,
+          production: combo.production,
+          target: combo.target,
+          efficiency: efficiency.toFixed(1),
+          shifts: combo.shift,
+          operators: combo.operator ? [combo.operator] : [],
+          workingDays: 1,
+          entries: combo.entries,
+          remarks: combo.remarks,
+          lastActive: combo.date,
+          machineNumber: parseInt(combo.machine.replace(/[^0-9]/g, "")) || 0,
+        };
+      });
+
       const processedShiftData = Object.values(shiftMap)
         .map((shift) => {
-          const efficiency =
-            shift.target > 0 ? (shift.production / shift.target) * 100 : 0;
+          const efficiency = calculateItemEfficiency(shift.production, shift.target);
           const machineCount = shift.machines.size;
-          const dayCount = shift.days.size;
 
           return {
             name: shift.shiftName,
@@ -362,7 +433,7 @@ const DailyProductionReport = () => {
             }),
             operators: [...shift.operators],
             machineCount: machineCount,
-            daysCount: dayCount,
+            daysCount: shift.days.size,
             combinationsCount: shift.combinations,
             entries: shift.entries,
             avgTargetPerCombo: shift.combinations > 0 ? (shift.target / shift.combinations).toFixed(0) : 0,
@@ -373,13 +444,10 @@ const DailyProductionReport = () => {
           const shiftOrder = {
             morning: 1,
             day: 1,
-            صبح: 1,
             a: 1,
             evening: 2,
-            شام: 2,
             b: 2,
             night: 3,
-            رات: 3,
             c: 3,
           };
           const aOrder = shiftOrder[a.name.toLowerCase()] || 99;
@@ -389,8 +457,7 @@ const DailyProductionReport = () => {
 
       const processedDailyData = Object.values(dailyMap)
         .map((day) => {
-          const efficiency =
-            day.target > 0 ? (day.production / day.target) * 100 : 0;
+          const efficiency = calculateItemEfficiency(day.production, day.target);
           const dateObj = new Date(day.date);
           const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -415,73 +482,26 @@ const DailyProductionReport = () => {
         })
         .sort((a, b) => new Date(b.date) - new Date(a.date));
 
-      const processedMachineData = Object.values(machineMap)
-        .map((machine) => {
-          const efficiency =
-            machine.target > 0
-              ? (machine.production / machine.target) * 100
-              : 0;
-
-          // Remove unused variable daysSinceActive
-          // const daysSinceActive = machine.lastActive
-          //   ? Math.floor(
-          //       (new Date() - machine.lastActive) / (1000 * 60 * 60 * 24)
-          //     )
-          //   : 999;
-
-          return {
-            name: machine.machineName,
-            production: machine.production,
-            target: machine.target,
-            efficiency: efficiency.toFixed(1),
-            shifts: [...machine.shifts].sort().join(", "),
-            operators: [...machine.operators],
-            workingDays: machine.days.size,
-            entries: machine.entries,
-            remarks: machine.remarks,
-            lastActive: machine.lastActive
-              ? machine.lastActive.toLocaleDateString("en-US", {
-                  weekday: "short",
-                  month: "short",
-                  day: "numeric",
-                })
-              : "Never",
-            machineNumber: machine.machineNumber,
-          };
-        })
-        .sort((a, b) => a.machineNumber - b.machineNumber);
-
       return {
         dailyData: processedDailyData,
         machineData: processedMachineData,
         shiftData: processedShiftData,
       };
     },
-    [date]
+    [date, calculateItemEfficiency]
   );
 
   const getShiftIcon = (shiftName) => {
     const name = shiftName?.toLowerCase() || "";
-    if (
-      name.includes("morning") ||
-      name.includes("صبح") ||
-      name === "a" ||
-      name === "day"
-    )
+    if (name.includes("morning") || name === "a" || name === "day")
       return <FaSun />;
-    if (name.includes("evening") || name.includes("شام") || name === "b")
+    if (name.includes("evening") || name === "b")
       return <FaClock />;
-    if (
-      name.includes("night") ||
-      name.includes("رات") ||
-      name === "c" ||
-      name === "night"
-    )
+    if (name.includes("night") || name === "c")
       return <FaMoon />;
     return <FaClock />;
   };
 
-  // Fetch actual production data with remarks
   const fetchActualData = useCallback(async () => {
     try {
       setLoading(true);
@@ -497,15 +517,16 @@ const DailyProductionReport = () => {
       const dateStr = date.toISOString().split("T")[0];
       const allData = {};
 
-      // Fetch data for all departments with remarks
       for (const dept of departments) {
-        const { data: productionRecords, error } = await supabase
+        // Raw Material کے لیے weight اور target_weight فیلڈز بھی شامل کریں
+        let query = supabase
           .from(dept.tableName)
           .select("*")
           .gte("created_at", `${dateStr}T00:00:00`)
           .lt("created_at", `${dateStr}T23:59:59`)
-          .order("created_at", { ascending: false })
-          .limit(1000);
+          .order("created_at", { ascending: false });
+
+        const { data: productionRecords, error } = await query.limit(1000);
 
         if (error) {
           console.error(`Supabase error for ${dept.name}:`, error);
@@ -518,9 +539,7 @@ const DailyProductionReport = () => {
         }
 
         if (!productionRecords || productionRecords.length === 0) {
-          console.log(
-            `No production records found for ${dept.name} on ${dateStr}`
-          );
+          console.log(`No production records found for ${dept.name} on ${dateStr}`);
           allData[dept.name] = {
             dailyData: [],
             machineData: [],
@@ -529,15 +548,17 @@ const DailyProductionReport = () => {
           continue;
         }
 
-        // Calculate data for this department
-        const calculatedData = calculateAllDataCorrectly(productionRecords);
+        // Raw Material کے لیے الگ calculation function call کریں
+        const calculatedData = calculateAllDataCorrectly(
+          productionRecords, 
+          dept.isRawMaterial
+        );
         allData[dept.name] = calculatedData;
       }
 
       setAllDepartmentsData(allData);
       setLastRefresh(new Date());
 
-      // If a specific department is selected, set its data
       if (selectedDepartment !== "all") {
         const selectedDept = departments.find(
           (d) => d.name === selectedDepartment
@@ -560,10 +581,8 @@ const DailyProductionReport = () => {
     }
   }, [date, selectedDepartment, departments, calculateAllDataCorrectly, formatDataForTable]);
 
-  // Get selected department data
   const getSelectedDepartmentData = useCallback(() => {
     if (selectedDepartment === "all") {
-      // Combine all departments data
       const allData = [];
       Object.keys(allDepartmentsData).forEach((deptName) => {
         const dept = departments.find((d) => d.name === deptName);
@@ -579,15 +598,8 @@ const DailyProductionReport = () => {
     } else {
       return productionData;
     }
-  }, [
-    selectedDepartment,
-    allDepartmentsData,
-    productionData,
-    departments,
-    formatDataForTable,
-  ]);
+  }, [selectedDepartment, allDepartmentsData, productionData, departments, formatDataForTable]);
 
-  // Calculate department totals
   const calculateDepartmentTotals = useCallback(
     (deptName) => {
       if (!allDepartmentsData[deptName]) {
@@ -600,11 +612,11 @@ const DailyProductionReport = () => {
           shifts: 0,
           combinations: 0,
           operators: 0,
+          isRawMaterial: departments.find(d => d.name === deptName)?.isRawMaterial || false,
         };
       }
 
-      const { dailyData, shiftData, machineData } =
-        allDepartmentsData[deptName];
+      const { dailyData } = allDepartmentsData[deptName];
       const todayData = dailyData.length > 0 ? dailyData[0] : null;
 
       if (!todayData) {
@@ -613,10 +625,11 @@ const DailyProductionReport = () => {
           totalTarget: 0,
           efficiency: 0,
           records: 0,
-          machines: machineData.length || 0,
-          shifts: shiftData.length || 0,
+          machines: 0,
+          shifts: 0,
           combinations: 0,
           operators: 0,
+          isRawMaterial: departments.find(d => d.name === deptName)?.isRawMaterial || false,
         };
       }
 
@@ -634,12 +647,12 @@ const DailyProductionReport = () => {
         shifts: todayData.shiftsCount,
         combinations: todayData.combinationsCount,
         operators: todayData.operatorsCount,
+        isRawMaterial: departments.find(d => d.name === deptName)?.isRawMaterial || false,
       };
     },
-    [allDepartmentsData]
+    [allDepartmentsData, departments]
   );
 
-  // Calculate overall totals
   const calculateTotals = useCallback(() => {
     if (selectedDepartment === "all") {
       let totalProduction = 0;
@@ -675,11 +688,11 @@ const DailyProductionReport = () => {
         operators: totalOperators,
       };
     } else {
-      return calculateDepartmentTotals(selectedDepartment);
+      const totals = calculateDepartmentTotals(selectedDepartment);
+      return totals;
     }
   }, [selectedDepartment, departments, calculateDepartmentTotals]);
 
-  // Group data by shift
   const groupByShift = useCallback((data) => {
     const grouped = {};
     data.forEach((item) => {
@@ -691,7 +704,6 @@ const DailyProductionReport = () => {
     return grouped;
   }, []);
 
-  // Format quantity with unit
   const formatQuantity = useCallback((quantity, unit) => {
     return `${quantity.toLocaleString("en-US", {
       minimumFractionDigits: unit === "Meter" ? 1 : 0,
@@ -699,7 +711,6 @@ const DailyProductionReport = () => {
     })} ${unit}`;
   }, []);
 
-  // Generate WhatsApp message
   const generateWhatsAppMessage = useCallback(() => {
     const totals = calculateTotals();
     const dateStr = date.toLocaleDateString("en-US", {
@@ -709,29 +720,31 @@ const DailyProductionReport = () => {
       day: "numeric",
     });
 
+    const deptInfo = getDepartmentInfo(selectedDepartment);
+    const isRawMaterial = deptInfo.isRawMaterial;
+
     let message = `📊 ${
       selectedDepartment === "all"
         ? "Daily Production Report"
-        : selectedDepartment.replace(" Section", "") + " Production Report"
+        : selectedDepartment.replace(" Section", "") + (isRawMaterial ? " Weight Report" : " Production Report")
     }\n`;
     message += `📅 Date: ${dateStr}\n`;
     message += `👤 Generated by: Admin\n\n`;
 
     message += `📈 Overall Summary:\n`;
-    message += `* Total Production: ${totals.totalProduction.toLocaleString()} ${
+    message += `* ${isRawMaterial ? "Total Weight Received" : "Total Production"}: ${totals.totalProduction.toLocaleString()} ${
       selectedDepartment === "all"
         ? "Units"
-        : getDepartmentInfo(selectedDepartment).unit
+        : deptInfo.unit
     }\n`;
-    message += `* Total Target: ${totals.totalTarget.toLocaleString()} ${
+    message += `* ${isRawMaterial ? "Total Target Weight" : "Total Target"}: ${totals.totalTarget.toLocaleString()} ${
       selectedDepartment === "all"
         ? "Units"
-        : getDepartmentInfo(selectedDepartment).unit
+        : deptInfo.unit
     }\n`;
     message += `* Average Efficiency: ${totals.efficiency}%\n`;
     message += `* Total Records: ${totals.records}\n\n`;
 
-    // Add shift-wise summary if available
     if (selectedDepartment !== "all") {
       const deptData = allDepartmentsData[selectedDepartment];
       if (deptData && deptData.shiftData.length > 0) {
@@ -750,11 +763,11 @@ const DailyProductionReport = () => {
               : "🕒";
 
           message += `${shiftIcon} ${shift.name} Shift:\n`;
-          message += `* Production: ${shift.production.toLocaleString()} ${
-            getDepartmentInfo(selectedDepartment).unit
+          message += `* ${isRawMaterial ? "Weight Received" : "Production"}: ${shift.production.toLocaleString()} ${
+            deptInfo.unit
           }\n`;
-          message += `* Target: ${shift.target.toLocaleString()} ${
-            getDepartmentInfo(selectedDepartment).unit
+          message += `* ${isRawMaterial ? "Target Weight" : "Target"}: ${shift.target.toLocaleString()} ${
+            deptInfo.unit
           }\n`;
           message += `* Efficiency: ${shift.efficiency}%\n`;
           message += `* Records: ${shift.entries}\n\n`;
@@ -763,10 +776,10 @@ const DailyProductionReport = () => {
     }
 
     message += `📝 Report Summary:\n`;
-    message += `* Target Production: ${totals.totalTarget.toLocaleString()} ${
+    message += `* ${isRawMaterial ? "Target Weight" : "Target Production"}: ${totals.totalTarget.toLocaleString()} ${
       selectedDepartment === "all"
         ? "Units"
-        : getDepartmentInfo(selectedDepartment).unit
+        : deptInfo.unit
     }\n`;
     message += `* Target Efficiency: ${
       totals.efficiency >= 100 ? "✅ Target Met" : "⚠️ Below Target"
@@ -783,7 +796,6 @@ const DailyProductionReport = () => {
     getDepartmentInfo,
   ]);
 
-  // Copy to clipboard
   const copyToClipboard = useCallback(() => {
     const message = generateWhatsAppMessage();
     navigator.clipboard.writeText(message).then(() => {
@@ -792,7 +804,6 @@ const DailyProductionReport = () => {
     });
   }, [generateWhatsAppMessage]);
 
-  // Open WhatsApp Desktop
   const openWhatsAppDesktop = useCallback(() => {
     const message = generateWhatsAppMessage();
     const encodedMessage = encodeURIComponent(message);
@@ -800,7 +811,6 @@ const DailyProductionReport = () => {
     window.open(whatsappUrl, "_blank");
   }, [generateWhatsAppMessage]);
 
-  // Open WhatsApp Group (mobile)
   const openWhatsAppGroup = useCallback(() => {
     const message = generateWhatsAppMessage();
     const encodedMessage = encodeURIComponent(message);
@@ -808,17 +818,51 @@ const DailyProductionReport = () => {
     window.open(whatsappUrl, "_blank");
   }, [generateWhatsAppMessage]);
 
-  // Refresh data
   const handleRefresh = useCallback(() => {
     fetchActualData();
   }, [fetchActualData]);
 
-  // Print report
   const handlePrint = useCallback(() => {
-    window.print();
-  }, []);
+  const originalStyles = document.querySelectorAll('style, link[rel="stylesheet"]');
+  
+  originalStyles.forEach(style => {
+    style.setAttribute('data-print-original-display', style.disabled);
+    style.disabled = true;
+  });
+  
+  const printStyle = document.createElement('style');
+  printStyle.innerHTML = `
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      .container, .container * {
+        visibility: visible;
+      }
+      .container {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+      }
+      .actionButtons, .refreshButton, .dropdownWrapper, 
+      .whatsappSettings, .dataSourceInfo, .popupOverlay {
+        display: none !important;
+      }
+    }
+  `;
+  document.head.appendChild(printStyle);
+  
+  window.print();
+  
+  setTimeout(() => {
+    document.head.removeChild(printStyle);
+    originalStyles.forEach(style => {
+      style.disabled = style.getAttribute('data-print-original-display') === 'true';
+    });
+  }, 100);
+}, []);
 
-  // Export to JSON
   const handleExport = useCallback(() => {
     const exportData = {
       reportDate: date.toISOString(),
@@ -829,6 +873,7 @@ const DailyProductionReport = () => {
           name: dept.name,
           unit: dept.unit,
           tableName: dept.tableName,
+          isRawMaterial: dept.isRawMaterial,
           ...totals,
         };
       }),
@@ -856,11 +901,9 @@ const DailyProductionReport = () => {
     getSelectedDepartmentData,
   ]);
 
-  // Export to Excel with remarks
   const handleExportExcel = useCallback(() => {
     const data = getSelectedDepartmentData();
 
-    // Prepare worksheet data
     const worksheetData = data.map((item) => ({
       Department: item.department,
       Section: item.section,
@@ -876,7 +919,6 @@ const DailyProductionReport = () => {
       Date: item.date,
     }));
 
-    // Add summary row
     const totals = calculateTotals();
     worksheetData.push({
       Department: "TOTAL",
@@ -897,7 +939,6 @@ const DailyProductionReport = () => {
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Production Report");
 
-    // Auto-size columns
     const maxWidth = worksheetData.reduce(
       (w, r) => Math.max(w, r.Department.length),
       10
@@ -910,7 +951,6 @@ const DailyProductionReport = () => {
     );
   }, [getSelectedDepartmentData, calculateTotals, date]);
 
-  // Format last refresh time
   const formatLastRefresh = useCallback(() => {
     return lastRefresh.toLocaleTimeString([], {
       hour: "2-digit",
@@ -919,10 +959,10 @@ const DailyProductionReport = () => {
     });
   }, [lastRefresh]);
 
-  // Handle department change
   const handleDepartmentChange = useCallback(
     (deptName) => {
       setSelectedDepartment(deptName);
+      setShowDepartmentDropdown(false);
       if (deptName !== "all") {
         const selectedDept = departments.find((d) => d.name === deptName);
         if (selectedDept && allDepartmentsData[deptName]) {
@@ -937,215 +977,77 @@ const DailyProductionReport = () => {
     [departments, allDepartmentsData, formatDataForTable]
   );
 
-  // WhatsApp Popup Component
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showDepartmentDropdown && !event.target.closest(`.${styles.filterContainer}`)) {
+        setShowDepartmentDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showDepartmentDropdown]);
+
   const WhatsAppPopup = () => {
     if (!showWhatsAppPopup) return null;
 
     return (
-      <div
-        style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: "rgba(0, 0, 0, 0.5)",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          zIndex: 1000,
-          padding: "20px",
-        }}
-      >
-        <div
-          style={{
-            backgroundColor: "white",
-            padding: "30px",
-            borderRadius: "12px",
-            maxWidth: "500px",
-            width: "100%",
-            boxShadow: "0 10px 30px rgba(0, 0, 0, 0.3)",
-            position: "relative",
-            animation: "popupFadeIn 0.3s ease",
-          }}
-        >
-          {/* Close button */}
+      <div className={styles.popupOverlay} onClick={() => setShowWhatsAppPopup(false)}>
+        <div className={styles.popupContainer} onClick={(e) => e.stopPropagation()}>
           <button
             onClick={() => setShowWhatsAppPopup(false)}
-            style={{
-              position: "absolute",
-              top: "15px",
-              right: "15px",
-              background: "none",
-              border: "none",
-              fontSize: "24px",
-              color: "#6b7280",
-              cursor: "pointer",
-              padding: "5px",
-              borderRadius: "50%",
-              width: "36px",
-              height: "36px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              transition: "all 0.2s",
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.backgroundColor = "#f3f4f6";
-              e.currentTarget.style.color = "#ef4444";
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.backgroundColor = "transparent";
-              e.currentTarget.style.color = "#6b7280";
-            }}
+            className={styles.popupClose}
+            aria-label="Close popup"
           >
             <FaClose />
           </button>
 
-          <h3
-            style={{
-              margin: "0 0 20px 0",
-              color: "#1e293b",
-              fontSize: "20px",
-              display: "flex",
-              alignItems: "center",
-              gap: "10px",
-            }}
-          >
+          <h3 className={styles.popupTitle}>
             <FaWhatsapp style={{ color: "#25D366" }} />
             Share Report via WhatsApp
           </h3>
 
-          <div
-            style={{
-              marginBottom: "25px",
-              padding: "15px",
-              backgroundColor: "#f8fafc",
-              borderRadius: "8px",
-              border: "1px solid #e5e7eb",
-              maxHeight: "200px",
-              overflowY: "auto",
-              fontSize: "14px",
-              whiteSpace: "pre-line",
-              fontFamily: "monospace",
-              lineHeight: "1.6",
-            }}
-          >
+          <div className={styles.messagePreview}>
             {generateWhatsAppMessage()}
           </div>
 
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "12px",
-            }}
-          >
-            {/* Copy to Clipboard Button */}
+          <div className={styles.popupButtons}>
             <button
               onClick={copyToClipboard}
+              className={`${styles.popupButton} ${styles.copyButton}`}
               style={{
-                padding: "15px",
                 backgroundColor: copiedToClipboard ? "#10b981" : "#3b82f6",
-                color: "white",
-                border: "none",
-                borderRadius: "8px",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "12px",
-                fontWeight: "600",
-                fontSize: "16px",
-                transition: "all 0.2s",
-                width: "100%",
               }}
-              onMouseOver={(e) => {
-                if (!copiedToClipboard) {
-                  e.currentTarget.style.backgroundColor = "#2563eb";
-                }
-              }}
-              onMouseOut={(e) => {
-                if (!copiedToClipboard) {
-                  e.currentTarget.style.backgroundColor = "#3b82f6";
-                }
-              }}
+              aria-label={copiedToClipboard ? "Copied to clipboard" : "Copy to clipboard"}
             >
-              <FaCopy size={20} />
+              <FaCopy size={16} />
               {copiedToClipboard
                 ? "✓ Copied to Clipboard!"
                 : "Copy Text to Clipboard"}
             </button>
 
-            {/* WhatsApp Desktop Button */}
             <button
               onClick={openWhatsAppDesktop}
-              style={{
-                padding: "15px",
-                backgroundColor: "#25D366",
-                color: "white",
-                border: "none",
-                borderRadius: "8px",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "12px",
-                fontWeight: "600",
-                fontSize: "16px",
-                transition: "all 0.2s",
-                width: "100%",
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.backgroundColor = "#128C7E";
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.backgroundColor = "#25D366";
-              }}
+              className={`${styles.popupButton} ${styles.whatsappDesktopButton}`}
+              aria-label="Open WhatsApp Desktop"
             >
-              <FaDesktop size={20} />
+              <FaDesktop size={16} />
               Open WhatsApp Desktop
             </button>
 
-            {/* WhatsApp Group/Mobile Button */}
             <button
               onClick={openWhatsAppGroup}
-              style={{
-                padding: "15px",
-                backgroundColor: "#075E54",
-                color: "white",
-                border: "none",
-                borderRadius: "8px",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "12px",
-                fontWeight: "600",
-                fontSize: "16px",
-                transition: "all 0.2s",
-                width: "100%",
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.backgroundColor = "#054D42";
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.backgroundColor = "#075E54";
-              }}
+              className={`${styles.popupButton} ${styles.whatsappGroupButton}`}
+              aria-label="Share in WhatsApp Group"
             >
-              <FaUsers size={20} />
+              <FaUsers size={16} />
               Share in WhatsApp Group
             </button>
           </div>
 
-          <div
-            style={{
-              marginTop: "20px",
-              fontSize: "12px",
-              color: "#6b7280",
-              textAlign: "center",
-            }}
-          >
+          <div className={styles.popupHint}>
             <p>✅ WhatsApp Group sharing works on mobile devices</p>
             <p>💻 WhatsApp Desktop requires WhatsApp Web to be logged in</p>
           </div>
@@ -1154,60 +1056,29 @@ const DailyProductionReport = () => {
     );
   };
 
-  // Initialize data
   useEffect(() => {
     fetchActualData();
   }, [fetchActualData]);
 
   if (loading) {
     return (
-      <div
-        style={{
-          padding: "40px",
-          textAlign: "center",
-          backgroundColor: "#f8fafc",
-          minHeight: "100vh",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        <div
-          style={{
-            width: "60px",
-            height: "60px",
-            border: "5px solid #e2e8f0",
-            borderTopColor: "#3b82f6",
-            borderRadius: "50%",
-            marginBottom: "20px",
-            animation: "spin 1s linear infinite",
-          }}
-        ></div>
-        <h3 style={{ color: "#1e293b", marginBottom: "10px" }}>
+      <div className={styles.loadingContainer}>
+        <div className={styles.spinner}></div>
+        <h3>
           <FaDatabase /> Loading Production Data...
         </h3>
-        <p style={{ color: "#64748b" }}>
+        <p>
           Fetching real-time data from all departments for{" "}
           {date.toLocaleDateString()}
         </p>
         <div
-          style={{
-            marginTop: "20px",
-            padding: "10px 20px",
-            backgroundColor: isSupabaseConnected ? "#d1fae5" : "#fee2e2",
-            color: isSupabaseConnected ? "#065f46" : "#991b1b",
-            borderRadius: "8px",
-            fontSize: "14px",
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-          }}
+          className={`${styles.connectionStatus} ${
+            isSupabaseConnected ? styles.connected : styles.connecting
+          }`}
         >
           <FaDatabase />
           {isSupabaseConnected ? "Connected to Database" : "Connecting..."}
         </div>
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }
@@ -1215,345 +1086,180 @@ const DailyProductionReport = () => {
   const filteredData = getSelectedDepartmentData();
   const totals = calculateTotals();
   const shiftGroups = groupByShift(filteredData);
-  const allDepartments = departments;
+  const selectedDeptDisplay = getSelectedDepartmentDisplay();
+  const deptInfo = getDepartmentInfo(selectedDepartment);
+  const isRawMaterial = deptInfo.isRawMaterial;
 
   return (
-    <div
-      style={{
-        padding: "20px",
-        backgroundColor: "#f8fafc",
-        minHeight: "100vh",
-        fontFamily: "Arial, sans-serif",
-      }}
-    >
-      {/* WhatsApp Popup */}
+    <div className={styles.container}>
       <WhatsAppPopup />
 
-      {/* Header */}
-      <div
-        style={{
-          backgroundColor: "white",
-          padding: "20px",
-          borderRadius: "10px",
-          boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
-          marginBottom: "20px",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "flex-start",
-            flexWrap: "wrap",
-            gap: "20px",
-            marginBottom: "20px",
-          }}
-        >
-          <div>
-            <h1
-              style={{
-                margin: "0 0 10px 0",
-                color: "#1e293b",
-                fontSize: "28px",
-                display: "flex",
-                alignItems: "center",
-                gap: "10px",
-              }}
-            >
-              <FaCalendarAlt style={{ color: "#3b82f6" }} />
-              Daily Production Report
+      <div className={styles.header}>
+        <div className={styles.headerTop}>
+          <div className={styles.titleText}>
+            <h1>
+              <FaCalendarAlt className={styles.titleIcon} />
+              {isRawMaterial ? "Daily Material Weight Report" : "Daily Production Report"}
               <span
-                style={{
-                  fontSize: "14px",
-                  backgroundColor: isSupabaseConnected ? "#10b981" : "#ef4444",
-                  color: "white",
-                  padding: "4px 12px",
-                  borderRadius: "20px",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "6px",
-                }}
+                className={`${styles.statusBadge} ${
+                  !isSupabaseConnected && styles.offlineBadge
+                }`}
               >
-                <FaDatabase size={12} />
+                <FaDatabase size={10} />
                 {isSupabaseConnected ? "Live Data" : "Offline"}
               </span>
             </h1>
-            <p
-              style={{
-                margin: "0",
-                color: "#64748b",
-                fontSize: "16px",
-                display: "flex",
-                alignItems: "center",
-                gap: "10px",
-              }}
-            >
-              <FaRegCalendarCheck />
-              {date.toLocaleDateString("en-US", {
-                weekday: "long",
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
-              <span
-                style={{
-                  color: "#6b7280",
-                  marginLeft: "10px",
-                  paddingLeft: "10px",
-                  borderLeft: "1px solid #d1d5db",
-                }}
-              >
-                <FaRegClock style={{ marginRight: "6px" }} />
-                Last refresh: {formatLastRefresh()}
-              </span>
-            </p>
           </div>
-
-          <div
-            style={{
-              display: "flex",
-              gap: "10px",
-              alignItems: "center",
-              flexWrap: "wrap",
-            }}
-          >
-            <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-              <label
-                style={{
-                  fontSize: "14px",
-                  fontWeight: "600",
-                  color: "#374151",
-                }}
-              >
-                <FaCalendarAlt style={{ marginRight: "6px" }} />
+          <div className={styles.dateInfo}>
+            <FaRegCalendarCheck className={styles.dateIcon} />
+            {date.toLocaleDateString("en-US", {
+              weekday: "short",
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            })}
+            <span className={styles.refreshTime}>
+              <FaRegClock />
+              {formatLastRefresh()}
+            </span>
+          </div>
+          <div className={styles.controls}>
+            <div className={styles.dateControl}>
+              <label className={styles.dateLabel}>
+                <FaCalendarAlt />
                 Date:
               </label>
               <input
                 type="date"
                 value={date.toISOString().split("T")[0]}
                 onChange={(e) => setDate(new Date(e.target.value))}
-                style={{
-                  padding: "8px 12px",
-                  border: "1px solid #d1d5db",
-                  borderRadius: "6px",
-                  fontSize: "14px",
-                  backgroundColor: "#f9fafb",
-                  transition: "all 0.2s",
-                  cursor: "pointer",
-                }}
-                onMouseOver={(e) =>
-                  (e.currentTarget.style.borderColor = "#3b82f6")
-                }
-                onMouseOut={(e) =>
-                  (e.currentTarget.style.borderColor = "#d1d5db")
-                }
+                className={styles.dateInput}
+                aria-label="Select report date"
               />
             </div>
             <button
               onClick={handleRefresh}
-              style={{
-                padding: "8px 16px",
-                backgroundColor: "#3b82f6",
-                color: "white",
-                border: "none",
-                borderRadius: "6px",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                fontWeight: "600",
-                transition: "all 0.2s",
-                transform: "translateY(0)",
-                boxShadow: "0 2px 4px rgba(59, 130, 246, 0.3)",
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.backgroundColor = "#2563eb";
-                e.currentTarget.style.transform = "translateY(-2px)";
-                e.currentTarget.style.boxShadow =
-                  "0 4px 8px rgba(59, 130, 246, 0.4)";
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.backgroundColor = "#3b82f6";
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow =
-                  "0 2px 4px rgba(59, 130, 246, 0.3)";
-              }}
+              className={styles.refreshButton}
+              aria-label="Refresh data"
             >
               <FaSyncAlt /> Refresh
             </button>
           </div>
         </div>
 
-        {/* Department Filter */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "20px",
-            flexWrap: "wrap",
-          }}
-        >
-          <div
-            style={{
-              fontWeight: "600",
-              color: "#1e293b",
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-            }}
-          >
-            <FaBuilding />
-            Filter by Department:
+        <div className={styles.filterContainer}>
+          <div className={styles.filterLabel}>
+            <FaBuilding className={styles.filterIcon} />
+            Select Department:
           </div>
-          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+          
+          <div className={styles.dropdownWrapper}>
             <button
-              onClick={() => handleDepartmentChange("all")}
-              style={{
-                padding: "8px 16px",
-                backgroundColor:
-                  selectedDepartment === "all" ? "#3b82f6" : "#f3f4f6",
-                color: selectedDepartment === "all" ? "white" : "#374151",
-                border: "none",
-                borderRadius: "6px",
-                cursor: "pointer",
-                fontWeight: "600",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                transition: "all 0.2s",
-                transform: "translateY(0)",
-                boxShadow:
-                  selectedDepartment === "all"
-                    ? "0 2px 4px rgba(59, 130, 246, 0.3)"
-                    : "none",
-              }}
-              onMouseOver={(e) => {
-                if (selectedDepartment !== "all") {
-                  e.currentTarget.style.backgroundColor = "#e5e7eb";
-                  e.currentTarget.style.transform = "translateY(-2px)";
-                  e.currentTarget.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)";
-                }
-              }}
-              onMouseOut={(e) => {
-                if (selectedDepartment !== "all") {
-                  e.currentTarget.style.backgroundColor = "#f3f4f6";
-                  e.currentTarget.style.transform = "translateY(0)";
-                  e.currentTarget.style.boxShadow = "none";
-                }
-              }}
+              onClick={() => setShowDepartmentDropdown(!showDepartmentDropdown)}
+              className={styles.dropdownToggle}
+              aria-label="Select department"
+              aria-expanded={showDepartmentDropdown}
             >
-              <FaSitemap />
-              All Departments
+              <div className={styles.selectedOption}>
+                <div
+                  className={styles.iconWrapper}
+                  style={{
+                    backgroundColor: selectedDeptDisplay.color + "20",
+                    color: selectedDeptDisplay.color,
+                  }}
+                >
+                  {selectedDeptDisplay.icon}
+                </div>
+                <span className={styles.selectedText}>{selectedDeptDisplay.shortName}</span>
+              </div>
+              <FaChevronDown 
+                className={styles.chevron}
+                style={{ 
+                  transform: showDepartmentDropdown ? "rotate(180deg)" : "rotate(0deg)"
+                }} 
+              />
             </button>
-            {allDepartments.map((dept) => (
-              <button
-                key={dept.id}
-                onClick={() => handleDepartmentChange(dept.name)}
-                style={{
-                  padding: "8px 16px",
-                  backgroundColor:
-                    selectedDepartment === dept.name ? dept.color : "#f3f4f6",
-                  color: selectedDepartment === dept.name ? "white" : "#374151",
-                  border: `1px solid ${dept.color}30`,
-                  borderRadius: "6px",
-                  cursor: "pointer",
-                  fontWeight: "600",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  transition: "all 0.2s",
-                  transform: "translateY(0)",
-                  boxShadow:
-                    selectedDepartment === dept.name
-                      ? `0 2px 4px ${dept.color}30`
-                      : "none",
-                }}
-                onMouseOver={(e) => {
-                  if (selectedDepartment !== dept.name) {
-                    e.currentTarget.style.backgroundColor = "#e5e7eb";
-                    e.currentTarget.style.transform = "translateY(-2px)";
-                    e.currentTarget.style.boxShadow =
-                      "0 2px 4px rgba(0,0,0,0.1)";
-                  }
-                }}
-                onMouseOut={(e) => {
-                  if (selectedDepartment !== dept.name) {
-                    e.currentTarget.style.backgroundColor = "#f3f4f6";
-                    e.currentTarget.style.transform = "translateY(0)";
-                    e.currentTarget.style.boxShadow = "none";
-                  }
-                }}
-              >
-                {dept.icon}
-                {dept.name.replace(" Section", "")}
-              </button>
-            ))}
+
+            {showDepartmentDropdown && (
+              <div className={styles.dropdownMenu} role="listbox">
+                <div
+                  onClick={() => handleDepartmentChange("all")}
+                  className={styles.optionItem}
+                  role="option"
+                  aria-selected={selectedDepartment === "all"}
+                  style={{
+                    backgroundColor: selectedDepartment === "all" ? "#f3f4f6" : "white",
+                  }}
+                >
+                  <div
+                    className={styles.optionIcon}
+                    style={{
+                      backgroundColor: "#6b728020",
+                      color: "#6b7280",
+                    }}
+                  >
+                    <FaSitemap size={12} />
+                  </div>
+                  <div className={styles.optionInfo}>
+                    <div className={styles.optionName}>All Departments</div>
+                    <div className={styles.optionDetails}>
+                      View data from all sections
+                    </div>
+                  </div>
+                </div>
+
+                {departments.map((dept) => (
+                  <div
+                    key={dept.id}
+                    onClick={() => handleDepartmentChange(dept.name)}
+                    className={styles.optionItem}
+                    role="option"
+                    aria-selected={selectedDepartment === dept.name}
+                    style={{
+                      backgroundColor: selectedDepartment === dept.name ? "#f3f4f6" : "white",
+                      borderBottom: dept.id === departments.length ? "none" : "1px solid #f3f4f6",
+                    }}
+                  >
+                    <div
+                      className={styles.optionIcon}
+                      style={{
+                        backgroundColor: dept.color + "20",
+                        color: dept.color,
+                      }}
+                    >
+                      {dept.icon}
+                    </div>
+                    <div className={styles.optionInfo}>
+                      <div className={styles.optionName}>{dept.shortName}</div>
+                      <div className={styles.optionDetails}>
+                        {dept.isRawMaterial ? "Material Weight" : "Production"} • Unit: {dept.unit}
+                      </div>
+                    </div>
+                    {selectedDepartment === dept.name && (
+                      <div
+                        className={styles.selectedIndicator}
+                        style={{ backgroundColor: dept.color }}
+                        aria-hidden="true"
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Summary Cards */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-          gap: "20px",
-          marginBottom: "30px",
-        }}
-      >
+      <div className={styles.summaryGrid}>
         <div
-          style={{
-            backgroundColor: "white",
-            padding: "20px",
-            borderRadius: "10px",
-            boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
-            borderLeft: "4px solid #3b82f6",
-            position: "relative",
-            overflow: "hidden",
-            transition: "all 0.3s ease",
-            cursor: "pointer",
-          }}
-          onMouseOver={(e) => {
-            e.currentTarget.style.transform = "translateY(-5px)";
-            e.currentTarget.style.boxShadow = "0 10px 20px rgba(0,0,0,0.15)";
-          }}
-          onMouseOut={(e) => {
-            e.currentTarget.style.transform = "translateY(0)";
-            e.currentTarget.style.boxShadow = "0 2px 10px rgba(0,0,0,0.1)";
-          }}
+          className={styles.summaryCard}
+          style={{ borderLeft: "3px solid #3b82f6" }}
         >
-          <div
-            style={{
-              position: "absolute",
-              right: "-20px",
-              top: "-20px",
-              width: "80px",
-              height: "80px",
-              backgroundColor: "#3b82f610",
-              borderRadius: "50%",
-            }}
-          ></div>
-          <div
-            style={{
-              color: "#64748b",
-              marginBottom: "10px",
-              fontSize: "14px",
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-            }}
-          >
-            <FaIndustry />
-            Total Production
+          <div className={styles.cardIcon}>
+            {isRawMaterial ? <FaWeightHanging /> : <FaIndustry />}
+            {isRawMaterial ? "Total Weight Received" : "Total Production"}
           </div>
-          <div
-            style={{
-              fontSize: "32px",
-              fontWeight: "bold",
-              color: "#1e293b",
-              marginBottom: "5px",
-            }}
-          >
+          <div className={styles.cardValue}>
             {totals.totalProduction.toLocaleString("en-US", {
               minimumFractionDigits:
                 selectedDepartment === "all"
@@ -1569,64 +1275,20 @@ const DailyProductionReport = () => {
                   : 0,
             })}
           </div>
-          <div style={{ color: "#64748b", fontSize: "12px" }}>
-            Across {filteredData.length} records • {totals.machines} machines
+          <div className={styles.cardSubtitle}>
+            {filteredData.length} records • {totals.machines} machines
           </div>
         </div>
 
         <div
-          style={{
-            backgroundColor: "white",
-            padding: "20px",
-            borderRadius: "10px",
-            boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
-            borderLeft: "4px solid #10b981",
-            position: "relative",
-            overflow: "hidden",
-            transition: "all 0.3s ease",
-            cursor: "pointer",
-          }}
-          onMouseOver={(e) => {
-            e.currentTarget.style.transform = "translateY(-5px)";
-            e.currentTarget.style.boxShadow = "0 10px 20px rgba(0,0,0,0.15)";
-          }}
-          onMouseOut={(e) => {
-            e.currentTarget.style.transform = "translateY(0)";
-            e.currentTarget.style.boxShadow = "0 2px 10px rgba(0,0,0,0.1)";
-          }}
+          className={styles.summaryCard}
+          style={{ borderLeft: "3px solid #10b981" }}
         >
-          <div
-            style={{
-              position: "absolute",
-              right: "-20px",
-              top: "-20px",
-              width: "80px",
-              height: "80px",
-              backgroundColor: "#10b98110",
-              borderRadius: "50%",
-            }}
-          ></div>
-          <div
-            style={{
-              color: "#64748b",
-              marginBottom: "10px",
-              fontSize: "14px",
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-            }}
-          >
+          <div className={styles.cardIcon}>
             <FaBullseye />
-            Total Target
+            {isRawMaterial ? "Total Target Weight" : "Total Target"}
           </div>
-          <div
-            style={{
-              fontSize: "32px",
-              fontWeight: "bold",
-              color: "#1e293b",
-              marginBottom: "5px",
-            }}
-          >
+          <div className={styles.cardValue}>
             {totals.totalTarget.toLocaleString("en-US", {
               minimumFractionDigits:
                 selectedDepartment === "all"
@@ -1642,124 +1304,39 @@ const DailyProductionReport = () => {
                   : 0,
             })}
           </div>
-          <div style={{ color: "#64748b", fontSize: "12px" }}>
-            Expected production • {totals.shifts} active shifts
+          <div className={styles.cardSubtitle}>
+            Expected {isRawMaterial ? "weight" : "production"} • {totals.shifts} shifts
           </div>
         </div>
 
         <div
-          style={{
-            backgroundColor: "white",
-            padding: "20px",
-            borderRadius: "10px",
-            boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
-            borderLeft: `4px solid ${getEfficiencyColor(totals.efficiency)}`,
-            position: "relative",
-            overflow: "hidden",
-            transition: "all 0.3s ease",
-            cursor: "pointer",
-          }}
-          onMouseOver={(e) => {
-            e.currentTarget.style.transform = "translateY(-5px)";
-            e.currentTarget.style.boxShadow = "0 10px 20px rgba(0,0,0,0.15)";
-          }}
-          onMouseOut={(e) => {
-            e.currentTarget.style.transform = "translateY(0)";
-            e.currentTarget.style.boxShadow = "0 2px 10px rgba(0,0,0,0.1)";
-          }}
+          className={styles.summaryCard}
+          style={{ borderLeft: `3px solid ${getEfficiencyColor(totals.efficiency)}` }}
         >
-          <div
-            style={{
-              position: "absolute",
-              right: "-20px",
-              top: "-20px",
-              width: "80px",
-              height: "80px",
-              backgroundColor: `${getEfficiencyColor(totals.efficiency)}10`,
-              borderRadius: "50%",
-            }}
-          ></div>
-          <div
-            style={{
-              color: "#64748b",
-              marginBottom: "10px",
-              fontSize: "14px",
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-            }}
-          >
+          <div className={styles.cardIcon}>
             <FaChartLine />
             Efficiency
           </div>
           <div
-            style={{
-              fontSize: "32px",
-              fontWeight: "bold",
-              color: getEfficiencyColor(totals.efficiency),
-              marginBottom: "5px",
-            }}
+            className={styles.cardValue}
+            style={{ color: getEfficiencyColor(totals.efficiency) }}
           >
             {totals.efficiency}%
           </div>
-          <div style={{ color: "#64748b", fontSize: "12px" }}>
-            Production vs Target • {totals.records} total entries
+          <div className={styles.cardSubtitle}>
+            {isRawMaterial ? "Weight vs Target" : "Production vs Target"} • {totals.records} entries
           </div>
         </div>
 
         <div
-          style={{
-            backgroundColor: "white",
-            padding: "20px",
-            borderRadius: "10px",
-            boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
-            borderLeft: "4px solid #8b5cf6",
-            position: "relative",
-            overflow: "hidden",
-            transition: "all 0.3s ease",
-            cursor: "pointer",
-          }}
-          onMouseOver={(e) => {
-            e.currentTarget.style.transform = "translateY(-5px)";
-            e.currentTarget.style.boxShadow = "0 10px 20px rgba(0,0,0,0.15)";
-          }}
-          onMouseOut={(e) => {
-            e.currentTarget.style.transform = "translateY(0)";
-            e.currentTarget.style.boxShadow = "0 2px 10px rgba(0,0,0,0.1)";
-          }}
+          className={styles.summaryCard}
+          style={{ borderLeft: "3px solid #8b5cf6" }}
         >
-          <div
-            style={{
-              position: "absolute",
-              right: "-20px",
-              top: "-20px",
-              width: "80px",
-              height: "80px",
-              backgroundColor: "#8b5cf610",
-              borderRadius: "50%",
-            }}
-          ></div>
-          <div
-            style={{
-              color: "#64748b",
-              marginBottom: "10px",
-              fontSize: "14px",
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-            }}
-          >
+          <div className={styles.cardIcon}>
             <FaTachometerAlt />
             Avg per Record
           </div>
-          <div
-            style={{
-              fontSize: "20px",
-              fontWeight: "bold",
-              color: "#1e293b",
-              marginBottom: "5px",
-            }}
-          >
+          <div className={styles.cardValue}>
             {filteredData.length > 0
               ? (totals.totalProduction / filteredData.length).toLocaleString(
                   "en-US",
@@ -1780,57 +1357,25 @@ const DailyProductionReport = () => {
                 )
               : "0"}
           </div>
-          <div style={{ color: "#64748b", fontSize: "12px" }}>
-            Per production record • {totals.combinations || 0} M-S-D pairs
+          <div className={styles.cardSubtitle}>
+            Per record • {totals.combinations || 0} combos
           </div>
         </div>
       </div>
 
-      {/* Production Details */}
-      <div
-        style={{
-          backgroundColor: "white",
-          padding: "20px",
-          borderRadius: "10px",
-          boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
-          marginBottom: "30px",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "20px",
-            flexWrap: "wrap",
-            gap: "15px",
-          }}
-        >
-          <div>
-            <h2
-              style={{
-                margin: "0",
-                color: "#1e293b",
-                display: "flex",
-                alignItems: "center",
-                gap: "10px",
-              }}
-            >
+      <div className={styles.detailsContainer}>
+        <div className={styles.detailsHeader}>
+          <div className={styles.detailsTitle}>
+            <h2>
               <FaDatabase />
-              Production Details
+              {isRawMaterial ? "Material Weight Details" : "Production Details"}
               {selectedDepartment !== "all" && (
                 <span
+                  className={styles.departmentBadge}
                   style={{
-                    fontSize: "14px",
                     backgroundColor:
                       getDepartmentInfo(selectedDepartment).color + "20",
                     color: getDepartmentInfo(selectedDepartment).color,
-                    padding: "4px 12px",
-                    borderRadius: "20px",
-                    fontWeight: "600",
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: "6px",
                   }}
                 >
                   {getDepartmentInfo(selectedDepartment).icon}
@@ -1838,323 +1383,99 @@ const DailyProductionReport = () => {
                 </span>
               )}
             </h2>
-            <p
-              style={{
-                margin: "5px 0 0 0",
-                color: "#64748b",
-                fontSize: "14px",
-              }}
-            >
+            <p className={styles.detailsSubtitle}>
               {selectedDepartment === "all"
                 ? "Showing data from all departments"
-                : `Unit: ${
+                : `${isRawMaterial ? "Material Weight" : "Production"} • Unit: ${
                     getDepartmentInfo(selectedDepartment).unit
-                  } • Table: ${
-                    departments.find((d) => d.name === selectedDepartment)
-                      ?.tableName
                   }`}
             </p>
           </div>
 
-          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+          <div className={styles.actionButtons}>
             <button
               onClick={() => setShowWhatsAppPopup(true)}
-              style={{
-                padding: "8px 16px",
-                backgroundColor: "#25D366",
-                color: "white",
-                border: "none",
-                borderRadius: "6px",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                fontWeight: "600",
-                transition: "all 0.2s",
-                transform: "translateY(0)",
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.backgroundColor = "#128C7E";
-                e.currentTarget.style.transform = "translateY(-2px)";
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.backgroundColor = "#25D366";
-                e.currentTarget.style.transform = "translateY(0)";
-              }}
+              className={`${styles.actionButton} ${styles.whatsappButton}`}
               title="Share report via WhatsApp"
             >
-              <FaWhatsapp /> WhatsApp
+              <FaWhatsapp /> <span>WhatsApp</span>
             </button>
 
             <button
               onClick={handleExportExcel}
-              style={{
-                padding: "8px 16px",
-                backgroundColor: "#10b981",
-                color: "white",
-                border: "none",
-                borderRadius: "6px",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                fontWeight: "600",
-                transition: "all 0.2s",
-                transform: "translateY(0)",
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.backgroundColor = "#059669";
-                e.currentTarget.style.transform = "translateY(-2px)";
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.backgroundColor = "#10b981";
-                e.currentTarget.style.transform = "translateY(0)";
-              }}
+              className={`${styles.actionButton} ${styles.excelButton}`}
               title="Export to Excel"
             >
-              <FaFileExcel /> Excel
+              <FaFileExcel /> <span>Excel</span>
             </button>
 
             <button
               onClick={handleExport}
-              style={{
-                padding: "8px 16px",
-                backgroundColor: "#3b82f6",
-                color: "white",
-                border: "none",
-                borderRadius: "6px",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                fontWeight: "600",
-                transition: "all 0.2s",
-                transform: "translateY(0)",
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.backgroundColor = "#2563eb";
-                e.currentTarget.style.transform = "translateY(-2px)";
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.backgroundColor = "#3b82f6";
-                e.currentTarget.style.transform = "translateY(0)";
-              }}
+              className={`${styles.actionButton} ${styles.jsonButton}`}
             >
-              <FaFileDownload /> JSON
+              <FaFileDownload /> <span>JSON</span>
             </button>
 
             <button
               onClick={handlePrint}
-              style={{
-                padding: "8px 16px",
-                backgroundColor: "#6b7280",
-                color: "white",
-                border: "none",
-                borderRadius: "6px",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                fontWeight: "600",
-                transition: "all 0.2s",
-                transform: "translateY(0)",
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.backgroundColor = "#4b5563";
-                e.currentTarget.style.transform = "translateY(-2px)";
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.backgroundColor = "#6b7280";
-                e.currentTarget.style.transform = "translateY(0)";
-              }}
+              className={`${styles.actionButton} ${styles.printButton}`}
             >
-              <FaPrint /> Print
+              <FaPrint /> <span>Print</span>
             </button>
           </div>
         </div>
 
         {Object.keys(shiftGroups).length > 0 ? (
           Object.keys(shiftGroups).map((shift) => (
-            <div key={shift} style={{ marginBottom: "30px" }}>
-              <h3
-                style={{
-                  margin: "0 0 15px 0",
-                  color: "#374151",
-                  paddingBottom: "10px",
-                  borderBottom: "2px solid #e5e7eb",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "10px",
-                }}
-              >
-                <span
-                  style={{
-                    color: getShiftIcon(shift).props.color || "#6b7280",
-                  }}
-                >
+            <div key={shift} className={styles.shiftSection}>
+              <h3 className={styles.shiftTitle}>
+                <span style={{ color: getShiftIcon(shift).props.color || "#6b7280" }}>
                   {getShiftIcon(shift)}
                 </span>
                 Shift: {shift}
               </h3>
 
-              <div style={{ overflowX: "auto" }}>
-                <table
-                  style={{
-                    width: "100%",
-                    borderCollapse: "collapse",
-                  }}
-                >
+              <div className={styles.tableContainer}>
+                <table className={styles.productionTable}>
                   <thead>
-                    <tr
-                      style={{
-                        backgroundColor: "#f8fafc",
-                        borderBottom: "2px solid #e5e7eb",
-                      }}
-                    >
-                      <th
-                        style={{
-                          padding: "12px",
-                          textAlign: "left",
-                          fontWeight: "600",
-                          color: "#1e293b",
-                        }}
-                      >
-                        Section
+                    <tr className={styles.tableHeader}>
+                      <th>Section</th>
+                      <th>Operator</th>
+                      <th>Machine</th>
+                      <th style={{ textAlign: "right" }}>
+                        {isRawMaterial ? "Weight" : "Production"}
                       </th>
-                      <th
-                        style={{
-                          padding: "12px",
-                          textAlign: "left",
-                          fontWeight: "600",
-                          color: "#1e293b",
-                        }}
-                      >
-                        Operator
-                      </th>
-                      <th
-                        style={{
-                          padding: "12px",
-                          textAlign: "left",
-                          fontWeight: "600",
-                          color: "#1e293b",
-                        }}
-                      >
-                        Machine
-                      </th>
-                      <th
-                        style={{
-                          padding: "12px",
-                          textAlign: "right",
-                          fontWeight: "600",
-                          color: "#1e293b",
-                        }}
-                      >
-                        Production
-                      </th>
-                      <th
-                        style={{
-                          padding: "12px",
-                          textAlign: "right",
-                          fontWeight: "600",
-                          color: "#1e293b",
-                        }}
-                      >
-                        Target
-                      </th>
-                      <th
-                        style={{
-                          padding: "12px",
-                          textAlign: "center",
-                          fontWeight: "600",
-                          color: "#1e293b",
-                        }}
-                      >
-                        Unit
-                      </th>
-                      <th
-                        style={{
-                          padding: "12px",
-                          textAlign: "center",
-                          fontWeight: "600",
-                          color: "#1e293b",
-                        }}
-                      >
-                        Efficiency
-                      </th>
-                      <th
-                        style={{
-                          padding: "12px",
-                          textAlign: "center",
-                          fontWeight: "600",
-                          color: "#1e293b",
-                        }}
-                      >
-                        Entries
-                      </th>
-                      <th
-                        style={{
-                          padding: "12px",
-                          textAlign: "center",
-                          fontWeight: "600",
-                          color: "#1e293b",
-                        }}
-                      >
-                        Remarks
-                      </th>
+                      <th style={{ textAlign: "right" }}>Target</th>
+                      <th style={{ textAlign: "center" }}>Unit</th>
+                      <th style={{ textAlign: "center" }}>Efficiency</th>
+                      <th style={{ textAlign: "center" }}>Entries</th>
+                      <th style={{ textAlign: "center" }}>Remarks</th>
                     </tr>
                   </thead>
                   <tbody>
                     {shiftGroups[shift].map((item, index) => {
                       const deptInfo = getDepartmentInfo(item.department);
+                      const isItemRawMaterial = item.isRawMaterial || deptInfo.isRawMaterial;
                       const efficiencyColor = getEfficiencyColor(item.efficiency);
                       const efficiencyBgColor = getEfficiencyBgColor(item.efficiency);
                       
                       return (
                         <tr
                           key={item.id}
+                          className={styles.tableRow}
                           style={{
-                            borderBottom: "1px solid #e5e7eb",
-                            backgroundColor:
-                              index % 2 === 0 ? "#ffffff" : "#f8fafc",
+                            backgroundColor: index % 2 === 0 ? "#ffffff" : "#f8fafc",
                           }}
                         >
-                          <td style={{ padding: "12px" }}>
-                            <div>
-                              <div
-                                style={{
-                                  fontWeight: "600",
-                                  marginBottom: "4px",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: "8px",
-                                }}
-                              >
-                                {deptInfo.icon}
-                                {item.section}
-                              </div>
-                              <div
-                                style={{
-                                  fontSize: "12px",
-                                  color: "#6b7280",
-                                  backgroundColor: "#f3f4f6",
-                                  padding: "2px 6px",
-                                  borderRadius: "4px",
-                                  display: "inline-block",
-                                }}
-                              >
-                                {item.department}
-                              </div>
+                          <td className={styles.sectionCell}>
+                            <div className={styles.sectionInfo}>
+                              {deptInfo.icon}
+                              {item.section}
                             </div>
                           </td>
-                          <td style={{ padding: "12px" }}>
-                            <div
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "8px",
-                              }}
-                            >
-                              <FaUser style={{ color: "#6b7280" }} />
+                          <td className={styles.operatorCell}>
+                            <div className={styles.operatorInfo}>
+                              <FaUser className={styles.infoIcon} />
                               <span
                                 style={{
                                   fontWeight:
@@ -2171,27 +1492,18 @@ const DailyProductionReport = () => {
                               </span>
                             </div>
                           </td>
-                          <td style={{ padding: "12px" }}>
-                            <div
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "8px",
-                              }}
-                            >
-                              <FaCogs style={{ color: "#6b7280" }} />
+                          <td className={styles.machineCell}>
+                            <div className={styles.machineInfo}>
+                              <FaCogs className={styles.infoIcon} />
                               {item.machine}
                             </div>
                           </td>
                           <td
+                            className={styles.quantityCell}
                             style={{
-                              padding: "12px",
-                              textAlign: "right",
-                              fontWeight: "600",
-                              color:
-                                item.production_quantity > 0
-                                  ? "#1e293b"
-                                  : "#ef4444",
+                              color: item.production_quantity > 0
+                                ? "#1e293b"
+                                : "#ef4444",
                             }}
                           >
                             {formatQuantity(
@@ -2199,118 +1511,46 @@ const DailyProductionReport = () => {
                               item.quantity_unit
                             )}
                           </td>
-                          <td
-                            style={{
-                              padding: "12px",
-                              textAlign: "right",
-                            }}
-                          >
+                          <td className={styles.quantityCell}>
                             {formatQuantity(
                               item.target_quantity,
                               item.quantity_unit
                             )}
                           </td>
-                          <td
-                            style={{
-                              padding: "12px",
-                              textAlign: "center",
-                            }}
-                          >
+                          <td className={styles.centerCell}>
                             <span
-                              style={{
-                                padding: "4px 12px",
-                                backgroundColor:
-                                  item.quantity_unit === "kg"
-                                    ? "#dbeafe"
-                                    : "#ede9fe",
-                                color:
-                                  item.quantity_unit === "kg"
-                                    ? "#1d4ed8"
-                                    : "#7c3aed",
-                                borderRadius: "20px",
-                                fontSize: "12px",
-                                fontWeight: "600",
-                              }}
+                              className={`${styles.quantityBadge} ${
+                                item.quantity_unit === "kg" 
+                                  ? styles.kgUnit 
+                                  : styles.meterUnit
+                              }`}
                             >
                               {item.quantity_unit}
                             </span>
                           </td>
-                          <td
-                            style={{
-                              padding: "12px",
-                              textAlign: "center",
-                            }}
-                          >
+                          <td className={styles.centerCell}>
                             <span
+                              className={styles.efficiencyBadge}
                               style={{
-                                padding: "4px 12px",
                                 backgroundColor: efficiencyBgColor,
                                 color: efficiencyColor,
-                                borderRadius: "20px",
-                                fontSize: "12px",
-                                fontWeight: "600",
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "4px",
                               }}
                             >
                               {item.efficiency >= 100 && (
-                                <FaArrowUp size={10} />
+                                <FaArrowUp size={8} />
                               )}
                               {item.efficiency}%
                             </span>
                           </td>
-                          <td
-                            style={{
-                              padding: "12px",
-                              textAlign: "center",
-                            }}
-                          >
-                            <span
-                              style={{
-                                padding: "4px 12px",
-                                backgroundColor: "#f3f4f6",
-                                color: "#374151",
-                                borderRadius: "20px",
-                                fontSize: "12px",
-                                fontWeight: "600",
-                              }}
-                            >
+                          <td className={styles.centerCell}>
+                            <span className={styles.entriesBadge}>
                               {item.entries}
                             </span>
                           </td>
-                          <td
-                            style={{
-                              padding: "12px",
-                              textAlign: "center",
-                              maxWidth: "200px",
-                              wordWrap: "break-word",
-                            }}
-                          >
-                            <div
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "8px",
-                                justifyContent: "center",
-                              }}
-                            >
-                              <FaCommentAlt style={{ color: "#6b7280", flexShrink: 0 }} />
-                              <span
-                                style={{
-                                  fontSize: "12px",
-                                  color: "#4b5563",
-                                  backgroundColor: "#f9fafb",
-                                  padding: "6px 10px",
-                                  borderRadius: "6px",
-                                  border: "1px solid #e5e7eb",
-                                  textAlign: "left",
-                                  maxWidth: "180px",
-                                  whiteSpace: "normal",
-                                  wordBreak: "break-word",
-                                }}
-                                title={item.remarks}
-                              >
+                          <td className={styles.remarksCell}>
+                            <div className={styles.remarksContent}>
+                              <FaCommentAlt className={styles.remarksIcon} title={item.remarks} />
+                              <span className={styles.remarksText}>
                                 {item.remarks}
                               </span>
                             </div>
@@ -2322,63 +1562,36 @@ const DailyProductionReport = () => {
                 </table>
               </div>
 
-              {/* Shift Summary */}
               {shiftGroups[shift].length > 0 && (
-                <div
-                  style={{
-                    marginTop: "15px",
-                    padding: "15px",
-                    backgroundColor: "#f0f9ff",
-                    borderRadius: "8px",
-                    border: "1px solid #bae6fd",
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                    }}
-                  >
-                    <div>
-                      <div
-                        style={{
-                          fontWeight: "600",
-                          color: "#0369a1",
-                          marginBottom: "5px",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "8px",
-                        }}
-                      >
-                        <span
-                          style={{
-                            color: getShiftIcon(shift).props.color || "#0369a1",
-                          }}
-                        >
-                          {getShiftIcon(shift)}
-                        </span>
-                        Shift {shift} Summary
-                      </div>
-                      <div style={{ fontSize: "14px", color: "#64748b" }}>
-                        {shiftGroups[shift].length} records in this shift
-                      </div>
+                <div className={styles.shiftSummary}>
+                  <div className={styles.shiftSummaryContent}>
+                    <div className={styles.shiftSummaryTitle}>
+                      <span style={{ color: getShiftIcon(shift).props.color || "#0369a1" }}>
+                        {getShiftIcon(shift)}
+                      </span>
+                      Shift {shift} Summary
                     </div>
-                    <div style={{ textAlign: "right" }}>
-                      <div style={{ fontWeight: "600", color: "#1e293b" }}>
-                        Production:{" "}
-                        {shiftGroups[shift]
-                          .reduce(
-                            (sum, item) => sum + item.production_quantity,
-                            0
-                          )
-                          .toLocaleString()}
+                    <div className={styles.shiftSummaryStats}>
+                      <div className={styles.shiftSummaryStat}>
+                        <div className={styles.statLabel}>
+                          {isRawMaterial ? "Weight:" : "Production:"}
+                        </div>
+                        <div className={styles.statValue}>
+                          {shiftGroups[shift]
+                            .reduce(
+                              (sum, item) => sum + item.production_quantity,
+                              0
+                            )
+                            .toLocaleString()}
+                        </div>
                       </div>
-                      <div style={{ fontSize: "14px", color: "#64748b" }}>
-                        Target:{" "}
-                        {shiftGroups[shift]
-                          .reduce((sum, item) => sum + item.target_quantity, 0)
-                          .toLocaleString()}
+                      <div className={styles.shiftSummaryStat}>
+                        <div className={styles.statLabel}>Target:</div>
+                        <div className={styles.statValue}>
+                          {shiftGroups[shift]
+                            .reduce((sum, item) => sum + item.target_quantity, 0)
+                            .toLocaleString()}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -2387,141 +1600,37 @@ const DailyProductionReport = () => {
             </div>
           ))
         ) : (
-          <div
-            style={{
-              textAlign: "center",
-              padding: "40px",
-              color: "#6b7280",
-            }}
-          >
-            <div style={{ fontSize: "48px", marginBottom: "20px" }}>
+          <div className={styles.noDataMessage}>
+            <div className={styles.noDataIcon}>
               <FaDatabase />
             </div>
-            <h3>No Production Data Found</h3>
+            <h3>No {isRawMaterial ? "Material Weight" : "Production"} Data Found</h3>
             <p>
-              Select a different department or date to view production records
+              Select a different department or date to view {isRawMaterial ? "material weight" : "production"} records
             </p>
           </div>
         )}
       </div>
 
-      {/* Department Summary (Only when showing all departments) */}
       {selectedDepartment === "all" && (
-        <div
-          style={{
-            backgroundColor: "white",
-            padding: "20px",
-            borderRadius: "10px",
-            boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
-          }}
-        >
-          <h2
-            style={{
-              margin: "0 0 20px 0",
-              color: "#1e293b",
-              display: "flex",
-              alignItems: "center",
-              gap: "10px",
-            }}
-          >
+        <div className={styles.departmentSummary}>
+          <h2>
             <FaSitemap />
             Department-wise Summary
           </h2>
 
-          <div style={{ overflowX: "auto" }}>
-            <table
-              style={{
-                width: "100%",
-                borderCollapse: "collapse",
-              }}
-            >
+          <div className={styles.tableContainer}>
+            <table className={`${styles.productionTable} ${styles.departmentTable}`}>
               <thead>
-                <tr
-                  style={{
-                    backgroundColor: "#f8fafc",
-                    borderBottom: "2px solid #e5e7eb",
-                  }}
-                >
-                  <th
-                    style={{
-                      padding: "12px",
-                      textAlign: "left",
-                      fontWeight: "600",
-                      color: "#1e293b",
-                    }}
-                  >
-                    Department
-                  </th>
-                  <th
-                    style={{
-                      padding: "12px",
-                      textAlign: "right",
-                      fontWeight: "600",
-                      color: "#1e293b",
-                    }}
-                  >
-                    Total Production
-                  </th>
-                  <th
-                    style={{
-                      padding: "12px",
-                      textAlign: "right",
-                      fontWeight: "600",
-                      color: "#1e293b",
-                    }}
-                  >
-                    Total Target
-                  </th>
-                  <th
-                    style={{
-                      padding: "12px",
-                      textAlign: "center",
-                      fontWeight: "600",
-                      color: "#1e293b",
-                    }}
-                  >
-                    Efficiency
-                  </th>
-                  <th
-                    style={{
-                      padding: "12px",
-                      textAlign: "center",
-                      fontWeight: "600",
-                      color: "#1e293b",
-                    }}
-                  >
-                    Records
-                  </th>
-                  <th
-                    style={{
-                      padding: "12px",
-                      textAlign: "center",
-                      fontWeight: "600",
-                      color: "#1e293b",
-                    }}
-                  >
-                    Machines
-                  </th>
-                  <th
-                    style={{
-                      padding: "12px",
-                      textAlign: "center",
-                      fontWeight: "600",
-                      color: "#1e293b",
-                    }}
-                  >
-                    Main Unit
-                  </th>
-                  <th
-                    style={{
-                      padding: "12px",
-                      textAlign: "center",
-                      fontWeight: "600",
-                      color: "#1e293b",
-                    }}
-                  >
-                    Status
-                  </th>
+                <tr className={styles.tableHeader}>
+                  <th>Department</th>
+                  <th style={{ textAlign: "right" }}>Production / Weight</th>
+                  <th style={{ textAlign: "right" }}>Target</th>
+                  <th style={{ textAlign: "center" }}>Efficiency</th>
+                  <th style={{ textAlign: "center" }}>Records</th>
+                  <th style={{ textAlign: "center" }}>Machines</th>
+                  <th style={{ textAlign: "center" }}>Main Unit</th>
+                  <th style={{ textAlign: "center" }}>Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -2533,44 +1642,25 @@ const DailyProductionReport = () => {
                   const efficiencyBgColor = getEfficiencyBgColor(totals.efficiency);
 
                   return (
-                    <tr
-                      key={dept.id}
-                      style={{
-                        borderBottom: "1px solid #e5e7eb",
-                      }}
-                    >
-                      <td
-                        style={{
-                          padding: "12px",
-                          fontWeight: "600",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "10px",
-                        }}
-                      >
-                        <div
-                          style={{
-                            width: "32px",
-                            height: "32px",
-                            borderRadius: "8px",
-                            backgroundColor: dept.color + "20",
-                            color: dept.color,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                          }}
-                        >
-                          {dept.icon}
+                    <tr key={dept.id} className={styles.tableRow}>
+                      <td className={styles.sectionCell}>
+                        <div className={styles.sectionInfo}>
+                          <div
+                            className={styles.iconWrapper}
+                            style={{
+                              backgroundColor: dept.color + "20",
+                              color: dept.color,
+                            }}
+                          >
+                            {dept.icon}
+                          </div>
+                          {dept.shortName}
                         </div>
-                        {dept.name}
                       </td>
                       <td
+                        className={styles.quantityCell}
                         style={{
-                          padding: "12px",
-                          textAlign: "right",
-                          fontWeight: "600",
-                          color:
-                            totals.totalProduction > 0 ? "#1e293b" : "#ef4444",
+                          color: totals.totalProduction > 0 ? "#1e293b" : "#ef4444",
                         }}
                       >
                         {totals.totalProduction.toLocaleString("en-US", {
@@ -2578,89 +1668,47 @@ const DailyProductionReport = () => {
                           maximumFractionDigits: dept.unit === "Meter" ? 1 : 0,
                         })}
                       </td>
-                      <td
-                        style={{
-                          padding: "12px",
-                          textAlign: "right",
-                        }}
-                      >
+                      <td className={styles.quantityCell}>
                         {totals.totalTarget.toLocaleString("en-US", {
                           minimumFractionDigits: dept.unit === "Meter" ? 0 : 0,
                           maximumFractionDigits: dept.unit === "Meter" ? 0 : 0,
                         })}
                       </td>
-                      <td
-                        style={{
-                          padding: "12px",
-                          textAlign: "center",
-                        }}
-                      >
+                      <td className={styles.centerCell}>
                         <span
+                          className={styles.efficiencyBadge}
                           style={{
-                            padding: "4px 12px",
                             backgroundColor: efficiencyBgColor,
                             color: efficiencyColor,
-                            borderRadius: "20px",
-                            fontSize: "12px",
-                            fontWeight: "600",
                           }}
                         >
                           {totals.efficiency}%
                         </span>
                       </td>
-                      <td
-                        style={{
-                          padding: "12px",
-                          textAlign: "center",
-                        }}
-                      >
+                      <td className={styles.centerCell}>
                         {totals.records}
                       </td>
-                      <td
-                        style={{
-                          padding: "12px",
-                          textAlign: "center",
-                        }}
-                      >
+                      <td className={styles.centerCell}>
                         {totals.machines}
                       </td>
-                      <td
-                        style={{
-                          padding: "12px",
-                          textAlign: "center",
-                        }}
-                      >
+                      <td className={styles.centerCell}>
                         <span
-                          style={{
-                            padding: "4px 12px",
-                            backgroundColor:
-                              dept.unit === "kg" ? "#dbeafe" : "#ede9fe",
-                            color: dept.unit === "kg" ? "#1d4ed8" : "#7c3aed",
-                            borderRadius: "20px",
-                            fontSize: "12px",
-                            fontWeight: "600",
-                          }}
+                          className={`${styles.quantityBadge} ${
+                            dept.unit === "kg" ? styles.kgUnit : styles.meterUnit
+                          }`}
                         >
                           {dept.unit}
                         </span>
                       </td>
-                      <td
-                        style={{
-                          padding: "12px",
-                          textAlign: "center",
-                        }}
-                      >
+                      <td className={styles.centerCell}>
                         <span
+                          className={styles.entriesBadge}
                           style={{
-                            padding: "4px 12px",
                             backgroundColor: hasData ? "#d1fae5" : "#f3f4f6",
                             color: hasData ? "#059669" : "#6b7280",
-                            borderRadius: "20px",
-                            fontSize: "12px",
-                            fontWeight: "600",
                           }}
                         >
-                          {hasData ? "Active" : "No Data"}
+                          {hasData ? (dept.isRawMaterial ? "Receiving" : "Active") : "No Data"}
                         </span>
                       </td>
                     </tr>
@@ -2672,36 +1720,12 @@ const DailyProductionReport = () => {
         </div>
       )}
 
-      {/* WhatsApp Configuration */}
-      <div
-        style={{
-          marginTop: "20px",
-          padding: "15px",
-          backgroundColor: "#f0fff4",
-          borderRadius: "8px",
-          border: "1px solid #a7f3d0",
-        }}
-      >
-        <h4
-          style={{
-            margin: "0 0 10px 0",
-            color: "#065f46",
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-          }}
-        >
+      <div className={styles.whatsappSettings}>
+        <h4 className={styles.whatsappTitle}>
           <FaWhatsapp /> WhatsApp Settings
         </h4>
-        <div
-          style={{
-            display: "flex",
-            gap: "10px",
-            alignItems: "center",
-            flexWrap: "wrap",
-          }}
-        >
-          <label style={{ fontSize: "14px", color: "#374151" }}>
+        <div className={styles.whatsappInputContainer}>
+          <label className={styles.whatsappLabel}>
             WhatsApp Number (Optional):
           </label>
           <input
@@ -2709,206 +1733,66 @@ const DailyProductionReport = () => {
             value={whatsappNumber}
             onChange={(e) => setWhatsappNumber(e.target.value)}
             placeholder="923001234567"
-            style={{
-              padding: "8px 12px",
-              border: "1px solid #a7f3d0",
-              borderRadius: "6px",
-              fontSize: "14px",
-              backgroundColor: "white",
-              flex: 1,
-              maxWidth: "200px",
-              transition: "all 0.2s",
-            }}
-            onMouseOver={(e) => (e.currentTarget.style.borderColor = "#10b981")}
-            onMouseOut={(e) => (e.currentTarget.style.borderColor = "#a7f3d0")}
+            className={styles.whatsappInput}
           />
-          <span style={{ fontSize: "12px", color: "#6b7280" }}>
-            Format: 923001234567 (Pakistan) • Leave empty for general WhatsApp
-            sharing
-          </span>
+        </div>
+        <div className={styles.whatsappHint}>
+          Format: 923001234567 (Pakistan) • Leave empty for general WhatsApp sharing
         </div>
       </div>
 
-      {/* Data Source Info */}
-      <div
-        style={{
-          marginTop: "30px",
-          padding: "20px",
-          backgroundColor: "#f8fafc",
-          borderRadius: "10px",
-          border: "1px solid #e5e7eb",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "flex-start",
-            gap: "20px",
-            flexWrap: "wrap",
-          }}
-        >
-          <div
-            style={{
-              width: "50px",
-              height: "50px",
-              borderRadius: "10px",
-              backgroundColor: "#3b82f610",
-              color: "#3b82f6",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexShrink: 0,
-            }}
-          >
-            <FaCheckCircle size={24} />
+      <div className={styles.dataSourceInfo}>
+        <div className={styles.dataSourceContent}>
+          <div className={styles.dataSourceIcon}>
+            <FaCheckCircle size={18} />
           </div>
           <div style={{ flex: 1 }}>
-            <h4
-              style={{
-                margin: "0 0 10px 0",
-                color: "#1e293b",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-              }}
-            >
+            <h4 style={{ margin: "0 0 8px 0", color: "#1e293b", display: "flex", alignItems: "center", gap: "6px" }}>
               Calculation Method
             </h4>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-                gap: "15px",
-                fontSize: "14px",
-              }}
-            >
-              <div>
-                <strong
-                  style={{
-                    color: "#374151",
-                    display: "block",
-                    marginBottom: "5px",
-                  }}
-                >
-                  <FaCheckCircle
-                    style={{ marginRight: "6px", color: "#10b981" }}
-                  />
+            <div className={styles.calculationGrid}>
+              <div className={styles.calculationItem}>
+                <strong>
+                  <FaCheckCircle style={{ marginRight: "4px", color: "#10b981", fontSize: "10px" }} />
                   Target Calculation:
                 </strong>
-                <span style={{ color: "#6b7280" }}>
-                  Per Machine-Shift-Day (Unique Combination)
+                <span>
+                  Per Machine-Shift-Day (Unique Combination) - Counted ONLY ONCE
                 </span>
               </div>
-              <div>
-                <strong
-                  style={{
-                    color: "#374151",
-                    display: "block",
-                    marginBottom: "5px",
-                  }}
-                >
-                  <FaCheckCircle
-                    style={{ marginRight: "6px", color: "#10b981" }}
-                  />
-                  Production Calculation:
+              <div className={styles.calculationItem}>
+                <strong>
+                  <FaCheckCircle style={{ marginRight: "4px", color: "#10b981", fontSize: "10px" }} />
+                  {isRawMaterial ? "Weight" : "Production"} Calculation:
                 </strong>
-                <span style={{ color: "#6b7280" }}>Sum of All Entries</span>
+                <span>
+                  Sum of ALL Entries for each combination
+                </span>
               </div>
-              <div>
-                <strong
-                  style={{
-                    color: "#374151",
-                    display: "block",
-                    marginBottom: "5px",
-                  }}
-                >
-                  <FaCheckCircle
-                    style={{ marginRight: "6px", color: "#10b981" }}
-                  />
+              <div className={styles.calculationItem}>
+                <strong>
+                  <FaCheckCircle style={{ marginRight: "4px", color: "#10b981", fontSize: "10px" }} />
                   Efficiency Formula:
                 </strong>
-                <span style={{ color: "#6b7280" }}>
+                <span>
                   <span style={{ color: "#10b981" }}>≥80% Green</span>,
                   <span style={{ color: "#f59e0b" }}> 70-79% Yellow</span>,
                   <span style={{ color: "#ef4444" }}> &lt;70% Red</span>
                 </span>
               </div>
-              <div>
-                <strong
-                  style={{
-                    color: "#374151",
-                    display: "block",
-                    marginBottom: "5px",
-                  }}
-                >
-                  <FaCommentAlt style={{ marginRight: "6px", color: "#3b82f6" }} />
+              <div className={styles.calculationItem}>
+                <strong>
+                  <FaCommentAlt style={{ marginRight: "4px", color: "#3b82f6", fontSize: "10px" }} />
                   Remarks Data:
                 </strong>
-                <span style={{ color: "#6b7280" }}>
-                  Now showing actual remarks/comments from database
+                <span>
+                  Showing actual remarks/comments from database
                 </span>
               </div>
             </div>
           </div>
         </div>
       </div>
-
-      {/* Print Styles */}
-      <style>
-        {`
-          @media print {
-            body {
-              background-color: white !important;
-              color: black !important;
-              font-size: 11pt;
-              padding: 0 !important;
-            }
-            
-            button, input, select {
-              display: none !important;
-            }
-            
-            div {
-              box-shadow: none !important;
-              border: 1px solid #ddd !important;
-              margin-bottom: 10px !important;
-            }
-            
-            table {
-              border: 1px solid #000 !important;
-              font-size: 10pt !important;
-            }
-            
-            th, td {
-              border: 1px solid #ddd !important;
-              padding: 6px !important;
-            }
-            
-            .print-only {
-              display: block !important;
-            }
-            
-            @page {
-              margin: 0.5in;
-            }
-          }
-          
-          @keyframes spin {
-            to { transform: rotate(360deg); }
-          }
-          
-          @keyframes popupFadeIn {
-            from {
-              opacity: 0;
-              transform: translateY(-20px);
-            }
-            to {
-              opacity: 1;
-              transform: translateY(0);
-            }
-          }
-        `}
-      </style>
     </div>
   );
 };

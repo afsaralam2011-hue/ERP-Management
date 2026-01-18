@@ -1,0 +1,1560 @@
+/* src/pages/ProductionReports/DailyProductionReport.module.css */
+
+/* Base Styles */
+.container {
+  padding: 10px 8px;
+  background-color: #f8fafc;
+  min-height: 100vh;
+  font-family: 'Segoe UI', 'Arial', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-size: 13px;
+}
+
+/* HEADER - Single Line */
+.header {
+  background-color: white;
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  margin-bottom: 10px;
+  border-left: 4px solid #3b82f6;
+}
+
+.headerTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: nowrap;
+}
+
+.titleText {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.titleText h1 {
+  margin: 0;
+  color: #1e293b;
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.titleIcon {
+  color: #3b82f6;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.statusBadge {
+  font-size: 10px;
+  background-color: #10b981;
+  color: white;
+  padding: 2px 6px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.offlineBadge {
+  background-color: #ef4444;
+}
+
+.dateInfo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dateIcon {
+  flex-shrink: 0;
+}
+
+.refreshTime {
+  font-size: 11px;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.dateControl {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dateLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+  display: none;
+}
+
+.dateInput {
+  padding: 6px 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 12px;
+  background-color: #f9fafb;
+  width: 110px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.refreshButton {
+  padding: 6px 10px;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+/* Department Filter - Single Line */
+.filterContainer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filterLabel {
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.filterIcon {
+  color: #3b82f6;
+  font-size: 12px;
+}
+
+.dropdownWrapper {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.dropdownToggle {
+  width: 100%;
+  padding: 8px 10px;
+  background-color: white;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  font-family: inherit;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.selectedOption {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  flex: 1;
+}
+
+.iconWrapper {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.selectedText {
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+
+.chevron {
+  font-size: 10px;
+  color: #6b7280;
+  flex-shrink: 0;
+}
+
+.dropdownMenu {
+  position: absolute;
+  top: calc(100% + 2px);
+  left: 0;
+  right: 0;
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  z-index: 100;
+  max-height: 250px;
+  overflow-y: auto;
+  font-size: 12px;
+}
+
+.optionItem {
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  border-bottom: 1px solid #f3f4f6;
+  min-height: 36px;
+}
+
+.optionItem:last-child {
+  border-bottom: none;
+}
+
+.optionIcon {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 10px;
+}
+
+.optionInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.optionName {
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.optionDetails {
+  font-size: 10px;
+  color: #6b7280;
+  margin-top: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.selectedIndicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Summary Cards - Compact */
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.summaryCard {
+  background-color: white;
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  border-left: 3px solid #3b82f6;
+  position: relative;
+  overflow: hidden;
+}
+
+.cardIcon {
+  color: #64748b;
+  margin-bottom: 4px;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+}
+
+.cardValue {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 2px;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cardSubtitle {
+  color: #64748b;
+  font-size: 10px;
+  line-height: 1.2;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-height: 2.4em;
+  display: box;
+  line-clamp: 2;
+  box-orient: vertical;
+}
+
+/* Production Details - Micro */
+.detailsContainer {
+  background-color: white;
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  margin-bottom: 12px;
+}
+
+.detailsHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+  flex-wrap: nowrap;
+}
+
+.detailsTitle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.detailsTitle h2 {
+  margin: 0;
+  color: #1e293b;
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.departmentBadge {
+  font-size: 10px;
+  background-color: #f3f4f6;
+  color: #374151;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.detailsSubtitle {
+  color: #64748b;
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.actionButtons {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.actionButton {
+  padding: 6px 8px;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+  font-size: 11px;
+  flex-shrink: 0;
+  min-width: 30px;
+  justify-content: center;
+}
+
+.actionButton span {
+  display: none;
+}
+
+.whatsappButton {
+  background-color: #25D366;
+}
+
+.excelButton {
+  background-color: #10b981;
+}
+
+.jsonButton {
+  background-color: #3b82f6;
+}
+
+.printButton {
+  background-color: #6b7280;
+}
+
+/* TABLE - Ultra Micro */
+.shiftSection {
+  margin-bottom: 12px;
+}
+
+.shiftTitle {
+  margin: 0 0 6px 0;
+  color: #374151;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #e5e7eb;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tableContainer {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 0 -8px;
+  padding: 0 8px;
+  width: calc(100% + 16px);
+}
+
+/* REGULAR PRODUCTION TABLE */
+.productionTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+  min-width: 700px;
+}
+
+/* RAW MATERIAL TABLE */
+.rawMaterialTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+  min-width: 900px;
+}
+
+.tableHeader {
+  background-color: #f8fafc;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.tableHeader th {
+  padding: 6px 4px;
+  text-align: left;
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 10px;
+  white-space: nowrap;
+  border-right: 1px solid #e5e7eb;
+}
+
+.tableHeader th:last-child {
+  border-right: none;
+}
+
+.tableRow {
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.tableRow:nth-child(even) {
+  background-color: #f8fafc;
+}
+
+.tableCell {
+  padding: 6px 4px;
+  vertical-align: top;
+  border-right: 1px solid #f1f5f9;
+  font-size: 11px;
+}
+
+.tableCell:last-child {
+  border-right: none;
+}
+
+/* Columns width for micro design */
+.sectionCell { min-width: 80px; max-width: 100px; }
+.operatorCell { min-width: 70px; max-width: 90px; }
+.machineCell { min-width: 70px; max-width: 90px; }
+.quantityCell { min-width: 60px; max-width: 80px; text-align: right; font-weight: 600; }
+.targetCell { min-width: 50px; max-width: 70px; text-align: center; }
+.efficiencyCell { min-width: 50px; max-width: 70px; text-align: center; }
+.entriesCell { min-width: 40px; max-width: 60px; text-align: center; }
+.remarksCell { min-width: 80px; max-width: 120px; }
+
+/* Raw Material Columns */
+.gatePassCell { min-width: 90px; max-width: 120px; }
+.wireSizeCell { min-width: 60px; max-width: 80px; text-align: center; }
+.weightCell { min-width: 70px; max-width: 90px; text-align: right; font-weight: 600; }
+.receivedByCell { min-width: 80px; max-width: 110px; }
+.rawRemarksCell { min-width: 100px; max-width: 150px; }
+
+/* Cell content - Micro */
+.sectionInfo {
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sectionBadge {
+  display: none;
+}
+
+.operatorInfo, .machineInfo {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.infoIcon {
+  color: #6b7280;
+  font-size: 10px;
+  flex-shrink: 0;
+}
+
+/* REMARKS - FIXED: موبائل پر بھی دکھائیں */
+.remarksContent {
+  display: block;
+  max-height: 40px;
+  overflow-y: auto;
+  font-size: 10px;
+  line-height: 1.3;
+  padding: 3px;
+  background-color: #f9fafb;
+  border-radius: 4px;
+  border: 1px solid #f1f5f9;
+}
+
+.remarksIcon {
+  display: none;
+}
+
+/* Badges - Micro */
+.quantityBadge,
+.weightBadge,
+.efficiencyBadge,
+.entriesBadge {
+  padding: 2px 5px;
+  border-radius: 8px;
+  font-size: 9px;
+  font-weight: 600;
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.kgUnit {
+  background-color: #dbeafe;
+  color: #1d4ed8;
+}
+
+.meterUnit {
+  background-color: #ede9fe;
+  color: #7c3aed;
+}
+
+.tonUnit {
+  background-color: #fce7f3;
+  color: #be185d;
+}
+
+.efficiencyBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.entriesBadge {
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+/* Gate Pass Badge */
+.gatePassBadge {
+  background-color: #dcfce7;
+  color: #166534;
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-size: 9px;
+  font-weight: 600;
+  display: inline-block;
+  white-space: nowrap;
+}
+
+/* Shift Summary - Single Line */
+.shiftSummary {
+  margin-top: 6px;
+  padding: 6px 8px;
+  background-color: #f0f9ff;
+  border-radius: 5px;
+  border: 1px solid #bae6fd;
+}
+
+.shiftSummaryContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.shiftSummaryTitle {
+  font-weight: 600;
+  color: #0369a1;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
+}
+
+.shiftSummaryStats {
+  display: flex;
+  gap: 12px;
+}
+
+.shiftSummaryStat {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
+}
+
+.statLabel {
+  font-size: 10px;
+  color: #64748b;
+}
+
+.statValue {
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 11px;
+}
+
+/* Raw Material Summary */
+.rawMaterialSummary {
+  margin-top: 6px;
+  padding: 6px 8px;
+  background-color: #f0fdf4;
+  border-radius: 5px;
+  border: 1px solid #bbf7d0;
+}
+
+.rawMaterialSummaryContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.rawMaterialSummaryTitle {
+  font-weight: 600;
+  color: #166534;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
+}
+
+.rawMaterialSummaryStats {
+  display: flex;
+  gap: 12px;
+}
+
+.rawMaterialSummaryStat {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
+}
+
+/* No Data */
+.noDataMessage {
+  text-align: center;
+  padding: 20px 10px;
+  color: #6b7280;
+}
+
+.noDataIcon {
+  font-size: 30px;
+  margin-bottom: 10px;
+  color: #d1d5db;
+}
+
+.noDataMessage h3 {
+  margin: 0 0 6px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.noDataMessage p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+/* Department Summary - Micro */
+.departmentSummary {
+  background-color: white;
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  margin-bottom: 12px;
+}
+
+.departmentSummary h2 {
+  margin: 0 0 8px 0;
+  color: #1e293b;
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.departmentTable {
+  font-size: 11px;
+}
+
+.departmentTable .tableCell {
+  padding: 4px 3px;
+  font-size: 10px;
+}
+
+/* WhatsApp Settings - Single Line */
+.whatsappSettings {
+  margin-top: 12px;
+  padding: 8px 10px;
+  background-color: #f0fff4;
+  border-radius: 6px;
+  border: 1px solid #a7f3d0;
+}
+
+.whatsappTitle {
+  margin: 0 0 6px 0;
+  color: #065f46;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.whatsappInputContainer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.whatsappLabel {
+  font-size: 11px;
+  color: #374151;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.whatsappInput {
+  padding: 5px 8px;
+  border: 1px solid #a7f3d0;
+  border-radius: 4px;
+  font-size: 11px;
+  background-color: white;
+  flex: 1;
+  min-width: 0;
+  font-family: inherit;
+}
+
+.whatsappHint {
+  font-size: 9px;
+  color: #6b7280;
+  line-height: 1.2;
+  margin-top: 3px;
+}
+
+/* Data Source Info - Micro */
+.dataSourceInfo {
+  margin-top: 12px;
+  padding: 10px;
+  background-color: #f8fafc;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+}
+
+.dataSourceContent {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dataSourceIcon {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background-color: #3b82f610;
+  color: #3b82f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: flex-start;
+}
+
+.calculationGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.calculationItem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.calculationItem strong {
+  color: #374151;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.calculationItem span {
+  color: #6b7280;
+  font-size: 10px;
+  line-height: 1.3;
+  padding-left: 18px;
+}
+
+/* Loading - Micro */
+.loadingContainer {
+  padding: 30px 15px;
+  text-align: center;
+  background-color: #f8fafc;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #e2e8f0;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  margin-bottom: 12px;
+  animation: spin 1s linear infinite;
+}
+
+.loadingContainer h3 {
+  color: #1e293b;
+  margin-bottom: 6px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  justify-content: center;
+}
+
+.loadingContainer p {
+  color: #64748b;
+  font-size: 11px;
+  line-height: 1.3;
+  max-width: 200px;
+  margin: 0 auto;
+}
+
+.connectionStatus {
+  margin-top: 12px;
+  padding: 6px 10px;
+  border-radius: 5px;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 500;
+}
+
+.connected {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.connecting {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+/* WhatsApp Popup - Micro */
+.popupOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 10px;
+}
+
+.popupContainer {
+  background-color: white;
+  padding: 12px 15px;
+  border-radius: 8px;
+  max-width: 95%;
+  width: 100%;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+  position: relative;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  font-size: 12px;
+}
+
+.popupClose {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: none;
+  border: none;
+  font-size: 16px;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+.popupTitle {
+  margin: 0 0 10px 0;
+  color: #1e293b;
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-right: 20px;
+}
+
+.messagePreview {
+  flex: 1;
+  margin-bottom: 12px;
+  padding: 10px;
+  background-color: #f8fafc;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  overflow-y: auto;
+  font-size: 11px;
+  white-space: pre-line;
+  font-family: monospace;
+  line-height: 1.4;
+  max-height: 200px;
+}
+
+.popupButtons {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.popupButton {
+  padding: 8px 10px;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 12px;
+  width: 100%;
+  font-family: inherit;
+}
+
+.copyButton {
+  background-color: #3b82f6;
+}
+
+.whatsappDesktopButton {
+  background-color: #25D366;
+}
+
+.whatsappGroupButton {
+  background-color: #075E54;
+}
+
+.popupHint {
+  margin-top: 8px;
+  font-size: 9px;
+  color: #6b7280;
+  text-align: center;
+  line-height: 1.3;
+}
+
+/* Animations */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* For slightly larger screens (tablets) */
+@media (min-width: 481px) {
+  .container {
+    padding: 12px 10px;
+  }
+  
+  .summaryGrid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  
+  .actionButton span {
+    display: inline;
+    font-size: 10px;
+  }
+  
+  .remarksCell, .rawRemarksCell {
+    min-width: 100px;
+    max-width: 150px;
+  }
+  
+  .remarksContent {
+    font-size: 11px;
+    max-height: 50px;
+  }
+}
+
+/* For desktops */
+@media (min-width: 769px) {
+  .container {
+    padding: 16px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  
+  .dateLabel {
+    display: inline;
+  }
+  
+  .actionButton span {
+    display: inline;
+    font-size: 11px;
+  }
+  
+  .summaryCard {
+    padding: 12px;
+  }
+  
+  .cardValue {
+    font-size: 20px;
+  }
+  
+  .productionTable, .rawMaterialTable {
+    min-width: 100%;
+    font-size: 12px;
+  }
+  
+  .tableHeader th,
+  .tableCell {
+    padding: 8px 6px;
+    font-size: 12px;
+  }
+  
+  .remarksContent {
+    font-size: 12px;
+    max-height: 60px;
+  }
+}
+
+/* Touch devices optimization */
+@media (hover: none) and (pointer: coarse) {
+  .tableHeader th,
+  .tableCell {
+    padding: 8px 5px;
+  }
+  
+  .actionButton {
+    min-height: 36px;
+    min-width: 36px;
+  }
+  
+  .dropdownToggle,
+  .optionItem {
+    min-height: 40px;
+  }
+}
+
+/* =========================================== */
+/* PRINT STYLES - FIXED FOR PROPER PRINTING */
+/* =========================================== */
+
+@media print {
+  /* Reset all unnecessary styles */
+  * {
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    background: transparent !important;
+    color: #000 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  /* Hide all non-essential elements for print */
+  .actionButtons,
+  .refreshButton,
+  .dateInput,
+  .dateLabel,
+  .dropdownWrapper,
+  .filterContainer,
+  .whatsappSettings,
+  .dataSourceInfo,
+  .popupOverlay,
+  .printButton,
+  .refreshTime,
+  .statusBadge,
+  .chevron,
+  .dropdownToggle,
+  .remarksIcon,
+  .noDataIcon,
+  .spinner,
+  .loadingContainer,
+  .connectionStatus,
+  .popupContainer,
+  .popupClose,
+  .titleIcon,
+  .cardIcon,
+  .infoIcon,
+  .sectionBadge,
+  .dateIcon,
+  .filterIcon,
+  .detailsTitle svg,
+  .whatsappTitle svg,
+  .dataSourceIcon {
+    display: none !important;
+  }
+  
+  /* Base container for print - IMPORTANT FIX */
+  .container {
+    background-color: white !important;
+    color: #000 !important;
+    padding: 20px !important;
+    margin: 0 !important;
+    font-size: 12px !important;
+    min-height: auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    font-family: "Arial", "Helvetica Neue", Helvetica, sans-serif !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+  
+  /* Header for print */
+  .header {
+    background: white !important;
+    border: 2px solid #000 !important;
+    border-radius: 0 !important;
+    padding: 15px !important;
+    margin-bottom: 20px !important;
+    page-break-after: avoid !important;
+    border-left-width: 5px !important;
+    display: block !important;
+  }
+  
+  .headerTop {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+    gap: 10px !important;
+  }
+  
+  .titleText h1 {
+    font-size: 24px !important;
+    color: #000 !important;
+    justify-content: center !important;
+    margin-bottom: 10px !important;
+    display: block !important;
+    text-align: center !important;
+  }
+  
+  .dateInfo {
+    font-size: 14px !important;
+    color: #000 !important;
+    justify-content: center !important;
+    margin-bottom: 10px !important;
+    display: flex !important;
+    gap: 10px !important;
+  }
+  
+  .controls {
+    display: none !important;
+  }
+  
+  /* Summary cards for print - FIXED */
+  .summaryGrid {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 15px !important;
+    margin-bottom: 20px !important;
+    page-break-inside: avoid !important;
+  }
+  
+  .summaryCard {
+    border: 1px solid #000 !important;
+    border-left: 3px solid #000 !important;
+    border-radius: 0 !important;
+    padding: 12px !important;
+    background: white !important;
+    page-break-inside: avoid !important;
+    display: block !important;
+    visibility: visible !important;
+  }
+  
+  .cardValue {
+    font-size: 20px !important;
+    color: #000 !important;
+    margin-bottom: 5px !important;
+    font-weight: bold !important;
+    display: block !important;
+  }
+  
+  .cardSubtitle {
+    font-size: 10px !important;
+    color: #666 !important;
+    display: block !important;
+    overflow: visible !important;
+    white-space: normal !important;
+    line-height: 1.4 !important;
+  }
+  
+  /* Production details for print - FIXED */
+  .detailsContainer {
+    border: 1px solid #000 !important;
+    border-radius: 0 !important;
+    padding: 15px !important;
+    margin-bottom: 20px !important;
+    page-break-inside: avoid !important;
+    display: block !important;
+  }
+  
+  .detailsHeader {
+    display: block !important;
+    text-align: center !important;
+    margin-bottom: 15px !important;
+  }
+  
+  .detailsTitle h2 {
+    font-size: 18px !important;
+    color: #000 !important;
+    justify-content: center !important;
+    margin-bottom: 10px !important;
+    display: block !important;
+    text-align: center !important;
+  }
+  
+  .detailsSubtitle {
+    font-size: 12px !important;
+    color: #666 !important;
+    text-align: center !important;
+    display: block !important;
+    margin-bottom: 15px !important;
+  }
+  
+  /* Table for print - FIXED */
+  .shiftSection {
+    margin-bottom: 20px !important;
+    page-break-inside: avoid !important;
+    display: block !important;
+  }
+  
+  .shiftTitle {
+    font-size: 14px !important;
+    color: #000 !important;
+    border-bottom: 2px solid #000 !important;
+    padding-bottom: 8px !important;
+    margin-bottom: 10px !important;
+    display: block !important;
+  }
+  
+  .tableContainer {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    overflow: visible !important;
+    display: block !important;
+  }
+  
+  .productionTable, .rawMaterialTable {
+    width: 100% !important;
+    border: 2px solid #000 !important;
+    font-size: 11px !important;
+    min-width: auto !important;
+    page-break-inside: avoid !important;
+    border-collapse: collapse !important;
+    display: table !important;
+  }
+  
+  .tableHeader {
+    background: #f0f0f0 !important;
+    border-bottom: 2px solid #000 !important;
+    display: table-header-group !important;
+  }
+  
+  .tableHeader th {
+    padding: 8px 6px !important;
+    border: 1px solid #000 !important;
+    font-size: 11px !important;
+    color: #000 !important;
+    text-align: center !important;
+    font-weight: bold !important;
+    background: #f0f0f0 !important;
+  }
+  
+  .tableRow {
+    border-bottom: 1px solid #ccc !important;
+    display: table-row !important;
+  }
+  
+  .tableCell {
+    padding: 6px 5px !important;
+    border: 1px solid #ccc !important;
+    font-size: 11px !important;
+    color: #000 !important;
+    vertical-align: middle !important;
+    display: table-cell !important;
+  }
+  
+  .sectionInfo,
+  .operatorInfo,
+  .machineInfo {
+    font-size: 11px !important;
+    justify-content: flex-start !important;
+    display: flex !important;
+  }
+  
+  /* Force visibility of all content in print */
+  .remarksContent {
+    display: block !important;
+    font-size: 10px !important;
+    color: #000 !important;
+    background: white !important;
+    border: 1px solid #ccc !important;
+    padding: 4px !important;
+    max-height: none !important;
+    overflow: visible !important;
+    white-space: normal !important;
+    text-align: left !important;
+  }
+  
+  /* Badges for print */
+  .quantityBadge,
+  .weightBadge,
+  .efficiencyBadge,
+  .entriesBadge,
+  .gatePassBadge {
+    border: 1px solid #000 !important;
+    padding: 3px 6px !important;
+    font-size: 9px !important;
+    background: white !important;
+    display: inline-block !important;
+  }
+  
+  /* Shift summary for print */
+  .shiftSummary, .rawMaterialSummary {
+    border: 1px solid #000 !important;
+    background: white !important;
+    padding: 10px !important;
+    margin-top: 15px !important;
+    page-break-inside: avoid !important;
+    display: block !important;
+  }
+  
+  .shiftSummaryTitle, .rawMaterialSummaryTitle {
+    font-size: 12px !important;
+    color: #000 !important;
+    font-weight: bold !important;
+    display: block !important;
+  }
+  
+  .statLabel,
+  .statValue {
+    font-size: 11px !important;
+    color: #000 !important;
+    display: inline !important;
+  }
+  
+  /* Department summary for print */
+  .departmentSummary {
+    border: 1px solid #000 !important;
+    border-radius: 0 !important;
+    padding: 15px !important;
+    margin-bottom: 20px !important;
+    page-break-inside: avoid !important;
+    display: block !important;
+  }
+  
+  .departmentSummary h2 {
+    font-size: 16px !important;
+    color: #000 !important;
+    margin-bottom: 15px !important;
+    display: block !important;
+    text-align: center !important;
+  }
+  
+  /* Page settings */
+  @page {
+    margin: 15mm !important;
+    size: A4 portrait !important;
+  }
+  
+  /* Page break controls */
+  h1, h2, h3, h4 {
+    page-break-after: avoid !important;
+  }
+  
+  table, img, .summaryGrid, .detailsContainer, .shiftSection {
+    page-break-inside: avoid !important;
+  }
+  
+  thead {
+    display: table-header-group !important;
+  }
+  
+  tfoot {
+    display: table-footer-group !important;
+  }
+  
+  /* Ensure all content is visible */
+  body {
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+  
+  .container > * {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+  
+  /* Print specific adjustments */
+  html, body {
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  
+  /* Force black and white for better print quality */
+  img, svg {
+    filter: grayscale(100%) !important;
+  }
+  
+  /* Print header */
+  body::before {
+    content: "Pakistan Wire Industries - Daily Production Report";
+    display: block;
+    text-align: center;
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #000;
+  }
+  
+  /* Print footer */
+  body::after {
+    content: "Page " counter(page);
+    display: block;
+    text-align: center;
+    font-size: 10px;
+    color: #666;
+    margin-top: 20px;
+    padding-top: 10px;
+    border-top: 1px solid #ccc;
+  }
+}

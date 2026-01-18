@@ -1,494 +1,39 @@
 /* ========================================================
-FILE: RawMaterialLogForm.css
-PURPOSE: CSS for Raw Material Transaction Form
-DESIGN: Navy Blue Header, Compact Form, Three Transaction Types
-======================================================== */
+   FILE: RawMaterialLogForm.css
+   COMPONENT: Raw Material Transaction Form
+   ======================================================== */
 
-/* ========================================================
-SECTION 1: MODAL OVERLAY & CONTAINER
-======================================================== */
-.form-modal-overlay {
+/* Base Modal Styles */
+.rm-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
   z-index: 1000;
   padding: 20px;
-  backdrop-filter: blur(3px);
 }
 
-.form-modal-container {
+.rm-modal-container {
   background: white;
-  border-radius: 12px;
   width: 100%;
-  max-width: 600px;
-  max-height: 90vh;
+  max-width: 800px;
+  max-height: 95vh;
   overflow-y: auto;
-  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15), 0 10px 30px rgba(0, 0, 0, 0.1);
-  animation: modalSlideIn 0.3s ease-out;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideIn 0.3s ease-out;
 }
 
-@keyframes modalSlideIn {
+@keyframes slideIn {
   from {
     opacity: 0;
-    transform: translateY(-15px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-/* ========================================================
-SECTION 2: MODAL HEADER - NAVY BLUE THEME
-======================================================== */
-.form-modal-header {
-  padding: 22px 26px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
-  border-radius: 12px 12px 0 0;
-  position: relative;
-  overflow: hidden;
-}
-
-.form-modal-header::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, #10b981, #f59e0b, #8b5cf6);
-}
-
-.form-modal-title-section {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  z-index: 1;
-}
-
-.form-modal-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%);
-  backdrop-filter: blur(10px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-  flex-shrink: 0;
-}
-
-.form-modal-title {
-  margin: 0;
-  color: white;
-  font-size: 22px;
-  font-weight: 700;
-  letter-spacing: -0.3px;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.form-modal-subtitle {
-  margin: 6px 0 0 0;
-  color: #dbeafe;
-  font-size: 14px;
-  font-weight: 400;
-  opacity: 0.9;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.form-modal-subtitle svg {
-  opacity: 0.8;
-}
-
-.form-modal-close {
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  flex-shrink: 0;
-  backdrop-filter: blur(5px);
-}
-
-.form-modal-close:hover {
-  background: rgba(255, 255, 255, 0.2);
-  transform: rotate(90deg);
-  border-color: rgba(255, 255, 255, 0.4);
-}
-
-.form-modal-close:active {
-  transform: scale(0.95) rotate(90deg);
-}
-
-/* ========================================================
-SECTION 3: FORM CONTENT
-======================================================== */
-.raw-material-log-form {
-  padding: 26px;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-}
-
-/* ========================================================
-SECTION 4: FORM ELEMENTS
-======================================================== */
-.form-group {
-  margin-bottom: 22px;
-  position: relative;
-}
-
-.form-row {
-  display: flex;
-  gap: 20px;
-  margin-bottom: 22px;
-}
-
-.form-row .form-group {
-  flex: 1;
-  margin-bottom: 0;
-}
-
-.form-label {
-  display: block;
-  margin-bottom: 10px;
-  font-weight: 600;
-  color: #1e293b;
-  font-size: 14px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.form-label.required::after {
-  content: ' *';
-  color: #ef4444;
-  margin-left: 2px;
-}
-
-.form-input,
-.form-select,
-.form-textarea {
-  width: 100%;
-  padding: 14px 18px;
-  border: 2px solid #e2e8f0;
-  border-radius: 10px;
-  font-size: 15px;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  background: white;
-  font-family: inherit;
-  color: #1e293b;
-}
-
-.form-input:focus,
-.form-select:focus,
-.form-textarea:focus {
-  outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
-  background: white;
-}
-
-.form-input:hover,
-.form-select:hover,
-.form-textarea:hover {
-  border-color: #cbd5e1;
-}
-
-.form-input.error,
-.form-select.error {
-  border-color: #ef4444;
-  background: #fef2f2;
-}
-
-.form-input.error:focus,
-.form-select.error:focus {
-  border-color: #dc2626;
-  box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.15);
-}
-
-/* ========================================================
-SECTION 5: WEIGHT INPUT WITH UNIT
-======================================================== */
-.weight-input-container {
-  position: relative;
-}
-
-.weight-unit {
-  position: absolute;
-  right: 18px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #64748b;
-  font-weight: 500;
-  pointer-events: none;
-  background: white;
-  padding: 0 6px;
-  border-radius: 4px;
-}
-
-.form-textarea {
-  resize: vertical;
-  min-height: 100px;
-  line-height: 1.5;
-}
-
-/* ========================================================
-SECTION 6: TRANSACTION TYPE BUTTONS
-======================================================== */
-.transaction-type-buttons {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 10px;
-}
-
-.transaction-btn {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  padding: 16px;
-  border: 2px solid;
-  border-radius: 10px;
-  background: white;
-  font-weight: 600;
-  font-size: 15px;
-  cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  color: #475569;
-  text-align: center;
-  position: relative;
-  overflow: hidden;
-}
-
-.transaction-btn::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: inherit;
-  opacity: 0;
-  transition: opacity 0.2s;
-}
-
-.transaction-btn.active {
-  color: #1e293b;
-  border-width: 2px;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-}
-
-.transaction-btn.active::before {
-  opacity: 1;
-}
-
-.transaction-btn:hover:not(.active) {
-  background: #f8fafc;
-  transform: translateY(-1px);
-  border-color: #cbd5e1;
-}
-
-.transaction-btn:active {
-  transform: translateY(0);
-}
-
-.transaction-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  flex-shrink: 0;
-  transition: all 0.25s;
-  font-size: 18px;
-}
-
-/* ========================================================
-SECTION 7: FORM ACTIONS
-======================================================== */
-.form-actions {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-top: 24px;
-  border-top: 2px solid #e2e8f0;
-  margin-top: 28px;
-  gap: 20px;
-}
-
-.form-action-left,
-.form-action-right {
-  display: flex;
-  gap: 12px;
-}
-
-.form-btn {
-  padding: 14px 26px;
-  border-radius: 10px;
-  font-weight: 600;
-  font-size: 15px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  border: 2px solid transparent;
-  min-width: 120px;
-  position: relative;
-  overflow: hidden;
-}
-
-.form-btn::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: rgba(255, 255, 255, 0.3);
-  opacity: 0;
-  transition: opacity 0.2s;
-}
-
-.form-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none !important;
-}
-
-.form-btn:disabled:hover {
-  transform: none !important;
-}
-
-/* Primary Button */
-.form-btn.primary {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-  color: white;
-  border-color: #3b82f6;
-  box-shadow: 0 6px 15px rgba(59, 130, 246, 0.25);
-}
-
-.form-btn.primary:hover:not(:disabled) {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 25px rgba(59, 130, 246, 0.35);
-  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
-}
-
-.form-btn.primary:active:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
-}
-
-.form-btn.primary::before {
-  background: rgba(255, 255, 255, 0.4);
-}
-
-.form-btn.primary:hover::before {
-  opacity: 1;
-}
-
-/* Secondary Button */
-.form-btn.secondary {
-  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
-  color: #475569;
-  border-color: #cbd5e1;
-}
-
-.form-btn.secondary:hover:not(:disabled) {
-  transform: translateY(-2px);
-  background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
-  color: #334155;
-}
-
-.form-btn.secondary:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-/* Cancel Button */
-.form-btn.cancel {
-  background: white;
-  color: #64748b;
-  border-color: #e2e8f0;
-}
-
-.form-btn.cancel:hover:not(:disabled) {
-  background: #f8fafc;
-  color: #475569;
-  border-color: #cbd5e1;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-}
-
-.form-btn.cancel:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-/* ========================================================
-SECTION 8: SPINNER
-======================================================== */
-.spinner-small {
-  width: 18px;
-  height: 18px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top-color: white;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  flex-shrink: 0;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* ========================================================
-SECTION 9: MESSAGES
-======================================================== */
-.message {
-  padding: 16px 20px;
-  border-radius: 10px;
-  margin: 0 26px 20px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-weight: 500;
-  font-size: 15px;
-  animation: slideDown 0.3s ease-out;
-  border: 2px solid transparent;
-}
-
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
+    transform: translateY(-20px);
   }
   to {
     opacity: 1;
@@ -496,176 +41,447 @@ SECTION 9: MESSAGES
   }
 }
 
-.message.success {
-  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-  color: #065f46;
-  border-color: #10b981;
+/* Header */
+.rm-modal-header {
+  background: linear-gradient(135deg, #3498db, #2c3e50);
+  color: white;
+  padding: 24px 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: 16px 16px 0 0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
-.message.success svg {
-  color: #10b981;
-}
-
-.message.error {
-  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-  color: #7f1d1d;
-  border-color: #ef4444;
-}
-
-.message.error svg {
-  color: #ef4444;
-}
-
-/* ========================================================
-SECTION 10: FORM HINTS & ERRORS
-======================================================== */
-.form-hint {
-  font-size: 13px;
-  color: #64748b;
-  margin-top: 8px;
+.rm-modal-title {
+  font-size: 22px;
+  font-weight: 600;
+  margin: 0;
   display: flex;
   align-items: center;
-  gap: 6px;
-  line-height: 1.4;
+  gap: 12px;
 }
 
-.form-error {
-  font-size: 13px;
-  color: #ef4444;
-  margin-top: 8px;
+.rm-modal-close {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: white;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.rm-modal-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: rotate(90deg);
+}
+
+/* Content */
+.rm-modal-content {
+  padding: 30px;
+}
+
+/* Form Groups */
+.rm-form-group {
+  margin-bottom: 24px;
+}
+
+.rm-form-label {
+  display: block;
+  margin-bottom: 8px;
   font-weight: 500;
-  animation: shake 0.3s ease-in-out;
+  color: #374151;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-@keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-3px); }
-  75% { transform: translateX(3px); }
+.rm-form-label.required::after {
+  content: '*';
+  color: #e74c3c;
+  margin-left: 4px;
 }
 
-/* ========================================================
-SECTION 11: READ-ONLY INPUTS
-======================================================== */
-.form-input[readonly] {
-  background: #f8fafc;
-  color: #64748b;
-  border-color: #e2e8f0;
+.rm-form-input,
+.rm-form-select,
+.rm-form-textarea {
+  width: 100%;
+  padding: 14px;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 15px;
+  font-family: inherit;
+  transition: all 0.3s;
+  background: white;
+}
+
+.rm-form-input:focus,
+.rm-form-select:focus,
+.rm-form-textarea:focus {
+  border-color: #3498db;
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.1);
+}
+
+.rm-form-textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+/* Form Rows */
+.rm-form-row {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.rm-form-row > div {
+  flex: 1;
+}
+
+/* Transaction Type */
+.rm-transaction-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.rm-transaction-card {
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 20px;
+  background: white;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.3s;
+}
+
+.rm-transaction-card:hover {
+  border-color: #3498db;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(52, 152, 219, 0.15);
+}
+
+.rm-transaction-card.active {
+  border-color: #3498db;
+  background: linear-gradient(135deg, #e6f7ff, #f0f8ff);
+  color: #3498db;
+  font-weight: 600;
+}
+
+.rm-transaction-icon {
+  font-size: 28px;
+  margin-bottom: 12px;
+  color: inherit;
+}
+
+.rm-transaction-label {
+  font-size: 15px;
+  font-weight: inherit;
+}
+
+/* Image Upload */
+.rm-image-section {
+  border: 3px dashed #d1d5db;
+  border-radius: 12px;
+  padding: 30px;
+  text-align: center;
+  margin-bottom: 30px;
+  transition: all 0.3s;
+  background: #fafafa;
+}
+
+.rm-image-section:hover {
+  border-color: #3498db;
+  background: #f0f8ff;
+}
+
+.rm-image-preview-container {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 20px;
+}
+
+.rm-image-preview {
+  max-width: 250px;
+  max-height: 250px;
+  border-radius: 12px;
+  border: 2px solid #e5e7eb;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.rm-image-remove {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  background: #e74c3c;
+  color: white;
+  border: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+}
+
+.rm-image-remove:hover {
+  background: #c0392b;
+  transform: scale(1.1);
+}
+
+.rm-image-buttons {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+
+/* Buttons */
+.rm-btn {
+  padding: 14px 28px;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.3s;
+  font-family: inherit;
+}
+
+.rm-btn:disabled {
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
-/* ========================================================
-SECTION 12: RESPONSIVE DESIGN
-======================================================== */
+.rm-btn-primary {
+  background: linear-gradient(135deg, #2ecc71, #27ae60);
+  color: white;
+}
+
+.rm-btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #27ae60, #219653);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(46, 204, 113, 0.4);
+}
+
+.rm-btn-secondary {
+  background: linear-gradient(135deg, #34495e, #2c3e50);
+  color: white;
+}
+
+.rm-btn-secondary:hover {
+  background: linear-gradient(135deg, #2c3e50, #1c2833);
+  transform: translateY(-2px);
+}
+
+.rm-btn-outline {
+  background: white;
+  border: 2px solid #3498db;
+  color: #3498db;
+}
+
+.rm-btn-outline:hover {
+  background: #f0f8ff;
+  transform: translateY(-2px);
+}
+
+.rm-btn-danger {
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  color: white;
+}
+
+.rm-btn-danger:hover {
+  background: linear-gradient(135deg, #c0392b, #a93226);
+  transform: translateY(-2px);
+}
+
+/* Form Actions */
+.rm-form-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 40px;
+  padding-top: 30px;
+  border-top: 2px solid #e5e7eb;
+}
+
+/* Sections */
+.rm-section {
+  margin-bottom: 40px;
+}
+
+.rm-section-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 0 0 20px 0;
+  padding-bottom: 12px;
+  border-bottom: 3px solid #3498db;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Messages */
+.rm-message {
+  padding: 16px;
+  margin: 0 30px 24px;
+  border-radius: 10px;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.rm-message-success {
+  background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+  color: #065f46;
+  border: 2px solid #6ee7b7;
+}
+
+.rm-message-error {
+  background: linear-gradient(135deg, #fee2e2, #fecaca);
+  color: #991b1b;
+  border: 2px solid #fca5a5;
+}
+
+/* Loading Spinner */
+.rm-spinner {
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top: 3px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Responsive Design */
 @media (max-width: 768px) {
-  .form-modal-overlay {
-    padding: 15px;
+  .rm-modal-container {
+    max-height: 100vh;
+    border-radius: 0;
+    margin: 0;
   }
   
-  .form-modal-container {
-    width: 95%;
-    max-width: 500px;
+  .rm-modal-overlay {
+    padding: 0;
   }
   
-  .form-modal-header {
-    padding: 18px 20px;
-    flex-direction: column;
-    gap: 15px;
+  .rm-modal-header {
+    padding: 20px;
+    border-radius: 0;
   }
   
-  .form-modal-title-section {
-    width: 100%;
-  }
-  
-  .form-modal-title {
-    font-size: 20px;
-  }
-  
-  .raw-material-log-form {
+  .rm-modal-content {
     padding: 20px;
   }
   
-  .form-row {
+  .rm-form-row {
     flex-direction: column;
-    gap: 15px;
+    gap: 16px;
   }
   
-  .transaction-type-buttons {
-    flex-direction: column;
+  .rm-transaction-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
   }
   
-  .transaction-btn {
+  .rm-form-actions {
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .rm-form-actions > div {
     width: 100%;
-    justify-content: flex-start;
-    padding: 14px;
   }
   
-  .form-actions {
-    flex-direction: column;
-    gap: 15px;
-  }
-  
-  .form-action-left,
-  .form-action-right {
+  .rm-btn {
     width: 100%;
     justify-content: center;
   }
   
-  .form-btn {
-    flex: 1;
-    min-width: 0;
+  .rm-image-buttons {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .rm-image-preview {
+    max-width: 200px;
+    max-height: 200px;
   }
 }
 
-@media (max-width: 480px) {
-  .form-modal-container {
-    width: 98%;
+/* Print Styles */
+@media print {
+  .rm-modal-overlay {
+    position: static;
+    background: none;
   }
   
-  .form-modal-title {
-    font-size: 18px;
+  .rm-modal-container {
+    max-width: none;
+    box-shadow: none;
+    border-radius: 0;
   }
   
-  .form-modal-subtitle {
-    font-size: 13px;
-  }
-  
-  .raw-material-log-form {
-    padding: 16px;
-  }
-  
-  .form-btn {
-    padding: 12px 20px;
-    font-size: 14px;
-  }
-  
-  .form-input,
-  .form-select,
-  .form-textarea {
-    padding: 12px 16px;
-    font-size: 14px;
+  .rm-form-actions,
+  .rm-modal-close {
+    display: none !important;
   }
 }
 
-/* ========================================================
-SECTION 13: SCROLLBAR STYLING
-======================================================== */
-.form-modal-container::-webkit-scrollbar {
-  width: 8px;
-}
-
-.form-modal-container::-webkit-scrollbar-track {
-  background: #f1f5f9;
-  border-radius: 4px;
-}
-
-.form-modal-container::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 4px;
-}
-
-.form-modal-container::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+/* Dark Mode Support (Optional) */
+@media (prefers-color-scheme: dark) {
+  .rm-modal-container {
+    background: #1a202c;
+    color: #e2e8f0;
+  }
+  
+  .rm-form-input,
+  .rm-form-select,
+  .rm-form-textarea {
+    background: #2d3748;
+    border-color: #4a5568;
+    color: #e2e8f0;
+  }
+  
+  .rm-form-label {
+    color: #cbd5e0;
+  }
+  
+  .rm-transaction-card {
+    background: #2d3748;
+    border-color: #4a5568;
+  }
+  
+  .rm-image-section {
+    background: #2d3748;
+    border-color: #4a5568;
+  }
 }
