@@ -1,0 +1,290 @@
+/* ===== THEME SYSTEM WITH CSS VARIABLES ===== */
+
+:root {
+  /* ===== LIGHT THEME (DEFAULT) ===== */
+  --primary: #2563EB;
+  --primary-light: #3B82F6;
+  --primary-dark: #1D4ED8;
+  --secondary: #8B5CF6;
+  --accent: #10B981;
+  --highlight: #F59E0B;
+  --background: #FFFFFF;
+  --surface: #FFFFFF;
+  --card: #FFFFFF;
+  --sidebar: #F8FAFC;
+  --header: #FFFFFF;
+  --text-primary: #1E293B;
+  --text-secondary: #64748B;
+  --text-disabled: #94A3B8;
+  --text-inverse: #FFFFFF;
+  --border: #E2E8F0;
+  --divider: #F1F5F9;
+  --hover: #F8FAFC;
+  --selected: #EFF6FF;
+  --focused: #DBEAFE;
+  --success: #10B981;
+  --warning: #F59E0B;
+  --error: #EF4444;
+  --info: #3B82F6;
+  --white: #FFFFFF;
+  --black: #0F172A;
+  --glass: rgba(255, 255, 255, 0.8);
+  --glass-border: rgba(255, 255, 255, 0.2);
+  --glass-shadow: rgba(0, 0, 0, 0.1);
+  
+  /* Button Colors */
+  --button-bg: var(--primary);
+  --button-text: var(--white);
+  --button-border: var(--primary);
+  
+  /* Input Colors */
+  --input-bg: var(--white);
+  --input-border: var(--border);
+  --input-text: var(--text-primary);
+  
+  /* Table Colors */
+  --table-header: var(--sidebar);
+  --table-row-even: var(--white);
+  --table-row-odd: var(--sidebar);
+  --table-border: var(--border);
+  
+  /* Badge Colors */
+  --badge-bg: var(--selected);
+  --badge-text: var(--primary-dark);
+  --badge-border: #BFDBFE;
+  
+  /* Sidebar specific */
+  --sidebar-width: 320px;
+  --sidebar-width-collapsed: 70px;
+  --sidebar-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* Navigation */
+  --nav-active: var(--primary);
+  --nav-hover: var(--hover);
+  --nav-text: var(--text-secondary);
+  --nav-text-active: var(--white);
+}
+
+/* ===== DARK THEME ===== */
+[data-theme="dark"] {
+  --primary: #60A5FA;
+  --primary-light: #93C5FD;
+  --primary-dark: #3B82F6;
+  --secondary: #A78BFA;
+  --accent: #34D399;
+  --highlight: #FBBF24;
+  --background: #0F172A;
+  --surface: #1E293B;
+  --card: #1E293B;
+  --sidebar: #0F172A;
+  --header: #1E293B;
+  --text-primary: #F1F5F9;
+  --text-secondary: #CBD5E1;
+  --text-disabled: #64748B;
+  --text-inverse: #0F172A;
+  --border: #334155;
+  --divider: #1E293B;
+  --hover: #334155;
+  --selected: #1E40AF;
+  --focused: #1E40AF;
+  --success: #10B981;
+  --warning: #F59E0B;
+  --error: #F87171;
+  --info: #3B82F6;
+  --white: #1E293B;
+  --black: #0F172A;
+  --glass: rgba(30, 41, 59, 0.8);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-shadow: rgba(0, 0, 0, 0.3);
+  
+  /* Button Colors */
+  --button-bg: var(--primary-dark);
+  --button-text: var(--white);
+  --button-border: var(--primary-dark);
+  
+  /* Input Colors */
+  --input-bg: var(--surface);
+  --input-border: var(--border);
+  --input-text: var(--text-primary);
+  
+  /* Table Colors */
+  --table-header: var(--surface);
+  --table-row-even: var(--surface);
+  --table-row-odd: var(--background);
+  --table-border: var(--border);
+  
+  /* Badge Colors */
+  --badge-bg: #1E3A8A;
+  --badge-text: var(--primary);
+  --badge-border: #1E40AF;
+}
+
+/* ===== PROFESSIONAL THEME ===== */
+[data-theme="professional"] {
+  --primary: #1E40AF;
+  --primary-light: #3B82F6;
+  --primary-dark: #1D4ED8;
+  --secondary: #8B5CF6;
+  --accent: #059669;
+  --highlight: #D97706;
+  --background: #F8FAFC;
+  --surface: #FFFFFF;
+  --card: #FFFFFF;
+  --sidebar: #FFFFFF;
+  --header: #FFFFFF;
+  --text-primary: #1E293B;
+  --text-secondary: #475569;
+  --text-disabled: #94A3B8;
+  --border: #E2E8F0;
+  --divider: #F1F5F9;
+  --hover: #F1F5F9;
+  --selected: #EFF6FF;
+  --focused: #DBEAFE;
+  --error: #DC2626;
+  --glass: rgba(255, 255, 255, 0.9);
+  --glass-shadow: rgba(0, 0, 0, 0.08);
+}
+
+/* ===== MIDNIGHT THEME ===== */
+[data-theme="midnight"] {
+  --primary: #818CF8;
+  --primary-light: #A5B4FC;
+  --primary-dark: #6366F1;
+  --secondary: #A78BFA;
+  --accent: #10B981;
+  --highlight: #F59E0B;
+  --background: #111827;
+  --surface: #1F2937;
+  --card: #1F2937;
+  --sidebar: #111827;
+  --header: #1F2937;
+  --text-primary: #F9FAFB;
+  --text-secondary: #D1D5DB;
+  --text-disabled: #6B7280;
+  --border: #374151;
+  --divider: #1F2937;
+  --hover: #374151;
+  --selected: #4F46E5;
+  --focused: #4F46E5;
+  --glass: rgba(31, 41, 55, 0.8);
+  --glass-shadow: rgba(0, 0, 0, 0.25);
+}
+
+/* ===== NAVIGATION SPECIFIC STYLES ===== */
+.navigation-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  background: var(--sidebar);
+  border-right: 1px solid var(--border);
+  z-index: 1000;
+  overflow-y: auto;
+  transition: var(--sidebar-transition);
+}
+
+.navigation-sidebar.collapsed {
+  width: var(--sidebar-width-collapsed);
+}
+
+.navigation-sidebar.expanded {
+  width: var(--sidebar-width);
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  color: var(--nav-text);
+  text-decoration: none;
+  transition: all 0.2s ease;
+  border-left: 3px solid transparent;
+  border-radius: 6px;
+  margin: 2px 8px;
+}
+
+.nav-item:hover {
+  background: var(--nav-hover);
+  color: var(--accent);
+  border-left-color: var(--accent);
+}
+
+.nav-item.active {
+  background: var(--nav-active);
+  color: var(--nav-text-active);
+  border-left-color: var(--accent);
+}
+
+.nav-icon {
+  font-size: 20px;
+  min-width: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-label {
+  margin-left: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* Animation */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+.slide-down {
+  animation: slideDown 0.3s ease;
+}
+
+.pulse {
+  animation: pulse 1.5s infinite;
+}
+
+/* Mobile Responsive */
+@media (max-width: 1024px) {
+  :root {
+    --sidebar-width: 280px;
+  }
+  
+  .navigation-sidebar.mobile {
+    transform: translateX(-100%);
+  }
+  
+  .navigation-sidebar.mobile.open {
+    transform: translateX(0);
+  }
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--surface);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--secondary);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   FaIndustry,
   FaCheckCircle,
@@ -7,6 +7,7 @@ import {
   FaCalendarAlt,
   FaCogs,
   FaArrowUp,
+  FaArrowDown,
   FaWarehouse,
   FaCut,
   FaBoxOpen,
@@ -117,6 +118,37 @@ const DailyProductionReport = () => {
     []
   );
 
+  // Efficiency functions
+  const getEfficiencyColor = useCallback((efficiency) => {
+    const eff = parseFloat(efficiency) || 0;
+    if (eff >= 80) return "#10b981";  // GREEN for 80% and above
+    if (eff >= 70) return "#f59e0b";  // YELLOW for 70-79%
+    return "#ef4444";                 // RED for below 70%
+  }, []);
+
+  const getEfficiencyClass = useCallback((efficiency) => {
+    const eff = parseFloat(efficiency) || 0;
+    if (eff >= 80) return styles.efficiencyHigh;      // 80% اور اوپر - GREEN
+    if (eff >= 70) return styles.efficiencyMedium;    // 70-79% - YELLOW
+    return styles.efficiencyLow;                      // 70% سے کم - RED
+  }, []);
+
+  const getEfficiencyArrow = useCallback((efficiency) => {
+    const eff = parseFloat(efficiency) || 0;
+    if (eff >= 70) {
+      return <FaArrowUp className={styles.arrowIndicator} style={{ color: eff >= 80 ? "#10b981" : "#f59e0b" }} />;
+    } else {
+      return <FaArrowDown className={styles.arrowIndicator} style={{ color: "#ef4444" }} />;
+    }
+  }, []);
+
+  const getEfficiencyBgColor = useCallback((efficiency) => {
+    const eff = parseFloat(efficiency) || 0;
+    if (eff >= 80) return "#d1fae5";
+    if (eff >= 70) return "#fef3c7";
+    return "#fee2e2";
+  }, []);
+
   const getDepartmentInfo = useCallback(
     (deptName) => {
       const dept = departments.find((d) => d.name === deptName);
@@ -149,20 +181,6 @@ const DailyProductionReport = () => {
       isRawMaterial: false,
     };
   }, [selectedDepartment, departments]);
-
-  const getEfficiencyColor = useCallback((efficiency) => {
-    const eff = parseFloat(efficiency) || 0;
-    if (eff >= 80) return "#10b981";
-    if (eff >= 70) return "#f59e0b";
-    return "#ef4444";
-  }, []);
-
-  const getEfficiencyBgColor = useCallback((efficiency) => {
-    const eff = parseFloat(efficiency) || 0;
-    if (eff >= 80) return "#d1fae5";
-    if (eff >= 70) return "#fef3c7";
-    return "#fee2e2";
-  }, []);
 
   const calculateItemEfficiency = useCallback((production, target) => {
     if (target === 0) return 0;
@@ -518,7 +536,6 @@ const DailyProductionReport = () => {
       const allData = {};
 
       for (const dept of departments) {
-        // Raw Material کے لیے weight اور target_weight فیلڈز بھی شامل کریں
         let query = supabase
           .from(dept.tableName)
           .select("*")
@@ -548,7 +565,6 @@ const DailyProductionReport = () => {
           continue;
         }
 
-        // Raw Material کے لیے الگ calculation function call کریں
         const calculatedData = calculateAllDataCorrectly(
           productionRecords, 
           dept.isRawMaterial
@@ -823,45 +839,8 @@ const DailyProductionReport = () => {
   }, [fetchActualData]);
 
   const handlePrint = useCallback(() => {
-  const originalStyles = document.querySelectorAll('style, link[rel="stylesheet"]');
-  
-  originalStyles.forEach(style => {
-    style.setAttribute('data-print-original-display', style.disabled);
-    style.disabled = true;
-  });
-  
-  const printStyle = document.createElement('style');
-  printStyle.innerHTML = `
-    @media print {
-      body * {
-        visibility: hidden;
-      }
-      .container, .container * {
-        visibility: visible;
-      }
-      .container {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-      }
-      .actionButtons, .refreshButton, .dropdownWrapper, 
-      .whatsappSettings, .dataSourceInfo, .popupOverlay {
-        display: none !important;
-      }
-    }
-  `;
-  document.head.appendChild(printStyle);
-  
-  window.print();
-  
-  setTimeout(() => {
-    document.head.removeChild(printStyle);
-    originalStyles.forEach(style => {
-      style.disabled = style.getAttribute('data-print-original-display') === 'true';
-    });
-  }, 100);
-}, []);
+    window.print();
+  }, []);
 
   const handleExport = useCallback(() => {
     const exportData = {
@@ -979,7 +958,7 @@ const DailyProductionReport = () => {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (showDepartmentDropdown && !event.target.closest(`.${styles.filterContainer}`)) {
+      if (showDepartmentDropdown && !event.target.closest(`.${styles.dropdownWrapper}`)) {
         setShowDepartmentDropdown(false);
       }
     };
@@ -1019,6 +998,7 @@ const DailyProductionReport = () => {
               className={`${styles.popupButton} ${styles.copyButton}`}
               style={{
                 backgroundColor: copiedToClipboard ? "#10b981" : "#3b82f6",
+                color: "white",
               }}
               aria-label={copiedToClipboard ? "Copied to clipboard" : "Copy to clipboard"}
             >
@@ -1031,6 +1011,7 @@ const DailyProductionReport = () => {
             <button
               onClick={openWhatsAppDesktop}
               className={`${styles.popupButton} ${styles.whatsappDesktopButton}`}
+              style={{ backgroundColor: "#25D366", color: "white" }}
               aria-label="Open WhatsApp Desktop"
             >
               <FaDesktop size={16} />
@@ -1040,6 +1021,7 @@ const DailyProductionReport = () => {
             <button
               onClick={openWhatsAppGroup}
               className={`${styles.popupButton} ${styles.whatsappGroupButton}`}
+              style={{ backgroundColor: "#075E54", color: "white" }}
               aria-label="Share in WhatsApp Group"
             >
               <FaUsers size={16} />
@@ -1187,9 +1169,6 @@ const DailyProductionReport = () => {
                   className={styles.optionItem}
                   role="option"
                   aria-selected={selectedDepartment === "all"}
-                  style={{
-                    backgroundColor: selectedDepartment === "all" ? "#f3f4f6" : "white",
-                  }}
                 >
                   <div
                     className={styles.optionIcon}
@@ -1215,10 +1194,6 @@ const DailyProductionReport = () => {
                     className={styles.optionItem}
                     role="option"
                     aria-selected={selectedDepartment === dept.name}
-                    style={{
-                      backgroundColor: selectedDepartment === dept.name ? "#f3f4f6" : "white",
-                      borderBottom: dept.id === departments.length ? "none" : "1px solid #f3f4f6",
-                    }}
                   >
                     <div
                       className={styles.optionIcon}
@@ -1453,20 +1428,11 @@ const DailyProductionReport = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {shiftGroups[shift].map((item, index) => {
+                    {shiftGroups[shift].map((item) => {
                       const deptInfo = getDepartmentInfo(item.department);
-                      const isItemRawMaterial = item.isRawMaterial || deptInfo.isRawMaterial;
-                      const efficiencyColor = getEfficiencyColor(item.efficiency);
-                      const efficiencyBgColor = getEfficiencyBgColor(item.efficiency);
                       
                       return (
-                        <tr
-                          key={item.id}
-                          className={styles.tableRow}
-                          style={{
-                            backgroundColor: index % 2 === 0 ? "#ffffff" : "#f8fafc",
-                          }}
-                        >
+                        <tr key={item.id} className={styles.tableRow}>
                           <td className={styles.sectionCell}>
                             <div className={styles.sectionInfo}>
                               {deptInfo.icon}
@@ -1498,14 +1464,7 @@ const DailyProductionReport = () => {
                               {item.machine}
                             </div>
                           </td>
-                          <td
-                            className={styles.quantityCell}
-                            style={{
-                              color: item.production_quantity > 0
-                                ? "#1e293b"
-                                : "#ef4444",
-                            }}
-                          >
+                          <td className={styles.quantityCell}>
                             {formatQuantity(
                               item.production_quantity,
                               item.quantity_unit
@@ -1529,18 +1488,12 @@ const DailyProductionReport = () => {
                             </span>
                           </td>
                           <td className={styles.centerCell}>
-                            <span
-                              className={styles.efficiencyBadge}
-                              style={{
-                                backgroundColor: efficiencyBgColor,
-                                color: efficiencyColor,
-                              }}
-                            >
-                              {item.efficiency >= 100 && (
-                                <FaArrowUp size={8} />
-                              )}
-                              {item.efficiency}%
-                            </span>
+                            <div className={`${styles.efficiencyBadge} ${getEfficiencyClass(item.efficiency)}`}>
+                              <span>
+                                {getEfficiencyArrow(item.efficiency)}
+                                {item.efficiency}%
+                              </span>
+                            </div>
                           </td>
                           <td className={styles.centerCell}>
                             <span className={styles.entriesBadge}>
@@ -1638,8 +1591,6 @@ const DailyProductionReport = () => {
                   const totals = calculateDepartmentTotals(dept.name);
                   const hasData =
                     totals.totalProduction > 0 || totals.totalTarget > 0;
-                  const efficiencyColor = getEfficiencyColor(totals.efficiency);
-                  const efficiencyBgColor = getEfficiencyBgColor(totals.efficiency);
 
                   return (
                     <tr key={dept.id} className={styles.tableRow}>
@@ -1657,12 +1608,7 @@ const DailyProductionReport = () => {
                           {dept.shortName}
                         </div>
                       </td>
-                      <td
-                        className={styles.quantityCell}
-                        style={{
-                          color: totals.totalProduction > 0 ? "#1e293b" : "#ef4444",
-                        }}
-                      >
+                      <td className={styles.quantityCell}>
                         {totals.totalProduction.toLocaleString("en-US", {
                           minimumFractionDigits: dept.unit === "Meter" ? 1 : 0,
                           maximumFractionDigits: dept.unit === "Meter" ? 1 : 0,
@@ -1675,15 +1621,12 @@ const DailyProductionReport = () => {
                         })}
                       </td>
                       <td className={styles.centerCell}>
-                        <span
-                          className={styles.efficiencyBadge}
-                          style={{
-                            backgroundColor: efficiencyBgColor,
-                            color: efficiencyColor,
-                          }}
-                        >
-                          {totals.efficiency}%
-                        </span>
+                        <div className={`${styles.efficiencyBadge} ${getEfficiencyClass(totals.efficiency)}`}>
+                          <span>
+                            {getEfficiencyArrow(totals.efficiency)}
+                            {totals.efficiency}%
+                          </span>
+                        </div>
                       </td>
                       <td className={styles.centerCell}>
                         {totals.records}
@@ -1706,6 +1649,7 @@ const DailyProductionReport = () => {
                           style={{
                             backgroundColor: hasData ? "#d1fae5" : "#f3f4f6",
                             color: hasData ? "#059669" : "#6b7280",
+                            borderColor: hasData ? "#059669" : "#6b7280",
                           }}
                         >
                           {hasData ? (dept.isRawMaterial ? "Receiving" : "Active") : "No Data"}

@@ -1,6 +1,4 @@
-// Header.jsx - COMPLETE FINAL VERSION
-//D:\ERP-Management\frontend\src\components\Header\Header.jsx
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { FiBell, FiSettings, FiLogOut, FiUser } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -12,308 +10,131 @@ const Header = ({
 }) => {
   const navigate = useNavigate();
   const tickerRef = useRef(null);
-  
-  // USE THEME HOOK
+  const [isMobile, setIsMobile] = useState(false);
   const { theme } = useTheme();
 
-  // Get user info
-  const storedUser = localStorage.getItem("user");
-  const user = storedUser
-    ? JSON.parse(storedUser)
-    : { display_name: "Admin User", email: "admin@example.com", role: "Administrator" };
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
-  const getInitials = (user) => {
-    if (!user) return "AU";
-    if (user.display_name) {
-      const parts = user.display_name.trim().split(" ");
-      if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-      return (parts[0][0] + parts[1][0]).toUpperCase();
+  // --- USER DATA LOGIC ---
+  // ہم نے اسے مزید مضبوط بنا دیا ہے تاکہ نام لازمی آئے
+  const getStoredUser = () => {
+    const rawData = localStorage.getItem("user") || localStorage.getItem("userData");
+    if (!rawData) return { display_name: "Admin User", email: "admin@pwi.com" };
+    
+    try {
+      const parsed = JSON.parse(rawData);
+      // اگر display_name نہیں ہے تو دوسرے ممکنہ نام چیک کریں
+      return {
+        ...parsed,
+        display_name: parsed.display_name || parsed.username || parsed.name || "Admin User"
+      };
+    } catch (e) {
+      return { display_name: "Admin User", email: "admin@pwi.com" };
     }
-    return "AU";
+  };
+
+  const user = getStoredUser();
+
+  const getInitials = (userData) => {
+    const name = userData.display_name;
+    const parts = name.trim().split(" ");
+    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+    return name.slice(0, 2).toUpperCase();
   };
 
   const initials = getInitials(user);
 
-  // Ticker animation
+  // Ticker Animation
   useEffect(() => {
-    const tickerElement = tickerRef.current;
-    if (!tickerElement) return;
-
+    if (isMobile || !tickerRef.current) return;
     let animationId;
     let position = 0;
-    const speed = 0.8;
-
-    const animateTicker = () => {
-      position -= speed;
-      if (position <= -400) {
-        position = 0;
-      }
-      tickerElement.style.transform = `translateX(${position}px)`;
-      animationId = requestAnimationFrame(animateTicker);
+    const animate = () => {
+      position -= 0.8;
+      if (position <= -400) position = 0;
+      if (tickerRef.current) tickerRef.current.style.transform = `translateX(${position}px)`;
+      animationId = requestAnimationFrame(animate);
     };
-
-    animationId = requestAnimationFrame(animateTicker);
-
-    return () => {
-      if (animationId) {
-        cancelAnimationFrame(animationId);
-      }
-    };
-  }, []);
-
-  const handleSettingsClick = () => {
-    navigate("/settings/theme");
-  };
-
-  const handleProfileClick = () => {
-    navigate("/profile");
-  };
+    animationId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animationId);
+  }, [isMobile]);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("userData");
+    localStorage.clear();
     sessionStorage.clear();
     navigate("/login");
-  };
-
-  // Function to invert logo color based on theme
-  const getLogoFilter = () => {
-    if (theme.name === 'dark') {
-      return 'invert(1) brightness(2)';
-    } else if (theme.name === 'blue') {
-      return 'invert(0.8) sepia(1) saturate(5) hue-rotate(175deg)';
-    }
-    return 'invert(0)';
   };
 
   return (
     <div 
       className="header-container"
       style={{
-        background: `linear-gradient(135deg, ${theme.colors.primary} 0%, ${theme.colors.secondary} 50%, ${theme.colors.accent} 100%)`,
-        borderBottom: `3px solid ${theme.colors.primary}`,
-        color: theme.colors.textPrimary
+        width: "100%",
+        background: `linear-gradient(135deg, ${theme.colors.primary} 0%, ${theme.colors.primaryLight} 50%, ${theme.colors.primaryDark} 100%)`,
+        borderBottom: `2px solid ${theme.colors.border}`,
+        color: theme.colors.textPrimary,
+        margin: "0",
+        padding: "0",
       }}
     >
       {/* Ticker Bar */}
-      <div 
-        className="ticker-bar"
-        style={{
-          background: `linear-gradient(90deg, ${theme.colors.primary}99 0%, ${theme.colors.secondary}99 50%, ${theme.colors.primary}99 100%)`,
-          borderTop: `2px solid ${theme.colors.primary}`,
-        }}
-      >
-        <div ref={tickerRef} className="ticker-content">
-          {[...Array(8)].map((_, i) => (
-            <div key={i} className="ticker-item">
-              {/* Logo with theme-based color */}
-              <img
-                src="/images/logoA.png"
-                alt="PWI Logo"
-                className="ticker-logo"
-                style={{
-                  filter: getLogoFilter(),
-                  transition: 'filter 0.3s ease'
-                }}
-              />
-              <span className="ticker-text" style={{ color: theme.colors.textPrimary }}>
-                Pakistan Wire Industries
-              </span>
-              <span 
-                className="ticker-tag"
-                style={{
-                  background: `${theme.colors.secondary}CC`,
-                  color: theme.colors.textPrimary,
-                  border: `2px solid ${theme.colors.accent}`
-                }}
-              >
-                SPI & CCD
-              </span>
-              <span className="ticker-separator">|</span>
-            </div>
-          ))}
-        </div>
-        <div 
-          className="ticker-fade-left"
-          style={{
-            background: `linear-gradient(90deg, ${theme.colors.primary} 0%, transparent 100%)`
-          }}
-        />
-        <div 
-          className="ticker-fade-right"
-          style={{
-            background: `linear-gradient(90deg, transparent 0%, ${theme.colors.primary} 100%)`
-          }}
-        />
-      </div>
-
-      {/* Left Section */}
-      <div className="left-section">
-        <div className="logo-title-container">
-          {/* Main Logo with theme-based color */}
-          <img
-            src="/images/logoB.png"
-            alt="Pakistan Wire Industries Logo"
-            className="main-logo"
-            style={{
-              filter: getLogoFilter(),
-              transition: 'filter 0.3s ease'
-            }}
-          />
-          <div className="title-container">
-            <h1 
-              className="main-title"
-              style={{ color: theme.colors.textPrimary }}
-            >
-              {title}
-            </h1>
-            <p 
-              className="main-subtitle"
-              style={{ color: theme.colors.textSecondary }}
-            >
-              {subtitle}
-            </p>
-          </div>
-        </div>
-        <div className="company-tag">
-          <span 
-            className="company-text"
-            style={{
-              background: `${theme.colors.primary}33`,
-              color: theme.colors.textPrimary,
-              border: `1px solid ${theme.colors.border}`
-            }}
-          >
-            PWI Pvt Ltd
-          </span>
-        </div>
-      </div>
-
-      {/* Right Section - IMPROVED LAYOUT */}
-      <div className="right-section">
-        {/* Notification Button */}
-        <button 
-          className="notification-btn"
-          style={{
-            background: `${theme.colors.primary}1A`,
-            color: theme.colors.textPrimary
-          }}
-          title="Notifications"
-        >
-          <FiBell />
-          <span 
-            className="notification-badge"
-            style={{
-              background: theme.colors.accent,
-              border: `2px solid ${theme.colors.primary}`
-            }}
-          >
-            3
-          </span>
-        </button>
-
-        {/* Settings Button */}
-        <button 
-          className="settings-btn" 
-          onClick={handleSettingsClick}
-          style={{
-            background: `${theme.colors.primary}1A`,
-            color: theme.colors.textPrimary
-          }}
-          title="Theme Settings"
-        >
-          <FiSettings />
-        </button>
-
-        {/* Profile Button */}
-        <button 
-          className="profile-btn"
-          onClick={handleProfileClick}
-          style={{
-            background: `${theme.colors.primary}1A`,
-            color: theme.colors.textPrimary
-          }}
-          title="User Profile"
-        >
-          <FiUser />
-        </button>
-
-        {/* User Section */}
-        <div 
-          className="user-section"
-          style={{
-            background: `${theme.colors.primary}1A`,
-            border: `1px solid ${theme.colors.border}`,
-            color: theme.colors.textPrimary
-          }}
-          onClick={handleProfileClick}
-          title="Click to view profile"
-        >
-          <div 
-            className="user-avatar"
-            style={{
-              background: `linear-gradient(135deg, ${theme.colors.primary} 0%, ${theme.colors.secondary} 100%)`
-            }}
-          >
-            {initials}
-          </div>
-          <div className="user-info">
-            <div 
-              className="user-name" 
-              title={user.display_name}
-              style={{ color: theme.colors.textPrimary }}
-            >
-              {user.display_name}
-            </div>
-            <div 
-              className="user-email" 
-              title={user.email}
-              style={{ color: theme.colors.textSecondary }}
-            >
-              {user.email}
-            </div>
-            {user.role && (
-              <div 
-                className="user-role"
-                style={{ color: theme.colors.accent }}
-              >
-                {user.role}
+      {!isMobile && (
+        <div className="ticker-bar" style={{ background: `linear-gradient(90deg, ${theme.colors.primary} 0%, ${theme.colors.secondary} 50%, ${theme.colors.primary} 100%)` }}>
+          <div ref={tickerRef} className="ticker-content">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="ticker-item">
+                <img src="/images/logoA.png" alt="Logo" className="ticker-logo" style={{ filter: theme.type === 'dark' ? 'invert(1)' : 'none' }} />
+                <span className="ticker-text">Pakistan Wire Industries</span>
+                <span className="ticker-tag">SPI & CCD</span>
+                <span className="ticker-separator">|</span>
               </div>
-            )}
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Main Header Content */}
+      <div className="header-main-content">
+        <div className="left-section">
+          <div className="logo-title-container">
+            <img src="/images/logoB.png" alt="Logo" className="main-logo" style={{ filter: theme.type === 'dark' ? 'invert(1)' : 'none' }} />
+            <div className="title-container">
+              <h1 className="main-title">{title}</h1>
+              <p className="main-subtitle">{subtitle}</p>
+            </div>
           </div>
         </div>
 
-        {/* Logout Button - FIXED COLOR */}
-        <button 
-          className="logout-btn" 
-          onClick={handleLogout}
-          style={{
-            background: `${theme.colors.primary}1A`,
-            border: `1px solid ${theme.colors.border}`,
-            color: theme.colors.textPrimary, // Changed to theme text color
-            fontWeight: '600'
-          }}
-          title="Logout from system"
-        >
-          <FiLogOut className="logout-icon" />
-          <span className="logout-text">Logout</span>
-        </button>
+        <div className="right-section">
+          <div className="header-icons-row">
+            <button className="notification-btn"><FiBell /><span className="notification-badge">3</span></button>
+            <button className="settings-btn" onClick={() => navigate("/settings/theme")}><FiSettings /></button>
+            
+            {/* USER INFO SECTION - اب یہاں نام لازمی آئے گا */}
+            <div className="user-section-compact" onClick={() => navigate("/profile")}>
+              <div className="user-avatar-compact">{initials}</div>
+              {!isMobile && (
+                <div className="user-info-compact">
+                  <div className="user-name-compact" style={{ fontWeight: "bold", fontSize: "14px" }}>
+                    {user.display_name}
+                  </div>
+                  <div className="user-email-compact" style={{ fontSize: "11px", opacity: 0.8 }}>
+                    {user.email}
+                  </div>
+                </div>
+              )}
+            </div>
 
-        {/* Mobile Logout Button - Only shows on mobile */}
-        <button 
-          className="mobile-logout-btn"
-          onClick={handleLogout}
-          style={{
-            background: `${theme.colors.primary}1A`,
-            border: `1px solid ${theme.colors.border}`,
-            color: theme.colors.textPrimary
-          }}
-          title="Logout"
-        >
-          <FiLogOut />
-        </button>
+            <button className="logout-btn-compact" onClick={handleLogout}>
+              <FiLogOut /> {!isMobile && <span>Logout</span>}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

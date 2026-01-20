@@ -8,9 +8,11 @@ import {
 
 /* ========== THEME CONTEXT & STYLES ========== */
 import { ThemeProvider } from "./contexts/ThemeContext";
+import './styles/global.css';  // ✅ YAHAN HUMARA PROFESSIONAL GLOBAL CSS IMPORT KAREIN
 import './output.css';
+
+
 /* ========== COMMON COMPONENTS ========== */
-// Header کو یہاں سے remove کریں - Layout میں ہے
 import Layout from "./components/common/Layout";
 import ProtectedRoute from "./pages/auth/ProtectedRoute";
 
@@ -76,7 +78,6 @@ function App() {
     <ThemeProvider>
       <Router>
         <div className="App">
-          
           <main>
             <Routes>
               {/* ========== AUTH ROUTES (No Layout) ========== */}
@@ -98,7 +99,6 @@ function App() {
                 />
                 
                 {/* ========== SETTINGS ROUTES ========== */}
-
                 <Route 
                   path="/settings/theme" 
                   element={
