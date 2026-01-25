@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import Header from "../Header/Header";
 import Navigation from "./Navigation";
 import { useTheme } from "../../contexts/ThemeContext";
-
+import "./Layout.css";
 
 const SIDEBAR_COLLAPSED = 60;
 const SIDEBAR_EXPANDED = 280;
@@ -35,66 +35,117 @@ const Layout = ({
       : SIDEBAR_COLLAPSED;
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
+    <div
+      className="layout-container"
+      style={{
+        display: "flex",
+        height: "100vh",
+        width: "100vw",
+        overflow: "hidden",
+        // background: theme.colors.background
+      }}
+    >
 
-      {/* Sidebar - Hidden on mobile, Flex on desktop */}
-      <aside
-        className={`z-50 h-full bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transition-all duration-300 ease-in-out flex-shrink-0
-          ${isMobile
-            ? (sidebarOpen ? "fixed inset-y-0 left-0 w-64 shadow-2xl" : "hidden")
-            : (sidebarOpen || "hover:w-64") && "w-64" // Desktop expanded
-          }
-          ${!isMobile && !sidebarOpen && "w-20"} // Desktop collapsed
-        `}
-        onMouseEnter={() => !isMobile && setSidebarOpen(true)}
-        onMouseLeave={() => !isMobile && setSidebarOpen(false)}
+      {/* Sidebar */}
+      {showSidebar && (
+        <aside
+          onMouseEnter={() => !isMobile && setSidebarOpen(true)}
+          onMouseLeave={() => !isMobile && setSidebarOpen(false)}
+          style={{
+            width: isMobile ? (sidebarOpen ? SIDEBAR_EXPANDED : 0) : sidebarWidth,
+            flexShrink: 0,
+            height: "100%",
+            transition: "width 0.3s ease",
+            background: "#fff",
+            zIndex: 1000,
+            // borderRight: "1px solid #eee", // بارڈر ہٹا دیا
+            overflowX: "hidden"
+          }}
+        >
+          <Navigation isOpen={sidebarOpen || isMobile} />
+        </aside>
+      )}
+
+      {/* Main Wrapper */}
+      <div
+        className="main-wrapper"
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          flexGrow: 1,
+          width: `calc(100% - ${sidebarWidth}px)`,
+          height: "100vh",
+          overflow: "hidden",
+          transition: "width 0.3s ease",
+          position: "relative"
+        }}
       >
-        <Navigation isOpen={sidebarOpen || isMobile} onClose={() => setSidebarOpen(false)} />
-      </aside>
-
-      {/* Main Content Wrapper */}
-      <div className="flex flex-col flex-1 h-full overflow-hidden relative w-full">
-
         {/* Header */}
         {showHeader && (
-          <header className={`h-16 w-full bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex-shrink-0 z-40
-            ${isMobile ? "sticky top-0" : "relative"}
-          `}>
-            <div className="flex items-center justify-between h-full px-4">
-              {/* Mobile Menu Toggle */}
-              {isMobile && (
-                <button
-                  onClick={() => setSidebarOpen(!sidebarOpen)}
-                  className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
-                </button>
-              )}
-              <Header title={title} subtitle={subtitle} />
-            </div>
+          <header
+            style={{
+              height: "60px",
+              width: "100%",
+              flexShrink: 0,
+              zIndex: 900,
+              background: "#fff",
+              position: isMobile ? "absolute" : "relative",
+              top: isMobile ? MOBILE_TOP_GAP : 0,
+            }}
+          >
+            <Header title={title} subtitle={subtitle} />
           </header>
         )}
 
-        {/* Subtitle / Breadcrumb Bar */}
-        <div className="h-10 w-full bg-gray-50 dark:bg-gray-900 flex items-center px-6 text-sm text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-800 flex-shrink-0">
+        {/* Sub Header */}
+        <div
+          style={{
+            height: "50px",
+            width: "100%",
+            flexShrink: 0,
+            background: "#f9f9f9",
+            display: "flex",
+            alignItems: "center",
+            padding: "0 0px",
+            boxSizing: "border-box",
+          }}
+        >
           {subtitle}
         </div>
 
-        {/* Scrollable Content Area */}
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 dark:bg-gray-900 w-full p-4 md:p-6 pb-20">
-          <div className="container mx-auto max-w-7xl w-full">
+        {/* Scrollable Content */}
+        <main
+          className="content-area"
+          style={{
+            flexGrow: 1,
+            overflowY: "auto",
+            overflowX: "auto",
+            padding: "0px", // سائیڈوں کا گیپ ختم کیا
+            boxSizing: "border-box",
+            width: "100%",
+            display: "flex",
+            justifyContent: "center", // افقی سینٹر
+            alignItems: "flex-start" // اوپر سے شروع کریں
+          }}
+        >
+          <div style={{
+            width: "100%",
+            maxWidth: "100%",
+            padding: "0px",
+            boxSizing: "border-box"
+          }}>
             {children}
           </div>
         </main>
-
-        {/* Mobile Backdrop */}
-        {isMobile && sidebarOpen && (
-          <div
-            className="fixed inset-0 bg-black/50 z-40 backdrop-blur-sm"
-            onClick={() => setSidebarOpen(false)}
-          />
-        )}
       </div>
+
+      {/* Mobile Backdrop */}
+      {isMobile && sidebarOpen && (
+        <div
+          onClick={() => setSidebarOpen(false)}
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 999 }}
+        />
+      )}
     </div>
   );
 };

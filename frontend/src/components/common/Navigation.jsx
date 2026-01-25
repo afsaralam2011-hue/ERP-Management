@@ -33,7 +33,7 @@ import {
 import { useTheme } from '../../contexts/ThemeContext';
 import './Navigation.css';
 
-const Navigation = ({ isOpen, onClose }) => {
+const Navigation = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const currentPath = location.pathname;
@@ -85,8 +85,7 @@ const Navigation = ({ isOpen, onClose }) => {
   const [logoMissing, setLogoMissing] = useState(false);
   const [mobileLogoMissing, setMobileLogoMissing] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  // REMOVED internal sidebarOpen state
-  const sidebarOpen = isOpen; // Use prop
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isHovering, setIsHovering] = useState(false);
   const hoverTimerRef = useRef(null);
   const leaveTimerRef = useRef(null);
@@ -270,7 +269,12 @@ const Navigation = ({ isOpen, onClose }) => {
     const handleResize = () => {
       const mobile = window.innerWidth < 1024;
       setIsMobile(mobile);
-      // Removed setSidebarOpen logic as it is controlled by props now
+      if (mobile) {
+        setSidebarOpen(false);
+      } else {
+        setSidebarOpen(true);
+        setIsHovering(false);
+      }
     };
 
     window.addEventListener('resize', handleResize);
@@ -289,11 +293,10 @@ const Navigation = ({ isOpen, onClose }) => {
     setExpandedSections(newExpandedSections);
   }, [currentPath]);
 
-  // Click outside handling is done by Layout mostly, but keeping this for safety if sidebarRef used
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (isMobile && sidebarOpen && sidebarRef.current && !sidebarRef.current.contains(event.target)) {
-        if (onClose) onClose();
+        closeMobileMenu();
       }
     };
 
@@ -304,7 +307,7 @@ const Navigation = ({ isOpen, onClose }) => {
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('touchstart', handleClickOutside);
     };
-  }, [isMobile, sidebarOpen, onClose]);
+  }, [isMobile, sidebarOpen]);
 
   const handleLogout = () => {
     localStorage.clear();
@@ -333,22 +336,37 @@ const Navigation = ({ isOpen, onClose }) => {
   }, []);
 
   const handleSidebarMouseEnter = () => {
-    // Managed by Layout via props, but if hover needed:
-    /* if (!isMobile && !sidebarOpen) {
-      // logic...
-    } */
+    if (!isMobile && !sidebarOpen) {
+      if (leaveTimerRef.current) {
+        clearTimeout(leaveTimerRef.current);
+        leaveTimerRef.current = null;
+      }
+      hoverTimerRef.current = setTimeout(() => {
+        setIsHovering(true);
+        setSidebarOpen(true);
+      }, 100);
+    }
   };
 
   const handleSidebarMouseLeave = () => {
-    // Managed by Layout
+    if (!isMobile && sidebarOpen) {
+      if (hoverTimerRef.current) {
+        clearTimeout(hoverTimerRef.current);
+        hoverTimerRef.current = null;
+      }
+      leaveTimerRef.current = setTimeout(() => {
+        setIsHovering(false);
+        setSidebarOpen(false);
+      }, 200);
+    }
   };
 
   const toggleMobileMenu = () => {
-    // if (onClose) onClose(); or toggle via prop? Layout controls this.
+    setSidebarOpen(true);
   };
 
   const closeMobileMenu = () => {
-    if (onClose) onClose();
+    setSidebarOpen(false);
   };
 
   const resetDepartmentUpdates = (department, e) => {
@@ -735,7 +753,7 @@ const Navigation = ({ isOpen, onClose }) => {
                       key={subItem.path || subIndex}
                       to={subItem.path}
                       className={`sub-nav-link ${isActive ? 'active' : ''}`}
-                      onClick={() => isMobile && onClose && onClose()}
+                      onClick={() => isMobile && closeMobileMenu()}
                       style={{
                         color: isActive ? item.color : themeColors.textSecondary,
                         borderLeft: `2px solid ${isActive ? item.color : 'transparent'}`,

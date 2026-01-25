@@ -21,11 +21,4 @@ if (!supabaseUrl || !supabaseAnonKey) {
   console.error('REACT_APP_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNlcnFyc3R0c2t3dXRwbmhiY3ZxIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NDQzMzM4NSwiZXhwIjoyMDgwMDA5Mzg1fQ.C5d2but4lVKLC1cQNXIaxuqB2Z-XQabORPFgpVOqT90');
 }                                          //eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNlcnFyc3R0c2t3dXRwbmhiY3ZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ0MzMzODUsImV4cCI6MjA4MDAwOTM4NX0.zorIOTNMTevhmspNTCxaCuA5nCrrUA2hLLoowny3-rQ
 //eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNlcnFyc3R0c2t3dXRwbmhiY3ZxIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NDQzMzM4NSwiZXhwIjoyMDgwMDA5Mzg1fQ.C5d2but4lVKLC1cQNXIaxuqB2Z-XQabORPFgpVOqT90
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true,
-    storage: window.localStorage
-  }
-});
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);

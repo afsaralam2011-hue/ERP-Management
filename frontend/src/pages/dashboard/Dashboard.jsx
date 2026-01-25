@@ -379,24 +379,20 @@ const Dashboard = () => {
                       </button>
                     </div>
                     <div className="notifications-list">
-                      {notifications.length > 0 ? (
-                        notifications.map(notification => (
+                      {notifications.map(notification => (
+                        <div
+                          key={notification.id}
+                          className={`notification-item ${!notification.read ? 'unread' : ''}`}
+                        >
+                          <div className="notification-text">{notification.text}</div>
                           <div
-                            key={notification.id}
-                            className={`notification-item ${!notification.read ? 'unread' : ''}`}
+                            className="notification-time"
+                            style={{ color: getThemeColor("#6b7280", "#9ca3af") }}
                           >
-                            <div className="notification-text">{notification.text}</div>
-                            <div
-                              className="notification-time"
-                              style={{ color: getThemeColor("#6b7280", "#9ca3af") }}
-                            >
-                              {notification.time}
-                            </div>
+                            {notification.time}
                           </div>
-                        ))
-                      ) : (
-                        <div className="no-notifications">No new notifications</div>
-                      )}
+                        </div>
+                      ))}
                     </div>
                   </div>
                 )}
@@ -497,39 +493,39 @@ const Dashboard = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
+                <div className="stats-grid">
                   {quickStats.map((stat) => (
                     <div
                       key={stat.id}
-                      className="stat-card p-6 rounded-xl shadow-sm border transition-transform hover:-translate-y-1"
+                      className="stat-card"
                       style={{
                         backgroundColor: getThemeColor("#ffffff", "#1f2937"),
                         borderColor: getThemeColor("#e5e7eb", "#374151")
                       }}
                     >
-                      <div className="stat-content flex items-start justify-between">
+                      <div className="stat-content">
                         <div
-                          className="stat-icon p-3 rounded-lg text-white"
+                          className="stat-icon"
                           style={{ backgroundColor: stat.color }}
                         >
                           {stat.icon}
                         </div>
-                        <div className="stat-info text-right">
+                        <div className="stat-info">
                           <div
-                            className="stat-value text-2xl font-bold"
+                            className="stat-value"
                             style={{ color: getThemeColor("#1f2937", "#f3f4f6") }}
                           >
                             {stat.value}
                           </div>
                           <div
-                            className="stat-label text-sm mt-1"
+                            className="stat-label"
                             style={{ color: getThemeColor("#6b7280", "#9ca3af") }}
                           >
                             {stat.label}
                           </div>
-                          <div className={`stat-change text-xs mt-2 font-medium flex items-center justify-end gap-1 ${stat.trend === "up" ? "text-green-500" : "text-red-500"}`}>
+                          <div className="stat-change" style={{ color: stat.color }}>
                             {stat.change}
-                            <span className="trend-arrow">
+                            <span className={`trend-arrow ${stat.trend}`}>
                               {stat.trend === "up" ? "↑" : "↓"}
                             </span>
                           </div>
