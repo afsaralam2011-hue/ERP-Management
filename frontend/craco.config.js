@@ -5,7 +5,12 @@ module.exports = {
   style: {
     postcss: {
       plugins: [
-        require('@tailwindcss/postcss')
+        require('@tailwindcss/postcss'),
+        require('cssnano')({
+          preset: ['default', {
+            calc: false,
+          }],
+        }),
       ],
     },
   },
