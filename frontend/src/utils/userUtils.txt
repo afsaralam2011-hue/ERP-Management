@@ -1,0 +1,99 @@
+// src/utils/userUtils.js
+
+export const getUserFromStorage = () => {
+  try {
+    // مختلف possible keys سے user data تلاش کریں
+    let user = null;
+    
+    // پہلے 'user' key سے چیک کریں
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      user = JSON.parse(storedUser);
+    }
+    
+    // پھر 'userData' key سے چیک کریں
+    if (!user) {
+      const storedUserData = localStorage.getItem('userData');
+      if (storedUserData) {
+        user = JSON.parse(storedUserData);
+      }
+    }
+    
+    // پھر کسی اور possible key سے چیک کریں
+    if (!user) {
+      const authData = localStorage.getItem('auth');
+      if (authData) {
+        const auth = JSON.parse(authData);
+        if (auth.user) {
+          user = auth.user;
+        }
+      }
+    }
+    
+    // اگر کہیں سے بھی user مل جائے
+    if (user) {
+      // نام مختلف keys میں ہو سکتا ہے
+      const userName = user.display_name || user.username || user.name || user.full_name || 'Admin User';
+      const userEmail = user.email || 'admin@pakistanwire.com';
+      
+      // initials بنائیں
+      const initials = userName
+        .split(' ')
+        .map(n => n[0])
+        .join('')
+        .toUpperCase()
+        .substring(0, 2);
+      
+      return {
+        name: userName,
+        email: userEmail,
+        initials: initials,
+        raw: user // original data بھی شامل
+      };
+    }
+    
+    // Default user data
+    return {
+      name: 'Admin User',
+      email: 'admin@pakistanwire.com',
+      initials: 'AU',
+      raw: null
+    };
+
+  } catch (error) {
+    console.error('Error getting user from storage:', error);
+    return {
+      name: 'Admin User',
+      email: 'admin@pakistanwire.com',
+      initials: 'AU',
+      raw: null
+    };
+  }
+};
+
+export const saveUserToStorage = (userData) => {
+  try {
+    // ایک standard format میں save کریں
+    const userToSave = {
+      display_name: userData.name,
+      username: userData.name.toLowerCase().replace(/\s+/g, '.'),
+      email: userData.email,
+      name: userData.name,
+      initials: userData.name
+        .split(' ')
+        .map(n => n[0])
+        .join('')
+        .toUpperCase()
+        .substring(0, 2)
+    };
+    
+    // دونوں keys میں save کریں
+    localStorage.setItem('user', JSON.stringify(userToSave));
+    localStorage.setItem('userData', JSON.stringify(userToSave));
+    
+    return userToSave;
+  } catch (error) {
+    console.error('Error saving user to storage:', error);
+    return null;
+  }
+};

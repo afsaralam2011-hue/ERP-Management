@@ -1,189 +1,141 @@
 // src/contexts/ThemeContext.jsx
-// ✅ COMPLETE PROFESSIONAL THEME CONTEXT
-
-import React, { createContext, useState, useContext, useEffect, useMemo, useCallback } from 'react';
-import { themes } from '../utils/themes';
+import React, { createContext, useState, useContext, useEffect } from 'react';
 
 const ThemeContext = createContext();
 
+export const useTheme = () => useContext(ThemeContext);
+
 export const ThemeProvider = ({ children }) => {
-  // Get initial theme from localStorage or use professional as default
-  const [theme, setTheme] = useState(() => {
-    const savedTheme = localStorage.getItem('app-theme');
-    if (savedTheme) {
-      try {
-        const parsed = JSON.parse(savedTheme);
-        return themes[parsed.name] || themes.professional;
-      } catch (error) {
-        return themes.professional;
-      }
-    }
-    return themes.professional; // Default: Professional theme
-  });
+  const [theme, setTheme] = useState('light');
+  const [primaryColor, setPrimaryColor] = useState('#2563EB');
 
-  // Apply theme CSS variables to document root
-  const applyTheme = useCallback((themeToApply) => {
-    const root = document.documentElement;
-    const colors = themeToApply.colors;
-    
-    // ===== CORE COLORS =====
-    root.style.setProperty('--color-primary', colors.primary);
-    root.style.setProperty('--color-primary-light', colors.primaryLight);
-    root.style.setProperty('--color-primary-dark', colors.primaryDark);
-    
-    // ===== BACKGROUND & SURFACE =====
-    root.style.setProperty('--color-background', colors.background);
-    root.style.setProperty('--color-surface', colors.surface);
-    root.style.setProperty('--color-card', colors.card);
-    root.style.setProperty('--color-sidebar', colors.sidebar);
-    root.style.setProperty('--color-header', colors.header);
-    
-    // ===== TEXT COLORS =====
-    root.style.setProperty('--color-text-primary', colors.textPrimary);
-    root.style.setProperty('--color-text-secondary', colors.textSecondary);
-    root.style.setProperty('--color-text-disabled', colors.textDisabled);
-    root.style.setProperty('--color-text-inverse', colors.textInverse);
-    
-    // ===== BORDERS =====
-    root.style.setProperty('--color-border', colors.border);
-    root.style.setProperty('--color-divider', colors.divider);
-    
-    // ===== STATES =====
-    root.style.setProperty('--color-hover', colors.hover);
-    root.style.setProperty('--color-selected', colors.selected);
-    root.style.setProperty('--color-focused', colors.focused);
-    
-    // ===== BUTTONS =====
-    root.style.setProperty('--color-button-bg', colors.button.background);
-    root.style.setProperty('--color-button-text', colors.button.text);
-    root.style.setProperty('--color-button-border', colors.button.border);
-    
-    // ===== INPUTS =====
-    root.style.setProperty('--color-input-bg', colors.input.background);
-    root.style.setProperty('--color-input-border', colors.input.border);
-    root.style.setProperty('--color-input-text', colors.input.text);
-    
-    // ===== TABLES =====
-    root.style.setProperty('--color-table-header', colors.table.header);
-    root.style.setProperty('--color-table-row-even', colors.table.rowEven);
-    root.style.setProperty('--color-table-row-odd', colors.table.rowOdd);
-    root.style.setProperty('--color-table-border', colors.table.border);
-    
-    // ===== BADGES =====
-    root.style.setProperty('--color-badge-bg', colors.badge.background);
-    root.style.setProperty('--color-badge-text', colors.badge.text);
-    root.style.setProperty('--color-badge-border', colors.badge.border);
-    
-    // ===== SEMANTIC COLORS =====
-    root.style.setProperty('--color-success', colors.success);
-    root.style.setProperty('--color-warning', colors.warning);
-    root.style.setProperty('--color-error', colors.error);
-    root.style.setProperty('--color-info', colors.info);
-    
-    // ===== GLASS EFFECTS =====
-    root.style.setProperty('--glass-background', colors.glass);
-    root.style.setProperty('--glass-border', colors.glassBorder);
-    root.style.setProperty('--glass-shadow', colors.glassShadow);
-    
-    // ===== SHADOWS =====
-    root.style.setProperty('--shadow-sm', `0 1px 2px 0 ${colors.glassShadow}`);
-    root.style.setProperty('--shadow-md', `0 4px 6px -1px ${colors.glassShadow}`);
-    root.style.setProperty('--shadow-lg', `0 10px 15px -3px ${colors.glassShadow}`);
-    
-    // ===== TRANSITIONS =====
-    root.style.setProperty('--transition-fast', '150ms cubic-bezier(0.4, 0, 0.2, 1)');
-    root.style.setProperty('--transition-normal', '300ms cubic-bezier(0.4, 0, 0.2, 1)');
-    root.style.setProperty('--transition-slow', '500ms cubic-bezier(0.4, 0, 0.2, 1)');
-    
-    // Set theme class on body for easy targeting
-    document.body.className = `theme-${themeToApply.name} theme-type-${themeToApply.type}`;
-    
-    console.log(`🎨 Theme "${themeToApply.label}" applied`);
-  }, []);
-
-  // Change theme function
-  const changeTheme = useCallback((themeName) => {
-    const newTheme = themes[themeName] || themes.professional;
-    setTheme(newTheme);
-    
-    localStorage.setItem('app-theme', JSON.stringify({
-      name: newTheme.name,
-      label: newTheme.label,
-      type: newTheme.type
-    }));
-    
-    applyTheme(newTheme);
-    
-    // Dispatch event for other parts of app
-    window.dispatchEvent(new CustomEvent('themechange', {
-      detail: { theme: newTheme.name }
-    }));
-  }, [applyTheme]);
-
-  // Toggle between light/dark themes
-  const toggleTheme = useCallback(() => {
-    const currentThemeName = theme.name;
-    
-    if (theme.type === 'light') {
-      // Find a dark theme
-      const darkTheme = Object.values(themes).find(t => t.type === 'dark');
-      changeTheme(darkTheme?.name || 'dark');
-    } else {
-      // Find a light theme
-      const lightTheme = Object.values(themes).find(t => t.type === 'light');
-      changeTheme(lightTheme?.name || 'light');
-    }
-  }, [theme, changeTheme]);
-
-  // Get all themes
-  const getAllThemes = useCallback(() => {
-    return Object.values(themes);
-  }, []);
-
-  // Get themes by type
-  const getThemesByType = useCallback((type) => {
-    return Object.values(themes).filter(t => t.type === type);
-  }, []);
-
-  // Initialize theme
   useEffect(() => {
-    applyTheme(theme);
+    const savedTheme = localStorage.getItem('app-theme') || 'light';
+    const savedColor = localStorage.getItem('primary-color') || '#2563EB';
     
-    // Listen for system theme changes
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleSystemThemeChange = (e) => {
-      if (!localStorage.getItem('app-theme')) {
-        changeTheme(e.matches ? 'dark' : 'light');
+    setTheme(savedTheme);
+    setPrimaryColor(savedColor);
+    applyTheme(savedTheme, savedColor);
+  }, []);
+
+  const applyTheme = (newTheme, color) => {
+    const themes = {
+      light: {
+        '--bg-primary': '#FFFFFF',
+        '--bg-secondary': '#F8FAFC',
+        '--bg-card': '#FFFFFF',
+        '--text-primary': '#1F2937',
+        '--text-secondary': '#4B5563',
+        '--text-muted': '#6B7280',
+        '--border': '#E5E7EB',
+        '--header-bg': '#FFFFFF',
+        '--sidebar-bg': '#F9FAFB',
+        '--table-header': '#F3F4F6',
+        '--table-row-even': '#FFFFFF',
+        '--table-row-odd': '#F9FAFB',
+        '--success': '#10B981',
+        '--warning': '#F59E0B',
+        '--error': '#EF4444',
+        '--info': '#3B82F6'
+      },
+      dark: {
+        '--bg-primary': '#111827',
+        '--bg-secondary': '#1F2937',
+        '--bg-card': '#1F2937',
+        '--text-primary': '#F9FAFB',
+        '--text-secondary': '#D1D5DB',
+        '--text-muted': '#9CA3AF',
+        '--border': '#374151',
+        '--header-bg': '#1F2937',
+        '--sidebar-bg': '#111827',
+        '--table-header': '#374151',
+        '--table-row-even': '#1F2937',
+        '--table-row-odd': '#111827',
+        '--success': '#10B981',
+        '--warning': '#F59E0B',
+        '--error': '#EF4444',
+        '--info': '#3B82F6'
+      },
+      blue: {
+        '--bg-primary': '#EFF6FF',
+        '--bg-secondary': '#DBEAFE',
+        '--bg-card': '#FFFFFF',
+        '--text-primary': '#1E40AF',
+        '--text-secondary': '#3B82F6',
+        '--text-muted': '#60A5FA',
+        '--border': '#BFDBFE',
+        '--header-bg': '#FFFFFF',
+        '--sidebar-bg': '#DBEAFE',
+        '--table-header': '#BFDBFE',
+        '--table-row-even': '#FFFFFF',
+        '--table-row-odd': '#EFF6FF',
+        '--success': '#10B981',
+        '--warning': '#F59E0B',
+        '--error': '#EF4444',
+        '--info': '#3B82F6'
+      },
+      green: {
+        '--bg-primary': '#F0FDF4',
+        '--bg-secondary': '#DCFCE7',
+        '--bg-card': '#FFFFFF',
+        '--text-primary': '#065F46',
+        '--text-secondary': '#059669',
+        '--text-muted': '#34D399',
+        '--border': '#BBF7D0',
+        '--header-bg': '#FFFFFF',
+        '--sidebar-bg': '#DCFCE7',
+        '--table-header': '#BBF7D0',
+        '--table-row-even': '#FFFFFF',
+        '--table-row-odd': '#F0FDF4',
+        '--success': '#10B981',
+        '--warning': '#F59E0B',
+        '--error': '#EF4444',
+        '--info': '#3B82F6'
       }
     };
-    
-    mediaQuery.addEventListener('change', handleSystemThemeChange);
-    
-    return () => {
-      mediaQuery.removeEventListener('change', handleSystemThemeChange);
-    };
-  }, [theme, applyTheme, changeTheme]);
 
-  const contextValue = useMemo(() => ({
-    theme,
-    themes: getAllThemes(),
-    changeTheme,
-    toggleTheme,
-    getAllThemes,
-    getThemesByType
-  }), [theme, changeTheme, toggleTheme, getAllThemes, getThemesByType]);
+    const root = document.documentElement;
+    
+    // Apply primary color
+    root.style.setProperty('--primary-color', color);
+    
+    // Apply theme colors
+    const themeColors = themes[newTheme] || themes.light;
+    Object.entries(themeColors).forEach(([key, value]) => {
+      root.style.setProperty(key, value);
+    });
+    
+    // Save
+    localStorage.setItem('app-theme', newTheme);
+    localStorage.setItem('primary-color', color);
+    
+    console.log(`Theme applied: ${newTheme}, Primary color: ${color}`);
+  };
+
+  const changeTheme = (newTheme) => {
+    setTheme(newTheme);
+    applyTheme(newTheme, primaryColor);
+  };
+
+  const changePrimaryColor = (color) => {
+    setPrimaryColor(color);
+    applyTheme(theme, color);
+  };
+
+  const resetTheme = () => {
+    changeTheme('light');
+    changePrimaryColor('#2563EB');
+  };
 
   return (
-    <ThemeContext.Provider value={contextValue}>
+    <ThemeContext.Provider value={{
+      theme,
+      primaryColor,
+      changeTheme,
+      changePrimaryColor,
+      resetTheme
+    }}>
       {children}
     </ThemeContext.Provider>
   );
-};
-
-export const useTheme = () => {
-  const context = useContext(ThemeContext);
-  if (!context) {
-    throw new Error('useTheme must be used within a ThemeProvider');
-  }
-  return context;
 };

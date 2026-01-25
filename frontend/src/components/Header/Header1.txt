@@ -1,0 +1,135 @@
+// src/components/Header/Header.jsx
+import React, { useEffect, useRef, useState } from "react";
+import { FiSettings, FiLogOut } from "react-icons/fi";
+import { useNavigate } from "react-router-dom";
+import NotificationBell from './NotificationBell';
+import "./Header.css";
+
+const Header = ({
+  title = "Flattening Section",
+  subtitle = "Wire flattening process management"
+}) => {
+  const navigate = useNavigate();
+  const tickerRef = useRef(null);
+  const [isMobile, setIsMobile] = useState(false);
+  
+  // ✅ Simple user data (no external dependency)
+  const user = {
+    display_name: localStorage.getItem('userName') || "Admin User",
+    email: localStorage.getItem('userEmail') || "admin@pwi.com",
+    initials: localStorage.getItem('userInitials') || "AU"
+  };
+
+  const getInitials = (name) => {
+    const parts = name.trim().split(" ");
+    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+    return name.slice(0, 2).toUpperCase();
+  };
+
+  const initials = user.initials || getInitials(user.display_name);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  // Ticker Animation
+  useEffect(() => {
+    if (isMobile || !tickerRef.current) return;
+    let animationId;
+    let position = 0;
+    const animate = () => {
+      position -= 0.8;
+      if (position <= -400) position = 0;
+      if (tickerRef.current) tickerRef.current.style.transform = `translateX(${position}px)`;
+      animationId = requestAnimationFrame(animate);
+    };
+    animationId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animationId);
+  }, [isMobile]);
+
+  const handleLogout = () => {
+    localStorage.clear();
+    sessionStorage.clear();
+    navigate("/login");
+  };
+
+  return (
+    <div 
+      className="header-container"
+      style={{
+        width: "100%",
+        background: "linear-gradient(135deg, #2563EB 0%, #3B82F6 50%, #1D4ED8 100%)",
+        borderBottom: "2px solid #E2E8F0",
+        color: "#FFFFFF",
+        margin: "0",
+        padding: "0",
+      }}
+    >
+      {/* Ticker Bar */}
+      {!isMobile && (
+        <div className="ticker-bar" style={{ background: "linear-gradient(90deg, #2563EB 0%, #4F46E5 50%, #2563EB 100%)" }}>
+          <div ref={tickerRef} className="ticker-content">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="ticker-item">
+                <img src="/assets/images/logoA.png" alt="Logo" className="ticker-logo" />
+                <span className="ticker-text">Pakistan Wire Industries</span>
+                <span className="ticker-tag">SPI & CCD</span>
+                <span className="ticker-separator">|</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Main Header Content */}
+      <div className="header-main-content">
+        <div className="left-section">
+          <div className="logo-title-container">
+            <img src="/assets/images/logoA.png" alt="Logo" className="main-logo" />
+            <div className="title-container">
+              <h1 className="main-title">{title}</h1>
+              <p className="main-subtitle">{subtitle}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="right-section">
+          <div className="header-icons-row">
+            {/* Notification Bell Component */}
+            <NotificationBell />
+            
+            {/* Settings Button */}
+            <button className="settings-btn" onClick={() => navigate("/settings/theme")}>
+              <FiSettings />
+            </button>
+            
+            {/* USER INFO SECTION */}
+            <div className="user-section-compact" onClick={() => navigate("/profile")}>
+              <div className="user-avatar-compact">{initials}</div>
+              {!isMobile && (
+                <div className="user-info-compact">
+                  <div className="user-name-compact" style={{ fontWeight: "bold", fontSize: "14px" }}>
+                    {user.display_name}
+                  </div>
+                  <div className="user-email-compact" style={{ fontSize: "11px", opacity: 0.8 }}>
+                    {user.email}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Logout Button */}
+            <button className="logout-btn-compact" onClick={handleLogout}>
+              <FiLogOut /> {!isMobile && <span>Logout</span>}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Header;

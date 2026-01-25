@@ -1,9 +1,9 @@
 // src/contexts/ThemeToggle.jsx
 import React, { useState } from 'react';
-import { FiSun, FiMoon, FiPalette, FiCheck } from 'react-icons/fi';
+import { FiSun, FiDroplet, FiCheck } from 'react-icons/fi';
 import { useTheme } from './ThemeContext';
 
-export const ThemeToggle = () => {
+const ThemeToggle = () => {
   const { theme, toggleTheme, changeTheme, themes } = useTheme();
   const [showPalette, setShowPalette] = useState(false);
   
@@ -13,9 +13,9 @@ export const ThemeToggle = () => {
       <button 
         onClick={toggleTheme}
         className="theme-toggle-btn"
-        title={`Switch to ${theme.name === 'dark' ? 'light' : 'dark'} mode`}
+        title={`Switch theme`}
       >
-        {theme.name === 'dark' ? <FiSun /> : <FiMoon />}
+        <FiSun />
       </button>
       
       {/* Theme Palette Dropdown */}
@@ -25,7 +25,7 @@ export const ThemeToggle = () => {
           onClick={() => setShowPalette(!showPalette)}
           title="Change theme palette"
         >
-          <FiPalette />
+          <FiDroplet />
         </button>
         
         {showPalette && (
@@ -38,14 +38,14 @@ export const ThemeToggle = () => {
                   setShowPalette(false);
                 }}
                 className={`theme-preset ${theme.name === themeObj.name ? 'active' : ''}`}
-                title={themeObj.name.charAt(0).toUpperCase() + themeObj.name.slice(1)}
+                title={themeObj.label}
               >
                 <div className="theme-preset-preview">
                   <div style={{ backgroundColor: themeObj.colors.primary }}></div>
-                  <div style={{ backgroundColor: themeObj.colors.secondary }}></div>
                   <div style={{ backgroundColor: themeObj.colors.background }}></div>
+                  <div style={{ backgroundColor: themeObj.colors.textPrimary }}></div>
                 </div>
-                <span>{themeObj.name}</span>
+                <span>{themeObj.label}</span>
                 {theme.name === themeObj.name && <FiCheck className="theme-check-icon" />}
               </button>
             ))}
@@ -55,3 +55,5 @@ export const ThemeToggle = () => {
     </div>
   );
 };
+
+export default ThemeToggle;

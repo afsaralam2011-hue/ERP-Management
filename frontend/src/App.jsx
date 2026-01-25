@@ -5,27 +5,17 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
-
-/* ========== THEME CONTEXT & STYLES ========== */
 import { ThemeProvider } from "./contexts/ThemeContext";
-import './styles/global.css';  // ✅ YAHAN HUMARA PROFESSIONAL GLOBAL CSS IMPORT KAREIN
+import './styles/global.css';
 import './output.css';
-
-
-/* ========== COMMON COMPONENTS ========== */
 import Layout from "./components/common/Layout";
 import ProtectedRoute from "./pages/auth/ProtectedRoute";
-
-/* ========== AUTH PAGES ========== */
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
-
-/* ========== SETTINGS PAGES ========== */
-import ThemeSettings from "./pages/Settings/ThemeSettings";
-
-/* ========== DASHBOARDS ========== */
+import ThemeSettings from './pages/Settings/ThemeSettings';
+import ChromeThemeSettings from './pages/Settings/ChromeThemeSettings';
 import Dashboard from "./pages/dashboard/Dashboard";
 import HRDashboard from "./pages/departments/HR/HRDashboard";
 import FinanceDashboard from "./pages/departments/Finance/FinanceDashboard";
@@ -33,42 +23,30 @@ import SalesDashboard from "./pages/departments/Sales/SalesDashboard";
 import ITDashboard from "./pages/departments/IT/ITDashboard";
 import LogisticsDashboard from "./pages/departments/Logistics/LogisticsDashboard";
 import ProductionDashboard from "./components/departments/Production/ProductionDashboard";
-
-/* ========== PRODUCTION SECTIONS ========== */
 import ProductionSections from "./pages/ProductionSections/Production";
-
-/* ========== FLATTENING ========== */
 import FlatteningPage from "./pages/ProductionSections/FlatteningSection/FlatteningPage";
 import FlatteningForm from "./pages/ProductionSections/FlatteningSection/FlatteningForm";
 import FlatteningEditForm from "./pages/ProductionSections/FlatteningSection/FlatteningEditForm";
 import FlatteningView from "./pages/ProductionSections/FlatteningSection/FlatteningView";
 import FlatteningSmartForm from "./pages/ProductionSections/FlatteningSection/FlatteningSmartForm";
-
-/* ========== SPIRAL ========== */
 import SpiralPage from "./pages/ProductionSections/SpiralSection/SpiralPage";
 import SpiralForm from "./pages/ProductionSections/SpiralSection/SpiralForm";
 import SpiralEditForm from "./pages/ProductionSections/SpiralSection/SpiralEditForm";
 import SpiralView from "./pages/ProductionSections/SpiralSection/SpiralView";
 import SpiralSmartForm from "./pages/ProductionSections/SpiralSection/SpiralSmartForm";
 import SpiralMultiEntryForm from "./pages/ProductionSections/SpiralSection/SpiralMultiEntryForm";
-
-/* ========== RAW MATERIAL ========== */
 import RawMaterialPage from "./pages/ProductionSections/RawMaterialSection/RawMaterialPage";
 import RawMaterialLogForm from "./pages/ProductionSections/RawMaterialSection/RawMaterialLogForm";
 import MaterialReceivedForm from "./pages/ProductionSections/RawMaterialSection/MaterialReceivedForm";
 import MaterialIssueForm from "./pages/ProductionSections/RawMaterialSection/MaterialIssueForm";
 import RawMaterialEditForm from "./pages/ProductionSections/RawMaterialSection/RawMaterialEditForm";
 import RawMaterialForm from "./pages/ProductionSections/RawMaterialSection/RawMaterialForm";
-
-/* ========== PVC COATING ========== */
 import PVCCoatingPage from "./pages/ProductionSections/PVCCoatingSection/PVCCoatingPage";
 import PVCCoatingForm from "./pages/ProductionSections/PVCCoatingSection/PVCCoatingForm";
 import PVCCoatingEditForm from "./pages/ProductionSections/PVCCoatingSection/PVCCoatingEditForm";
 import PVCCoatingView from "./pages/ProductionSections/PVCCoatingSection/PVCCoatingView";
 import PVCSmartForm from "./pages/ProductionSections/PVCCoatingSection/PVCSmartForm";
 import PVCCoatingMultiEntryForm from "./pages/ProductionSections/PVCCoatingSection/PVCCoatingMultiEntryForm";
-
-/* ========== REPORTS ========== */
 import DailyProductionReport from "./pages/ProductionReports/DailyProductionReport";
 import FlatteningInventoryReport from "./components/FlatteningInventoryReport";
 import FlatteningInventoryLedger from "./components/FlatteningInventoryLedger";
@@ -80,15 +58,12 @@ function App() {
         <div className="App">
           <main>
             <Routes>
-              {/* ========== AUTH ROUTES (No Layout) ========== */}
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
 
-              {/* ========== PROTECTED ROUTES ========== */}
               <Route element={<ProtectedRoute />}>
-                {/* Main Dashboard */}
                 <Route
                   path="/dashboard"
                   element={
@@ -98,7 +73,6 @@ function App() {
                   }
                 />
                 
-                {/* ========== SETTINGS ROUTES ========== */}
                 <Route 
                   path="/settings/theme" 
                   element={
@@ -107,8 +81,12 @@ function App() {
                     </Layout>
                   } 
                 />
+                
+                <Route 
+                  path="/settings/chrome-theme" 
+                  element={<ChromeThemeSettings />} 
+                />
 
-                {/* Department Dashboards */}
                 <Route 
                   path="/hr" 
                   element={
@@ -158,7 +136,6 @@ function App() {
                   } 
                 />
 
-                {/* Production Sections */}
                 <Route 
                   path="/production-sections" 
                   element={
@@ -168,7 +145,6 @@ function App() {
                   } 
                 />
 
-                {/* Flattening */}
                 <Route 
                   path="/production-sections/flattening" 
                   element={
@@ -210,7 +186,6 @@ function App() {
                   } 
                 />
 
-                {/* Spiral */}
                 <Route 
                   path="/production-sections/spiral" 
                   element={
@@ -260,7 +235,6 @@ function App() {
                   } 
                 />
 
-                {/* Raw Material */}
                 <Route 
                   path="/production-sections/raw-material" 
                   element={
@@ -310,7 +284,6 @@ function App() {
                   } 
                 />
 
-                {/* PVC */}
                 <Route 
                   path="/production-sections/pvc-coating" 
                   element={
@@ -360,7 +333,6 @@ function App() {
                   } 
                 />
                 
-                {/* Reports */}
                 <Route 
                   path="/production-reports/daily" 
                   element={
@@ -385,9 +357,9 @@ function App() {
                     </Layout>
                   } 
                 />
+
               </Route>
 
-              {/* ========== DEFAULT ROUTES ========== */}
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Routes>

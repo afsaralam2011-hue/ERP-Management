@@ -2,7 +2,7 @@
   "name": "erp-backend",
   "version": "1.0.0",
   "description": "Backend API for Devine Water ERP Management System",
-  "type": "module",
+
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",

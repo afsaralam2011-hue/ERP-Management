@@ -1,10 +1,12 @@
+// frontend/src/components/common/Layout.jsx
+
 import React, { useEffect, useState } from "react";
 import Header from "../Header/Header";
 import Navigation from "./Navigation";
 import { useTheme } from "../../contexts/ThemeContext";
 import "./Layout.css";
 
-const SIDEBAR_COLLAPSED = 70;
+const SIDEBAR_COLLAPSED = 60;
 const SIDEBAR_EXPANDED = 280;
 const MOBILE_TOP_GAP = 60;
 
@@ -37,26 +39,26 @@ const Layout = ({
       className="layout-container" 
       style={{ 
         display: "flex", 
-        height: "100vh", // پوری اسکرین کی بلندی
-        width: "100vw",  // پوری اسکرین کی چوڑائی
-        overflow: "hidden", // اسکرین سے باہر کچھ نہیں جائے گا
-        background: theme.colors.background 
+        height: "100vh", 
+        width: "100vw", 
+        overflow: "hidden",
+        // background: theme.colors.background
       }}
     >
       
-      {/* سائیڈ بار - یہ اپنی جگہ فکس رہے گا */}
+      {/* Sidebar */}
       {showSidebar && (
         <aside
           onMouseEnter={() => !isMobile && setSidebarOpen(true)}
           onMouseLeave={() => !isMobile && setSidebarOpen(false)}
           style={{
             width: isMobile ? (sidebarOpen ? SIDEBAR_EXPANDED : 0) : sidebarWidth,
-            flexShrink: 0, // یہ اپنی چوڑائی نہیں چھوڑے گا
+            flexShrink: 0,
             height: "100%",
             transition: "width 0.3s ease",
             background: "#fff",
             zIndex: 1000,
-            borderRight: "1px solid #eee",
+            // borderRight: "1px solid #eee", // بارڈر ہٹا دیا
             overflowX: "hidden"
           }}
         >
@@ -64,25 +66,25 @@ const Layout = ({
         </aside>
       )}
 
-      {/* ہیڈر اور مواد کا مین کنٹینر */}
+      {/* Main Wrapper */}
       <div
         className="main-wrapper"
         style={{
           display: "flex",
           flexDirection: "column",
-          flexGrow: 1, // باقی تمام جگہ یہ لے گا
-          width: `calc(100% - ${sidebarWidth}px)`, // چوڑائی کو سائیڈ بار کے حساب سے سیٹ کیا
+          flexGrow: 1,
+          width: `calc(100% - ${sidebarWidth}px)`,
           height: "100vh",
-          overflow: "hidden", // یہ پورے اسٹرکچر کو اسکرین کے اندر رکھے گا
+          overflow: "hidden",
           transition: "width 0.3s ease",
           position: "relative"
         }}
       >
-        {/* فکسڈ ہیڈر - اب یہ ہلے گا نہیں */}
+        {/* Header */}
         {showHeader && (
           <header 
             style={{ 
-              height: "70px", // ہیڈر کی فکسڈ اونچائی
+              height: "60px",
               width: "100%",
               flexShrink: 0,
               zIndex: 900,
@@ -95,25 +97,49 @@ const Layout = ({
           </header>
         )}
 
-        {/* اسکرول ہونے والا مواد - پیج کا ڈیٹا یہاں آئے گا */}
+        {/* Sub Header */}
+        <div
+          style={{
+            height: "50px",
+            width: "100%",
+            flexShrink: 0,
+            background: "#f9f9f9",
+            display: "flex",
+            alignItems: "center",
+            padding: "0 0px",
+            boxSizing: "border-box",
+          }}
+        >
+          {subtitle}
+        </div>
+
+        {/* Scrollable Content */}
         <main 
           className="content-area" 
           style={{ 
             flexGrow: 1, 
-            overflowY: "auto", // صرف اوپر نیچے اسکرول ہوگا، دائیں بائیں نہیں
-            overflowX: "auto", // اگر ٹیبل بہت بڑا ہے تو صرف اس حصے میں اسکرول بار آئے گا
-            padding: "20px",
+            overflowY: "auto", 
+            overflowX: "auto", 
+            padding: "0px", // سائیڈوں کا گیپ ختم کیا
             boxSizing: "border-box",
-            width: "100%"
+            width: "100%",
+            display: "flex",
+            justifyContent: "center", // افقی سینٹر
+            alignItems: "flex-start" // اوپر سے شروع کریں
           }}
         >
-          <div style={{ minWidth: "100%", display: "inline-block" }}>
+          <div style={{ 
+            width: "100%",
+            maxWidth: "100%",
+            padding: "0px",
+            boxSizing: "border-box"
+          }}>
             {children}
           </div>
         </main>
       </div>
 
-      {/* موبائل بیک ڈراپ */}
+      {/* Mobile Backdrop */}
       {isMobile && sidebarOpen && (
         <div 
           onClick={() => setSidebarOpen(false)}

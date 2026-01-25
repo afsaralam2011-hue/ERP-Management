@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
   <head>
     <meta charset="utf-8" />
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
@@ -37,10 +37,10 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     
-    <!-- REMOVED: External theme CSS files (They conflict with React ThemeContext) -->
-    <!-- <link rel="stylesheet" href="%PUBLIC_URL%/theme-variables.css"> -->
-    <!-- <link rel="stylesheet" href="%PUBLIC_URL%/light-theme.css"> -->
-    <!-- <link rel="stylesheet" href="%PUBLIC_URL%/dark-theme.css"> -->
+    <!-- Theme System CSS -->
+    <link rel="stylesheet" href="%PUBLIC_URL%/theme-variables.css">
+    <link rel="stylesheet" href="%PUBLIC_URL%/light-theme.css">
+    <link rel="stylesheet" href="%PUBLIC_URL%/dark-theme.css">
     
     <title>Pakistan Wire Industries</title>
     
@@ -76,7 +76,7 @@
         }
       }
       
-      /* Body Styles - USING CSS VARIABLES FROM REACT THEMECONTEXT */
+      /* Body Styles */
       body {
         margin: 0;
         padding: 0;
@@ -85,13 +85,12 @@
           sans-serif;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
-        background-color: var(--bg-primary, #FFFFFF); /* Fallback to white */
-        color: var(--text-primary, #1F2937); /* Fallback to dark gray */
+        background-color: var(--bg-primary);
+        color: var(--text-primary);
         line-height: 1.5;
         height: 100%;
         overflow-x: hidden;
         touch-action: manipulation;
-        transition: background-color 0.3s ease, color 0.3s ease;
       }
       
       /* Root Container */
@@ -100,14 +99,14 @@
         min-height: 100vh;
       }
       
-      /* Welcome Screen Styles - USING CSS VARIABLES */
+      /* Welcome Screen Styles */
       .welcome-screen {
         position: fixed;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
-        background: linear-gradient(135deg, var(--primary-color, #005461), #00363d);
+        background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -156,7 +155,7 @@
         font-size: 3rem;
         font-weight: bold;
         margin: 2rem 0;
-        color: #00B7B5; /* Fixed color for visibility */
+        color: var(--color-secondary);
         text-shadow: 0 2px 10px rgba(0, 183, 181, 0.3);
         animation: countdownPulse 1s infinite;
       }
@@ -172,7 +171,7 @@
       
       .progress-fill {
         height: 100%;
-        background: linear-gradient(90deg, #00B7B5, #00D4D2);
+        background: linear-gradient(90deg, var(--color-secondary), var(--color-secondary-light));
         width: 0%;
         transition: width 0.3s ease;
         border-radius: 4px;
@@ -185,7 +184,7 @@
         justify-content: center;
         align-items: center;
         height: 100vh;
-        background: linear-gradient(135deg, var(--primary-color, #005461), #00363d);
+        background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
         color: white;
       }
       
@@ -199,11 +198,11 @@
         margin-bottom: 20px;
       }
       
-      /* Theme Toggle Button Styles - USING CSS VARIABLES */
+      /* Theme Toggle Button Styles */
       .theme-toggle-button {
-        background: var(--bg-card, #FFFFFF);
-        color: var(--text-primary, #1F2937);
-        border: 1px solid var(--border, #E5E7EB);
+        background: var(--btn-primary-bg);
+        color: var(--btn-primary-text);
+        border: none;
         border-radius: 12px;
         padding: 10px;
         cursor: pointer;
@@ -216,26 +215,26 @@
       }
       
       .theme-toggle-button:hover {
-        background: var(--bg-secondary, #F8FAFC);
+        background: var(--btn-primary-hover);
         transform: translateY(-2px);
       }
       
-      /* Theme Change Notification - USING CSS VARIABLES */
+      /* Theme Change Notification */
       .theme-change-notification {
         position: fixed;
         top: 20px;
         right: 20px;
-        background: var(--bg-card, #FFFFFF);
-        color: var(--text-primary, #1F2937);
+        background: var(--bg-secondary);
+        color: var(--text-primary);
         padding: 12px 20px;
         border-radius: 12px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 4px 20px var(--shadow-color);
         z-index: 9999;
         font-weight: 600;
         display: flex;
         align-items: center;
         gap: 10px;
-        border: 1px solid var(--border, #E5E7EB);
+        border: 1px solid var(--border-color);
         animation: slideIn 0.3s ease, fadeOut 0.3s ease 2s forwards;
       }
       
@@ -352,36 +351,15 @@
         }
       }
       
-      /* DARK THEME OVERRIDES - REMOVED data-theme selectors since React handles themes */
-      /* All theme colors are now handled by React ThemeContext via CSS Variables */
-      
-      /* Ensure text colors have proper contrast */
-      .text-contrast {
-        color: var(--text-primary) !important;
+      /* Dark theme adjustments for welcome screen */
+      [data-theme="dark"] .welcome-screen {
+        background: linear-gradient(135deg, #00363d, #005461);
+        color: #f1f5f9;
       }
       
-      /* Ensure background colors are properly themed */
-      .bg-themed {
-        background-color: var(--bg-card) !important;
-      }
-      
-      /* Table header specific styling */
-      .table-header-fix {
-        background-color: var(--table-header) !important;
-        color: var(--text-primary) !important;
-      }
-      
-      /* Dropdown/Select specific styling */
-      .select-fix {
-        background-color: var(--bg-secondary) !important;
-        color: var(--text-primary) !important;
-        border-color: var(--border) !important;
-      }
-      
-      /* Button specific styling */
-      .btn-primary-fix {
-        background-color: var(--primary-color) !important;
-        color: var(--btn-text-color, white) !important;
+      [data-theme="dark"] .app-loading {
+        background: linear-gradient(135deg, #00363d, #005461);
+        color: #f1f5f9;
       }
     </style>
     
@@ -518,6 +496,9 @@
     <!-- Main App Container -->
     <div id="root"></div>
     
+    <!-- Theme Toggle Script -->
+    <script src="%PUBLIC_URL%/theme-toggle.js"></script>
+    
     <!-- Main Script -->
     <script>
       // Global variables
@@ -538,7 +519,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, #00B7B5, #005461);
+            background: linear-gradient(135deg, var(--color-secondary), var(--color-primary));
             border-radius: 50%;
             color: white;
             font-size: 3rem;
@@ -785,7 +766,7 @@
           
           // Change color when 5 seconds remain
           if (timeLeft <= 5) {
-            countdownElement.style.color = '#EF4444';
+            countdownElement.style.color = 'var(--color-error)';
             countdownElement.style.animation = 'none';
           }
           
@@ -815,37 +796,51 @@
           }
         }
         
-        // REMOVED: Theme management from HTML (Now handled by React)
-        // Just show a simple toggle that doesn't interfere with React
-        
-        // Get current theme from localStorage if exists
-        const savedTheme = localStorage.getItem('pwi_theme') || 'light';
-        updateWelcomeThemeButton(savedTheme);
+        // Get current theme
+        const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+        updateWelcomeThemeButton(currentTheme);
         
         // Add click event
         welcomeThemeToggle.addEventListener('click', function() {
-          // Just show notification, let React handle theme changes
-          const currentTheme = localStorage.getItem('pwi_theme') || 'light';
-          const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-          
-          // Save to localStorage (React will read this)
-          localStorage.setItem('pwi_theme', newTheme);
-          updateWelcomeThemeButton(newTheme);
-          
-          // Show notification
-          const notification = document.createElement('div');
-          notification.className = 'theme-change-notification';
-          notification.innerHTML = `
-            <span>Theme preference saved: ${newTheme === 'dark' ? 'Dark' : 'Light'}</span>
-            <span style="font-size: 1.2em;">${newTheme === 'dark' ? '🌙' : '☀️'}</span>
-          `;
-          document.body.appendChild(notification);
-          
-          setTimeout(() => {
-            if (notification.parentNode) {
-              notification.parentNode.removeChild(notification);
+          // Toggle theme using global function if available
+          if (window.toggleTheme) {
+            const newTheme = window.toggleTheme();
+            updateWelcomeThemeButton(newTheme);
+          } else {
+            // Fallback toggle
+            const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            
+            // Apply theme
+            document.documentElement.setAttribute('data-theme', newTheme);
+            updateWelcomeThemeButton(newTheme);
+            
+            // Save to localStorage
+            try {
+              localStorage.setItem('pwi_theme', newTheme);
+            } catch (e) {
+              console.error('Error saving theme:', e);
             }
-          }, 2300);
+            
+            // Show notification
+            const notification = document.createElement('div');
+            notification.className = 'theme-change-notification';
+            notification.innerHTML = `
+              <span>Switched to ${newTheme === 'dark' ? 'Dark' : 'Light'} theme</span>
+            `;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+              if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+              }
+            }, 2300);
+          }
+        });
+        
+        // Listen for theme changes from theme manager
+        window.addEventListener('theme-change', (event) => {
+          updateWelcomeThemeButton(event.detail.theme);
         });
       }
       
