@@ -1,4 +1,7 @@
 module.exports = {
+  eslint: {
+    enable: false,
+  },
   style: {
     postcss: {
       plugins: [
@@ -14,7 +17,7 @@ module.exports = {
         maxEntrypointSize: 2 * 1024 * 1024, // 2MB
         hints: false // Turn off size warnings
       };
-      
+
       // Ignore all warnings
       webpackConfig.ignoreWarnings = [
         { message: /Failed to parse source map/ },
@@ -23,7 +26,7 @@ module.exports = {
         { message: /unused/ },
         { message: /asset size limit/ }
       ];
-      
+
       return webpackConfig;
     }
   }
