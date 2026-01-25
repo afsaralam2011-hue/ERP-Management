@@ -3,25 +3,30 @@
 ================================ */
 :root {
   --bg-main: #0b0f1a;
-  --card-bg: rgba(255, 255, 255, 0.08);
-  --input-bg: rgba(255, 255, 255, 0.12);
-  --border: rgba(255, 255, 255, 0.25);
+  --bg-gradient-start: #1a1f3c;
+  --card-bg: rgba(30, 41, 59, 0.7);
+  /* Slightly more opaque for better contrast */
+  --input-bg: rgba(255, 255, 255, 0.08);
+  /* Reduced opacity for cleaner look */
+  --border: rgba(255, 255, 255, 0.2);
   --text-main: #ffffff;
-  --text-muted: #cfd3ff;
-  --accent: #6aece1;
-  --error: #fa5c5c;
-  transition: all 0.5s ease;
+  --text-muted: #94a3b8;
+  --accent: #38bdf8;
+  /* Brighter accent */
+  --error: #fb7185;
+  transition: all 0.3s ease;
 }
 
 [data-theme="light"] {
-  --bg-main: #f4f6fb;
-  --card-bg: #ffffff;
-  --input-bg: #f1f3f8;
-  --border: #d0d4e4;
+  --bg-main: #f0fdf4;
+  --bg-gradient-start: #ffffff;
+  --card-bg: rgba(255, 255, 255, 0.9);
+  --input-bg: #f8fafc;
+  --border: #e2e8f0;
   --text-main: #0f172a;
-  --text-muted: #475569;
-  --accent: #2563eb;
-  --error: #dc2626;
+  --text-muted: #64748b;
+  --accent: #0ea5e9;
+  --error: #ef4444;
 }
 
 /* ===============================
@@ -30,10 +35,10 @@
 .erp-bg {
   min-height: 100vh;
   width: 100%;
-  background: radial-gradient(circle at top, #1a1f3c, var(--bg-main));
+  background: radial-gradient(circle at top, var(--bg-gradient-start), var(--bg-main));
   position: relative;
   overflow: hidden;
-  font-family: "Inter", sans-serif;
+  font-family: "Inter", "Segoe UI", sans-serif;
   color: var(--text-main);
   transition: all 0.5s ease;
 }
@@ -51,8 +56,13 @@
 }
 
 @keyframes floatPWI {
-  from { transform: translateY(0) rotate(0deg); }
-  to { transform: translateY(-120vh) rotate(360deg); }
+  from {
+    transform: translateY(0) rotate(0deg);
+  }
+
+  to {
+    transform: translateY(-120vh) rotate(360deg);
+  }
 }
 
 /* ===============================
@@ -133,7 +143,7 @@
   height: 42px;
   border-radius: 12px;
   object-fit: contain;
-  
+
 }
 
 .erp-brand-inline span {
@@ -144,34 +154,38 @@
 /* ===============================
    TITLES
 ================================ */
+/* ===============================
+   TITLES
+================================ */
 .erp-title {
   text-align: center;
-  font-size: 22px;
-  margin-bottom: 6px;
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--text-main);
 }
 
 .erp-subtitle {
   text-align: center;
-  font-size: 14px;
+  font-size: 15px;
   color: var(--text-muted);
-  margin-bottom: 24px;
+  margin-bottom: 32px;
 }
 
 /* ===============================
    ERROR
 ================================ */
 .erp-error {
-  background: rgba(250, 92, 92, 0.15);
+  background: rgba(239, 68, 68, 0.1);
   border: 1px solid var(--error);
   color: var(--error);
-  padding: 10px 12px;
-  border-radius: 10px;
+  padding: 12px;
+  border-radius: 8px;
   font-size: 14px;
   display: flex;
-  gap: 8px;
+  gap: 10px;
   align-items: center;
-  margin-bottom: 16px;
-  transition: all 0.5s ease;
+  margin-bottom: 20px;
 }
 
 /* ===============================
@@ -179,37 +193,43 @@
 ================================ */
 .erp-input {
   position: relative;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .erp-input svg {
   position: absolute;
   top: 50%;
-  left: 14px;
+  left: 16px;
   transform: translateY(-50%);
   color: var(--text-muted);
+  font-size: 18px;
+  pointer-events: none;
+  z-index: 10;
 }
 
 .erp-input input {
   width: 100%;
-  height: 48px;
-  padding: 0 44px;
+  height: 52px;
+  padding: 0 16px 0 48px;
   border-radius: 12px;
   border: 1px solid var(--border);
   background: var(--input-bg);
   color: var(--text-main);
-  font-size: 14px;
+  font-size: 15px;
   outline: none;
-  transition: all 0.5s ease;
+  transition: all 0.3s ease;
 }
 
 .erp-input input::placeholder {
   color: var(--text-muted);
+  opacity: 0.7;
 }
 
 .erp-input input:focus {
   border-color: var(--accent);
-  background: var(--input-bg);
+  background: rgba(255, 255, 255, 0.05);
+  /* Slight highlight on focus */
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.1);
 }
 
 /* Eye button */
@@ -296,18 +316,28 @@
 /* ===============================
    INPUT FIXES
 ================================ */
+/* ===============================
+   INPUT FIXES
+================================ */
 .erp-input input {
-  background: transparent !important;
+  background-color: var(--input-bg) !important;
   color: var(--text-main) !important;
-  caret-color: var(--text-main);
-  -webkit-text-fill-color: var(--text-main);
 }
 
+/* Target autocomplete background */
 .erp-input input:-webkit-autofill,
 .erp-input input:-webkit-autofill:hover,
 .erp-input input:-webkit-autofill:focus,
 .erp-input input:-webkit-autofill:active {
-  -webkit-box-shadow: 0 0 0 1000px var(--input-bg) inset !important;
-  -webkit-text-fill-color: var(--text-main) !important;
-  transition: background-color 9999s ease-in-out 0s;
+  -webkit-box-shadow: 0 0 0 100px #1e293b inset !important;
+  /* Matches dark cardish bg */
+  -webkit-text-fill-color: #ffffff !important;
+  transition: background-color 5000s ease-in-out 0s;
+  caret-color: #ffffff;
+}
+
+[data-theme="light"] .erp-input input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 100px #f8fafc inset !important;
+  -webkit-text-fill-color: #0f172a !important;
+  caret-color: #0f172a;
 }
