@@ -80,6 +80,7 @@ const DailyProductionReport = () => {
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [tableScrollPosition, setTableScrollPosition] = useState(0);
   const [expandedRemarks, setExpandedRemarks] = useState({});
+  const [activeRemarksId, setActiveRemarksId] = useState(null);
 
   const tableContainerRef = useRef(null);
   const remarksRefs = useRef({});
@@ -2588,10 +2589,24 @@ const DailyProductionReport = () => {
   // 🔥 Improved toggleRemarks function for mobile and desktop
   const toggleRemarks = useCallback((itemId, e) => {
     if (e) e.stopPropagation();
+    
+    // Close any currently open remarks popup
+    if (activeRemarksId === itemId) {
+      setActiveRemarksId(null);
+    } else {
+      setActiveRemarksId(itemId);
+    }
+    
+    // Also toggle expandedRemarks for the inline view
     setExpandedRemarks((prev) => ({
       ...prev,
       [itemId]: !prev[itemId],
     }));
+  }, [activeRemarksId]);
+
+  // Close remarks popup when clicking outside
+  const closeRemarksPopup = useCallback(() => {
+    setActiveRemarksId(null);
   }, []);
 
   useEffect(() => {
@@ -2608,6 +2623,15 @@ const DailyProductionReport = () => {
       ) {
         setShowMobileDepartmentDropdown(false);
       }
+      
+      // Close remarks popup when clicking outside
+      if (
+        activeRemarksId &&
+        !event.target.closest(`.${styles.remarksPopupContainer}`) &&
+        !event.target.closest(`.${styles.remarksToggle}`)
+      ) {
+        setActiveRemarksId(null);
+      }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
@@ -2617,14 +2641,16 @@ const DailyProductionReport = () => {
       document.removeEventListener("mousedown", handleClickOutside);
       document.removeEventListener("touchstart", handleClickOutside);
     };
-  }, [showDepartmentDropdown, showMobileDepartmentDropdown]);
+  }, [showDepartmentDropdown, showMobileDepartmentDropdown, activeRemarksId]);
 
   useEffect(() => {
     fetchActualData();
   }, [fetchActualData]);
 
-  // 🔥 WhatsApp Modal Component - Dark theme compatible
+  // 🔥 WhatsApp Modal Component - Fixed version
   const WhatsAppModal = () => {
+    if (!showWhatsAppModal) return null;
+
     const totals = calculateTotals();
     const dateStr = date.toLocaleDateString("en-US", {
       weekday: "long",
@@ -2733,12 +2759,12 @@ const DailyProductionReport = () => {
               <button
                 onClick={() => {
                   navigator.clipboard.writeText(message);
-                  alert('Report copied to clipboard. Please paste in WhatsApp.');
-                  setShowWhatsAppModal(false);
+                  setCopiedToClipboard(true);
+                  setTimeout(() => setCopiedToClipboard(false), 2000);
                 }}
                 style={{
                   padding: '12px 20px',
-                  backgroundColor: theme === "dark" ? "#3b82f6" : "#2563eb",
+                  backgroundColor: copiedToClipboard ? '#10b981' : (theme === "dark" ? "#3b82f6" : "#2563eb"),
                   color: 'white',
                   border: 'none',
                   borderRadius: '5px',
@@ -2750,7 +2776,7 @@ const DailyProductionReport = () => {
                   fontWeight: 'bold',
                 }}
               >
-                <FaCopy /> Copy Message
+                <FaCopy /> {copiedToClipboard ? 'Copied!' : 'Copy Message'}
               </button>
 
               <button
@@ -2807,38 +2833,7 @@ const DailyProductionReport = () => {
     );
   };
 
-  const deptInfo = getDepartmentInfo(selectedDepartment);
-  const isRawMaterial = deptInfo.isRawMaterial;
-
-  if (loading) {
-    return (
-      <div className={styles.loadingContainer}>
-        <div className={styles.spinner}></div>
-        <h3>
-          <FaDatabase /> Loading Production Data...
-        </h3>
-        <p>
-          Fetching real-time data from all departments for{" "}
-          {date.toLocaleDateString()}
-        </p>
-        <div
-          className={`${styles.connectionStatus} ${
-            isSupabaseConnected ? styles.connected : styles.connecting
-          }`}
-        >
-          <FaDatabase />
-          {isSupabaseConnected ? "Connected to Database" : "Connecting..."}
-        </div>
-      </div>
-    );
-  }
-
-  const filteredData = getSelectedDepartmentData();
-  const totals = calculateTotals();
-  const shiftGroups = groupByShift(filteredData);
-  const selectedDeptDisplay = getSelectedDepartmentDisplay();
-  const efficiencyLabel = getEfficiencyLabel(totals.efficiency);
-
+  // 🔥 WhatsApp Message Viewer Component
   const WhatsAppMessageViewer = () => {
     if (!showWhatsAppMessage) return null;
 
@@ -2923,37 +2918,164 @@ const DailyProductionReport = () => {
     );
   };
 
-  // 🔥 Improved RemarksOverlay component
-  const RemarksOverlay = ({ isOpen, onClose, children }) => {
-    if (!isOpen) return null;
+  // 🔥 Remarks Popup Component
+  const RemarksPopup = () => {
+    if (!activeRemarksId) return null;
+
+    const activeItem = getSelectedDepartmentData().find(item => item.id === activeRemarksId);
+    if (!activeItem) return null;
 
     return (
-      <>
+      <div 
+        className={styles.remarksPopupOverlay}
+        style={{
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 1000,
+        }}
+        onClick={closeRemarksPopup}
+      >
         <div 
-          className={styles.remarksOverlay} 
-          onClick={onClose}
+          className={styles.remarksPopupContainer}
           style={{
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            backgroundColor: getThemeColor("#ffffff", "#1f2937"),
+            color: getTextColor(),
+            borderColor: getCardBorder(),
             position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            zIndex: 1000,
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            padding: '20px',
+            borderRadius: '10px',
+            zIndex: 1001,
+            width: isMobile ? '90%' : '500px',
+            maxWidth: '90%',
+            maxHeight: '80vh',
+            overflow: 'auto',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
           }}
-        />
-        {children}
-      </>
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className={styles.remarksPopupHeader} style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '15px',
+            paddingBottom: '10px',
+            borderBottom: `1px solid ${getCardBorder()}`,
+          }}>
+            <div>
+              <span style={{ 
+                color: getTextColor(),
+                fontWeight: 'bold',
+                fontSize: '16px'
+              }}>
+                Full Remarks
+              </span>
+              <div style={{ 
+                color: getMutedTextColor(),
+                fontSize: '14px',
+                marginTop: '5px'
+              }}>
+                {activeItem.section} • {activeItem.machineId} • {activeItem.operator}
+              </div>
+            </div>
+            <button
+              onClick={closeRemarksPopup}
+              className={styles.remarksPopupClose}
+              style={{ 
+                color: getMutedTextColor(),
+                background: 'none',
+                border: 'none',
+                fontSize: '20px',
+                cursor: 'pointer',
+                padding: '5px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <FaClose />
+            </button>
+          </div>
+          <div
+            className={styles.remarksPopupContent}
+            style={{ 
+              color: getTextColor(),
+              whiteSpace: 'pre-wrap',
+              lineHeight: '1.5',
+              fontSize: '14px',
+              wordBreak: 'break-word',
+              padding: '10px',
+              backgroundColor: getThemeColor("#f9fafb", "#111827"),
+              borderRadius: '5px',
+              border: `1px solid ${getCardBorder()}`,
+            }}
+          >
+            {activeItem.remarks}
+          </div>
+          <div className={styles.remarksPopupFooter} style={{
+            marginTop: '15px',
+            paddingTop: '10px',
+            borderTop: `1px solid ${getCardBorder()}`,
+            display: 'flex',
+            justifyContent: 'flex-end',
+          }}>
+            <button
+              onClick={closeRemarksPopup}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: getThemeColor("#e5e7eb", "#374151"),
+                color: getTextColor(),
+                border: 'none',
+                borderRadius: '5px',
+                cursor: 'pointer',
+                fontSize: '14px',
+              }}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
     );
   };
 
-  const WhatsAppPopup = () => {
-    if (!showWhatsAppModal) return null;
+  const deptInfo = getDepartmentInfo(selectedDepartment);
+  const isRawMaterial = deptInfo.isRawMaterial;
 
+  if (loading) {
     return (
-      <WhatsAppModal />
+      <div className={styles.loadingContainer}>
+        <div className={styles.spinner}></div>
+        <h3>
+          <FaDatabase /> Loading Production Data...
+        </h3>
+        <p>
+          Fetching real-time data from all departments for{" "}
+          {date.toLocaleDateString()}
+        </p>
+        <div
+          className={`${styles.connectionStatus} ${
+            isSupabaseConnected ? styles.connected : styles.connecting
+          }`}
+        >
+          <FaDatabase />
+          {isSupabaseConnected ? "Connected to Database" : "Connecting..."}
+        </div>
+      </div>
     );
-  };
+  }
+
+  const filteredData = getSelectedDepartmentData();
+  const totals = calculateTotals();
+  const shiftGroups = groupByShift(filteredData);
+  const selectedDeptDisplay = getSelectedDepartmentDisplay();
+  const efficiencyLabel = getEfficiencyLabel(totals.efficiency);
 
   const MobileDepartmentDropdown = () => {
     if (!showMobileDepartmentDropdown) return null;
@@ -3086,8 +3208,16 @@ const DailyProductionReport = () => {
         color: getTextColor(),
       }}
     >
-      {showWhatsAppModal && <WhatsAppPopup />}
+      {/* WhatsApp Modal */}
+      <WhatsAppModal />
+      
+      {/* WhatsApp Message Viewer */}
       <WhatsAppMessageViewer />
+      
+      {/* Remarks Popup */}
+      <RemarksPopup />
+      
+      {/* Mobile Department Dropdown */}
       <MobileDepartmentDropdown />
 
       {isMobile && (
@@ -3819,7 +3949,6 @@ const DailyProductionReport = () => {
                         const efficiencyColor = getEfficiencyColor(
                           item.efficiency,
                         );
-                        const isExpanded = expandedRemarks[item.id];
                         const showExpandButton = isMobile ? item.remarks.length > 20 : item.remarks.length > 30;
 
                         return (
@@ -3945,23 +4074,15 @@ const DailyProductionReport = () => {
                             )}
 
                             <td className={styles.remarksCell}>
-                              <div
-                                className={styles.remarksContent}
-                                ref={(el) =>
-                                  (remarksRefs.current[item.id] = el)
-                                }
-                              >
-                                <div
-                                  className={`${styles.remarksContainer} ${isExpanded ? styles.remarksExpanded : ""}`}
-                                  onClick={(e) => e.stopPropagation()}
-                                >
+                              <div className={styles.remarksContent}>
+                                <div className={styles.remarksContainer}>
                                   <span
                                     className={styles.remarksText}
                                     style={{ color: getMutedTextColor() }}
                                   >
-                                    {isMobile && !isExpanded && showExpandButton
+                                    {isMobile && showExpandButton
                                       ? item.remarks.substring(0, 20) + "..."
-                                      : !isMobile && !isExpanded && showExpandButton
+                                      : !isMobile && showExpandButton
                                       ? item.remarks.substring(0, 30) + "..."
                                       : item.remarks}
                                   </span>
@@ -3969,7 +4090,7 @@ const DailyProductionReport = () => {
                                     <button
                                       className={styles.remarksToggle}
                                       onClick={(e) => toggleRemarks(item.id, e)}
-                                      title={isExpanded ? "Collapse remarks" : "Expand remarks"}
+                                      title="View full remarks"
                                       style={{
                                         background: 'none',
                                         border: 'none',
@@ -3980,86 +4101,10 @@ const DailyProductionReport = () => {
                                         fontSize: '12px',
                                       }}
                                     >
-                                      {isExpanded ? <FaCompress /> : <FaExpand />}
+                                      <FaExpand />
                                     </button>
                                   )}
                                 </div>
-
-                                <RemarksOverlay
-                                  isOpen={isExpanded}
-                                  onClose={() => toggleRemarks(item.id)}
-                                >
-                                  <div
-                                    className={styles.remarksFull}
-                                    style={{
-                                      backgroundColor: getThemeColor(
-                                        "#ffffff",
-                                        "#1f2937",
-                                      ),
-                                      color: getTextColor(),
-                                      borderColor: getCardBorder(),
-                                      position: 'fixed',
-                                      top: '50%',
-                                      left: '50%',
-                                      transform: 'translate(-50%, -50%)',
-                                      padding: '20px',
-                                      borderRadius: '10px',
-                                      zIndex: 1001,
-                                      width: isMobile ? '90%' : '500px',
-                                      maxWidth: '90%',
-                                      maxHeight: '80vh',
-                                      overflow: 'auto',
-                                      boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
-                                    }}
-                                    onClick={(e) => e.stopPropagation()}
-                                  >
-                                    <div className={styles.remarksFullHeader} style={{
-                                      display: 'flex',
-                                      justifyContent: 'space-between',
-                                      alignItems: 'center',
-                                      marginBottom: '15px',
-                                      paddingBottom: '10px',
-                                      borderBottom: `1px solid ${getCardBorder()}`,
-                                    }}>
-                                      <span style={{ 
-                                        color: getTextColor(),
-                                        fontWeight: 'bold',
-                                        fontSize: '16px'
-                                      }}>
-                                        Full Remarks
-                                      </span>
-                                      <button
-                                        onClick={() => toggleRemarks(item.id)}
-                                        className={styles.remarksClose}
-                                        style={{ 
-                                          color: getMutedTextColor(),
-                                          background: 'none',
-                                          border: 'none',
-                                          fontSize: '20px',
-                                          cursor: 'pointer',
-                                          padding: '5px',
-                                          display: 'flex',
-                                          alignItems: 'center',
-                                          justifyContent: 'center',
-                                        }}
-                                      >
-                                        <FaClose />
-                                      </button>
-                                    </div>
-                                    <div
-                                      className={styles.remarksFullContent}
-                                      style={{ 
-                                        color: getTextColor(),
-                                        whiteSpace: 'pre-wrap',
-                                        lineHeight: '1.5',
-                                        fontSize: '14px',
-                                        wordBreak: 'break-word',
-                                      }}
-                                    >
-                                      {item.remarks}
-                                    </div>
-                                  </div>
-                                </RemarksOverlay>
                               </div>
                             </td>
                           </tr>
