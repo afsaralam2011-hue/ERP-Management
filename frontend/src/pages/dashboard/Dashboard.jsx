@@ -493,39 +493,42 @@ const Dashboard = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                <div className="stats-grid">
                   {quickStats.map((stat) => (
                     <div
                       key={stat.id}
-                      className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
+                      className="stat-card"
                       style={{
                         backgroundColor: getThemeColor("#ffffff", "#1f2937"),
                         borderColor: getThemeColor("#e5e7eb", "#374151")
                       }}
                     >
-                      <div className="flex items-start justify-between">
+                      <div className="stat-content">
                         <div
-                          className="p-3 rounded-lg flex items-center justify-center text-white"
+                          className="stat-icon"
                           style={{ backgroundColor: stat.color }}
                         >
                           {stat.icon}
                         </div>
-                        <div className={`text-xs font-medium px-2 py-1 rounded-full ${stat.trend === 'up' ? 'text-green-600 bg-green-50' : 'text-red-600 bg-red-50'}`}>
-                          {stat.change}
-                        </div>
-                      </div>
-                      <div className="mt-4">
-                        <div
-                          className="text-2xl font-bold"
-                          style={{ color: getThemeColor("#1f2937", "#f3f4f6") }}
-                        >
-                          {stat.value}
-                        </div>
-                        <div
-                          className="text-sm text-gray-500 mt-1"
-                          style={{ color: getThemeColor("#6b7280", "#9ca3af") }}
-                        >
-                          {stat.label}
+                        <div className="stat-info">
+                          <div
+                            className="stat-value"
+                            style={{ color: getThemeColor("#1f2937", "#f3f4f6") }}
+                          >
+                            {stat.value}
+                          </div>
+                          <div
+                            className="stat-label"
+                            style={{ color: getThemeColor("#6b7280", "#9ca3af") }}
+                          >
+                            {stat.label}
+                          </div>
+                          <div className="stat-change" style={{ color: stat.color }}>
+                            {stat.change}
+                            <span className={`trend-arrow ${stat.trend}`}>
+                              {stat.trend === "up" ? "↑" : "↓"}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -668,48 +671,48 @@ const Dashboard = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="departments-grid">
                   {departments.map((dept) => (
                     <div
                       key={dept.id}
-                      className="bg-white rounded-xl border border-gray-200 p-6 cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 group"
+                      className="department-card"
                       onClick={() => handleDepartmentClick(dept)}
                       style={{
                         backgroundColor: getThemeColor("#ffffff", "#1f2937"),
                         borderColor: getThemeColor("#e5e7eb", "#374151")
                       }}
                     >
-                      <div className="flex items-center gap-4 mb-4">
+                      <div className="dept-header">
                         <div
-                          className="w-12 h-12 rounded-lg flex items-center justify-center text-white text-xl shadow-md group-hover:scale-110 transition-transform"
+                          className="dept-icon"
                           style={{ backgroundColor: dept.color }}
                         >
                           {dept.icon}
                         </div>
                         <h4
-                          className="text-lg font-bold"
+                          className="dept-name"
                           style={{ color: getThemeColor("#1f2937", "#f3f4f6") }}
                         >
                           {dept.fullName}
                         </h4>
                       </div>
                       <p
-                        className="text-sm text-gray-500 mb-6 h-10 line-clamp-2"
+                        className="dept-desc"
                         style={{ color: getThemeColor("#6b7280", "#9ca3af") }}
                       >
                         {dept.description}
                       </p>
-                      <div className="grid grid-cols-3 gap-2 mb-6 p-3 bg-gray-50 rounded-lg dark:bg-gray-800">
+                      <div className="dept-stats">
                         {Object.entries(dept.stats).map(([key, value], idx) => (
-                          <div key={idx} className="text-center">
+                          <div key={idx} className="dept-stat">
                             <span
-                              className="block text-xs uppercase tracking-wider text-gray-400 mb-1"
+                              className="stat-key"
                               style={{ color: getThemeColor("#6b7280", "#9ca3af") }}
                             >
                               {key}
                             </span>
                             <span
-                              className="block text-sm font-bold truncate"
+                              className="stat-val"
                               style={{ color: getThemeColor("#1f2937", "#f3f4f6") }}
                             >
                               {value}
@@ -718,7 +721,7 @@ const Dashboard = () => {
                         ))}
                       </div>
                       <button
-                        className="w-full py-2.5 rounded-lg text-white text-sm font-medium flex items-center justify-center gap-2 transition-opacity opacity-90 hover:opacity-100"
+                        className="dept-btn"
                         style={{ backgroundColor: dept.color }}
                       >
                         Access <FiChevronRight />

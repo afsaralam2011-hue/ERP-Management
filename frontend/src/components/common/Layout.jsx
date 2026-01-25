@@ -1,10 +1,14 @@
 // frontend/src/components/common/Layout.jsx
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Header from "../Header/Header";
 import Navigation from "./Navigation";
-import { FiMenu } from "react-icons/fi";
+import { useTheme } from "../../contexts/ThemeContext";
 import "./Layout.css";
+
+const SIDEBAR_COLLAPSED = 60;
+const SIDEBAR_EXPANDED = 280;
+const MOBILE_TOP_GAP = 60;
 
 const Layout = ({
   children,
@@ -13,76 +17,135 @@ const Layout = ({
   showHeader = true,
   showSidebar = true,
 }) => {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { theme } = useTheme();
+  const [isMobile, setIsMobile] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 768);
+    onResize();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  const sidebarWidth = !showSidebar || isMobile
+    ? 0
+    : sidebarOpen
+      ? SIDEBAR_EXPANDED
+      : SIDEBAR_COLLAPSED;
 
   return (
-    <div className="flex h-screen w-full bg-theme-background overflow-hidden">
-
-      {/* Mobile Sidebar Overlay */}
-      {isMobileMenuOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-          onClick={() => setIsMobileMenuOpen(false)}
-        />
-      )}
+    <div
+      className="layout-container"
+      style={{
+        display: "flex",
+        height: "100vh",
+        width: "100vw",
+        overflow: "hidden",
+        // background: theme.colors.background
+      }}
+    >
 
       {/* Sidebar */}
       {showSidebar && (
         <aside
-          className={`
-            fixed lg:static inset-y-0 left-0 z-50
-            w-[280px] bg-white border-r border-gray-200
-            transform transition-transform duration-300 ease-in-out
-            ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
-          `}
+          onMouseEnter={() => !isMobile && setSidebarOpen(true)}
+          onMouseLeave={() => !isMobile && setSidebarOpen(false)}
+          style={{
+            width: isMobile ? (sidebarOpen ? SIDEBAR_EXPANDED : 0) : sidebarWidth,
+            flexShrink: 0,
+            height: "100%",
+            transition: "width 0.3s ease",
+            background: "#fff",
+            zIndex: 1000,
+            // borderRight: "1px solid #eee", // بارڈر ہٹا دیا
+            overflowX: "hidden"
+          }}
         >
-          <div className="h-full overflow-y-auto">
-            <Navigation isOpen={true} />
-          </div>
+          <Navigation isOpen={sidebarOpen || isMobile} />
         </aside>
       )}
 
-      {/* Main Content Wrapper */}
-      <div className="flex-1 flex flex-col min-w-0 h-full relative transition-all duration-300">
-
+      {/* Main Wrapper */}
+      <div
+        className="main-wrapper"
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          flexGrow: 1,
+          width: `calc(100% - ${sidebarWidth}px)`,
+          height: "100vh",
+          overflow: "hidden",
+          transition: "width 0.3s ease",
+          position: "relative"
+        }}
+      >
         {/* Header */}
         {showHeader && (
-          <header className="sticky top-0 z-30 w-full bg-white shadow-sm shrink-0">
-            {/* Mobile Header Controls */}
-            <div className="lg:hidden flex items-center p-4 border-b border-gray-100 bg-white">
-              <button
-                onClick={() => setIsMobileMenuOpen(true)}
-                className="p-2 -ml-2 rounded-md hover:bg-gray-100 text-gray-600"
-              >
-                <FiMenu size={24} />
-              </button>
-              <span className="ml-3 font-semibold text-gray-800 truncate">{title}</span>
-            </div>
-
-            {/* Desktop Header */}
-            <div className="hidden lg:block w-full">
-              <Header title={title} subtitle={subtitle} />
-            </div>
+          <header
+            style={{
+              height: "60px",
+              width: "100%",
+              flexShrink: 0,
+              zIndex: 900,
+              background: "#fff",
+              position: isMobile ? "absolute" : "relative",
+              top: isMobile ? MOBILE_TOP_GAP : 0,
+            }}
+          >
+            <Header title={title} subtitle={subtitle} />
           </header>
         )}
 
-        {/* Sub Header (now handled within Header or Main Content) */}
-        {!showHeader && isMobileMenuOpen && (
-          <button
-            onClick={() => setIsMobileMenuOpen(true)} // Re-open menu if header hidden
-            className="absolute top-4 left-4 z-50 p-2 bg-white rounded-md shadow-lg lg:hidden"
-          >
-            <FiMenu size={24} />
-          </button>
-        )}
+        {/* Sub Header */}
+        <div
+          style={{
+            height: "50px",
+            width: "100%",
+            flexShrink: 0,
+            background: "#f9f9f9",
+            display: "flex",
+            alignItems: "center",
+            padding: "0 0px",
+            boxSizing: "border-box",
+          }}
+        >
+          {subtitle}
+        </div>
 
-        {/* Scrollable Content Area */}
-        <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-6 w-full">
-          <div className="w-full max-w-7xl mx-auto">
+        {/* Scrollable Content */}
+        <main
+          className="content-area"
+          style={{
+            flexGrow: 1,
+            overflowY: "auto",
+            overflowX: "auto",
+            padding: "0px", // سائیڈوں کا گیپ ختم کیا
+            boxSizing: "border-box",
+            width: "100%",
+            display: "flex",
+            justifyContent: "center", // افقی سینٹر
+            alignItems: "flex-start" // اوپر سے شروع کریں
+          }}
+        >
+          <div style={{
+            width: "100%",
+            maxWidth: "100%",
+            padding: "0px",
+            boxSizing: "border-box"
+          }}>
             {children}
           </div>
         </main>
       </div>
+
+      {/* Mobile Backdrop */}
+      {isMobile && sidebarOpen && (
+        <div
+          onClick={() => setSidebarOpen(false)}
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 999 }}
+        />
+      )}
     </div>
   );
 };

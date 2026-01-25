@@ -70,9 +70,20 @@ const FlatteningForm = ({ onClose, isModal = true }) => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-
-  // Removed manual isMobile state to rely on CSS
+  const [isMobile, setIsMobile] = useState(false);
   const [showMachineChange, setShowMachineChange] = useState(false); // مشین چینج سٹیٹ
+
+  // ==================== CHECK MOBILE ====================
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   // ==================== DEBUG FUNCTION ====================
   const debugLog = (message, data) => {
@@ -588,7 +599,7 @@ const FlatteningForm = ({ onClose, isModal = true }) => {
               <p>
                 <FiDatabase /> Data Loaded: {items.length} items,{" "}
                 {targets.length} targets
-                <span className="md:hidden ml-2 text-yellow-400">📱</span>
+                {isMobile && <span className="mobile-indicator">📱</span>}
               </p>
             </div>
           </div>
@@ -598,7 +609,7 @@ const FlatteningForm = ({ onClose, isModal = true }) => {
               onClick={handleBackClick}
               title="Back to Flattening Section"
             >
-              <FiArrowLeft /> <span className="hidden md:inline">BACK TO FLATTENING</span>
+              <FiArrowLeft /> {!isMobile && "BACK TO FLATTENING"}
             </button>
             <button className="close-button" onClick={handleClose}>
               <FiX />
@@ -627,7 +638,7 @@ const FlatteningForm = ({ onClose, isModal = true }) => {
               <FiTarget /> TARGET & MACHINE DETAILS
             </div>
 
-            <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 ${isModal ? 'p-4' : ''}`}>
+            <div className={`target-grid ${isMobile ? "mobile-grid" : ""}`}>
               {/* Target Selection */}
               <div className="selection-box">
                 <label className="selection-label required">
@@ -782,63 +793,87 @@ const FlatteningForm = ({ onClose, isModal = true }) => {
                 onClick={addItemRow}
                 className="add-item-btn"
               >
-                <FiPlus /> <span className="hidden sm:inline">ADD ITEM</span>
+                <FiPlus /> {!isMobile && "ADD ITEM"}
               </button>
             </div>
 
-            <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
-              <table className="w-full text-sm text-left">
-                <thead className="bg-gradient-to-r from-gray-800 to-gray-700 text-white uppercase text-xs">
+            <div
+              className={`table-container ${isMobile ? "mobile-table" : ""}`}
+            >
+              <table className="items-table">
+                <thead>
                   <tr>
-                    <th className="px-4 py-3">Item Name</th>
-                    <th className="px-4 py-3 hidden md:table-cell">Coil Size</th>
-                    <th className="px-4 py-3 hidden lg:table-cell">Material</th>
-                    <th className="px-4 py-3 text-right">Qty</th>
-                    <th className="px-4 py-3 text-center">Unit</th>
-                    <th className="px-4 py-3 text-center hidden sm:table-cell">Eff %</th>
-                    <th className="px-4 py-3 text-center">Action</th>
+                    <th>ITEM CODE</th>
+                    <th>ITEM NAME</th>
+                    {!isMobile && <th>COIL SIZE</th>}
+                    {!isMobile && <th>MATERIAL TYPE</th>}
+                    <th>QUANTITY</th>
+                    <th>UNIT</th>
+                    <th>EFFICIENCY</th>
+                    <th>ACTION</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody>
                   {itemsList.map((item) => (
-                    <tr key={item.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-4 py-2">
+                    <tr key={item.id}>
+                      <td>
                         <select
                           value={item.item_code}
                           onChange={(e) =>
                             handleItemChange(item.id, e.target.value)
                           }
-                          className={`w-full px-2 py-1.5 text-sm border rounded focus:ring-2 focus:ring-blue-500 outline-none ${fieldStatus[`item_${item.id}`] ? 'border-green-500 bg-green-50' : 'border-gray-300'
+                          className={`item-select ${fieldStatus[`item_${item.id}`] ||
+                            getFieldClass("item_code", item.item_code)
                             }`}
                         >
-                          <option value="">-- Select --</option>
+                          <option value="">-- SELECT ITEM --</option>
                           {items.map((itm) => (
                             <option key={itm.item_code} value={itm.item_code}>
-                              {itm.item_code} <span className="hidden sm:inline">- {itm.item_name || itm.name}</span>
+                              {itm.item_code}{" "}
+                              {!isMobile && `- ${itm.item_name || itm.name}`}
                             </option>
                           ))}
                         </select>
+                        {validationErrors[`item_${item.id}`] && (
+                          <div className="error-text">
+                            {validationErrors[`item_${item.id}`]}
+                          </div>
+                        )}
                       </td>
 
-                      <td className="px-4 py-2 hidden md:table-cell">
+                      <td>
                         <input
                           type="text"
-                          value={item.coil_size}
+                          value={item.item_name}
                           readOnly
-                          className="w-full px-2 py-1.5 text-sm bg-gray-100 border border-gray-200 rounded text-gray-500"
+                          className="item-input readonly"
+                          placeholder={isMobile ? "Item name" : ""}
                         />
                       </td>
 
-                      <td className="px-4 py-2 hidden lg:table-cell">
-                        <input
-                          type="text"
-                          value={item.material_type}
-                          readOnly
-                          className="w-full px-2 py-1.5 text-sm bg-gray-100 border border-gray-200 rounded text-gray-500"
-                        />
-                      </td>
+                      {!isMobile && (
+                        <td>
+                          <input
+                            type="text"
+                            value={item.coil_size}
+                            readOnly
+                            className="item-input readonly"
+                          />
+                        </td>
+                      )}
 
-                      <td className="px-4 py-2">
+                      {!isMobile && (
+                        <td>
+                          <input
+                            type="text"
+                            value={item.material_type}
+                            readOnly
+                            className="item-input readonly"
+                          />
+                        </td>
+                      )}
+
+                      <td>
                         <input
                           type="number"
                           value={item.production_quantity}
@@ -847,32 +882,37 @@ const FlatteningForm = ({ onClose, isModal = true }) => {
                           }
                           step="0.01"
                           min="0"
-                          className={`w-full px-2 py-1.5 text-sm text-right border rounded focus:ring-2 focus:ring-blue-500 outline-none ${fieldStatus[`quantity_${item.id}`] ? 'border-green-500' : 'border-gray-300'
+                          className={`item-input quantity-input ${fieldStatus[`quantity_${item.id}`] ||
+                            getFieldClass("quantity", item.production_quantity)
                             }`}
                           placeholder="0.00"
                         />
+                        {validationErrors[`quantity_${item.id}`] && (
+                          <div className="error-text">
+                            {validationErrors[`quantity_${item.id}`]}
+                          </div>
+                        )}
                       </td>
 
-                      <td className="px-4 py-2 text-center text-gray-600 font-medium">{item.unit}</td>
+                      <td className="unit-cell">{item.unit}</td>
 
-                      <td className="px-4 py-2 text-center hidden sm:table-cell">
-                        <span
-                          className="px-2 py-1 rounded text-xs font-bold"
-                          style={{
-                            color: getEfficiencyColor(item.efficiency),
-                            backgroundColor: getEfficiencyColor(item.efficiency) + "20",
-                          }}
-                        >
-                          {item.efficiency.toFixed(1)}%
-                        </span>
+                      <td
+                        className="efficiency-cell"
+                        style={{
+                          color: getEfficiencyColor(item.efficiency),
+                          backgroundColor:
+                            getEfficiencyColor(item.efficiency) + "20",
+                        }}
+                      >
+                        {item.efficiency.toFixed(1)}%
                       </td>
 
-                      <td className="px-4 py-2 text-center">
+                      <td className="action-cell">
                         {itemsList.length > 1 && (
                           <button
                             type="button"
                             onClick={() => removeItemRow(item.id)}
-                            className="p-1.5 text-red-500 hover:bg-red-50 rounded-full transition-colors"
+                            className="remove-item-btn"
                             title="Remove Item"
                           >
                             <FiTrash2 />
@@ -985,47 +1025,51 @@ const FlatteningForm = ({ onClose, isModal = true }) => {
         </form>
 
         {/* DEBUG INFO */}
-        <div className="mt-8 p-4 bg-gray-800 text-gray-400 text-xs rounded-lg hidden md:block">
-          <div className="flex items-center gap-2 font-bold mb-4 border-b border-gray-700 pb-2">
+        <div className="database-info debug-info">
+          <div className="info-header">
             <FiInfo /> SYSTEM INFORMATION
           </div>
-          <div className="grid grid-cols-4 gap-4">
-            <div>
-              <div className="font-bold text-gray-300">ENVIRONMENT</div>
-              <div>
+          <div className="info-grid">
+            <div className="info-item">
+              <div className="info-title">ENVIRONMENT</div>
+              <div className="info-value">
                 {window.location.href.includes("localhost") ? "LOCAL" : "WEB"}
+                {isMobile && " | MOBILE"}
               </div>
-              <div className="opacity-70">Host: {window.location.hostname}</div>
+              <div className="info-desc">Host: {window.location.hostname}</div>
             </div>
-            <div>
-              <div className="font-bold text-gray-300">ITEMS</div>
-              <div>{items.length} items</div>
-              <div className="opacity-70">Available for selection</div>
+            <div className="info-item">
+              <div className="info-title">ITEMS</div>
+              <div className="info-value">{items.length} items</div>
+              <div className="info-desc">Available for selection</div>
             </div>
-            <div>
-              <div className="font-bold text-gray-300">TARGETS</div>
-              <div>{targets.length} targets</div>
-              <div className="opacity-70">Loaded from database</div>
+            <div className="info-item">
+              <div className="info-title">TARGETS</div>
+              <div className="info-value">{targets.length} targets</div>
+              <div className="info-desc">Loaded from database</div>
             </div>
-            <div>
-              <div className="font-bold text-gray-300">CONNECTION</div>
-              <div style={{ color: items.length > 0 ? "#27ae60" : "#e74c3c" }}>
-                {items.length > 0 ? "● CONNECTED" : "● ERROR"}
+            <div className="info-item">
+              <div className="info-title">CONNECTION</div>
+              <div className="info-value">
+                <span
+                  style={{ color: items.length > 0 ? "#27ae60" : "#e74c3c" }}
+                >
+                  {items.length > 0 ? "● CONNECTED" : "● ERROR"}
+                </span>
               </div>
-              <div className="opacity-70">Supabase Database</div>
+              <div className="info-desc">Supabase Database</div>
             </div>
           </div>
         </div>
 
         {/* MOBILE FLOATING BACK BUTTON */}
-        <div className="md:hidden fixed bottom-6 right-6 z-50">
-          <button
-            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-3 rounded-full shadow-lg hover:bg-blue-700 transition"
-            onClick={handleBackClick}
-          >
-            <FiArrowLeft /> Back
-          </button>
-        </div>
+        {isMobile && (
+          <div className="mobile-floating-back">
+            <button className="floating-back-btn" onClick={handleBackClick}>
+              <FiArrowLeft /> Back to Flattening
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
