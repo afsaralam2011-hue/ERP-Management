@@ -3,8 +3,8 @@
 // ========================================================
 import React, { useState } from 'react';
 import { supabase } from '../../../supabaseClient';
-import { 
-  FiSave, FiX, FiPackage, FiCalendar, 
+import {
+  FiSave, FiX, FiPackage, FiCalendar,
   FiUser, FiHash, FiRefreshCw, FiMessageSquare,
   FiDownload, FiUpload
 } from 'react-icons/fi';
@@ -49,55 +49,55 @@ const MaterialTransactionForm = ({ onClose, onSaveSuccess }) => {
   // Validate form
   const validateForm = () => {
     setError('');
-    
+
     if (!formData.gate_pass.trim()) {
       setError('Gate pass number is required');
       return false;
     }
-    
+
     if (formData.transaction_type === 'receive' && !formData.supplier.trim()) {
       setError('Supplier is required for receiving');
       return false;
     }
-    
+
     if (!formData.person_name.trim()) {
-      setError(`${formData.transaction_type === 'receive' ? 'Received by' : 
-                formData.transaction_type === 'issue' ? 'Issued by' : 'Returned by'} is required`);
+      setError(`${formData.transaction_type === 'receive' ? 'Received by' :
+        formData.transaction_type === 'issue' ? 'Issued by' : 'Returned by'} is required`);
       return false;
     }
-    
+
     if (!formData.quantity || parseFloat(formData.quantity) <= 0) {
       setError('Please enter valid quantity');
       return false;
     }
-    
+
     if (!formData.wire_size) {
       setError('Please select wire size');
       return false;
     }
-    
+
     if (!formData.category) {
       setError('Please select category');
       return false;
     }
-    
+
     if (!formData.shape) {
       setError('Please select shape');
       return false;
     }
-    
+
     return true;
   };
 
   // Save to database
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
 
     try {
       setLoading(true);
-      
+
       // SIMPLE DATA - using only existing columns
       const dbData = {
         gate_pass: formData.gate_pass,
@@ -112,16 +112,16 @@ const MaterialTransactionForm = ({ onClose, onSaveSuccess }) => {
         status: 'active',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-        
+
         // Single column for all person types
         received_by: formData.person_name, // Always use received_by column
-        
+
         // Supplier only for receiving
         supplier: formData.transaction_type === 'receive' ? formData.supplier : null
       };
-      
+
       console.log('Saving data:', dbData);
-      
+
       const { data, error: insertError } = await supabase
         .from('raw_material_log')
         .insert([dbData])
@@ -132,16 +132,16 @@ const MaterialTransactionForm = ({ onClose, onSaveSuccess }) => {
         setError('❌ Failed to save: ' + insertError.message);
         throw insertError;
       }
-      
+
       // Success message
       const transactionMessages = {
         'receive': 'Material received successfully!',
         'issue': 'Material issued successfully!',
         'return': 'Material returned successfully!'
       };
-      
+
       setSuccess(`✅ ${transactionMessages[formData.transaction_type]}`);
-      
+
       // COMPLETE RESET AFTER 1 SECOND
       setTimeout(() => {
         // Complete reset
@@ -149,13 +149,13 @@ const MaterialTransactionForm = ({ onClose, onSaveSuccess }) => {
           ...initialFormState,
           transaction_type: formData.transaction_type
         });
-        
+
         setSuccess('');
-        
+
         if (onSaveSuccess) onSaveSuccess(data[0]);
-        
+
       }, 1000);
-      
+
     } catch (error) {
       console.error('Save error:', error);
       // Error already set above
@@ -177,7 +177,7 @@ const MaterialTransactionForm = ({ onClose, onSaveSuccess }) => {
 
   // Get label based on transaction type
   const getTransactionLabel = () => {
-    switch(formData.transaction_type) {
+    switch (formData.transaction_type) {
       case 'receive': return 'Receive Material';
       case 'issue': return 'Issue Material';
       case 'return': return 'Return Material';
@@ -187,7 +187,7 @@ const MaterialTransactionForm = ({ onClose, onSaveSuccess }) => {
 
   // Get person label based on transaction type
   const getPersonLabel = () => {
-    switch(formData.transaction_type) {
+    switch (formData.transaction_type) {
       case 'receive': return 'Received By *';
       case 'issue': return 'Issued By *';
       case 'return': return 'Returned By *';
@@ -197,7 +197,7 @@ const MaterialTransactionForm = ({ onClose, onSaveSuccess }) => {
 
   // Get placeholder based on transaction type
   const getPersonPlaceholder = () => {
-    switch(formData.transaction_type) {
+    switch (formData.transaction_type) {
       case 'receive': return 'Enter receiver name';
       case 'issue': return 'Enter issuer name';
       case 'return': return 'Enter returner name';
@@ -207,7 +207,7 @@ const MaterialTransactionForm = ({ onClose, onSaveSuccess }) => {
 
   // Get date label based on transaction type
   const getDateLabel = () => {
-    switch(formData.transaction_type) {
+    switch (formData.transaction_type) {
       case 'receive': return 'Receiving Date *';
       case 'issue': return 'Issuing Date *';
       case 'return': return 'Return Date *';
@@ -216,33 +216,18 @@ const MaterialTransactionForm = ({ onClose, onSaveSuccess }) => {
   };
 
   return (
-    <div style={{
-      background: 'white',
-      borderRadius: '12px',
-      padding: '0',
-      maxWidth: '500px',
-      margin: '0 auto',
-      boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-      maxHeight: '90vh',
-      overflowY: 'auto'
-    }}>
+    <div className="bg-white rounded-xl container mx-auto shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
       {/* Header */}
-      <div style={{
-        background: 'linear-gradient(135deg, #3498db, #2980b9)',
-        color: 'white',
-        padding: '20px',
-        borderRadius: '12px 12px 0 0',
-        textAlign: 'center'
-      }}>
-        <h2 style={{ margin: 0, fontSize: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+      <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-5 rounded-t-xl text-center">
+        <h2 className="m-0 text-xl flex items-center justify-center gap-2">
           <FiPackage /> {getTransactionLabel()}
         </h2>
       </div>
-      
+
       {/* Content */}
       <div style={{ padding: '25px' }}>
         <form onSubmit={handleSubmit}>
-          
+
           {/* Success Message */}
           {success && (
             <div style={{
@@ -256,7 +241,7 @@ const MaterialTransactionForm = ({ onClose, onSaveSuccess }) => {
               {success}
             </div>
           )}
-          
+
           {/* Error Message */}
           {error && (
             <div style={{
@@ -270,49 +255,35 @@ const MaterialTransactionForm = ({ onClose, onSaveSuccess }) => {
               {error}
             </div>
           )}
-          
+
           {/* Transaction Type Selector */}
-          <div style={{ marginBottom: '20px' }}>
-            <div style={{ 
-              display: 'flex', 
-              gap: '10px',
-              marginBottom: '15px'
-            }}>
+          <div className="mb-5">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
               {['receive', 'issue', 'return'].map((type) => (
                 <button
                   key={type}
                   type="button"
                   onClick={() => handleTransactionTypeChange(type)}
-                  style={{
-                    flex: 1,
-                    padding: '12px',
-                    background: formData.transaction_type === type ? 
-                      (type === 'receive' ? '#2ecc71' : 
-                       type === 'issue' ? '#e74c3c' : '#f39c12') : '#ecf0f1',
-                    color: formData.transaction_type === type ? 'white' : '#2c3e50',
-                    border: 'none',
-                    borderRadius: '8px',
-                    fontSize: '14px',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
-                    transition: 'all 0.3s'
-                  }}
+                  className={`
+                    flex items-center justify-center gap-2 p-3 rounded-lg text-sm font-medium transition-all duration-300
+                    ${formData.transaction_type === type
+                      ? (type === 'receive' ? 'bg-green-500 text-white' : type === 'issue' ? 'bg-red-500 text-white' : 'bg-yellow-500 text-white')
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }
+                  `}
                 >
                   {type === 'receive' && <FiDownload />}
                   {type === 'issue' && <FiUpload />}
                   {type === 'return' && <FiRefreshCw />}
-                  {type.charAt(0).toUpperCase() + type.slice(1)}
+                  <span className="capitalize">{type}</span>
                 </button>
               ))}
             </div>
           </div>
-          
+
           {/* Gate Pass */}
-          <div style={{ marginBottom: '15px' }}>
-            <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', color: '#2c3e50' }}>
+          <div className="mb-4">
+            <label className="block mb-2 font-medium text-gray-700 flex items-center gap-2">
               <FiHash /> Gate Pass Number *
             </label>
             <input
@@ -320,22 +291,16 @@ const MaterialTransactionForm = ({ onClose, onSaveSuccess }) => {
               name="gate_pass"
               value={formData.gate_pass}
               onChange={handleChange}
-              style={{
-                width: '100%',
-                padding: '10px 12px',
-                border: '1px solid #ddd',
-                borderRadius: '6px',
-                fontSize: '14px'
-              }}
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
               placeholder="Enter gate pass number"
               required
               disabled={loading}
             />
           </div>
-          
+
           {/* Date */}
-          <div style={{ marginBottom: '15px' }}>
-            <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', color: '#2c3e50' }}>
+          <div className="mb-4">
+            <label className="block mb-2 font-medium text-gray-700 flex items-center gap-2">
               <FiCalendar /> {getDateLabel()}
             </label>
             <input
@@ -343,23 +308,17 @@ const MaterialTransactionForm = ({ onClose, onSaveSuccess }) => {
               name="receiving_date"
               value={formData.receiving_date}
               onChange={handleChange}
-              style={{
-                width: '100%',
-                padding: '10px 12px',
-                border: '1px solid #ddd',
-                borderRadius: '6px',
-                fontSize: '14px'
-              }}
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
               required
               disabled={loading}
               max={new Date().toISOString().split('T')[0]}
             />
           </div>
-          
+
           {/* Supplier (Only for receiving) */}
           {formData.transaction_type === 'receive' && (
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', color: '#2c3e50' }}>
+            <div className="mb-4">
+              <label className="block mb-2 font-medium text-gray-700">
                 Supplier *
               </label>
               <input
@@ -367,23 +326,17 @@ const MaterialTransactionForm = ({ onClose, onSaveSuccess }) => {
                 name="supplier"
                 value={formData.supplier}
                 onChange={handleChange}
-                style={{
-                  width: '100%',
-                  padding: '10px 12px',
-                  border: '1px solid #ddd',
-                  borderRadius: '6px',
-                  fontSize: '14px'
-                }}
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                 placeholder="Enter supplier name"
                 required
                 disabled={loading}
               />
             </div>
           )}
-          
+
           {/* Single Person Name Column */}
-          <div style={{ marginBottom: '15px' }}>
-            <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', color: '#2c3e50' }}>
+          <div className="mb-4">
+            <label className="block mb-2 font-medium text-gray-700 flex items-center gap-2">
               <FiUser /> {getPersonLabel()}
             </label>
             <input
@@ -391,22 +344,16 @@ const MaterialTransactionForm = ({ onClose, onSaveSuccess }) => {
               name="person_name"
               value={formData.person_name}
               onChange={handleChange}
-              style={{
-                width: '100%',
-                padding: '10px 12px',
-                border: '1px solid #ddd',
-                borderRadius: '6px',
-                fontSize: '14px'
-              }}
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
               placeholder={getPersonPlaceholder()}
               required
               disabled={loading}
             />
           </div>
-          
+
           {/* Quantity */}
-          <div style={{ marginBottom: '15px' }}>
-            <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', color: '#2c3e50' }}>
+          <div className="mb-4">
+            <label className="block mb-2 font-medium text-gray-700 flex items-center gap-2">
               Quantity *
             </label>
             <input
@@ -414,13 +361,7 @@ const MaterialTransactionForm = ({ onClose, onSaveSuccess }) => {
               name="quantity"
               value={formData.quantity}
               onChange={handleChange}
-              style={{
-                width: '100%',
-                padding: '10px 12px',
-                border: '1px solid #ddd',
-                borderRadius: '6px',
-                fontSize: '14px'
-              }}
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
               placeholder="Enter quantity"
               step="0.01"
               min="0.01"
@@ -428,25 +369,17 @@ const MaterialTransactionForm = ({ onClose, onSaveSuccess }) => {
               disabled={loading}
             />
           </div>
-          
+
           {/* Wire Size */}
-          <div style={{ marginBottom: '15px' }}>
-            <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', color: '#2c3e50' }}>
+          <div className="mb-4">
+            <label className="block mb-2 font-medium text-gray-700">
               Wire Size *
             </label>
             <select
               name="wire_size"
               value={formData.wire_size}
               onChange={handleChange}
-              style={{
-                width: '100%',
-                padding: '10px 12px',
-                border: '1px solid #ddd',
-                borderRadius: '6px',
-                fontSize: '14px',
-                background: 'white',
-                color: formData.wire_size ? '#2c3e50' : '#999'
-              }}
+              className={`w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all ${!formData.wire_size && 'text-gray-400'}`}
               required
               disabled={loading}
             >
@@ -457,25 +390,17 @@ const MaterialTransactionForm = ({ onClose, onSaveSuccess }) => {
               <option value="2.00mm">2.00mm</option>
             </select>
           </div>
-          
+
           {/* Category */}
-          <div style={{ marginBottom: '15px' }}>
-            <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', color: '#2c3e50' }}>
+          <div className="mb-4">
+            <label className="block mb-2 font-medium text-gray-700">
               Category *
             </label>
             <select
               name="category"
               value={formData.category}
               onChange={handleChange}
-              style={{
-                width: '100%',
-                padding: '10px 12px',
-                border: '1px solid #ddd',
-                borderRadius: '6px',
-                fontSize: '14px',
-                background: 'white',
-                color: formData.category ? '#2c3e50' : '#999'
-              }}
+              className={`w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all ${!formData.category && 'text-gray-400'}`}
               required
               disabled={loading}
             >
@@ -486,25 +411,17 @@ const MaterialTransactionForm = ({ onClose, onSaveSuccess }) => {
               <option value="F9">F9</option>
             </select>
           </div>
-          
+
           {/* Shape */}
-          <div style={{ marginBottom: '15px' }}>
-            <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', color: '#2c3e50' }}>
+          <div className="mb-4">
+            <label className="block mb-2 font-medium text-gray-700">
               Shape *
             </label>
             <select
               name="shape"
               value={formData.shape}
               onChange={handleChange}
-              style={{
-                width: '100%',
-                padding: '10px 12px',
-                border: '1px solid #ddd',
-                borderRadius: '6px',
-                fontSize: '14px',
-                background: 'white',
-                color: formData.shape ? '#2c3e50' : '#999'
-              }}
+              className={`w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all ${!formData.shape && 'text-gray-400'}`}
               required
               disabled={loading}
             >
@@ -515,111 +432,64 @@ const MaterialTransactionForm = ({ onClose, onSaveSuccess }) => {
               <option value="rod">Rod</option>
             </select>
           </div>
-          
+
           {/* Remarks */}
-          <div style={{ marginBottom: '25px' }}>
-            <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', color: '#2c3e50' }}>
+          <div className="mb-6">
+            <label className="block mb-2 font-medium text-gray-700 flex items-center gap-2">
               <FiMessageSquare /> Remarks (Optional)
             </label>
             <textarea
               name="remarks"
               value={formData.remarks}
               onChange={handleChange}
-              style={{
-                width: '100%',
-                padding: '10px 12px',
-                border: '1px solid #ddd',
-                borderRadius: '6px',
-                fontSize: '14px',
-                minHeight: '80px',
-                resize: 'vertical'
-              }}
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all min-h-[80px] resize-y"
               placeholder="Enter any remarks..."
               disabled={loading}
             />
           </div>
-          
+
           {/* Actions */}
-          <div style={{ 
-            display: 'flex', 
-            gap: '10px', 
-            marginTop: '25px', 
-            justifyContent: 'space-between'
-          }}>
-            <div style={{ display: 'flex', gap: '10px' }}>
+          <div className="flex flex-col sm:flex-row gap-3 mt-6 justify-between">
+            <div className="flex gap-3 w-full sm:w-auto">
               <button
                 type="button"
                 onClick={handleReset}
                 disabled={loading}
-                style={{
-                  padding: '10px 20px',
-                  background: '#f39c12',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '6px',
-                  fontSize: '14px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px'
-                }}
+                className="flex-1 sm:flex-none py-2.5 px-5 bg-yellow-500 text-white rounded-lg text-sm font-medium hover:bg-yellow-600 disabled:opacity-50 flex items-center justify-center gap-2 transition-all"
               >
                 <FiRefreshCw /> Reset
               </button>
-              
+
               {onClose && (
                 <button
                   type="button"
                   onClick={onClose}
                   disabled={loading}
-                  style={{
-                    padding: '10px 20px',
-                    background: '#95a5a6',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '6px',
-                    fontSize: '14px',
-                    cursor: 'pointer'
-                  }}
+                  className="flex-1 sm:flex-none py-2.5 px-5 bg-gray-500 text-white rounded-lg text-sm font-medium hover:bg-gray-600 disabled:opacity-50 flex items-center justify-center gap-2 transition-all"
                 >
                   <FiX /> Cancel
                 </button>
               )}
             </div>
-            
+
             <button
               type="submit"
               disabled={loading}
-              style={{
-                padding: '10px 20px',
-                background: formData.transaction_type === 'receive' ? '#2ecc71' : 
-                           formData.transaction_type === 'issue' ? '#e74c3c' : '#f39c12',
-                color: 'white',
-                border: 'none',
-                borderRadius: '6px',
-                fontSize: '14px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
-              }}
+              className={`
+                w-full sm:w-auto py-2.5 px-5 text-white rounded-lg text-sm font-medium disabled:opacity-50 flex items-center justify-center gap-2 transition-all
+                ${formData.transaction_type === 'receive' ? 'bg-green-500 hover:bg-green-600' :
+                  formData.transaction_type === 'issue' ? 'bg-red-500 hover:bg-red-600' : 'bg-yellow-500 hover:bg-yellow-600'}
+              `}
             >
               {loading ? (
                 <>
-                  <div style={{
-                    width: '16px',
-                    height: '16px',
-                    border: '2px solid rgba(255,255,255,0.3)',
-                    borderTop: '2px solid white',
-                    borderRadius: '50%',
-                    animation: 'spin 1s linear infinite'
-                  }}></div>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                   Saving...
                 </>
               ) : (
                 <>
-                  <FiSave /> {formData.transaction_type === 'receive' ? 'Receive' : 
-                             formData.transaction_type === 'issue' ? 'Issue' : 'Return'}
+                  <FiSave /> {formData.transaction_type === 'receive' ? 'Receive' :
+                    formData.transaction_type === 'issue' ? 'Issue' : 'Return'}
                 </>
               )}
             </button>

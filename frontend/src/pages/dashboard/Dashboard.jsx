@@ -1,8 +1,8 @@
 // src/pages/Dashboard/Dashboard.jsx
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { 
-  FiUsers, FiDollarSign, FiPackage, FiTrendingUp, 
+import {
+  FiUsers, FiDollarSign, FiPackage, FiTrendingUp,
   FiActivity, FiBriefcase, FiSearch, FiSettings,
   FiChevronRight, FiDatabase, FiClock, FiSun,
   FiMoon, FiBarChart2, FiCalendar, FiBell,
@@ -24,85 +24,85 @@ const Dashboard = () => {
   };
 
   const departments = [
-    { 
+    {
       id: 1,
-      name: "HR", 
+      name: "HR",
       fullName: "HR Department",
-      color: "#4f46e5", 
+      color: "#4f46e5",
       path: "/hr",
-      stats: { 
-        employees: "1,248", 
-        growth: "+12%", 
+      stats: {
+        employees: "1,248",
+        growth: "+12%",
         vacancies: "8"
       },
       description: "Manage employees, recruitment, payroll, and HR operations.",
       icon: <FiUsers />
     },
-    { 
+    {
       id: 2,
-      name: "Finance", 
+      name: "Finance",
       fullName: "Finance Department",
-      color: "#059669", 
+      color: "#059669",
       path: "/finance",
-      stats: { 
-        revenue: "₹42.8M", 
-        growth: "+8.5%", 
+      stats: {
+        revenue: "₹42.8M",
+        growth: "+8.5%",
         expenses: "₹18.2M"
       },
       description: "Financial planning, accounting, budgeting, and reporting.",
       icon: <FiDollarSign />
     },
-    { 
+    {
       id: 3,
-      name: "Production", 
+      name: "Production",
       fullName: "Production Department",
-      color: "#d97706", 
+      color: "#d97706",
       path: "/production/daily-report",
-      stats: { 
-        output: "48.2K", 
-        growth: "+15%", 
+      stats: {
+        output: "48.2K",
+        growth: "+15%",
         efficiency: "92%"
       },
       description: "Manufacturing operations, production planning, and quality control.",
       icon: <FiPackage />
     },
-    { 
+    {
       id: 4,
-      name: "Sales", 
+      name: "Sales",
       fullName: "Sales Department",
-      color: "#dc2626", 
+      color: "#dc2626",
       path: "/sales",
-      stats: { 
-        orders: "342", 
-        growth: "+5%", 
+      stats: {
+        orders: "342",
+        growth: "+5%",
         revenue: "₹28.5M"
       },
       description: "Sales strategies, customer relations, and revenue generation.",
       icon: <FiTrendingUp />
     },
-    { 
+    {
       id: 5,
-      name: "IT", 
+      name: "IT",
       fullName: "IT Department",
-      color: "#7c3aed", 
+      color: "#7c3aed",
       path: "/it",
-      stats: { 
-        uptime: "99.8%", 
-        tickets: "42", 
+      stats: {
+        uptime: "99.8%",
+        tickets: "42",
         projects: "8"
       },
       description: "IT infrastructure, software development, and technical support.",
       icon: <FiDatabase />
     },
-    { 
+    {
       id: 6,
-      name: "Logistics", 
+      name: "Logistics",
       fullName: "Logistics Department",
-      color: "#0891b2", 
+      color: "#0891b2",
       path: "/logistics",
-      stats: { 
-        shipments: "128", 
-        delivered: "122", 
+      stats: {
+        shipments: "128",
+        delivered: "122",
         pending: "6"
       },
       description: "Supply chain management, transportation, and distribution.",
@@ -146,57 +146,57 @@ const Dashboard = () => {
   ];
 
   const quickStats = [
-    { 
+    {
       id: 1,
-      label: "Total Employees", 
-      value: "1,248", 
-      change: "+12%", 
-      icon: <FiUsers />, 
+      label: "Total Employees",
+      value: "1,248",
+      change: "+12%",
+      icon: <FiUsers />,
       color: "#4f46e5",
       trend: "up"
     },
-    { 
+    {
       id: 2,
-      label: "Active Orders", 
-      value: "342", 
-      change: "+5%", 
-      icon: <FiTrendingUp />, 
+      label: "Active Orders",
+      value: "342",
+      change: "+5%",
+      icon: <FiTrendingUp />,
       color: "#dc2626",
       trend: "up"
     },
-    { 
+    {
       id: 3,
-      label: "Monthly Revenue", 
-      value: "₹42.8M", 
-      change: "+8.5%", 
-      icon: <FiDollarSign />, 
+      label: "Monthly Revenue",
+      value: "₹42.8M",
+      change: "+8.5%",
+      icon: <FiDollarSign />,
       color: "#059669",
       trend: "up"
     },
-    { 
+    {
       id: 4,
-      label: "Production Output", 
-      value: "48.2K", 
-      change: "+15%", 
-      icon: <FiPackage />, 
+      label: "Production Output",
+      value: "48.2K",
+      change: "+15%",
+      icon: <FiPackage />,
       color: "#d97706",
       trend: "up"
     },
-    { 
+    {
       id: 5,
-      label: "System Uptime", 
-      value: "99.8%", 
-      change: "+0.2%", 
-      icon: <FiDatabase />, 
+      label: "System Uptime",
+      value: "99.8%",
+      change: "+0.2%",
+      icon: <FiDatabase />,
       color: "#7c3aed",
       trend: "up"
     },
-    { 
+    {
       id: 6,
-      label: "On-time Delivery", 
-      value: "95%", 
-      change: "+3%", 
-      icon: <FiClock />, 
+      label: "On-time Delivery",
+      value: "95%",
+      change: "+3%",
+      icon: <FiClock />,
       color: "#0891b2",
       trend: "up"
     },
@@ -261,7 +261,7 @@ const Dashboard = () => {
   ];
 
   return (
-    <div 
+    <div
       className="dashboard-wrapper"
       style={{
         backgroundColor: getThemeColor("#f9fafb", "#111827"),
@@ -271,7 +271,7 @@ const Dashboard = () => {
       {/* Main Content - NO SIDEBAR */}
       <div className="main-content">
         {/* Top Header */}
-        <header 
+        <header
           className="main-header"
           style={{
             backgroundColor: getThemeColor("#ffffff", "#1f2937"),
@@ -281,7 +281,7 @@ const Dashboard = () => {
           <div className="header-left">
             <div className="header-logo">
               <div className="header-logo-icon">
-                <div 
+                <div
                   className="pwi-logo"
                   style={{
                     backgroundColor: "#d97706",
@@ -303,15 +303,15 @@ const Dashboard = () => {
           </div>
 
           <div className="header-center">
-            <div 
+            <div
               className="search-box"
               style={{
                 backgroundColor: getThemeColor("#f3f4f6", "#374151"),
                 borderColor: getThemeColor("#e5e7eb", "#4b5563")
               }}
             >
-              <FiSearch 
-                className="search-icon" 
+              <FiSearch
+                className="search-icon"
                 style={{ color: getThemeColor("#6b7280", "#9ca3af") }}
               />
               <input
@@ -359,9 +359,9 @@ const Dashboard = () => {
                     </span>
                   )}
                 </button>
-                
+
                 {showNotifications && (
-                  <div 
+                  <div
                     className="notifications-dropdown"
                     style={{
                       backgroundColor: getThemeColor("#ffffff", "#1f2937"),
@@ -371,7 +371,7 @@ const Dashboard = () => {
                   >
                     <div className="notifications-header">
                       <h4>Notifications</h4>
-                      <button 
+                      <button
                         onClick={() => setShowNotifications(false)}
                         className="close-notifications"
                       >
@@ -380,12 +380,12 @@ const Dashboard = () => {
                     </div>
                     <div className="notifications-list">
                       {notifications.map(notification => (
-                        <div 
-                          key={notification.id} 
+                        <div
+                          key={notification.id}
                           className={`notification-item ${!notification.read ? 'unread' : ''}`}
                         >
                           <div className="notification-text">{notification.text}</div>
-                          <div 
+                          <div
                             className="notification-time"
                             style={{ color: getThemeColor("#6b7280", "#9ca3af") }}
                           >
@@ -399,20 +399,20 @@ const Dashboard = () => {
               </div>
 
               <div className="user-info">
-                <div 
+                <div
                   className="user-avatar"
                   style={{ backgroundColor: "#4f46e5", color: "white" }}
                 >
                   AU
                 </div>
                 <div className="user-details">
-                  <div 
+                  <div
                     className="user-name"
                     style={{ color: getThemeColor("#1f2937", "#f3f4f6") }}
                   >
                     Admin User
                   </div>
-                  <div 
+                  <div
                     className="user-role"
                     style={{ color: getThemeColor("#6b7280", "#9ca3af") }}
                   >
@@ -425,7 +425,7 @@ const Dashboard = () => {
         </header>
 
         {/* Navigation Tabs */}
-        <div 
+        <div
           className="navigation-tabs"
           style={{
             backgroundColor: getThemeColor("#ffffff", "#1f2937"),
@@ -477,14 +477,14 @@ const Dashboard = () => {
               <section className="stats-section">
                 <div className="section-header">
                   <div className="section-title-wrapper">
-                    <h3 
+                    <h3
                       className="section-title"
                       style={{ color: getThemeColor("#1f2937", "#f3f4f6") }}
                     >
                       <FiActivity className="title-icon" />
                       Quick Overview
                     </h3>
-                    <span 
+                    <span
                       className="section-subtitle"
                       style={{ color: getThemeColor("#6b7280", "#9ca3af") }}
                     >
@@ -492,43 +492,40 @@ const Dashboard = () => {
                     </span>
                   </div>
                 </div>
-                
-                <div className="stats-grid">
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                   {quickStats.map((stat) => (
-                    <div 
-                      key={stat.id} 
-                      className="stat-card"
+                    <div
+                      key={stat.id}
+                      className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
                       style={{
                         backgroundColor: getThemeColor("#ffffff", "#1f2937"),
                         borderColor: getThemeColor("#e5e7eb", "#374151")
                       }}
                     >
-                      <div className="stat-content">
-                        <div 
-                          className="stat-icon" 
+                      <div className="flex items-start justify-between">
+                        <div
+                          className="p-3 rounded-lg flex items-center justify-center text-white"
                           style={{ backgroundColor: stat.color }}
                         >
                           {stat.icon}
                         </div>
-                        <div className="stat-info">
-                          <div 
-                            className="stat-value"
-                            style={{ color: getThemeColor("#1f2937", "#f3f4f6") }}
-                          >
-                            {stat.value}
-                          </div>
-                          <div 
-                            className="stat-label"
-                            style={{ color: getThemeColor("#6b7280", "#9ca3af") }}
-                          >
-                            {stat.label}
-                          </div>
-                          <div className="stat-change" style={{ color: stat.color }}>
-                            {stat.change}
-                            <span className={`trend-arrow ${stat.trend}`}>
-                              {stat.trend === "up" ? "↑" : "↓"}
-                            </span>
-                          </div>
+                        <div className={`text-xs font-medium px-2 py-1 rounded-full ${stat.trend === 'up' ? 'text-green-600 bg-green-50' : 'text-red-600 bg-red-50'}`}>
+                          {stat.change}
+                        </div>
+                      </div>
+                      <div className="mt-4">
+                        <div
+                          className="text-2xl font-bold"
+                          style={{ color: getThemeColor("#1f2937", "#f3f4f6") }}
+                        >
+                          {stat.value}
+                        </div>
+                        <div
+                          className="text-sm text-gray-500 mt-1"
+                          style={{ color: getThemeColor("#6b7280", "#9ca3af") }}
+                        >
+                          {stat.label}
                         </div>
                       </div>
                     </div>
@@ -540,14 +537,14 @@ const Dashboard = () => {
               <section className="activities-section">
                 <div className="section-header">
                   <div className="section-title-wrapper">
-                    <h3 
+                    <h3
                       className="section-title"
                       style={{ color: getThemeColor("#1f2937", "#f3f4f6") }}
                     >
                       <FiClock className="title-icon" />
                       Recent Activities
                     </h3>
-                    <span 
+                    <span
                       className="section-subtitle"
                       style={{ color: getThemeColor("#6b7280", "#9ca3af") }}
                     >
@@ -555,8 +552,8 @@ const Dashboard = () => {
                     </span>
                   </div>
                 </div>
-                
-                <div 
+
+                <div
                   className="activities-list"
                   style={{
                     backgroundColor: getThemeColor("#ffffff", "#1f2937"),
@@ -565,7 +562,7 @@ const Dashboard = () => {
                 >
                   {recentActivities.map((activity) => (
                     <div key={activity.id} className="activity-item">
-                      <div 
+                      <div
                         className="activity-icon"
                         style={{ color: getThemeColor("#6b7280", "#9ca3af") }}
                       >
@@ -573,13 +570,13 @@ const Dashboard = () => {
                       </div>
                       <div className="activity-content">
                         <div className="activity-text">
-                          <span 
+                          <span
                             className="activity-user"
                             style={{ color: getThemeColor("#1f2937", "#f3f4f6") }}
                           >
                             {activity.user}
                           </span>
-                          <span 
+                          <span
                             className="activity-action"
                             style={{ color: getThemeColor("#6b7280", "#9ca3af") }}
                           >
@@ -587,7 +584,7 @@ const Dashboard = () => {
                           </span>
                         </div>
                         <div className="activity-meta">
-                          <span 
+                          <span
                             className="activity-department"
                             style={{
                               backgroundColor: getThemeColor("#f3f4f6", "#374151"),
@@ -596,7 +593,7 @@ const Dashboard = () => {
                           >
                             {activity.department}
                           </span>
-                          <span 
+                          <span
                             className="activity-time"
                             style={{ color: getThemeColor("#6b7280", "#9ca3af") }}
                           >
@@ -617,14 +614,14 @@ const Dashboard = () => {
               <section className="quick-access-section">
                 <div className="section-header">
                   <div className="section-title-wrapper">
-                    <h3 
+                    <h3
                       className="section-title"
                       style={{ color: getThemeColor("#1f2937", "#f3f4f6") }}
                     >
                       <FiBriefcase className="title-icon" />
                       Quick Access
                     </h3>
-                    <span 
+                    <span
                       className="section-subtitle"
                       style={{ color: getThemeColor("#6b7280", "#9ca3af") }}
                     >
@@ -632,13 +629,13 @@ const Dashboard = () => {
                     </span>
                   </div>
                 </div>
-                
+
                 <div className="department-buttons-grid">
                   {departments.map((dept) => (
                     <button
                       key={dept.id}
                       className="department-button"
-                      style={{ 
+                      style={{
                         backgroundColor: dept.color,
                         color: "white"
                       }}
@@ -655,14 +652,14 @@ const Dashboard = () => {
               <section className="departments-grid-section">
                 <div className="section-header">
                   <div className="section-title-wrapper">
-                    <h3 
+                    <h3
                       className="section-title"
                       style={{ color: getThemeColor("#1f2937", "#f3f4f6") }}
                     >
                       <FiBriefcase className="title-icon" />
                       All Departments
                     </h3>
-                    <span 
+                    <span
                       className="section-subtitle"
                       style={{ color: getThemeColor("#6b7280", "#9ca3af") }}
                     >
@@ -670,49 +667,49 @@ const Dashboard = () => {
                     </span>
                   </div>
                 </div>
-                
-                <div className="departments-grid">
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {departments.map((dept) => (
-                    <div 
-                      key={dept.id} 
-                      className="department-card"
+                    <div
+                      key={dept.id}
+                      className="bg-white rounded-xl border border-gray-200 p-6 cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 group"
                       onClick={() => handleDepartmentClick(dept)}
                       style={{
                         backgroundColor: getThemeColor("#ffffff", "#1f2937"),
                         borderColor: getThemeColor("#e5e7eb", "#374151")
                       }}
                     >
-                      <div className="dept-header">
-                        <div 
-                          className="dept-icon" 
+                      <div className="flex items-center gap-4 mb-4">
+                        <div
+                          className="w-12 h-12 rounded-lg flex items-center justify-center text-white text-xl shadow-md group-hover:scale-110 transition-transform"
                           style={{ backgroundColor: dept.color }}
                         >
                           {dept.icon}
                         </div>
-                        <h4 
-                          className="dept-name"
+                        <h4
+                          className="text-lg font-bold"
                           style={{ color: getThemeColor("#1f2937", "#f3f4f6") }}
                         >
                           {dept.fullName}
                         </h4>
                       </div>
-                      <p 
-                        className="dept-desc"
+                      <p
+                        className="text-sm text-gray-500 mb-6 h-10 line-clamp-2"
                         style={{ color: getThemeColor("#6b7280", "#9ca3af") }}
                       >
                         {dept.description}
                       </p>
-                      <div className="dept-stats">
+                      <div className="grid grid-cols-3 gap-2 mb-6 p-3 bg-gray-50 rounded-lg dark:bg-gray-800">
                         {Object.entries(dept.stats).map(([key, value], idx) => (
-                          <div key={idx} className="dept-stat">
-                            <span 
-                              className="stat-key"
+                          <div key={idx} className="text-center">
+                            <span
+                              className="block text-xs uppercase tracking-wider text-gray-400 mb-1"
                               style={{ color: getThemeColor("#6b7280", "#9ca3af") }}
                             >
                               {key}
                             </span>
-                            <span 
-                              className="stat-val"
+                            <span
+                              className="block text-sm font-bold truncate"
                               style={{ color: getThemeColor("#1f2937", "#f3f4f6") }}
                             >
                               {value}
@@ -720,8 +717,8 @@ const Dashboard = () => {
                           </div>
                         ))}
                       </div>
-                      <button 
-                        className="dept-btn" 
+                      <button
+                        className="w-full py-2.5 rounded-lg text-white text-sm font-medium flex items-center justify-center gap-2 transition-opacity opacity-90 hover:opacity-100"
                         style={{ backgroundColor: dept.color }}
                       >
                         Access <FiChevronRight />
@@ -735,14 +732,14 @@ const Dashboard = () => {
               <section className="production-modules-section">
                 <div className="section-header">
                   <div className="section-title-wrapper">
-                    <h3 
+                    <h3
                       className="section-title"
                       style={{ color: getThemeColor("#1f2937", "#f3f4f6") }}
                     >
                       <FiPackage className="title-icon" />
                       Production Modules
                     </h3>
-                    <span 
+                    <span
                       className="section-subtitle"
                       style={{ color: getThemeColor("#6b7280", "#9ca3af") }}
                     >
@@ -750,11 +747,11 @@ const Dashboard = () => {
                     </span>
                   </div>
                 </div>
-                
+
                 <div className="modules-grid">
                   {productionModules.map((module) => (
-                    <div 
-                      key={module.id} 
+                    <div
+                      key={module.id}
                       className="module-card"
                       onClick={() => handleProductionModuleClick(module)}
                       style={{
@@ -763,27 +760,27 @@ const Dashboard = () => {
                       }}
                     >
                       <div className="module-header">
-                        <div 
-                          className="module-icon" 
+                        <div
+                          className="module-icon"
                           style={{ backgroundColor: module.color }}
                         >
                           {module.icon}
                         </div>
-                        <h4 
+                        <h4
                           className="module-name"
                           style={{ color: getThemeColor("#1f2937", "#f3f4f6") }}
                         >
                           {module.name}
                         </h4>
                       </div>
-                      <p 
+                      <p
                         className="module-desc"
                         style={{ color: getThemeColor("#6b7280", "#9ca3af") }}
                       >
                         {module.description}
                       </p>
-                      <button 
-                        className="module-btn" 
+                      <button
+                        className="module-btn"
                         style={{ backgroundColor: module.color }}
                       >
                         Open <FiChevronRight />
@@ -799,14 +796,14 @@ const Dashboard = () => {
             <section className="reports-section">
               <div className="section-header">
                 <div className="section-title-wrapper">
-                  <h3 
+                  <h3
                     className="section-title"
                     style={{ color: getThemeColor("#1f2937", "#f3f4f6") }}
                   >
                     <FiBarChart2 className="title-icon" />
                     Reports & Analytics
                   </h3>
-                  <span 
+                  <span
                     className="section-subtitle"
                     style={{ color: getThemeColor("#6b7280", "#9ca3af") }}
                   >
@@ -814,11 +811,11 @@ const Dashboard = () => {
                   </span>
                 </div>
               </div>
-              
+
               <div className="reports-grid">
                 {departments.map((dept) => (
-                  <div 
-                    key={dept.id} 
+                  <div
+                    key={dept.id}
                     className="report-card"
                     style={{
                       backgroundColor: getThemeColor("#ffffff", "#1f2937"),
@@ -826,20 +823,20 @@ const Dashboard = () => {
                     }}
                   >
                     <div className="report-header">
-                      <div 
-                        className="report-icon" 
+                      <div
+                        className="report-icon"
                         style={{ backgroundColor: dept.color }}
                       >
                         {dept.icon}
                       </div>
                       <div>
-                        <h4 
+                        <h4
                           className="report-dept"
                           style={{ color: getThemeColor("#1f2937", "#f3f4f6") }}
                         >
                           {dept.name} Reports
                         </h4>
-                        <p 
+                        <p
                           className="report-desc"
                           style={{ color: getThemeColor("#6b7280", "#9ca3af") }}
                         >
@@ -848,7 +845,7 @@ const Dashboard = () => {
                       </div>
                     </div>
                     <div className="report-actions">
-                      <button 
+                      <button
                         className="report-btn"
                         style={{
                           backgroundColor: getThemeColor("#f3f4f6", "#374151"),
@@ -858,7 +855,7 @@ const Dashboard = () => {
                       >
                         <FiBarChart2 /> View Reports
                       </button>
-                      <button 
+                      <button
                         className="report-btn primary"
                         style={{ backgroundColor: dept.color }}
                       >
