@@ -16,7 +16,7 @@ import {
   FaCalendarAlt, FaUserFriends, FaMoneyBillWave,
   FaTruck, FaWrench, FaClipboardCheck
 } from "react-icons/fa";
- import { ThemeContext, useTheme } from '../../contexts/ThemeContext';
+import { ThemeContext, useTheme } from '../../contexts/ThemeContext';
 import "./Dashboard.css";
 
 const Dashboard = () => {
@@ -81,15 +81,9 @@ const Dashboard = () => {
   const departments = [
     {
       id: 1,
-<<<<<<< HEAD
-      name: "HR", 
-      fullName: "Human Resources",
-      color: "#4f46e5", 
-=======
       name: "HR",
-      fullName: "HR Department",
+      fullName: "Human Resources",
       color: "#4f46e5",
->>>>>>> de48dd99d82d0005078d2f34dac0bdbd9d3ade5d
       path: "/hr",
       stats: {
         employees: "1,248",
@@ -101,15 +95,9 @@ const Dashboard = () => {
     },
     {
       id: 2,
-<<<<<<< HEAD
-      name: "Finance", 
-      fullName: "Finance & Accounts",
-      color: "#059669", 
-=======
       name: "Finance",
-      fullName: "Finance Department",
+      fullName: "Finance & Accounts",
       color: "#059669",
->>>>>>> de48dd99d82d0005078d2f34dac0bdbd9d3ade5d
       path: "/finance",
       stats: {
         revenue: "₹42.8M",
@@ -125,32 +113,19 @@ const Dashboard = () => {
       fullName: "Production Department",
       color: "#d97706",
       path: "/production/daily-report",
-<<<<<<< HEAD
-      stats: { 
-        output: `${(productionStats.totalProduction / 1000).toFixed(1)}K`, 
-        efficiency: `${productionStats.efficiency.toFixed(1)}%`, 
-        machines: productionStats.machines
-=======
       stats: {
-        output: "48.2K",
-        growth: "+15%",
-        efficiency: "92%"
->>>>>>> de48dd99d82d0005078d2f34dac0bdbd9d3ade5d
+        output: `${(productionStats.totalProduction / 1000).toFixed(1)}K`,
+        efficiency: `${productionStats.efficiency.toFixed(1)}%`,
+        machines: productionStats.machines
       },
       description: "Manufacturing operations, production planning, and quality control.",
       icon: <FaIndustry />
     },
     {
       id: 4,
-<<<<<<< HEAD
-      name: "Sales", 
-      fullName: "Sales & Marketing",
-      color: "#dc2626", 
-=======
       name: "Sales",
-      fullName: "Sales Department",
+      fullName: "Sales & Marketing",
       color: "#dc2626",
->>>>>>> de48dd99d82d0005078d2f34dac0bdbd9d3ade5d
       path: "/sales",
       stats: {
         orders: "342",
@@ -162,15 +137,9 @@ const Dashboard = () => {
     },
     {
       id: 5,
-<<<<<<< HEAD
-      name: "IT", 
-      fullName: "Information Technology",
-      color: "#7c3aed", 
-=======
       name: "IT",
-      fullName: "IT Department",
+      fullName: "Information Technology",
       color: "#7c3aed",
->>>>>>> de48dd99d82d0005078d2f34dac0bdbd9d3ade5d
       path: "/it",
       stats: {
         uptime: "99.8%",
@@ -182,15 +151,9 @@ const Dashboard = () => {
     },
     {
       id: 6,
-<<<<<<< HEAD
-      name: "Logistics", 
-      fullName: "Logistics & Supply",
-      color: "#0891b2", 
-=======
       name: "Logistics",
-      fullName: "Logistics Department",
+      fullName: "Logistics & Supply",
       color: "#0891b2",
->>>>>>> de48dd99d82d0005078d2f34dac0bdbd9d3ade5d
       path: "/logistics",
       stats: {
         shipments: "128",
@@ -256,17 +219,10 @@ const Dashboard = () => {
   const quickStats = [
     {
       id: 1,
-<<<<<<< HEAD
-      label: "Total Employees", 
-      value: "1,248", 
-      change: "+12%", 
-      icon: <FaUserFriends />, 
-=======
       label: "Total Employees",
       value: "1,248",
       change: "+12%",
-      icon: <FiUsers />,
->>>>>>> de48dd99d82d0005078d2f34dac0bdbd9d3ade5d
+      icon: <FaUserFriends />,
       color: "#4f46e5",
       trend: "up"
     },
@@ -281,65 +237,37 @@ const Dashboard = () => {
     },
     {
       id: 3,
-<<<<<<< HEAD
-      label: "Monthly Revenue", 
-      value: "₹42.8M", 
-      change: "+8.5%", 
-      icon: <FaMoneyBillWave />, 
-=======
       label: "Monthly Revenue",
       value: "₹42.8M",
       change: "+8.5%",
-      icon: <FiDollarSign />,
->>>>>>> de48dd99d82d0005078d2f34dac0bdbd9d3ade5d
+      icon: <FaMoneyBillWave />,
       color: "#059669",
       trend: "up"
     },
     {
       id: 4,
-<<<<<<< HEAD
-      label: "Production Output", 
-      value: `${(productionStats.totalProduction / 1000).toFixed(1)}K`, 
-      change: "+15%", 
-      icon: <FaIndustry />, 
-=======
       label: "Production Output",
-      value: "48.2K",
+      value: `${(productionStats.totalProduction / 1000).toFixed(1)}K`,
       change: "+15%",
-      icon: <FiPackage />,
->>>>>>> de48dd99d82d0005078d2f34dac0bdbd9d3ade5d
+      icon: <FaIndustry />,
       color: "#d97706",
       trend: "up"
     },
     {
       id: 5,
-<<<<<<< HEAD
-      label: "System Uptime", 
-      value: "99.8%", 
-      change: "+0.2%", 
-      icon: <FaDb />, 
-=======
       label: "System Uptime",
       value: "99.8%",
       change: "+0.2%",
-      icon: <FiDatabase />,
->>>>>>> de48dd99d82d0005078d2f34dac0bdbd9d3ade5d
+      icon: <FaDb />,
       color: "#7c3aed",
       trend: "up"
     },
     {
       id: 6,
-<<<<<<< HEAD
-      label: "On-time Delivery", 
-      value: "95%", 
-      change: "+3%", 
-      icon: <FaTruck />, 
-=======
       label: "On-time Delivery",
       value: "95%",
       change: "+3%",
-      icon: <FiClock />,
->>>>>>> de48dd99d82d0005078d2f34dac0bdbd9d3ade5d
+      icon: <FaTruck />,
       color: "#0891b2",
       trend: "up"
     },
@@ -512,15 +440,9 @@ const Dashboard = () => {
                 borderColor: getCardBorder()
               }}
             >
-<<<<<<< HEAD
               <FiSearch 
                 className="search-icon" 
                 style={{ color: getMutedTextColor() }}
-=======
-              <FiSearch
-                className="search-icon"
-                style={{ color: getThemeColor("#6b7280", "#9ca3af") }}
->>>>>>> de48dd99d82d0005078d2f34dac0bdbd9d3ade5d
               />
               <input
                 type="text"
@@ -580,13 +502,8 @@ const Dashboard = () => {
                     }}
                   >
                     <div className="notifications-header">
-<<<<<<< HEAD
                       <h4 style={{ color: getTextColor() }}>Notifications</h4>
                       <button 
-=======
-                      <h4>Notifications</h4>
-                      <button
->>>>>>> de48dd99d82d0005078d2f34dac0bdbd9d3ade5d
                         onClick={() => setShowNotifications(false)}
                         className="close-notifications"
                         style={{ color: getMutedTextColor() }}
@@ -603,7 +520,6 @@ const Dashboard = () => {
                             borderBottom: `1px solid ${getCardBorder()}`
                           }}
                         >
-<<<<<<< HEAD
                           <div 
                             className="notification-text"
                             style={{ color: getTextColor() }}
@@ -611,10 +527,6 @@ const Dashboard = () => {
                             {notification.text}
                           </div>
                           <div 
-=======
-                          <div className="notification-text">{notification.text}</div>
-                          <div
->>>>>>> de48dd99d82d0005078d2f34dac0bdbd9d3ade5d
                             className="notification-time"
                             style={{ color: getMutedTextColor() }}
                           >
@@ -957,7 +869,6 @@ const Dashboard = () => {
                   }}
                 >
                   {recentActivities.map((activity) => (
-<<<<<<< HEAD
                     <div 
                       key={activity.id} 
                       className="activity-item"
@@ -966,10 +877,6 @@ const Dashboard = () => {
                       }}
                     >
                       <div 
-=======
-                    <div key={activity.id} className="activity-item">
-                      <div
->>>>>>> de48dd99d82d0005078d2f34dac0bdbd9d3ade5d
                         className="activity-icon"
                         style={{ color: getMutedTextColor() }}
                       >
