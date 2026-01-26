@@ -1,13 +1,13 @@
 // src/components/common/Navigation.jsx
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { 
-  FiHome, 
-  FiUsers, 
-  FiDollarSign, 
-  FiPackage, 
-  FiShoppingCart, 
-  FiCpu, 
+import {
+  FiHome,
+  FiUsers,
+  FiDollarSign,
+  FiPackage,
+  FiShoppingCart,
+  FiCpu,
   FiTruck,
   FiSettings,
   FiLogOut,
@@ -30,8 +30,8 @@ import {
   FiTrendingUp,
   FiTrendingDown
 } from 'react-icons/fi';
-import { useTheme } from '../../contexts/ThemeContext';
-import './Navigation.css';
+  import { ThemeContext, useTheme } from '../../contexts/ThemeContext';
+  import './Navigation.css';
 
 const Navigation = () => {
   const location = useLocation();

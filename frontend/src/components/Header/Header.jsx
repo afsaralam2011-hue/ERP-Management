@@ -1,82 +1,123 @@
 // src/components/Header/Header.jsx
-import React, { useEffect, useRef, useState, useContext } from "react";
-import { FiSettings, FiLogOut } from "react-icons/fi";
+import React, { useEffect, useRef, useState } from "react";
+import { FiSettings, FiLogOut, FiUser, FiMail } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
-import NotificationBell from './NotificationBell';
-import { useTheme } from "../../contexts/ThemeContext";
+import { useTheme } from '../../contexts/ThemeContext';
 import "./Header.css";
 
-const Header = ({
-  title = "Flattening Section",
-  subtitle = "Wire flattening process management"
-}) => {
+const Header = ({ title = "Pakistan Wire Industries", subtitle = "SPI & CCD Dashboard" }) => {
   const navigate = useNavigate();
   const tickerRef = useRef(null);
   const [isMobile, setIsMobile] = useState(false);
-  const { theme, primaryColor } = useTheme(); // Get theme from context
+  const [user, setUser] = useState(null);
   
-  // ✅ Dynamic user data from localStorage or sessionStorage
-  const getUserData = () => {
-    // Try to get user data from various storage locations
-    const displayName = localStorage.getItem('userName') || 
-                       sessionStorage.getItem('userName') || 
-                       localStorage.getItem('userDisplayName') ||
-                       sessionStorage.getItem('userDisplayName') ||
-                       localStorage.getItem('display_name') ||
-                       sessionStorage.getItem('display_name') ||
-                       "Admin User";
-    
-    const email = localStorage.getItem('userEmail') || 
-                  sessionStorage.getItem('userEmail') || 
-                  localStorage.getItem('userEmailAddress') ||
-                  sessionStorage.getItem('userEmailAddress') ||
-                  localStorage.getItem('email') ||
-                  sessionStorage.getItem('email') ||
-                  "admin@pwi.com";
-    
-    const initials = localStorage.getItem('userInitials') || 
-                     sessionStorage.getItem('userInitials') ||
-                     getInitials(displayName);
-
-    return {
-      display_name: displayName,
-      email: email,
-      initials: initials
-    };
-  };
-
-  const getInitials = (name) => {
-    if (!name || name.trim() === "") return "AU";
-    const parts = name.trim().split(" ");
-    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-    return name.slice(0, 2).toUpperCase();
-  };
-
-  const [user, setUser] = useState(getUserData());
-  const initials = user.initials || getInitials(user.display_name);
-
-  // Update user data when storage changes
+  // Theme Context سے mode لے رہے ہیں
+  const themeContext = useTheme();
+  
+  // 🔴 سادہ طریقہ: بس mode چیک کریں
+  let mode = 'light';
+  
+  // سب possibilities چیک کریں
+  if (themeContext.mode) {
+    mode = themeContext.mode; // اگر direct mode ہے
+  } else if (themeContext.theme && themeContext.theme.mode) {
+    mode = themeContext.theme.mode; // اگر theme object میں mode ہے
+  } else if (themeContext.currentTheme && themeContext.currentTheme.mode) {
+    mode = themeContext.currentTheme.mode; // اگر currentTheme میں mode ہے
+  }
+  
+  // بس colors طے کریں
+  const isDarkMode = mode === 'dark';
+  const backgroundColor = isDarkMode ? '#000000' : '#FFFFFF';
+  const textColor = isDarkMode ? '#FFFFFF' : '#000000';
+  const logoFilter = isDarkMode ? 'invert(1) brightness(2)' : 'none';
+  
+  // Logout button colors - آپ کی requirement کے مطابق
+  const logoutBgColor = isDarkMode ? 'rgba(239, 68, 68, 0.15)' : 'rgba(239, 68, 68, 0.1)'; // Light red
+  const logoutBorderColor = '#EF4444'; // Red border
+  const logoutTextColor = '#EF4444'; // Red text and icon
+  
+  // localStorage/sessionStorage سے REAL user data لائیں
   useEffect(() => {
-    const handleStorageChange = () => {
-      setUser(getUserData());
+    const loadUserData = () => {
+      // پہلے localStorage چیک کریں (Remember me case)
+      let userData = localStorage.getItem("user");
+      let token = localStorage.getItem("token");
+      
+      // اگر localStorage میں نہیں تو sessionStorage چیک کریں (Not Remember me case)
+      if (!userData || !token) {
+        userData = sessionStorage.getItem("user");
+        token = sessionStorage.getItem("token");
+      }
+      
+      if (userData && token) {
+        try {
+          const parsedUser = JSON.parse(userData);
+          console.log("Header میں User Data:", parsedUser); // Debugging کے لیے
+          
+          // اصل Supabase user object سے data نکالیں
+          const userName = parsedUser.user_metadata?.full_name || 
+                          parsedUser.user_metadata?.name || 
+                          parsedUser.email?.split('@')[0] || 
+                          "User";
+          
+          const userEmail = parsedUser.email || "No email";
+          
+          setUser({
+            display_name: userName,
+            email: userEmail,
+            initials: getInitials(userName),
+            // مکمل user object بھی save کریں اگر ضرورت ہو
+            full_user: parsedUser
+          });
+        } catch (error) {
+          console.error("Error parsing user data:", error);
+          // Fallback data
+          setUser({
+            display_name: "Guest User",
+            email: "guest@example.com",
+            initials: "GU"
+          });
+        }
+      } else {
+        // اگر کوئی user data نہیں ہے تو login پر redirect کریں
+        console.warn("No user data found in storage, redirecting to login");
+        navigate("/login");
+      }
     };
-
+    
+    loadUserData();
+    
+    // storage میں تبدیلیوں کو listen کریں
+    const handleStorageChange = (e) => {
+      if (e.key === "user" || e.key === "token") {
+        loadUserData();
+      }
+    };
+    
     window.addEventListener('storage', handleStorageChange);
     
-    // Also check periodically (for same-tab changes)
-    const interval = setInterval(() => {
-      const newUserData = getUserData();
-      if (JSON.stringify(newUserData) !== JSON.stringify(user)) {
-        setUser(newUserData);
-      }
-    }, 1000);
-
+    // ہر بار component mount ہونے پر بھی check کریں
+    const interval = setInterval(loadUserData, 5000); // ہر 5 سیکنڈ بعد چیک کریں
+    
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       clearInterval(interval);
     };
-  }, [user]);
+  }, [navigate]);
+  
+  // Initials نکالنے کے لیے function
+  const getInitials = (name) => {
+    if (!name) return "U";
+    return name
+      .split(' ')
+      .map(word => word[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
+  };
 
+  // Mobile check
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
@@ -84,7 +125,7 @@ const Header = ({
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // Ticker Animation
+  // Ticker animation
   useEffect(() => {
     if (isMobile || !tickerRef.current) return;
     let animationId;
@@ -105,79 +146,86 @@ const Header = ({
     navigate("/login");
   };
 
-  // Function to get gradient based on theme
-  const getHeaderGradient = () => {
-    switch(theme) {
-      case 'dark':
-        return `linear-gradient(135deg, ${primaryColor} 0%, ${primaryColor}80 50%, ${primaryColor}40 100%)`;
-      case 'blue':
-        return `linear-gradient(135deg, ${primaryColor} 0%, #60A5FA 50%, ${primaryColor} 100%)`;
-      case 'green':
-        return `linear-gradient(135deg, ${primaryColor} 0%, #34D399 50%, ${primaryColor} 100%)`;
-      default: // light
-        return `linear-gradient(135deg, ${primaryColor} 0%, #3B82F6 50%, #1D4ED8 100%)`;
-    }
-  };
-
-  // Function to get ticker gradient
-  const getTickerGradient = () => {
-    switch(theme) {
-      case 'dark':
-        return `linear-gradient(90deg, ${primaryColor} 0%, ${primaryColor}80 50%, ${primaryColor} 100%)`;
-      case 'blue':
-        return `linear-gradient(90deg, ${primaryColor} 0%, #93C5FD 50%, ${primaryColor} 100%)`;
-      case 'green':
-        return `linear-gradient(90deg, ${primaryColor} 0%, #6EE7B7 50%, ${primaryColor} 100%)`;
-      default: // light
-        return `linear-gradient(90deg, ${primaryColor} 0%, #4F46E5 50%, ${primaryColor} 100%)`;
-    }
-  };
-
-  // Function to get text color based on theme
-  const getTextColor = () => {
-    switch(theme) {
-      case 'dark':
-        return '#F9FAFB'; // Light text for dark theme
-      case 'blue':
-        return '#1E40AF'; // Dark blue text for blue theme
-      case 'green':
-        return '#065F46'; // Dark green text for green theme
-      default: // light
-        return '#FFFFFF'; // White text for light theme
-    }
-  };
-
-  const textColor = getTextColor();
-  const headerGradient = getHeaderGradient();
-  const tickerGradient = getTickerGradient();
-
-  return (
-    <div 
-      className="header-container"
-      style={{
+  // اگر user data نہیں ہے تو loading دکھائیں
+  if (!user) {
+    return (
+      <div style={{
         width: "100%",
-        background: headerGradient,
-        borderBottom: `2px solid var(--border, #E2E8F0)`,
+        background: backgroundColor,
         color: textColor,
-        margin: "0",
-        padding: "0",
-      }}
-    >
-      {/* Ticker Bar */}
+        height: '70px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        Loading user data...
+      </div>
+    );
+  }
+
+  // Header کا مکمل JSX
+  return (
+    <div style={{
+      width: "100%",
+      background: backgroundColor,
+      color: textColor,
+      borderBottom: `1px solid ${textColor}20`
+    }}>
+      {/* Ticker Bar (Desktop Only) */}
       {!isMobile && (
-        <div className="ticker-bar" style={{ background: tickerGradient }}>
-          <div ref={tickerRef} className="ticker-content">
+        <div style={{ 
+          background: backgroundColor,
+          borderTop: `1px solid ${textColor}20`,
+          height: '30px',
+          overflow: 'hidden',
+          position: 'relative'
+        }}>
+          <div ref={tickerRef} style={{
+            display: 'flex',
+            position: 'absolute',
+            whiteSpace: 'nowrap'
+          }}>
             {[...Array(8)].map((_, i) => (
-              <div key={i} className="ticker-item">
-                <img src="/assets/images/logoA.png" alt="Logo" className="ticker-logo" />
-                <span className="ticker-text" style={{ color: textColor }}>Pakistan Wire Industries</span>
-                <span className="ticker-tag" style={{ 
-                  background: `rgba(255, 255, 255, ${theme === 'dark' ? '0.1' : '0.2'})`,
+              <div key={i} style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '15px',
+                padding: '0 20px'
+              }}>
+                <img 
+                  src="/assets/images/logoA.png" 
+                  alt="Logo" 
+                  style={{ 
+                    height: '18px',
+                    width: 'auto',
+                    filter: logoFilter 
+                  }}
+                />
+                <span style={{ 
+                  fontSize: '13px',
+                  fontWeight: '500',
                   color: textColor 
+                }}>
+                  Pakistan Wire Industries
+                </span>
+                <span style={{ 
+                  padding: '2px 8px',
+                  borderRadius: '4px',
+                  fontSize: '11px',
+                  fontWeight: '600',
+                  textTransform: 'uppercase',
+                  background: `${textColor}20`,
+                  color: textColor
                 }}>
                   SPI & CCD
                 </span>
-                <span className="ticker-separator" style={{ color: textColor, opacity: 0.5 }}>|</span>
+                <span style={{ 
+                  marginLeft: '15px',
+                  fontWeight: '300',
+                  color: textColor
+                }}>
+                  |
+                </span>
               </div>
             ))}
           </div>
@@ -185,106 +233,200 @@ const Header = ({
       )}
 
       {/* Main Header Content */}
-      <div className="header-main-content">
-        <div className="left-section">
-          <div className="logo-title-container">
-            <img src="/assets/images/logoA.png" alt="Logo" className="main-logo" />
-            <div className="title-container">
-              <h1 className="main-title" style={{ color: textColor }}>{title}</h1>
-              <p className="main-subtitle" style={{ color: `rgba(${theme === 'dark' ? '249, 250, 251' : '255, 255, 255'}, 0.9)` }}>
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '12px 24px',
+        minHeight: '70px'
+      }}>
+        {/* Left: Logo + Title */}
+        <div style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <img 
+              src="/assets/images/logoA.png" 
+              alt="Logo" 
+              style={{ 
+                height: '40px',
+                width: 'auto',
+                filter: logoFilter 
+              }}
+            />
+            <div>
+              <h1 style={{ 
+                fontSize: '22px',
+                fontWeight: '700',
+                margin: 0,
+                color: textColor
+              }}>
+                {title}
+              </h1>
+              <p style={{ 
+                fontSize: '13px',
+                fontWeight: '400',
+                margin: '4px 0 0 0',
+                color: textColor,
+                opacity: 0.9
+              }}>
                 {subtitle}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="right-section">
-          <div className="header-icons-row">
-            {/* Notification Bell Component */}
-            <NotificationBell theme={theme} primaryColor={primaryColor} textColor={textColor} />
-            
-            {/* Settings Button */}
+        {/* Right: Icons + User */}
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            {/* Notification */}
+            <div style={{
+              position: 'relative',
+              cursor: 'pointer',
+              padding: '8px',
+              borderRadius: '8px',
+              background: `${textColor}15`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              🔔
+              <span style={{
+                position: 'absolute',
+                top: '-2px',
+                right: '-2px',
+                background: '#EF4444',
+                color: 'white',
+                borderRadius: '50%',
+                width: '18px',
+                height: '18px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '10px',
+                fontWeight: 'bold'
+              }}>
+                3
+              </span>
+            </div>
+
+            {/* Settings */}
             <button 
-              className="settings-btn" 
               onClick={() => navigate("/settings/theme")}
               style={{
-                background: `rgba(255, 255, 255, ${theme === 'dark' ? '0.1' : '0.15'})`,
-                color: textColor
+                background: `${textColor}15`,
+                color: textColor,
+                border: `1px solid ${textColor}30`,
+                padding: '8px 12px',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
               }}
             >
               <FiSettings />
             </button>
-            
-            {/* USER INFO SECTION */}
+
+            {/* User */}
             <div 
-              className="user-section-compact" 
               onClick={() => navigate("/profile")}
               style={{
-                background: `rgba(255, 255, 255, ${theme === 'dark' ? '0.05' : '0.1'})`,
-                border: `1px solid rgba(255, 255, 255, ${theme === 'dark' ? '0.1' : '0.2'})`
+                background: `${textColor}10`,
+                border: `1px solid ${textColor}20`,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '8px 16px',
+                borderRadius: '12px',
+                minWidth: isMobile ? 'auto' : '250px'
               }}
             >
-              <div 
-                className="user-avatar-compact"
-                style={{
-                  background: `linear-gradient(135deg, ${primaryColor}, ${primaryColor}80)`,
-                  color: getContrastColor(primaryColor)
-                }}
-              >
-                {initials}
+              {/* یہاں کلر کو تھیک کیا ہے - Contrast کے لیے */}
+              <div style={{
+                background: isDarkMode ? '#6AECE1' : '#2563EB', // خوبصورت رنگ
+                color: isDarkMode ? '#000000' : '#FFFFFF',      // Contrast والا رنگ
+                fontWeight: 'bold',
+                width: '40px',
+                height: '40px',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '16px',
+                border: `2px solid ${textColor}30`
+              }}>
+                {user.initials}
               </div>
+              
               {!isMobile && (
-                <div className="user-info-compact">
-                  <div className="user-name-compact" style={{ 
-                    fontWeight: "bold", 
-                    fontSize: "14px",
-                    color: textColor
+                <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+                  <div style={{ 
+                    fontWeight: '600', 
+                    fontSize: '14px',
+                    color: textColor,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis'
                   }}>
+                    <FiUser size={12} />
                     {user.display_name}
                   </div>
-                  <div className="user-email-compact" style={{ 
-                    fontSize: "11px", 
-                    color: `rgba(${theme === 'dark' ? '249, 250, 251' : '255, 255, 255'}, 0.8)` 
+                  <div style={{ 
+                    fontSize: '12px', 
+                    color: textColor,
+                    opacity: 0.8,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis'
                   }}>
+                    <FiMail size={12} />
                     {user.email}
                   </div>
                 </div>
               )}
             </div>
 
-            {/* Logout Button */}
+            {/* Logout - آپ کی requirement کے مطابق */}
             <button 
-              className="logout-btn-compact" 
               onClick={handleLogout}
               style={{
-                background: `rgba(255, 255, 255, ${theme === 'dark' ? '0.1' : '0.15'})`,
-                color: textColor
+                background: logoutBgColor, // Light red background
+                color: logoutTextColor, // Red text
+                border: `1px solid ${logoutBorderColor}`, // Red border
+                padding: '8px 16px',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                fontWeight: '600',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = isDarkMode 
+                  ? 'rgba(239, 68, 68, 0.25)' 
+                  : 'rgba(239, 68, 68, 0.15)';
+                e.currentTarget.style.transform = 'translateY(-1px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = logoutBgColor;
+                e.currentTarget.style.transform = 'translateY(0)';
               }}
             >
-              <FiLogOut /> {!isMobile && <span>Logout</span>}
+              <FiLogOut style={{ color: logoutTextColor }} /> {/* Red icon */}
+              {!isMobile && <span>Logout</span>}
             </button>
           </div>
         </div>
       </div>
     </div>
   );
-};
-
-// Helper function to get contrast color (same as in ThemeSettings)
-const getContrastColor = (hexColor) => {
-  if (!hexColor || typeof hexColor !== 'string') return '#FFFFFF';
-  
-  const hex = hexColor.replace('#', '');
-  
-  if (hex.length !== 6) return '#FFFFFF';
-  
-  const r = parseInt(hex.substring(0, 2), 16);
-  const g = parseInt(hex.substring(2, 4), 16);
-  const b = parseInt(hex.substring(4, 6), 16);
-  
-  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-  
-  return luminance > 0.5 ? '#000000' : '#FFFFFF';
 };
 
 export default Header;

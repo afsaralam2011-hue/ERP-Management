@@ -4,7 +4,8 @@ import {
   FiLock,
   FiArrowRight,
   FiAlertCircle,
-  FiCheckCircle
+  FiCheckCircle,
+  FiStar
 } from "react-icons/fi";
 import { createClient } from "@supabase/supabase-js";
 import "./Login.css";
@@ -28,6 +29,19 @@ export default function ResetPassword() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [isDarkTheme, setIsDarkTheme] = useState(true);
+
+  // Theme state
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme) {
+      setIsDarkTheme(savedTheme === "dark");
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    setIsDarkTheme(!isDarkTheme);
+  };
 
   // ✅ Detect recovery session from email link
   useEffect(() => {
@@ -91,52 +105,57 @@ export default function ResetPassword() {
 
   if (loading) {
     return (
-      <div className="erp-bg">
+      <div className={`erp-bg ${isDarkTheme ? 'dark-theme' : 'light-theme'}`}>
         <div className="erp-login-card">
-          <p>Checking reset link...</p>
+          <div className="erp-brand-inline">
+            <img src="/assets/images/logo.png" alt="PWI" />
+            <div className="company-text">
+              <h3 className="company-name">Pakistan Wire Industries</h3>
+              <p className="company-type">Private Limited</p>
+            </div>
+          </div>
+          <p className="loading-text">Checking reset link...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="erp-bg">
-      <div className="bg-particles">
-        <span></span><span></span><span></span><span></span>
-      </div>
+    <div className={`erp-bg ${isDarkTheme ? 'dark-theme' : 'light-theme'}`}>
+      {/* THEME TOGGLE */}
+      <button className="theme-toggle" onClick={toggleTheme}>
+        <FiStar className="theme-icon" />
+      </button>
 
+      {/* LOGIN CARD */}
       <div className="erp-login-card">
-        {/* Branding */}
+        {/* BRANDING */}
         <div className="erp-brand-inline">
-          <img src="/images/logoA.png" alt="PWI" />
-          <span>Pakistan Wire Industries</span>
+          <img src="/assets/images/logo.png" alt="PWI" />
+          <div className="company-text">
+            <h3 className="company-name">Pakistan Wire Industries</h3>
+            <p className="company-type">Private Limited</p>
+          </div>
         </div>
-
-        <p className="erp-subtitle">
-          Create a new secure password
-        </p>
+        
+        <h1 className="erp-title">Reset Your Password</h1>
+        <p className="erp-subtitle">Create a new secure password</p>
 
         {error && (
           <div className="erp-error">
-            <FiAlertCircle /> {error}
+            <FiAlertCircle className="error-icon" /> {error}
           </div>
         )}
 
         {success && (
-          <div
-            className="erp-error"
-            style={{
-              background: "rgba(34,197,94,0.2)",
-              color: "#bbf7d0"
-            }}
-          >
-            <FiCheckCircle /> {success}
+          <div className="erp-success">
+            <FiCheckCircle className="success-icon" /> {success}
           </div>
         )}
 
         <form onSubmit={handleReset} className="erp-form">
           <div className="erp-input">
-            <FiLock />
+            <FiLock className="input-icon" />
             <input
               type="password"
               placeholder="New Password"
@@ -147,7 +166,7 @@ export default function ResetPassword() {
           </div>
 
           <div className="erp-input">
-            <FiLock />
+            <FiLock className="input-icon" />
             <input
               type="password"
               placeholder="Confirm Password"
@@ -159,12 +178,22 @@ export default function ResetPassword() {
 
           <button className="erp-login-btn" disabled={loading}>
             {loading ? "Updating..." : "Update Password"}
-            <FiArrowRight />
+            <FiArrowRight className="btn-icon" />
           </button>
         </form>
 
+        <div className="erp-register">
+          <span className="register-text">Remember your password?</span>
+          <button 
+            onClick={() => navigate("/login")} 
+            className="register-link-btn"
+          >
+            Back to Login
+          </button>
+        </div>
+
         <div className="erp-footer">
-          © {new Date().getFullYear()} Pakistan Wire Industries • ERP v2.0
+          © {new Date().getFullYear()} Pakistan Wire Industries
         </div>
       </div>
     </div>

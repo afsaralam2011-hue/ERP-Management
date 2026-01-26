@@ -55,7 +55,7 @@ import { supabase } from "../../supabaseClient";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { useTheme } from "../../contexts/ThemeContext";
+ import { ThemeContext, useTheme } from '../../contexts/ThemeContext';
 import styles from "./DailyProductionReport.module.css";
 
 const DailyProductionReport = () => {

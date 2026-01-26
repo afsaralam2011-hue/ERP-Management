@@ -1,195 +1,678 @@
-/* REGISTER PAGE CSS WITH FLOATING PWI TEXTS */
+/* Register.css */
 
-.erp-bg {
+/* ===============================
+   BACKGROUND
+================================ */
+.erp-bg.dark-theme {
   min-height: 100vh;
-  background: linear-gradient(135deg,#0f172a,#020617);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 100%;
+  background: radial-gradient(circle at top, #1a1f3c, #0b0f1a);
   position: relative;
   overflow: hidden;
   font-family: "Inter", sans-serif;
-}
-
-/* Floating PWI text items */
-.floating-pwi {
-  position: absolute;
-  font-size: 1.2rem;
-  font-weight: 700;
-  opacity: 0.7;
-  pointer-events: none;
-  white-space: nowrap;
-  user-select: none;
-  animation: floatText 20s linear infinite;
-}
-
-@keyframes floatText {
-  0% { opacity: 0.3; }
-  50% { opacity: 0.9; }
-  100% { opacity: 0.3; }
-}
-
-/* Card */
-.erp-login-card {
-  width: 100%;
-  max-width: 420px;
-  padding: 2.5rem 2.2rem;
-  background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(18px);
-  border-radius: 50px;
-  box-shadow: 0 25px 60px lab(33.31% 47.36 -81.7 / 0.507);
-  color: #e5e7eb;
-  z-index: 2;
-  animation: fadeInUp 0.8s ease;
-}
-
-@keyframes fadeInUp {
-  from { opacity:0; transform: translateY(40px); }
-  to { opacity:1; transform: translateY(0); }
-}
-
-/* Brand inline */
-.erp-brand-inline {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  margin-bottom: 0rem;
+  padding: 20px;
 }
 
-.erp-brand-inline img {
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
-  object-fit: contain;
-}
-
-.erp-brand-inline span {
-  font-size: 1.1rem;
-  font-weight: 600;
-  white-space: nowrap;
-  color: #f8fafc;
-}
-
-/* Subtitle */
-.erp-subtitle {
-  text-align: center;
-  font-size: 0.95rem;
-  color: #cbd5f5;
-  margin-bottom: 0rem;
-}
-
-/* Error / success */
-.erp-error {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0.75rem 0rem;
-  margin-bottom: 1rem;
-  border-radius: 10px;
-  font-size: 0.85rem;
-  background: rgba(239, 68, 68, 0.18);
-  color: #fecaca;
-}
-
-.erp-error.success {
-  background: rgba(34,197,94,0.18);
-  color: #bbf7d0;
-}
-
-/* Form */
-.erp-form {
-  display: flex;
-  flex-direction: column;
-  gap: .5rem;
-}
-
-/* Input */
-.erp-input {
+.erp-bg.light-theme {
+  min-height: 100vh;
+  width: 100%;
+  background: radial-gradient(circle at top, #e2e8f0, #f8fafc);
   position: relative;
-  display: flex;
-  align-items: center;
-  gap: 1px;
-  background: rgba(255, 255, 255, 0.12);
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
-}
-
-.erp-input svg {
-  color: #94a3b8;
-  font-size: 1.1rem;
-}
-
-.erp-input input {
-  background: transparent;
-  border: none;
-  outline: none;
-  color: #f8fafc;
-  width: 100%;
-  font-size: 0.95rem;
-}
-
-.erp-input input::placeholder {
-  color: #94a3b8;
-}
-
-/* Button */
-.erp-login-btn {
+  overflow: hidden;
+  font-family: "Inter", sans-serif;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 5px;
-  padding: 0.85rem;
-  margin-top: 0.1rem;
-  background: linear-gradient(135deg,lch(42.79% 27.36 196.4),oklab(44.094% -0.0708 -0.02385));
-  border: none;
-  border-radius: 12px;
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: #fff;
+  padding: 20px;
+}
+
+/* ===============================
+   THEME TOGGLE
+================================ */
+.theme-toggle {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
+  backdrop-filter: blur(12px);
+  transition: all 0.3s ease;
+  z-index: 1000;
+  border: none;
+}
+
+.dark-theme .theme-toggle {
+  background: rgba(106, 236, 225, 0.2);
+  border: 1px solid #6aece1;
+  color: #6aece1;
+}
+
+.light-theme .theme-toggle {
+  background: rgba(37, 99, 235, 0.2);
+  border: 1px solid #2563eb;
+  color: #2563eb;
+}
+
+.theme-toggle:hover {
+  transform: rotate(15deg) scale(1.1);
+}
+
+.theme-tooltip {
+  position: absolute;
+  top: 120%;
+  right: 50%;
+  transform: translateX(50%);
+  white-space: nowrap;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0;
+  visibility: hidden;
   transition: all 0.3s ease;
 }
 
-.erp-login-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 15px 35px #02297c73;
+.dark-theme .theme-tooltip {
+  background: rgba(30, 41, 59, 0.95);
+  color: #6AECE1;
+  border: 1px solid rgba(106, 236, 225, 0.2);
 }
 
-.erp-login-btn:disabled {
-  opacity: 0.2;
+.light-theme .theme-tooltip {
+  background: rgba(255, 255, 255, 0.95);
+  color: #2563EB;
+  border: 1px solid rgba(37, 99, 235, 0.2);
+}
+
+.theme-toggle:hover .theme-tooltip {
+  opacity: 1;
+  visibility: visible;
+  top: 110%;
+}
+
+/* ===============================
+   REGISTER CARD
+================================ */
+.register-card {
+  width: 100%;
+  max-width: 480px;
+  border-radius: 24px;
+  backdrop-filter: blur(20px);
+  position: relative;
+  z-index: 2;
+  overflow: hidden;
+}
+
+.dark-theme .register-card {
+  background: rgba(30, 41, 59, 0.85);
+  border: 1px solid rgba(100, 116, 139, 0.3);
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.35);
+}
+
+.light-theme .register-card {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(203, 213, 225, 0.5);
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.15);
+}
+
+/* ===============================
+   COMPANY HEADER
+================================ */
+.company-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 32px 32px 24px;
+  border-bottom: 1px solid;
+  min-height: 100px; /* فکسڈ مین ہائیٹ */
+}
+
+.dark-theme .company-header {
+  border-bottom-color: rgba(100, 116, 139, 0.3);
+}
+
+.light-theme .company-header {
+  border-bottom-color: rgba(203, 213, 225, 0.5);
+}
+
+.logo-wrapper {
+  margin-bottom: 0; /* نیچے کا فاصلہ ختم کریں */
+  flex-shrink: 0; /* لوگو کا سائز نہ بڑھے */
+}
+.company-logo {
+  width: 60px; /* تھوڑا چھوٹا کریں */
+  height: 60px; /* تھوڑا چھوٹا کریں */
+  border-radius: 12px;
+  object-fit: contain;
+  padding: 6px;
+}
+
+.dark-theme .company-logo {
+  background: rgba(106, 236, 225, 0.1);
+  border: 1px solid rgba(106, 236, 225, 0.2);
+}
+
+.light-theme .company-logo {
+  background: rgba(37, 99, 235, 0.1);
+  border: 1px solid rgba(37, 99, 235, 0.2);
+}
+
+.company-details {
+  margin-top: 0; /* اوپر کا فاصلہ ختم کریں */
+  text-align: left;
+}
+
+/* COMPANY NAME - TEXT COLOR */
+.company-name {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0 0 4px 0;
+  color: #FFFFFF !important;
+  line-height: 1.2;
+  white-space: nowrap; /* ایک لائن میں رہے */
+}
+
+.dark-theme .company-name {
+  color: #FFFFFF !important;
+}
+
+.light-theme .company-name {
+  color: #1E293B !important;
+}
+
+/* COMPANY TYPE - TEXT COLOR */
+.company-type {
+  font-size: 10px;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+  color: #6AECE1 !important;
+  line-height: 1.2;
+  white-space: nowrap; /* ایک لائن میں رہے */
+}
+
+.dark-theme .company-type {
+  color: #6AECE1 !important;
+}
+
+.light-theme .company-type {
+  color: #2563EB !important;
+}
+
+/* ERP TITLE - TEXT COLOR */
+.erp-title {
+  font-size: 11px !important; /* بہت چھوٹا */
+  font-weight: 500;
+  margin: 4px 0 0 0 !important; /* اوپر space دیں */
+  color: #CBD5E1 !important;
+  line-height: 1.2;
+  letter-spacing: 0.5px;
+  opacity: 0.9;
+}
+
+.dark-theme .erp-title {
+  color: #CBD5E1 !important;
+}
+
+.light-theme .erp-title {
+  color: #64748B !important;
+}
+
+/* ===============================
+   REGISTER HEADER
+================================ */
+.register-header {
+  padding: 24px 32px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.register-title h2 {
+  font-size: 26px;
+  font-weight: 700;
+  margin: 0 0 4px 0;
+}
+
+.dark-theme .register-title h2 {
+  color: #FFFFFF !important;
+}
+
+.light-theme .register-title h2 {
+  color: #1E293B !important;
+}
+
+.register-subtitle {
+  font-size: 14px;
+  margin: 0;
+}
+
+.dark-theme .register-subtitle {
+  color: #CBD5E1 !important;
+}
+
+.light-theme .register-subtitle {
+  color: #64748B !important;
+}
+
+.security-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.dark-theme .security-badge {
+  background: rgba(106, 236, 225, 0.1);
+  color: #6AECE1 !important;
+  border: 1px solid rgba(106, 236, 225, 0.2);
+}
+
+.light-theme .security-badge {
+  background: rgba(37, 99, 235, 0.1);
+  color: #2563EB !important;
+  border: 1px solid rgba(37, 99, 235, 0.2);
+}
+
+.badge-icon {
+  font-size: 14px;
+}
+
+/* ===============================
+   ERROR AND SUCCESS MESSAGES
+================================ */
+.register-error, .register-success {
+  margin: 16px 32px;
+  padding: 16px;
+  border-radius: 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.register-error {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.register-error .error-icon {
+  color: #EF4444;
+  font-size: 20px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.register-error span {
+  color: #EF4444 !important;
+  font-size: 14px;
+}
+
+.register-success {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.register-success .success-icon {
+  color: #10B981;
+  font-size: 20px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.success-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.success-title {
+  color: #10B981 !important;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.success-message {
+  color: #10B981 !important;
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+/* ===============================
+   REGISTER FORM
+================================ */
+.register-form {
+  padding: 0 32px 32px;
+}
+
+.input-group {
+  margin-bottom: 20px;
+}
+
+.input-group label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.dark-theme .input-group label {
+  color: #E2E8F0 !important;
+}
+
+.light-theme .input-group label {
+  color: #475569 !important;
+}
+
+.label-icon {
+  font-size: 16px;
+}
+
+.dark-theme .label-icon {
+  color: #6AECE1;
+}
+
+.light-theme .label-icon {
+  color: #2563EB;
+}
+
+.register-input {
+  width: 100%;
+  height: 50px;
+  padding: 0 16px;
+  border-radius: 12px;
+  font-size: 14px;
+  outline: none;
+  border: 1px solid;
+  transition: all 0.3s ease;
+}
+
+.dark-theme .register-input {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(100, 116, 139, 0.4);
+  color: #FFFFFF !important;
+}
+
+.light-theme .register-input {
+  background: #FFFFFF;
+  border-color: #E2E8F0;
+  color: #1E293B !important;
+}
+
+.dark-theme .register-input::placeholder {
+  color: #94A3B8 !important;
+}
+
+.light-theme .register-input::placeholder {
+  color: #94A3B8 !important;
+}
+
+.dark-theme .register-input:focus {
+  border-color: #6AECE1;
+  box-shadow: 0 0 0 3px rgba(106, 236, 225, 0.15);
+}
+
+.light-theme .register-input:focus {
+  border-color: #2563EB;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+/* ===============================
+   REGISTER BUTTON
+================================ */
+.register-btn {
+  width: 100%;
+  height: 52px;
+  border-radius: 12px;
+  border: none;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.3s ease;
+  margin-top: 8px;
+  background: linear-gradient(135deg, #6AECE1, #2563EB);
+  color: #FFFFFF !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.light-theme .register-btn {
+  background: linear-gradient(135deg, #2563EB, #8B5CF6);
+}
+
+.register-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(106, 236, 225, 0.3);
+}
+
+.register-btn:disabled {
+  opacity: 0.7;
   cursor: not-allowed;
 }
 
-/* Links */
-.erp-register {
-  text-align: center;
-  margin-top: 0rem;
-  font-size: 0.85rem;
+.arrow-icon {
+  font-size: 18px;
+  transition: transform 0.3s ease;
 }
 
-.erp-register a {
-  color: #60a5fa;
+.register-btn:hover .arrow-icon {
+  transform: translateX(4px);
+}
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #FFFFFF;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-right: 8px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ===============================
+   DIVIDER AND LOGIN LINK
+================================ */
+.divider {
+  margin: 24px 0;
+  text-align: center;
+  position: relative;
+}
+
+.divider::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.2;
+}
+
+.divider span {
+  background: inherit;
+  padding: 0 16px;
+  position: relative;
+  font-size: 13px;
+}
+
+.dark-theme .divider span {
+  color: #CBD5E1 !important;
+}
+
+.light-theme .divider span {
+  color: #64748B !important;
+}
+
+.login-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 12px;
   text-decoration: none;
-  font-weight: 500;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.3s ease;
 }
 
-.erp-register a:hover {
-  text-decoration: underline;
+.dark-theme .login-link {
+  background: rgba(106, 236, 225, 0.1);
+  color: #6AECE1 !important;
+  border: 1px solid rgba(106, 236, 225, 0.2);
 }
 
-/* Footer */
-.erp-footer {
+.light-theme .login-link {
+  background: rgba(37, 99, 235, 0.1);
+  color: #2563EB !important;
+  border: 1px solid rgba(37, 99, 235, 0.2);
+}
+
+.login-link:hover {
+  transform: translateY(-2px);
+}
+
+.dark-theme .login-link:hover {
+  background: rgba(106, 236, 225, 0.15);
+  box-shadow: 0 5px 15px rgba(106, 236, 225, 0.2);
+}
+
+.light-theme .login-link:hover {
+  background: rgba(37, 99, 235, 0.15);
+  box-shadow: 0 5px 15px rgba(37, 99, 235, 0.2);
+}
+
+.link-arrow {
+  font-size: 16px;
+}
+
+/* ===============================
+   REGISTER FOOTER
+================================ */
+.register-footer {
+  padding: 20px 32px;
+  border-top: 1px solid;
   text-align: center;
-  margin-top: 0rem;
-  font-size: 0.75rem;
-  color: #94a3b8;
 }
 
-/* Responsive */
+.dark-theme .register-footer {
+  border-top-color: rgba(100, 116, 139, 0.3);
+  color: #94A3B8 !important;
+}
+
+.light-theme .register-footer {
+  border-top-color: rgba(203, 213, 225, 0.5);
+  color: #64748B !important;
+}
+
+.register-footer p {
+  margin: 0 0 4px 0;
+  font-size: 13px;
+}
+
+.version {
+  font-size: 12px !important;
+  opacity: 0.8;
+}
+
+/* ===============================
+   RESPONSIVE DESIGN
+================================ */
+@media (max-width: 768px) {
+  .register-card {
+    max-width: 95%;
+  }
+  
+  .theme-toggle {
+    top: 16px;
+    right: 16px;
+    width: 40px;
+    height: 40px;
+  }
+  
+  .company-header,
+  .register-header,
+  .register-form,
+  .register-footer {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+
+  .company-name {
+    font-size: 16px;
+    white-space: normal; /* موبائل پر wrap ہو سکے */
+  }
+  
+  .register-title h2 {
+    font-size: 24px;
+  }
+  
+  .register-error,
+  .register-success {
+    margin-left: 24px;
+    margin-right: 24px;
+  }
+}
+
 @media (max-width: 480px) {
-  .erp-login-card {
-    padding: 2rem 1.5rem;
-    margin: 0 1rem;
+  .erp-bg {
+    padding: 10px;
+  }
+  
+  .register-card {
+    max-width: 100%;
+  }
+  
+  .register-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .company-logo {
+    width: 70px;
+    height: 70px;
+  }
+  
+  .company-name {
+    font-size: 18px;
+  }
+  
+  .erp-title {
+    font-size: 12px;
+    white-space: normal; /* موبائل پر wrap ہو سکے */
+  }
+  
+  .register-title h2 {
+    font-size: 22px;
+  }
+  
+  .register-input {
+    height: 48px;
+  }
+  
+  .register-btn {
+    height: 50px;
   }
 }

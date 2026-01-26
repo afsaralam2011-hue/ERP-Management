@@ -3,8 +3,7 @@ import { Link } from "react-router-dom";
 import {
   FiMail,
   FiArrowRight,
-  FiSun,
-  FiMoon,
+  FiStar,
   FiAlertCircle,
   FiCheckCircle
 } from "react-icons/fi";
@@ -27,11 +26,20 @@ export default function ForgotPassword() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [dark, setDark] = useState(true);
+  const [isDarkTheme, setIsDarkTheme] = useState(true);
 
+  // Theme state
   useEffect(() => {
-    document.body.className = dark ? "dark" : "light";
-  }, [dark]);
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme) {
+      setIsDarkTheme(savedTheme === "dark");
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    setIsDarkTheme(!isDarkTheme);
+    localStorage.setItem("theme", !isDarkTheme ? "dark" : "light");
+  };
 
   const handleReset = async (e) => {
     e.preventDefault();
@@ -64,47 +72,41 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="erp-bg">
-      <button className="theme-toggle" onClick={() => setDark(!dark)}>
-        {dark ? <FiSun /> : <FiMoon />}
+    <div className={`erp-bg ${isDarkTheme ? 'dark-theme' : 'light-theme'}`}>
+      {/* THEME TOGGLE */}
+      <button className="theme-toggle" onClick={toggleTheme}>
+        <FiStar className="theme-icon" />
       </button>
 
-      <div className="bg-particles">
-        <span></span><span></span><span></span><span></span>
-      </div>
-
+      {/* LOGIN CARD */}
       <div className="erp-login-card">
-        {/* Branding */}
+        {/* BRANDING */}
         <div className="erp-brand-inline">
-          <img src="/images/logo.png" alt="PWI" />
-          <span>Pakistan Wire Industries</span>
+          <img src="/assets/images/logo.png" alt="PWI" />
+          <div className="company-text">
+            <h3 className="company-name">Pakistan Wire Industries</h3>
+            <p className="company-type">Private Limited</p>
+          </div>
         </div>
-
-        <p className="erp-subtitle">
-          Reset your account password
-        </p>
+        
+        <h1 className="erp-title">Forgot Password</h1>
+        <p className="erp-subtitle">Enter your email to reset your password</p>
 
         {error && (
           <div className="erp-error">
-            <FiAlertCircle /> {error}
+            <FiAlertCircle className="error-icon" /> {error}
           </div>
         )}
 
         {success && (
-          <div
-            className="erp-error"
-            style={{
-              background: "rgba(34,197,94,0.2)",
-              color: "#bbf7d0"
-            }}
-          >
-            <FiCheckCircle /> {success}
+          <div className="erp-success">
+            <FiCheckCircle className="success-icon" /> {success}
           </div>
         )}
 
         <form onSubmit={handleReset} className="erp-form">
           <div className="erp-input">
-            <FiMail />
+            <FiMail className="input-icon" />
             <input
               type="email"
               placeholder="Enter your registered email"
@@ -116,16 +118,19 @@ export default function ForgotPassword() {
 
           <button className="erp-login-btn" disabled={loading}>
             {loading ? "Sending Email..." : "Send Reset Link"}
-            <FiArrowRight />
+            <FiArrowRight className="btn-icon" />
           </button>
         </form>
 
         <div className="erp-register">
-          <Link to="/login">Back to Login</Link>
+          <span className="register-text">Remember your password?</span>
+          <Link to="/login" className="register-link">
+            Back to Login
+          </Link>
         </div>
 
         <div className="erp-footer">
-          © {new Date().getFullYear()} Pakistan Wire Industries • ERP v2.0
+          © {new Date().getFullYear()} Pakistan Wire Industries
         </div>
       </div>
     </div>

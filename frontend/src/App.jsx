@@ -1,3 +1,4 @@
+// src/App.jsx
 import React from "react";
 import {
   BrowserRouter as Router,
@@ -5,7 +6,8 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
-import { ThemeProvider } from "./contexts/ThemeContext";
+import { ThemeProvider, useTheme } from './contexts/ThemeContext';
+import ThemeSettingsBenchmarks from './components/Settings/ThemeSettingsBenchmarks';
 import './styles/global.css';
 import './output.css';
 import Layout from "./components/common/Layout";
@@ -14,8 +16,7 @@ import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
-import ThemeSettings from './pages/Settings/ThemeSettings';
-import ChromeThemeSettings from './pages/Settings/ChromeThemeSettings';
+import ThemeSettings from './components/Settings/ThemeSettings';
 import Dashboard from "./pages/dashboard/Dashboard";
 import HRDashboard from "./pages/departments/HR/HRDashboard";
 import FinanceDashboard from "./pages/departments/Finance/FinanceDashboard";
@@ -58,12 +59,15 @@ function App() {
         <div className="App">
           <main>
             <Routes>
+              {/* Public Routes - Authentication */}
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
 
+              {/* Protected Routes */}
               <Route element={<ProtectedRoute />}>
+                {/* Main Dashboard */}
                 <Route
                   path="/dashboard"
                   element={
@@ -73,20 +77,27 @@ function App() {
                   }
                 />
                 
+                {/* Settings Routes */}
                 <Route 
                   path="/settings/theme" 
                   element={
-                    <Layout title="Theme Settings" subtitle="Customize Your Dashboard">
+                    <Layout title="Theme Settings" subtitle="Customize Your Dashboard Appearance">
                       <ThemeSettings />
                     </Layout>
                   } 
                 />
-                
+
+                {/* ⭐ Performance Benchmarks Route - یہاں add کریں */}
                 <Route 
-                  path="/settings/chrome-theme" 
-                  element={<ChromeThemeSettings />} 
+                  path="/settings/performance-benchmarks" 
+                  element={
+                    <Layout title="Performance Benchmarks" subtitle="Theme Settings Performance Targets">
+                      <ThemeSettingsBenchmarks />
+                    </Layout>
+                  } 
                 />
 
+                {/* Department Dashboards */}
                 <Route 
                   path="/hr" 
                   element={
@@ -136,6 +147,7 @@ function App() {
                   } 
                 />
 
+                {/* Production Sections */}
                 <Route 
                   path="/production-sections" 
                   element={
@@ -145,6 +157,7 @@ function App() {
                   } 
                 />
 
+                {/* Flattening Section Routes */}
                 <Route 
                   path="/production-sections/flattening" 
                   element={
@@ -186,6 +199,7 @@ function App() {
                   } 
                 />
 
+                {/* Spiral Section Routes */}
                 <Route 
                   path="/production-sections/spiral" 
                   element={
@@ -235,6 +249,7 @@ function App() {
                   } 
                 />
 
+                {/* Raw Material Section Routes */}
                 <Route 
                   path="/production-sections/raw-material" 
                   element={
@@ -284,6 +299,7 @@ function App() {
                   } 
                 />
 
+                {/* PVC Coating Section Routes */}
                 <Route 
                   path="/production-sections/pvc-coating" 
                   element={
@@ -333,6 +349,7 @@ function App() {
                   } 
                 />
                 
+                {/* Production Reports */}
                 <Route 
                   path="/production-reports/daily" 
                   element={
@@ -359,7 +376,8 @@ function App() {
                 />
 
               </Route>
-
+                
+              {/* Default & Fallback Routes */}
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Routes>
