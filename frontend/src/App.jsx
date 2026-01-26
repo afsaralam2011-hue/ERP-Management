@@ -98,7 +98,6 @@ function App() {
                       </Layout>
                     } 
                   />
-
                   {/* Department Dashboards */}
                   <Route 
                     path="/hr" 
