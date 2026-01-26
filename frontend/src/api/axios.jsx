@@ -1,7 +1,11 @@
 import axios from 'axios';
 
 const instance = axios.create({
+<<<<<<< HEAD
   baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000',
+=======
+  baseURL: process.env.REACT_APP_API_URL || 'https://erp-management-8rt3.onrender.com',
+>>>>>>> de48dd99d82d0005078d2f34dac0bdbd9d3ade5d
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',

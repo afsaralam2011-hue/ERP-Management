@@ -3,8 +3,8 @@
 // ========================================================
 import React, { useState } from 'react';
 import { supabase } from '../../../supabaseClient';
-import { 
-  FiSave, FiX, FiPackage, FiCalendar, 
+import {
+  FiSave, FiX, FiPackage, FiCalendar,
   FiUser, FiHash, FiRefreshCw, FiMessageSquare,
   FiDownload, FiUpload
 } from 'react-icons/fi';
@@ -49,55 +49,55 @@ const MaterialTransactionForm = ({ onClose, onSaveSuccess }) => {
   // Validate form
   const validateForm = () => {
     setError('');
-    
+
     if (!formData.gate_pass.trim()) {
       setError('Gate pass number is required');
       return false;
     }
-    
+
     if (formData.transaction_type === 'receive' && !formData.supplier.trim()) {
       setError('Supplier is required for receiving');
       return false;
     }
-    
+
     if (!formData.person_name.trim()) {
-      setError(`${formData.transaction_type === 'receive' ? 'Received by' : 
-                formData.transaction_type === 'issue' ? 'Issued by' : 'Returned by'} is required`);
+      setError(`${formData.transaction_type === 'receive' ? 'Received by' :
+        formData.transaction_type === 'issue' ? 'Issued by' : 'Returned by'} is required`);
       return false;
     }
-    
+
     if (!formData.quantity || parseFloat(formData.quantity) <= 0) {
       setError('Please enter valid quantity');
       return false;
     }
-    
+
     if (!formData.wire_size) {
       setError('Please select wire size');
       return false;
     }
-    
+
     if (!formData.category) {
       setError('Please select category');
       return false;
     }
-    
+
     if (!formData.shape) {
       setError('Please select shape');
       return false;
     }
-    
+
     return true;
   };
 
   // Save to database
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
 
     try {
       setLoading(true);
-      
+
       // SIMPLE DATA - using only existing columns
       const dbData = {
         gate_pass: formData.gate_pass,
@@ -112,16 +112,16 @@ const MaterialTransactionForm = ({ onClose, onSaveSuccess }) => {
         status: 'active',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-        
+
         // Single column for all person types
         received_by: formData.person_name, // Always use received_by column
-        
+
         // Supplier only for receiving
         supplier: formData.transaction_type === 'receive' ? formData.supplier : null
       };
-      
+
       console.log('Saving data:', dbData);
-      
+
       const { data, error: insertError } = await supabase
         .from('raw_material_log')
         .insert([dbData])
@@ -132,16 +132,16 @@ const MaterialTransactionForm = ({ onClose, onSaveSuccess }) => {
         setError('❌ Failed to save: ' + insertError.message);
         throw insertError;
       }
-      
+
       // Success message
       const transactionMessages = {
         'receive': 'Material received successfully!',
         'issue': 'Material issued successfully!',
         'return': 'Material returned successfully!'
       };
-      
+
       setSuccess(`✅ ${transactionMessages[formData.transaction_type]}`);
-      
+
       // COMPLETE RESET AFTER 1 SECOND
       setTimeout(() => {
         // Complete reset
@@ -149,13 +149,13 @@ const MaterialTransactionForm = ({ onClose, onSaveSuccess }) => {
           ...initialFormState,
           transaction_type: formData.transaction_type
         });
-        
+
         setSuccess('');
-        
+
         if (onSaveSuccess) onSaveSuccess(data[0]);
-        
+
       }, 1000);
-      
+
     } catch (error) {
       console.error('Save error:', error);
       // Error already set above
@@ -177,7 +177,7 @@ const MaterialTransactionForm = ({ onClose, onSaveSuccess }) => {
 
   // Get label based on transaction type
   const getTransactionLabel = () => {
-    switch(formData.transaction_type) {
+    switch (formData.transaction_type) {
       case 'receive': return 'Receive Material';
       case 'issue': return 'Issue Material';
       case 'return': return 'Return Material';
@@ -187,7 +187,7 @@ const MaterialTransactionForm = ({ onClose, onSaveSuccess }) => {
 
   // Get person label based on transaction type
   const getPersonLabel = () => {
-    switch(formData.transaction_type) {
+    switch (formData.transaction_type) {
       case 'receive': return 'Received By *';
       case 'issue': return 'Issued By *';
       case 'return': return 'Returned By *';
@@ -197,7 +197,7 @@ const MaterialTransactionForm = ({ onClose, onSaveSuccess }) => {
 
   // Get placeholder based on transaction type
   const getPersonPlaceholder = () => {
-    switch(formData.transaction_type) {
+    switch (formData.transaction_type) {
       case 'receive': return 'Enter receiver name';
       case 'issue': return 'Enter issuer name';
       case 'return': return 'Enter returner name';
@@ -207,7 +207,7 @@ const MaterialTransactionForm = ({ onClose, onSaveSuccess }) => {
 
   // Get date label based on transaction type
   const getDateLabel = () => {
-    switch(formData.transaction_type) {
+    switch (formData.transaction_type) {
       case 'receive': return 'Receiving Date *';
       case 'issue': return 'Issuing Date *';
       case 'return': return 'Return Date *';
@@ -238,11 +238,11 @@ const MaterialTransactionForm = ({ onClose, onSaveSuccess }) => {
           <FiPackage /> {getTransactionLabel()}
         </h2>
       </div>
-      
+
       {/* Content */}
       <div style={{ padding: '25px' }}>
         <form onSubmit={handleSubmit}>
-          
+
           {/* Success Message */}
           {success && (
             <div style={{
@@ -256,7 +256,7 @@ const MaterialTransactionForm = ({ onClose, onSaveSuccess }) => {
               {success}
             </div>
           )}
-          
+
           {/* Error Message */}
           {error && (
             <div style={{
@@ -270,11 +270,11 @@ const MaterialTransactionForm = ({ onClose, onSaveSuccess }) => {
               {error}
             </div>
           )}
-          
+
           {/* Transaction Type Selector */}
           <div style={{ marginBottom: '20px' }}>
-            <div style={{ 
-              display: 'flex', 
+            <div style={{
+              display: 'flex',
               gap: '10px',
               marginBottom: '15px'
             }}>
@@ -286,9 +286,9 @@ const MaterialTransactionForm = ({ onClose, onSaveSuccess }) => {
                   style={{
                     flex: 1,
                     padding: '12px',
-                    background: formData.transaction_type === type ? 
-                      (type === 'receive' ? '#2ecc71' : 
-                       type === 'issue' ? '#e74c3c' : '#f39c12') : '#ecf0f1',
+                    background: formData.transaction_type === type ?
+                      (type === 'receive' ? '#2ecc71' :
+                        type === 'issue' ? '#e74c3c' : '#f39c12') : '#ecf0f1',
                     color: formData.transaction_type === type ? 'white' : '#2c3e50',
                     border: 'none',
                     borderRadius: '8px',
@@ -309,7 +309,7 @@ const MaterialTransactionForm = ({ onClose, onSaveSuccess }) => {
               ))}
             </div>
           </div>
-          
+
           {/* Gate Pass */}
           <div style={{ marginBottom: '15px' }}>
             <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', color: '#2c3e50' }}>
@@ -332,7 +332,7 @@ const MaterialTransactionForm = ({ onClose, onSaveSuccess }) => {
               disabled={loading}
             />
           </div>
-          
+
           {/* Date */}
           <div style={{ marginBottom: '15px' }}>
             <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', color: '#2c3e50' }}>
@@ -355,7 +355,7 @@ const MaterialTransactionForm = ({ onClose, onSaveSuccess }) => {
               max={new Date().toISOString().split('T')[0]}
             />
           </div>
-          
+
           {/* Supplier (Only for receiving) */}
           {formData.transaction_type === 'receive' && (
             <div style={{ marginBottom: '15px' }}>
@@ -380,7 +380,7 @@ const MaterialTransactionForm = ({ onClose, onSaveSuccess }) => {
               />
             </div>
           )}
-          
+
           {/* Single Person Name Column */}
           <div style={{ marginBottom: '15px' }}>
             <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', color: '#2c3e50' }}>
@@ -403,7 +403,7 @@ const MaterialTransactionForm = ({ onClose, onSaveSuccess }) => {
               disabled={loading}
             />
           </div>
-          
+
           {/* Quantity */}
           <div style={{ marginBottom: '15px' }}>
             <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', color: '#2c3e50' }}>
@@ -428,7 +428,7 @@ const MaterialTransactionForm = ({ onClose, onSaveSuccess }) => {
               disabled={loading}
             />
           </div>
-          
+
           {/* Wire Size */}
           <div style={{ marginBottom: '15px' }}>
             <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', color: '#2c3e50' }}>
@@ -457,7 +457,7 @@ const MaterialTransactionForm = ({ onClose, onSaveSuccess }) => {
               <option value="2.00mm">2.00mm</option>
             </select>
           </div>
-          
+
           {/* Category */}
           <div style={{ marginBottom: '15px' }}>
             <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', color: '#2c3e50' }}>
@@ -486,7 +486,7 @@ const MaterialTransactionForm = ({ onClose, onSaveSuccess }) => {
               <option value="F9">F9</option>
             </select>
           </div>
-          
+
           {/* Shape */}
           <div style={{ marginBottom: '15px' }}>
             <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', color: '#2c3e50' }}>
@@ -515,7 +515,7 @@ const MaterialTransactionForm = ({ onClose, onSaveSuccess }) => {
               <option value="rod">Rod</option>
             </select>
           </div>
-          
+
           {/* Remarks */}
           <div style={{ marginBottom: '25px' }}>
             <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500', color: '#2c3e50' }}>
@@ -538,12 +538,12 @@ const MaterialTransactionForm = ({ onClose, onSaveSuccess }) => {
               disabled={loading}
             />
           </div>
-          
+
           {/* Actions */}
-          <div style={{ 
-            display: 'flex', 
-            gap: '10px', 
-            marginTop: '25px', 
+          <div style={{
+            display: 'flex',
+            gap: '10px',
+            marginTop: '25px',
             justifyContent: 'space-between'
           }}>
             <div style={{ display: 'flex', gap: '10px' }}>
@@ -566,7 +566,7 @@ const MaterialTransactionForm = ({ onClose, onSaveSuccess }) => {
               >
                 <FiRefreshCw /> Reset
               </button>
-              
+
               {onClose && (
                 <button
                   type="button"
@@ -586,14 +586,14 @@ const MaterialTransactionForm = ({ onClose, onSaveSuccess }) => {
                 </button>
               )}
             </div>
-            
+
             <button
               type="submit"
               disabled={loading}
               style={{
                 padding: '10px 20px',
-                background: formData.transaction_type === 'receive' ? '#2ecc71' : 
-                           formData.transaction_type === 'issue' ? '#e74c3c' : '#f39c12',
+                background: formData.transaction_type === 'receive' ? '#2ecc71' :
+                  formData.transaction_type === 'issue' ? '#e74c3c' : '#f39c12',
                 color: 'white',
                 border: 'none',
                 borderRadius: '6px',
@@ -618,8 +618,8 @@ const MaterialTransactionForm = ({ onClose, onSaveSuccess }) => {
                 </>
               ) : (
                 <>
-                  <FiSave /> {formData.transaction_type === 'receive' ? 'Receive' : 
-                             formData.transaction_type === 'issue' ? 'Issue' : 'Return'}
+                  <FiSave /> {formData.transaction_type === 'receive' ? 'Receive' :
+                    formData.transaction_type === 'issue' ? 'Issue' : 'Return'}
                 </>
               )}
             </button>

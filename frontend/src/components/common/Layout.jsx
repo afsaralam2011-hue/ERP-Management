@@ -31,21 +31,21 @@ const Layout = ({
   const sidebarWidth = !showSidebar || isMobile
     ? 0
     : sidebarOpen
-    ? SIDEBAR_EXPANDED
-    : SIDEBAR_COLLAPSED;
+      ? SIDEBAR_EXPANDED
+      : SIDEBAR_COLLAPSED;
 
   return (
-    <div 
-      className="layout-container" 
-      style={{ 
-        display: "flex", 
-        height: "100vh", 
-        width: "100vw", 
+    <div
+      className="layout-container"
+      style={{
+        display: "flex",
+        height: "100vh",
+        width: "100vw",
         overflow: "hidden",
         // background: theme.colors.background
       }}
     >
-      
+
       {/* Sidebar */}
       {showSidebar && (
         <aside
@@ -82,8 +82,8 @@ const Layout = ({
       >
         {/* Header */}
         {showHeader && (
-          <header 
-            style={{ 
+          <header
+            style={{
               height: "60px",
               width: "100%",
               flexShrink: 0,
@@ -114,12 +114,12 @@ const Layout = ({
         </div>
 
         {/* Scrollable Content */}
-        <main 
-          className="content-area" 
-          style={{ 
-            flexGrow: 1, 
-            overflowY: "auto", 
-            overflowX: "auto", 
+        <main
+          className="content-area"
+          style={{
+            flexGrow: 1,
+            overflowY: "auto",
+            overflowX: "auto",
             padding: "0px", // سائیڈوں کا گیپ ختم کیا
             boxSizing: "border-box",
             width: "100%",
@@ -128,7 +128,7 @@ const Layout = ({
             alignItems: "flex-start" // اوپر سے شروع کریں
           }}
         >
-          <div style={{ 
+          <div style={{
             width: "100%",
             maxWidth: "100%",
             padding: "0px",
@@ -141,7 +141,7 @@ const Layout = ({
 
       {/* Mobile Backdrop */}
       {isMobile && sidebarOpen && (
-        <div 
+        <div
           onClick={() => setSidebarOpen(false)}
           style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 999 }}
         />

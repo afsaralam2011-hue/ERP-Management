@@ -9,13 +9,9 @@ import {
   FiAlertCircle,
   FiStar
 } from "react-icons/fi";
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from "../../supabaseClient";
+import { useAuth } from "../../context/AuthContext";
 import "./Login.css";
-
-const supabase = createClient(
-  process.env.REACT_APP_SUPABASE_URL,
-  process.env.REACT_APP_SUPABASE_ANON_KEY
-);
 
 export default function Login() {
   const navigate = useNavigate();
@@ -98,7 +94,17 @@ export default function Login() {
     setIsDarkTheme(!isDarkTheme);
   };
 
+<<<<<<< HEAD
   // Handle login
+=======
+  const toggleTheme = () => setTheme(prev => (prev === "dark" ? "light" : "dark"));
+
+  const { login } = useAuth();
+
+  // =========================
+  // LOGIN
+  // =========================
+>>>>>>> de48dd99d82d0005078d2f34dac0bdbd9d3ade5d
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
@@ -116,9 +122,7 @@ export default function Login() {
       }
 
       if (data?.session) {
-        const storage = remember ? localStorage : sessionStorage;
-        storage.setItem("token", data.session.access_token);
-        storage.setItem("user", JSON.stringify(data.user));
+        login(data.session.access_token, data.user, remember);
         navigate("/dashboard", { replace: true });
       }
     } catch {
@@ -169,7 +173,7 @@ export default function Login() {
             <p className="company-type">Private Limited</p>
           </div>
         </div>
-        
+
         <h1 className="erp-title">Welcome to PWI ERP System</h1>
         <p className="erp-subtitle">Enterprise Resource Planning</p>
 

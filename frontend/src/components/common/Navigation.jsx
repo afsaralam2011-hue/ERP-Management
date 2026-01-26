@@ -39,39 +39,39 @@ const Navigation = () => {
   const currentPath = location.pathname;
   const sidebarRef = useRef(null);
   const { theme, primaryColor } = useTheme();
-  
+
   // Dynamic user data function
   const getUserData = () => {
     // Try multiple storage locations for user data
-    const userName = localStorage.getItem('userName') || 
-                    sessionStorage.getItem('userName') ||
-                    localStorage.getItem('display_name') ||
-                    sessionStorage.getItem('display_name') ||
-                    localStorage.getItem('userDisplayName') ||
-                    sessionStorage.getItem('userDisplayName') ||
-                    "Admin User";
-    
+    const userName = localStorage.getItem('userName') ||
+      sessionStorage.getItem('userName') ||
+      localStorage.getItem('display_name') ||
+      sessionStorage.getItem('display_name') ||
+      localStorage.getItem('userDisplayName') ||
+      sessionStorage.getItem('userDisplayName') ||
+      "Admin User";
+
     const userEmail = localStorage.getItem('userEmail') ||
-                      sessionStorage.getItem('userEmail') ||
-                      localStorage.getItem('email') ||
-                      sessionStorage.getItem('email') ||
-                      localStorage.getItem('userEmailAddress') ||
-                      sessionStorage.getItem('userEmailAddress') ||
-                      "admin@pwi.com";
-    
+      sessionStorage.getItem('userEmail') ||
+      localStorage.getItem('email') ||
+      sessionStorage.getItem('email') ||
+      localStorage.getItem('userEmailAddress') ||
+      sessionStorage.getItem('userEmailAddress') ||
+      "admin@pwi.com";
+
     const username = localStorage.getItem('username') ||
-                     sessionStorage.getItem('username') ||
-                     localStorage.getItem('userUsername') ||
-                     sessionStorage.getItem('userUsername') ||
-                     userName.toLowerCase().replace(/\s+/g, '.');
-    
+      sessionStorage.getItem('username') ||
+      localStorage.getItem('userUsername') ||
+      sessionStorage.getItem('userUsername') ||
+      userName.toLowerCase().replace(/\s+/g, '.');
+
     const getInitials = (name) => {
       if (!name || name.trim() === "") return "AU";
       const parts = name.trim().split(" ");
       if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
       return name.slice(0, 2).toUpperCase();
     };
-    
+
     return {
       name: userName,
       email: userEmail,
@@ -97,7 +97,7 @@ const Navigation = () => {
     };
 
     window.addEventListener('storage', handleStorageChange);
-    
+
     // Check periodically for same-tab changes
     const interval = setInterval(() => {
       const newUserData = getUserData();
@@ -199,7 +199,7 @@ const Navigation = () => {
 
   // Function to get text color based on theme
   const getTextColor = (type = 'primary') => {
-    switch(type) {
+    switch (type) {
       case 'primary': return themeColors.textPrimary;
       case 'secondary': return themeColors.textSecondary;
       case 'muted': return themeColors.textMuted;
@@ -285,8 +285,8 @@ const Navigation = () => {
   useEffect(() => {
     const newExpandedSections = { ...expandedSections };
     Object.keys(newExpandedSections).forEach(key => {
-      if (currentPath.includes(key.replace('-', '')) || 
-          (key === 'production' && (currentPath.includes('/production') || currentPath.includes('/production-sections')))) {
+      if (currentPath.includes(key.replace('-', '')) ||
+        (key === 'production' && (currentPath.includes('/production') || currentPath.includes('/production-sections')))) {
         newExpandedSections[key] = true;
       }
     });
@@ -302,7 +302,7 @@ const Navigation = () => {
 
     document.addEventListener('mousedown', handleClickOutside);
     document.addEventListener('touchstart', handleClickOutside);
-    
+
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('touchstart', handleClickOutside);
@@ -408,9 +408,9 @@ const Navigation = () => {
         {userData.initials}
 
         {!sidebarOpen && showTooltip && !isMobile && (
-          <div 
-            className="user-profile-tooltip" 
-            role="group" 
+          <div
+            className="user-profile-tooltip"
+            role="group"
             aria-hidden={!sidebarOpen}
             style={{
               position: 'absolute',
@@ -431,27 +431,27 @@ const Navigation = () => {
             }}
           >
             <div className="tooltip-user-info">
-              <div className="tooltip-user-name" style={{ 
+              <div className="tooltip-user-name" style={{
                 fontSize: '14px',
                 fontWeight: 600,
                 color: themeColors.textPrimary
               }}>
                 {userData.name}
               </div>
-              <div className="tooltip-user-email" style={{ 
+              <div className="tooltip-user-email" style={{
                 fontSize: '12px',
-                color: themeColors.textSecondary 
+                color: themeColors.textSecondary
               }}>
                 {userData.email}
               </div>
-              <div className="tooltip-user-username" style={{ 
+              <div className="tooltip-user-username" style={{
                 fontSize: '11px',
                 color: themeColors.accent,
                 marginTop: '2px'
               }}>
                 @{userData.username}
               </div>
-              <div className="tooltip-user-role" style={{ 
+              <div className="tooltip-user-role" style={{
                 fontSize: '10px',
                 padding: '2px 8px',
                 borderRadius: '10px',
@@ -480,7 +480,7 @@ const Navigation = () => {
       color: themeColors.primary,
       badge: null
     },
-    
+
     production: {
       path: '/dashboard/production',
       label: 'Production Dashboard',
@@ -492,11 +492,11 @@ const Navigation = () => {
         { path: '/dashboard/production', label: 'Production Department', icon: <FiGrid /> },
         { path: '/production-sections', label: 'All Sections', icon: <FiFolder /> },
         { path: '/production-reports/daily', label: 'Daily Production Report', icon: <FiActivity /> },
-        
-        { 
+
+        {
           type: 'department',
           key: 'rawMaterial',
-          label: 'Raw Material Department', 
+          label: 'Raw Material Department',
           icon: <FiDatabase />,
           color: themeColors.secondary,
           subItems: [
@@ -508,11 +508,11 @@ const Navigation = () => {
             { path: '/production-sections/raw-material/new-log', label: 'New Material Log', icon: <FiClipboard /> }
           ]
         },
-        
-        { 
+
+        {
           type: 'department',
           key: 'flattening',
-          label: 'Flattening Department', 
+          label: 'Flattening Department',
           icon: <FiBox />,
           color: themeColors.accent,
           subItems: [
@@ -524,11 +524,11 @@ const Navigation = () => {
             { path: '/production-sections/flattening/new', label: 'New Flattening Record', icon: <FiClipboard /> }
           ]
         },
-        
-        { 
+
+        {
           type: 'department',
           key: 'spiral',
-          label: 'Spiral Department', 
+          label: 'Spiral Department',
           icon: <FiLayers />,
           color: themeColors.accent,
           subItems: [
@@ -539,11 +539,11 @@ const Navigation = () => {
             { path: '/production-sections/spiral/new', label: 'New Spiral Record', icon: <FiClipboard /> }
           ]
         },
-        
-        { 
+
+        {
           type: 'department',
           key: 'pvc',
-          label: 'PVC Coating Department', 
+          label: 'PVC Coating Department',
           icon: <FiPackage />,
           color: themeColors.secondary,
           subItems: [
@@ -554,11 +554,11 @@ const Navigation = () => {
             { path: '/production-sections/pvc-coating/new', label: 'New PVC Record', icon: <FiClipboard /> }
           ]
         },
-        
-        { 
+
+        {
           type: 'department',
           key: 'cutting',
-          label: 'Cutting Packing Section', 
+          label: 'Cutting Packing Section',
           icon: <FiScissors />,
           color: themeColors.accent,
           subItems: [
@@ -567,11 +567,11 @@ const Navigation = () => {
             { path: '/production-reports/daily', label: 'Packing Inventory Reports', icon: <FiArchive /> }
           ]
         },
-        
-        { 
+
+        {
           type: 'department',
           key: 'finishedGoods',
-          label: 'Finished Goods Section', 
+          label: 'Finished Goods Section',
           icon: <FiCheckSquare />,
           color: themeColors.primary,
           subItems: [
@@ -581,7 +581,7 @@ const Navigation = () => {
         }
       ]
     },
-    
+
     hr: {
       path: '/hr',
       label: 'HR Department',
@@ -595,7 +595,7 @@ const Navigation = () => {
         { path: '/hr/leaves', label: 'Leaves', icon: <FiActivity /> }
       ]
     },
-    
+
     finance: {
       path: '/finance',
       label: 'Finance Department',
@@ -609,7 +609,7 @@ const Navigation = () => {
         { path: '/finance/reports', label: 'Reports', icon: <FiDatabase /> }
       ]
     },
-    
+
     sales: {
       path: '/sales',
       label: 'Sales Department',
@@ -623,7 +623,7 @@ const Navigation = () => {
         { path: '/sales/reports', label: 'Reports', icon: <FiDatabase /> }
       ]
     },
-    
+
     it: {
       path: '/it',
       label: 'IT Department',
@@ -637,7 +637,7 @@ const Navigation = () => {
         { path: '/it/security', label: 'Security', icon: <FiClipboard /> }
       ]
     },
-    
+
     logistics: {
       path: '/logistics',
       label: 'Logistics Department',
@@ -655,12 +655,12 @@ const Navigation = () => {
 
   const renderNestedItems = (items, departmentColor = themeColors.primary) => {
     if (!sidebarOpen) return null;
-    
+
     return items.map((item, index) => {
       if (item.type === 'department') {
         const isDeptExpanded = expandedSections[item.key];
         const hasSubItems = item.subItems && item.subItems.length > 0;
-        
+
         return (
           <div key={index} style={{ margin: '2px 0' }}>
             <div
@@ -698,7 +698,7 @@ const Navigation = () => {
                 e.currentTarget.style.borderLeft = `2px solid ${isDeptExpanded ? item.color : 'transparent'}`;
               }}
             >
-              <span className="department-icon" style={{ 
+              <span className="department-icon" style={{
                 color: isDeptExpanded ? item.color : themeColors.textSecondary,
                 fontSize: '16px',
                 display: 'flex',
@@ -710,7 +710,7 @@ const Navigation = () => {
               }}>
                 {item.icon}
               </span>
-              
+
               <div className="department-label" style={{
                 flex: 1,
                 overflow: 'hidden',
@@ -722,7 +722,7 @@ const Navigation = () => {
               }}>
                 {item.label}
               </div>
-              
+
               {hasSubItems && (
                 <span className={`nav-chevron ${isDeptExpanded ? 'chevron-expanded' : ''}`} style={{
                   color: themeColors.accent,
@@ -747,7 +747,7 @@ const Navigation = () => {
               }}>
                 {item.subItems.map((subItem, subIndex) => {
                   const isActive = currentPath === subItem.path || currentPath.startsWith(subItem.path);
-                  
+
                   return (
                     <NavLink
                       key={subItem.path || subIndex}
@@ -793,7 +793,7 @@ const Navigation = () => {
                       }}>
                         {subItem.icon}
                       </span>
-                      
+
                       <div className="sub-nav-label" style={{
                         flex: 1,
                         overflow: 'hidden',
@@ -812,9 +812,9 @@ const Navigation = () => {
           </div>
         );
       }
-      
+
       const isActive = currentPath === item.path || currentPath.startsWith(item.path);
-      
+
       return (
         <NavLink
           key={item.path || index}
@@ -860,7 +860,7 @@ const Navigation = () => {
           }}>
             {item.icon}
           </span>
-          
+
           <div className="sub-nav-label" style={{
             flex: 1,
             overflow: 'hidden',
@@ -878,7 +878,7 @@ const Navigation = () => {
 
   const MobileHeader = () => {
     if (!isMobile) return null;
-    
+
     return (
       <div className="mobile-header" style={{
         position: 'fixed',
@@ -903,7 +903,7 @@ const Navigation = () => {
           <button
             onClick={toggleMobileMenu}
             className="mobile-menu-button"
-            style={{ 
+            style={{
               width: '40px',
               height: '40px',
               display: 'flex',
@@ -930,7 +930,7 @@ const Navigation = () => {
           >
             <FiMenu />
           </button>
-          
+
           <div className="mobile-logo-container" style={{
             width: '40px',
             height: '40px',
@@ -952,7 +952,7 @@ const Navigation = () => {
                 style={{ width: '100%', height: '100%', objectFit: 'contain' }}
               />
             ) : (
-              <div className="mobile-logo-text" style={{ 
+              <div className="mobile-logo-text" style={{
                 fontWeight: 700,
                 fontSize: '18px',
                 color: themeColors.primary
@@ -961,9 +961,9 @@ const Navigation = () => {
               </div>
             )}
           </div>
-          
+
           <div className="mobile-company-name" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-            <div className="company-main-name" style={{ 
+            <div className="company-main-name" style={{
               fontSize: '14px',
               fontWeight: 700,
               color: themeColors.textPrimary,
@@ -971,7 +971,7 @@ const Navigation = () => {
             }}>
               PAKISTAN WIRE
             </div>
-            <div className="company-sub-name" style={{ 
+            <div className="company-sub-name" style={{
               fontSize: '10px',
               fontWeight: 500,
               color: themeColors.accent,
@@ -988,7 +988,7 @@ const Navigation = () => {
           gap: '12px'
         }}>
           <div className="mobile-user-info" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-            <div className="mobile-user-name" style={{ 
+            <div className="mobile-user-name" style={{
               fontSize: '14px',
               fontWeight: 600,
               color: themeColors.textPrimary,
@@ -999,7 +999,7 @@ const Navigation = () => {
             }}>
               {userData.name.split(' ')[0]}
             </div>
-            <div className="mobile-user-username" style={{ 
+            <div className="mobile-user-username" style={{
               fontSize: '11px',
               color: themeColors.textSecondary,
               opacity: 0.8
@@ -1007,7 +1007,7 @@ const Navigation = () => {
               @{userData.username}
             </div>
           </div>
-          
+
           <UserAvatar size="mobile" showTooltip={false} />
         </div>
       </div>
@@ -1024,9 +1024,9 @@ const Navigation = () => {
   return (
     <>
       <MobileHeader />
-      
+
       {isMobile && sidebarOpen && (
-        <div 
+        <div
           className="sidebar-overlay"
           onClick={closeMobileMenu}
           style={{
@@ -1044,7 +1044,7 @@ const Navigation = () => {
       )}
 
       {!isMobile && !sidebarOpen && (
-        <div 
+        <div
           className="sidebar-hover-trigger"
           onMouseEnter={handleSidebarMouseEnter}
           style={{
@@ -1059,7 +1059,7 @@ const Navigation = () => {
         />
       )}
 
-      <div 
+      <div
         ref={sidebarRef}
         className={`sidebar-container ${!sidebarOpen ? 'collapsed' : ''}`}
         onMouseEnter={handleSidebarMouseEnter}
@@ -1129,7 +1129,7 @@ const Navigation = () => {
               <FiX />
             </button>
           )}
-          
+
           <div className="logo-container" style={{
             width: sidebarOpen ? '48px' : '40px',
             height: sidebarOpen ? '48px' : '40px',
@@ -1163,7 +1163,7 @@ const Navigation = () => {
               </div>
             )}
           </div>
-          
+
           {sidebarOpen && (
             <div className="company-info" style={{
               display: 'flex',
@@ -1192,7 +1192,7 @@ const Navigation = () => {
               }}>
                 INDUSTRIES LTD
               </p>
-              
+
               <div className="company-badge" style={{
                 background: 'rgba(255, 255, 255, 0.2)',
                 color: 'white',
@@ -1264,7 +1264,7 @@ const Navigation = () => {
               }
             }}
           >
-            <span className="nav-icon" style={{ 
+            <span className="nav-icon" style={{
               color: currentPath === '/dashboard' ? navigationItems.dashboard.color : themeColors.textSecondary,
               fontSize: '20px',
               minWidth: '24px',
@@ -1276,7 +1276,7 @@ const Navigation = () => {
             }}>
               {navigationItems.dashboard.icon}
             </span>
-            
+
             {sidebarOpen && (
               <div className="nav-label" style={{
                 flex: 1,
@@ -1303,7 +1303,7 @@ const Navigation = () => {
               onClick={(e) => toggleSection('production', e)}
               onKeyDown={(e) => toggleSectionKey('production', e)}
               style={{
-                borderLeft: `3px solid ${currentPath.includes('/production') || currentPath.includes('/production-sections') ? 
+                borderLeft: `3px solid ${currentPath.includes('/production') || currentPath.includes('/production-sections') ?
                   navigationItems.production.color : 'transparent'}`,
                 margin: '3px 12px',
                 padding: sidebarOpen ? '14px 20px' : '12px 0',
@@ -1321,9 +1321,9 @@ const Navigation = () => {
                 border: 'none',
                 outline: 'none',
                 fontWeight: 500,
-                color: currentPath.includes('/production') || currentPath.includes('/production-sections') ? 
+                color: currentPath.includes('/production') || currentPath.includes('/production-sections') ?
                   themeColors.textPrimary : themeColors.textSecondary,
-                background: currentPath.includes('/production') || currentPath.includes('/production-sections') ? 
+                background: currentPath.includes('/production') || currentPath.includes('/production-sections') ?
                   themeColors.hoverBg : 'transparent',
                 width: sidebarOpen ? 'auto' : '46px'
               }}
@@ -1338,19 +1338,19 @@ const Navigation = () => {
               }}
               onMouseLeave={(e) => {
                 if (sidebarOpen) {
-                  e.currentTarget.style.background = currentPath.includes('/production') || currentPath.includes('/production-sections') ? 
+                  e.currentTarget.style.background = currentPath.includes('/production') || currentPath.includes('/production-sections') ?
                     themeColors.hoverBg : 'transparent';
-                  e.currentTarget.style.color = currentPath.includes('/production') || currentPath.includes('/production-sections') ? 
+                  e.currentTarget.style.color = currentPath.includes('/production') || currentPath.includes('/production-sections') ?
                     themeColors.textPrimary : themeColors.textSecondary;
-                  e.currentTarget.style.borderLeft = `3px solid ${currentPath.includes('/production') || currentPath.includes('/production-sections') ? 
+                  e.currentTarget.style.borderLeft = `3px solid ${currentPath.includes('/production') || currentPath.includes('/production-sections') ?
                     navigationItems.production.color : 'transparent'}`;
                   e.currentTarget.style.transform = 'translateX(0)';
                   e.currentTarget.style.boxShadow = 'none';
                 }
               }}
             >
-              <span className="nav-icon" style={{ 
-                color: currentPath.includes('/production') || currentPath.includes('/production-sections') ? 
+              <span className="nav-icon" style={{
+                color: currentPath.includes('/production') || currentPath.includes('/production-sections') ?
                   navigationItems.production.color : themeColors.textSecondary,
                 fontSize: '20px',
                 minWidth: '24px',
@@ -1362,29 +1362,29 @@ const Navigation = () => {
               }}>
                 {navigationItems.production.icon}
               </span>
-              
+
               {sidebarOpen && (
                 <>
                   <div className="nav-label" style={{
                     flex: 1,
                     overflow: 'hidden',
                     fontSize: '14px',
-                    fontWeight: currentPath.includes('/production') || currentPath.includes('/production-sections') ? 
+                    fontWeight: currentPath.includes('/production') || currentPath.includes('/production-sections') ?
                       600 : 500,
                     whiteSpace: 'nowrap',
                     textOverflow: 'ellipsis',
-                    color: currentPath.includes('/production') || currentPath.includes('/production-sections') ? 
+                    color: currentPath.includes('/production') || currentPath.includes('/production-sections') ?
                       themeColors.textPrimary : themeColors.textSecondary,
                     transition: 'all 0.2s ease'
                   }}>
                     {navigationItems.production.label}
                   </div>
-                  
+
                   <div className="nav-right-section" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     {navigationItems.production.badge && (
                       <div className="badge-with-reset" style={{ display: 'flex', alignItems: 'center', gap: '4px', position: 'relative' }}>
-                        <span 
-                          className="nav-badge" 
+                        <span
+                          className="nav-badge"
                           title={`Today's updates: ${dailyUpdates.production}`}
                           style={{
                             background: themeColors.badgeBackground,
@@ -1404,7 +1404,7 @@ const Navigation = () => {
                         >
                           {navigationItems.production.badge}
                         </span>
-                        <button 
+                        <button
                           className="reset-badge-btn"
                           onClick={(e) => resetDepartmentUpdates('production', e)}
                           title="Reset daily count"
@@ -1439,7 +1439,7 @@ const Navigation = () => {
                         </button>
                       </div>
                     )}
-                    
+
                     <span className={`nav-chevron ${expandedSections.production ? 'chevron-expanded' : ''}`} style={{
                       color: themeColors.accent,
                       fontSize: '14px',
@@ -1472,7 +1472,7 @@ const Navigation = () => {
           {Object.entries(navigationItems)
             .filter(([key]) => !['dashboard', 'production'].includes(key))
             .map(([key, item]) => {
-              const isActive = currentPath.includes(item.path) || 
+              const isActive = currentPath.includes(item.path) ||
                 (item.subSections && item.subSections.some(sub => sub.path && currentPath.startsWith(sub.path)));
               const isExpanded = expandedSections[key] && sidebarOpen;
               const hasSubSections = item.subSections && item.subSections.length > 0;
@@ -1546,7 +1546,7 @@ const Navigation = () => {
                       }
                     }}
                   >
-                    <span className="nav-icon" style={{ 
+                    <span className="nav-icon" style={{
                       color: isActive ? item.color : themeColors.textSecondary,
                       fontSize: '20px',
                       minWidth: '24px',
@@ -1558,7 +1558,7 @@ const Navigation = () => {
                     }}>
                       {item.icon}
                     </span>
-                    
+
                     {sidebarOpen && (
                       <>
                         <div className="nav-label" style={{
@@ -1573,12 +1573,12 @@ const Navigation = () => {
                         }}>
                           {item.label}
                         </div>
-                        
+
                         <div className="nav-right-section" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                           {item.badge && (
                             <div className="badge-with-reset" style={{ display: 'flex', alignItems: 'center', gap: '4px', position: 'relative' }}>
-                              <span 
-                                className="nav-badge" 
+                              <span
+                                className="nav-badge"
                                 title={`Today's updates: ${dailyUpdates[key] || 0}`}
                                 style={{
                                   background: themeColors.badgeBackground,
@@ -1598,7 +1598,7 @@ const Navigation = () => {
                               >
                                 {item.badge}
                               </span>
-                              <button 
+                              <button
                                 className="reset-badge-btn"
                                 onClick={(e) => resetDepartmentUpdates(key, e)}
                                 title="Reset daily count"
@@ -1633,7 +1633,7 @@ const Navigation = () => {
                               </button>
                             </div>
                           )}
-                          
+
                           {hasSubSections && sidebarOpen && (
                             <span className={`nav-chevron ${isExpanded ? 'chevron-expanded' : ''}`} style={{
                               color: themeColors.accent,
@@ -1661,7 +1661,7 @@ const Navigation = () => {
                     }}>
                       {item.subSections.map((subItem) => {
                         const subIsActive = currentPath === subItem.path || currentPath.startsWith(subItem.path);
-                        
+
                         return (
                           <NavLink
                             key={subItem.path}
@@ -1711,7 +1711,7 @@ const Navigation = () => {
                             }}>
                               {subItem.icon}
                             </span>
-                            
+
                             <div className="sub-nav-label" style={{
                               flex: 1,
                               overflow: 'hidden',
@@ -1787,7 +1787,7 @@ const Navigation = () => {
               }
             }}
           >
-            <FiSettings className="nav-icon" style={{ 
+            <FiSettings className="nav-icon" style={{
               color: currentPath.includes('/settings') ? themeColors.accent : themeColors.textSecondary,
               fontSize: '20px',
               minWidth: '24px',
@@ -1857,7 +1857,7 @@ const Navigation = () => {
               }
             }}
           >
-            <FiLogOut className="nav-icon" style={{ 
+            <FiLogOut className="nav-icon" style={{
               color: themeColors.error,
               fontSize: '20px',
               minWidth: '24px',
@@ -1896,12 +1896,12 @@ const Navigation = () => {
           flexShrink: 0,
           transition: 'all 0.2s ease'
         }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = themeColors.activeBg;
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = themeColors.hoverBg;
-        }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = themeColors.activeBg;
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = themeColors.hoverBg;
+          }}
         >
           <UserAvatar size={sidebarOpen ? 'default' : 'small'} showTooltip={!sidebarOpen} />
           {sidebarOpen && (
@@ -1910,7 +1910,7 @@ const Navigation = () => {
               minWidth: 0,
               overflow: 'hidden'
             }}>
-              <div className="user-name" style={{ 
+              <div className="user-name" style={{
                 fontSize: '14px',
                 fontWeight: 600,
                 marginBottom: '2px',
@@ -1921,7 +1921,7 @@ const Navigation = () => {
               }}>
                 {userData.name}
               </div>
-              <div className="user-email" style={{ 
+              <div className="user-email" style={{
                 fontSize: '12px',
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
@@ -1931,7 +1931,7 @@ const Navigation = () => {
               }}>
                 {userData.email}
               </div>
-              <div className="user-username" style={{ 
+              <div className="user-username" style={{
                 fontSize: '11px',
                 color: themeColors.textSecondary,
                 marginTop: '2px',

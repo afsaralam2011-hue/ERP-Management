@@ -414,9 +414,8 @@ const FlatteningForm = ({ onClose, isModal = true }) => {
         !item.production_quantity ||
         parseFloat(item.production_quantity) <= 0
       ) {
-        errors[`quantity_${item.id}`] = `Valid quantity for item ${
-          index + 1
-        } is required`;
+        errors[`quantity_${item.id}`] = `Valid quantity for item ${index + 1
+          } is required`;
         newFieldStatus[`quantity_${item.id}`] = "empty-required";
       } else {
         newFieldStatus[`quantity_${item.id}`] = "filled-valid";
@@ -648,10 +647,9 @@ const FlatteningForm = ({ onClose, isModal = true }) => {
                 <select
                   value={targetData.targets_id}
                   onChange={handleTargetChange}
-                  className={`form-select ${
-                    fieldStatus.targets_id ||
+                  className={`form-select ${fieldStatus.targets_id ||
                     getFieldClass("targets_id", targetData.targets_id)
-                  }`}
+                    }`}
                 >
                   <option value="">
                     -- SELECT TARGET ({targets.length} available) --
@@ -824,10 +822,9 @@ const FlatteningForm = ({ onClose, isModal = true }) => {
                           onChange={(e) =>
                             handleItemChange(item.id, e.target.value)
                           }
-                          className={`item-select ${
-                            fieldStatus[`item_${item.id}`] ||
+                          className={`item-select ${fieldStatus[`item_${item.id}`] ||
                             getFieldClass("item_code", item.item_code)
-                          }`}
+                            }`}
                         >
                           <option value="">-- SELECT ITEM --</option>
                           {items.map((itm) => (
@@ -885,10 +882,9 @@ const FlatteningForm = ({ onClose, isModal = true }) => {
                           }
                           step="0.01"
                           min="0"
-                          className={`item-input quantity-input ${
-                            fieldStatus[`quantity_${item.id}`] ||
+                          className={`item-input quantity-input ${fieldStatus[`quantity_${item.id}`] ||
                             getFieldClass("quantity", item.production_quantity)
-                          }`}
+                            }`}
                           placeholder="0.00"
                         />
                         {validationErrors[`quantity_${item.id}`] && (
@@ -943,10 +939,9 @@ const FlatteningForm = ({ onClose, isModal = true }) => {
                   type="text"
                   value={operatorName}
                   onChange={(e) => handleOperatorChange(e.target.value)}
-                  className={`item-input ${
-                    fieldStatus.operator_name ||
+                  className={`item-input ${fieldStatus.operator_name ||
                     getFieldClass("operator_name", operatorName)
-                  }`}
+                    }`}
                   placeholder="Enter operator name"
                 />
                 {validationErrors.operator_name && (
