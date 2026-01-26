@@ -1,7 +1,6 @@
 /* ===============================
    DARK THEME - BACKGROUND
 ================================ */
-<<<<<<< HEAD
 .erp-bg.dark-theme {
   min-height: 100vh;
   width: 100%;
@@ -9,50 +8,6 @@
   position: relative;
   overflow: hidden;
   font-family: "Inter", sans-serif;
-=======
-:root {
-  --bg-main: #0b0f1a;
-  --bg-gradient-start: #1a1f3c;
-  --card-bg: rgba(30, 41, 59, 0.85);
-  /* Slightly more opaque for better contrast */
-  --input-bg: rgba(255, 255, 255, 0.1);
-  /* Reduced opacity for cleaner look */
-  --border: rgba(255, 255, 255, 0.3);
-  --text-main: #ffffff !important;
-  /* Force white text */
-  --text-muted: #cbd5e1 !important;
-  /* Lighter grey for better contrast */
-  --accent: #38bdf8;
-  /* Brighter accent */
-  --error: #fb7185;
-  transition: all 0.3s ease;
-}
-
-[data-theme="light"] {
-  --bg-main: #f0fdf4;
-  --bg-gradient-start: #ffffff;
-  --card-bg: rgba(255, 255, 255, 0.95);
-  --input-bg: #f8fafc;
-  --border: #e2e8f0;
-  --text-main: #0f172a !important;
-  --text-muted: #475569 !important;
-  --accent: #0ea5e9;
-  --error: #ef4444;
-}
-
-/* ===============================
-   GLOBAL BACKGROUND
-================================ */
-.erp-bg {
-  min-height: 100vh;
-  width: 100%;
-  background: radial-gradient(circle at top, var(--bg-gradient-start), var(--bg-main));
-  position: relative;
-  overflow: hidden;
-  font-family: "Inter", "Segoe UI", sans-serif;
-  color: var(--text-main);
-  transition: all 0.5s ease;
->>>>>>> de48dd99d82d0005078d2f34dac0bdbd9d3ade5d
 }
 
 /* ===============================
@@ -67,7 +22,6 @@
   font-family: "Inter", sans-serif;
 }
 
-<<<<<<< HEAD
 /* ===============================
    FLOATING ITEMS ANIMATION - TOP SE GRENE WALA
 ================================ */
@@ -105,16 +59,6 @@
 /* Light theme floating items - DARK COLORS */
 .light-theme .floating-item {
   text-shadow: 0 0 10px currentColor;
-=======
-@keyframes floatPWI {
-  from {
-    transform: translateY(0) rotate(0deg);
-  }
-
-  to {
-    transform: translateY(-120vh) rotate(360deg);
-  }
->>>>>>> de48dd99d82d0005078d2f34dac0bdbd9d3ade5d
 }
 
 /* ===============================
@@ -195,10 +139,6 @@
   height: 50px;
   border-radius: 12px;
   object-fit: contain;
-<<<<<<< HEAD
-=======
-
->>>>>>> de48dd99d82d0005078d2f34dac0bdbd9d3ade5d
 }
 
 .company-text {
@@ -238,28 +178,11 @@
 /* ===============================
    WELCOME TITLE - TEXT COLOR
 ================================ */
-<<<<<<< HEAD
 .dark-theme .erp-title {
   text-align: center;
   font-size: 22px;
   margin-bottom: 6px;
   color: #FFFFFF !important; /* White for dark theme */
-=======
-/* ===============================
-   TITLES
-================================ */
-.erp-brand-inline h3 {
-  color: var(--text-main) !important;
-  margin: 0;
-}
-
-.erp-title {
-  text-align: center;
-  font-size: 24px;
-  font-weight: 700;
-  margin-bottom: 8px;
-  color: var(--text-main) !important;
->>>>>>> de48dd99d82d0005078d2f34dac0bdbd9d3ade5d
 }
 
 .light-theme .erp-title {
@@ -274,7 +197,6 @@
 ================================ */
 .dark-theme .erp-subtitle {
   text-align: center;
-<<<<<<< HEAD
   font-size: 14px;
   color: #E2E8F0 !important; /* Light gray for dark theme */
   margin-bottom: 24px;
@@ -285,33 +207,19 @@
   font-size: 14px;
   color: #4B5563 !important; /* Dark gray for light theme */
   margin-bottom: 24px;
-=======
-  font-size: 15px;
-  color: var(--text-muted) !important;
-  margin-bottom: 32px;
->>>>>>> de48dd99d82d0005078d2f34dac0bdbd9d3ade5d
 }
 
 /* ===============================
    ERROR MESSAGE - TEXT COLOR
 ================================ */
 .erp-error {
-<<<<<<< HEAD
   padding: 12px;
   border-radius: 10px;
-=======
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid var(--error);
-  color: var(--error);
-  padding: 12px;
-  border-radius: 8px;
->>>>>>> de48dd99d82d0005078d2f34dac0bdbd9d3ade5d
   font-size: 14px;
   display: flex;
-  gap: 10px;
+  gap: 8px;
   align-items: center;
   margin-bottom: 20px;
-<<<<<<< HEAD
 }
 
 .dark-theme .erp-error {
@@ -324,8 +232,6 @@
   background: rgba(220, 38, 38, 0.15);
   border: 1px solid #DC2626;
   color: #DC2626 !important;
-=======
->>>>>>> de48dd99d82d0005078d2f34dac0bdbd9d3ade5d
 }
 
 /* ===============================
@@ -333,21 +239,14 @@
 ================================ */
 .erp-input {
   position: relative;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .input-icon {
   position: absolute;
   top: 50%;
-  left: 16px;
+  left: 14px;
   transform: translateY(-50%);
-<<<<<<< HEAD
-=======
-  color: var(--text-muted);
-  font-size: 18px;
-  pointer-events: none;
-  z-index: 10;
->>>>>>> de48dd99d82d0005078d2f34dac0bdbd9d3ade5d
 }
 
 .dark-theme .input-icon {
@@ -363,10 +262,9 @@
 ================================ */
 .erp-input input {
   width: 100%;
-  height: 52px;
-  padding: 0 16px 0 48px;
+  height: 48px;
+  padding: 0 44px;
   border-radius: 12px;
-<<<<<<< HEAD
   font-size: 14px;
   outline: none;
   border: 1px solid;
@@ -383,25 +281,6 @@
   border-color: rgba(203, 213, 225, 0.5);
   background: rgba(241, 243, 248, 0.8);
   color: #000000 !important; /* Black for light theme */
-=======
-  border: 1px solid var(--border);
-  background-color: var(--input-bg) !important;
-  color: var(--text-main) !important;
-  font-size: 15px;
-  outline: none;
-  transition: all 0.3s ease;
-}
-
-.erp-input input::placeholder {
-  color: var(--text-muted) !important;
-  opacity: 0.8 !important;
-}
-
-.erp-input input:focus {
-  border-color: var(--accent);
-  background-color: rgba(255, 255, 255, 0.08) !important;
-  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
->>>>>>> de48dd99d82d0005078d2f34dac0bdbd9d3ade5d
 }
 
 /* PLACEHOLDER COLOR */
@@ -461,18 +340,10 @@
   margin-bottom: 20px;
 }
 
-/* ===============================
-   ROW & FOOTER TEXT
-================================ */
 .erp-check {
   display: flex;
   gap: 8px;
   align-items: center;
-  color: var(--text-main) !important;
-}
-
-.erp-check span {
-  color: var(--text-main) !important;
 }
 
 /* "Keep me signed in" TEXT COLOR */
@@ -526,18 +397,12 @@
   height: 50px;
   border-radius: 12px;
   border: none;
-<<<<<<< HEAD
-=======
-  background: linear-gradient(135deg, #6aece1, #2563eb);
-  color: #ffffff !important;
->>>>>>> de48dd99d82d0005078d2f34dac0bdbd9d3ade5d
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-<<<<<<< HEAD
   gap: 10px;
   transition: all 0.3s ease;
 }
@@ -555,11 +420,6 @@
 .erp-login-btn:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(106, 236, 225, 0.3);
-=======
-  gap: 8px;
-  transition: all 0.5s ease;
-  margin-top: 20px;
->>>>>>> de48dd99d82d0005078d2f34dac0bdbd9d3ade5d
 }
 
 .erp-login-btn:disabled {
@@ -567,7 +427,6 @@
   cursor: not-allowed;
 }
 
-<<<<<<< HEAD
 .btn-icon {
   font-size: 18px;
 }
@@ -575,16 +434,12 @@
 /* ===============================
    REGISTER SECTION
 ================================ */
-=======
->>>>>>> de48dd99d82d0005078d2f34dac0bdbd9d3ade5d
 .erp-register {
   text-align: center;
   margin-top: 20px;
   font-size: 14px;
-  color: var(--text-main) !important;
 }
 
-<<<<<<< HEAD
 /* "New here?" TEXT COLOR */
 .dark-theme .register-text {
   color: #FFFFFF !important; /* White for dark theme */
@@ -611,19 +466,11 @@
 
 .register-link:hover {
   text-decoration: underline;
-=======
-.erp-footer {
-  margin-top: 24px;
-  text-align: center;
-  font-size: 12px;
-  color: var(--text-muted) !important;
->>>>>>> de48dd99d82d0005078d2f34dac0bdbd9d3ade5d
 }
 
 /* ===============================
    FOOTER TEXT - TEXT COLOR
 ================================ */
-<<<<<<< HEAD
 .erp-footer {
   margin-top: 24px;
   text-align: center;
@@ -780,30 +627,4 @@
 
 .register-link-btn:hover {
   text-decoration: underline;
-=======
-/* ===============================
-   INPUT FIXES
-================================ */
-.erp-input input {
-  background-color: var(--input-bg) !important;
-  color: var(--text-main) !important;
-}
-
-/* Target autocomplete background */
-.erp-input input:-webkit-autofill,
-.erp-input input:-webkit-autofill:hover,
-.erp-input input:-webkit-autofill:focus,
-.erp-input input:-webkit-autofill:active {
-  -webkit-box-shadow: 0 0 0 100px #1e293b inset !important;
-  /* Matches dark cardish bg */
-  -webkit-text-fill-color: #ffffff !important;
-  transition: background-color 5000s ease-in-out 0s;
-  caret-color: #ffffff;
-}
-
-[data-theme="light"] .erp-input input:-webkit-autofill {
-  -webkit-box-shadow: 0 0 0 100px #f8fafc inset !important;
-  -webkit-text-fill-color: #0f172a !important;
-  caret-color: #0f172a;
->>>>>>> de48dd99d82d0005078d2f34dac0bdbd9d3ade5d
 }
