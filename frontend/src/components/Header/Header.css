@@ -22,6 +22,8 @@
   display: flex;
   position: absolute;
   white-space: nowrap;
+  will-change: transform;
+  animation: ticker-scroll 30s linear infinite;
 }
 
 .ticker-item {

@@ -1,6 +1,6 @@
 // src/components/Header/Header.jsx
 import React, { useEffect, useRef, useState } from "react";
-import { FiSettings, FiLogOut, FiUser, FiMail } from "react-icons/fi";
+import { FiSettings, FiLogOut, FiUser, FiMail, FiBell } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from '../../contexts/ThemeContext';
 import "./Header.css";
@@ -8,7 +8,8 @@ import "./Header.css";
 const Header = ({ title = "Pakistan Wire Industries", subtitle = "SPI & CCD Dashboard" }) => {
   const navigate = useNavigate();
   const tickerRef = useRef(null);
-  const [isMobile, setIsMobile] = useState(false);
+  const animationRef = useRef(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [user, setUser] = useState(null);
   
   // Theme Context سے mode لے رہے ہیں
@@ -32,19 +33,17 @@ const Header = ({ title = "Pakistan Wire Industries", subtitle = "SPI & CCD Dash
   const textColor = isDarkMode ? '#FFFFFF' : '#000000';
   const logoFilter = isDarkMode ? 'invert(1) brightness(2)' : 'none';
   
-  // Logout button colors - آپ کی requirement کے مطابق
-  const logoutBgColor = isDarkMode ? 'rgba(239, 68, 68, 0.15)' : 'rgba(239, 68, 68, 0.1)'; // Light red
-  const logoutBorderColor = '#EF4444'; // Red border
-  const logoutTextColor = '#EF4444'; // Red text and icon
+  // Logout button colors
+  const logoutBgColor = isDarkMode ? 'rgba(239, 68, 68, 0.15)' : 'rgba(239, 68, 68, 0.1)';
+  const logoutBorderColor = '#EF4444';
+  const logoutTextColor = '#EF4444';
   
   // localStorage/sessionStorage سے REAL user data لائیں
   useEffect(() => {
     const loadUserData = () => {
-      // پہلے localStorage چیک کریں (Remember me case)
       let userData = localStorage.getItem("user");
       let token = localStorage.getItem("token");
       
-      // اگر localStorage میں نہیں تو sessionStorage چیک کریں (Not Remember me case)
       if (!userData || !token) {
         userData = sessionStorage.getItem("user");
         token = sessionStorage.getItem("token");
@@ -53,9 +52,7 @@ const Header = ({ title = "Pakistan Wire Industries", subtitle = "SPI & CCD Dash
       if (userData && token) {
         try {
           const parsedUser = JSON.parse(userData);
-          console.log("Header میں User Data:", parsedUser); // Debugging کے لیے
           
-          // اصل Supabase user object سے data نکالیں
           const userName = parsedUser.user_metadata?.full_name || 
                           parsedUser.user_metadata?.name || 
                           parsedUser.email?.split('@')[0] || 
@@ -67,12 +64,10 @@ const Header = ({ title = "Pakistan Wire Industries", subtitle = "SPI & CCD Dash
             display_name: userName,
             email: userEmail,
             initials: getInitials(userName),
-            // مکمل user object بھی save کریں اگر ضرورت ہو
             full_user: parsedUser
           });
         } catch (error) {
           console.error("Error parsing user data:", error);
-          // Fallback data
           setUser({
             display_name: "Guest User",
             email: "guest@example.com",
@@ -80,30 +75,19 @@ const Header = ({ title = "Pakistan Wire Industries", subtitle = "SPI & CCD Dash
           });
         }
       } else {
-        // اگر کوئی user data نہیں ہے تو login پر redirect کریں
-        console.warn("No user data found in storage, redirecting to login");
-        navigate("/login");
+        console.warn("No user data found in storage");
+        setUser({
+          display_name: "Guest User",
+          email: "guest@example.com",
+          initials: "GU"
+        });
       }
     };
     
     loadUserData();
     
-    // storage میں تبدیلیوں کو listen کریں
-    const handleStorageChange = (e) => {
-      if (e.key === "user" || e.key === "token") {
-        loadUserData();
-      }
-    };
-    
-    window.addEventListener('storage', handleStorageChange);
-    
-    // ہر بار component mount ہونے پر بھی check کریں
-    const interval = setInterval(loadUserData, 5000); // ہر 5 سیکنڈ بعد چیک کریں
-    
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      clearInterval(interval);
-    };
+    const interval = setInterval(loadUserData, 5000);
+    return () => clearInterval(interval);
   }, [navigate]);
   
   // Initials نکالنے کے لیے function
@@ -125,19 +109,50 @@ const Header = ({ title = "Pakistan Wire Industries", subtitle = "SPI & CCD Dash
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // Ticker animation
+  // Ticker animation - SEAMLESS CONTINUOUS
   useEffect(() => {
     if (isMobile || !tickerRef.current) return;
-    let animationId;
-    let position = 0;
-    const animate = () => {
-      position -= 0.8;
-      if (position <= -400) position = 0;
-      if (tickerRef.current) tickerRef.current.style.transform = `translateX(${position}px)`;
-      animationId = requestAnimationFrame(animate);
+    
+    // پہلے موجودہ animation روکیں
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+    }
+    
+    const startTicker = () => {
+      let position = 0;
+      const tickerContent = tickerRef.current;
+      
+      // Content کو دو بار duplicate کریں seamless animation کے لیے
+      const originalContent = tickerContent.innerHTML;
+      tickerContent.innerHTML = originalContent + originalContent;
+      
+      const singleWidth = tickerContent.children[0].offsetWidth;
+      const speed = 1; // Pixels per frame
+      
+      const animate = () => {
+        position -= speed;
+        
+        // جب پہلا set ختم ہو جائے تو reset کریں
+        if (position <= -singleWidth) {
+          position = 0;
+        }
+        
+        tickerContent.style.transform = `translateX(${position}px)`;
+        animationRef.current = requestAnimationFrame(animate);
+      };
+      
+      animationRef.current = requestAnimationFrame(animate);
     };
-    animationId = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(animationId);
+    
+    // Thoda delay dein DOM ready hone ke liye
+    const timer = setTimeout(startTicker, 100);
+    
+    return () => {
+      clearTimeout(timer);
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
   }, [isMobile]);
 
   const handleLogout = () => {
@@ -146,83 +161,93 @@ const Header = ({ title = "Pakistan Wire Industries", subtitle = "SPI & CCD Dash
     navigate("/login");
   };
 
-  // اگر user data نہیں ہے تو loading دکھائیں
   if (!user) {
     return (
       <div style={{
         width: "100%",
         background: backgroundColor,
         color: textColor,
-        height: '70px',
+        height: '60px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center'
       }}>
-        Loading user data...
+        Loading...
       </div>
     );
   }
 
-  // Header کا مکمل JSX
   return (
     <div style={{
       width: "100%",
       background: backgroundColor,
       color: textColor,
-      borderBottom: `1px solid ${textColor}20`
+      borderBottom: `1px solid ${isDarkMode ? '#333' : '#ddd'}`
     }}>
-      {/* Ticker Bar (Desktop Only) */}
+      {/* Ticker Bar - SEAMLESS CONTINUOUS WITH LOGO */}
       {!isMobile && (
         <div style={{ 
-          background: backgroundColor,
-          borderTop: `1px solid ${textColor}20`,
-          height: '30px',
+          background: isDarkMode ? '#111' : '#f8f8f8',
+          borderBottom: `1px solid ${isDarkMode ? '#222' : '#eee'}`,
+          height: '28px',
           overflow: 'hidden',
-          position: 'relative'
+          position: 'relative',
+          width: '100%'
         }}>
-          <div ref={tickerRef} style={{
-            display: 'flex',
-            position: 'absolute',
-            whiteSpace: 'nowrap'
-          }}>
-            {[...Array(8)].map((_, i) => (
-              <div key={i} style={{
+          <div 
+            ref={tickerRef} 
+            style={{
+              display: 'flex',
+              position: 'absolute',
+              whiteSpace: 'nowrap',
+              left: '0',
+              top: '0',
+              height: '100%',
+              alignItems: 'center'
+            }}
+          >
+            {/* Multiple copies for seamless animation */}
+            {[...Array(8)].map((_, copyIndex) => (
+              <div key={copyIndex} style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '15px',
-                padding: '0 20px'
+                padding: '0 20px',
+                height: '100%'
               }}>
                 <img 
                   src="/assets/images/logoA.png" 
                   alt="Logo" 
                   style={{ 
-                    height: '18px',
+                    height: '16px',
                     width: 'auto',
-                    filter: logoFilter 
+                    filter: logoFilter,
+                    marginRight: '12px'
                   }}
                 />
                 <span style={{ 
-                  fontSize: '13px',
+                  fontSize: '12px',
                   fontWeight: '500',
-                  color: textColor 
+                  color: textColor,
+                  opacity: 0.8,
+                  marginRight: '12px'
                 }}>
                   Pakistan Wire Industries
                 </span>
                 <span style={{ 
-                  padding: '2px 8px',
-                  borderRadius: '4px',
-                  fontSize: '11px',
+                  padding: '1px 6px',
+                  borderRadius: '3px',
+                  fontSize: '10px',
                   fontWeight: '600',
-                  textTransform: 'uppercase',
-                  background: `${textColor}20`,
-                  color: textColor
+                  background: isDarkMode ? '#6AECE1' : '#2563EB',
+                  color: isDarkMode ? '#000' : '#FFF',
+                  marginRight: '15px'
                 }}>
                   SPI & CCD
                 </span>
                 <span style={{ 
-                  marginLeft: '15px',
-                  fontWeight: '300',
-                  color: textColor
+                  color: textColor,
+                  opacity: 0.3,
+                  marginRight: '15px'
                 }}>
                   |
                 </span>
@@ -232,101 +257,124 @@ const Header = ({ title = "Pakistan Wire Industries", subtitle = "SPI & CCD Dash
         </div>
       )}
 
-      {/* Main Header Content */}
+      {/* Main Header - ایک ہی row میں سب کچھ */}
       <div style={{
         display: 'flex',
-        justifyContent: 'space-between',
         alignItems: 'center',
-        padding: '12px 24px',
-        minHeight: '70px'
+        justifyContent: 'space-between',
+        padding: isMobile ? '8px 12px' : '8px 20px',
+        height: isMobile ? '56px' : '64px',
+        width: '100%',
+        gap: isMobile ? '8px' : '16px'
       }}>
-        {/* Left: Logo + Title */}
-        <div style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <img 
-              src="/assets/images/logoA.png" 
-              alt="Logo" 
-              style={{ 
-                height: '40px',
-                width: 'auto',
-                filter: logoFilter 
-              }}
-            />
-            <div>
-              <h1 style={{ 
-                fontSize: '22px',
-                fontWeight: '700',
-                margin: 0,
-                color: textColor
-              }}>
-                {title}
-              </h1>
-              <p style={{ 
-                fontSize: '13px',
-                fontWeight: '400',
-                margin: '4px 0 0 0',
+        {/* Left Side - Logo + Title */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: isMobile ? '8px' : '12px',
+          flexShrink: 1,
+          minWidth: 0,
+          overflow: 'hidden'
+        }}>
+          <img 
+            src="/assets/images/logoA.png" 
+            alt="Logo" 
+            style={{ 
+              height: isMobile ? '28px' : '32px',
+              width: 'auto',
+              filter: logoFilter,
+              flexShrink: 0
+            }}
+          />
+          <div style={{ 
+            minWidth: 0,
+            overflow: 'hidden'
+          }}>
+            <div style={{
+              fontSize: isMobile ? '14px' : '16px',
+              fontWeight: '700',
+              color: textColor,
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis'
+            }}>
+              {isMobile ? 'PWI ERP' : 'Pakistan Wire Industries'}
+            </div>
+            {!isMobile && (
+              <div style={{
+                fontSize: '11px',
                 color: textColor,
-                opacity: 0.9
+                opacity: 0.7,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis'
               }}>
                 {subtitle}
-              </p>
-            </div>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Right: Icons + User */}
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            {/* Notification */}
-            <div style={{
-              position: 'relative',
-              cursor: 'pointer',
-              padding: '8px',
-              borderRadius: '8px',
-              background: `${textColor}15`,
+        {/* Right Side - All Icons in ONE ROW */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: isMobile ? '4px' : '8px',
+          flexShrink: 0
+        }}>
+          {/* Notification */}
+          <div style={{
+            position: 'relative',
+            cursor: 'pointer',
+            padding: isMobile ? '6px' : '8px',
+            borderRadius: '6px',
+            background: `${textColor}10`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0
+          }}>
+            <FiBell size={isMobile ? 16 : 18} style={{ color: textColor }} />
+            <span style={{
+              position: 'absolute',
+              top: '-2px',
+              right: '-2px',
+              background: '#EF4444',
+              color: 'white',
+              borderRadius: '50%',
+              width: '16px',
+              height: '16px',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center'
+              justifyContent: 'center',
+              fontSize: '9px',
+              fontWeight: 'bold'
             }}>
-              🔔
-              <span style={{
-                position: 'absolute',
-                top: '-2px',
-                right: '-2px',
-                background: '#EF4444',
-                color: 'white',
-                borderRadius: '50%',
-                width: '18px',
-                height: '18px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '10px',
-                fontWeight: 'bold'
-              }}>
-                3
-              </span>
-            </div>
+              3
+            </span>
+          </div>
 
-            {/* Settings */}
-            <button 
-              onClick={() => navigate("/settings/theme")}
-              style={{
-                background: `${textColor}15`,
-                color: textColor,
-                border: `1px solid ${textColor}30`,
-                padding: '8px 12px',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
-              <FiSettings />
-            </button>
+          {/* Settings */}
+          <button 
+            onClick={() => navigate("/settings/theme")}
+            style={{
+              background: `${textColor}10`,
+              color: textColor,
+              border: `1px solid ${textColor}20`,
+              padding: isMobile ? '6px' : '8px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0
+            }}
+          >
+            <FiSettings size={isMobile ? 16 : 18} />
+          </button>
 
-            {/* User */}
+          {/* User Avatar Only (Mobile) */}
+          {isMobile ? (
             <div 
               onClick={() => navigate("/profile")}
               style={{
@@ -335,94 +383,109 @@ const Header = ({ title = "Pakistan Wire Industries", subtitle = "SPI & CCD Dash
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '12px',
-                padding: '8px 16px',
-                borderRadius: '12px',
-                minWidth: isMobile ? 'auto' : '250px'
+                justifyContent: 'center',
+                padding: '6px',
+                borderRadius: '6px',
+                flexShrink: 0
               }}
             >
-              {/* یہاں کلر کو تھیک کیا ہے - Contrast کے لیے */}
               <div style={{
-                background: isDarkMode ? '#6AECE1' : '#2563EB', // خوبصورت رنگ
-                color: isDarkMode ? '#000000' : '#FFFFFF',      // Contrast والا رنگ
+                background: isDarkMode ? '#6AECE1' : '#2563EB',
+                color: isDarkMode ? '#000000' : '#FFFFFF',
                 fontWeight: 'bold',
-                width: '40px',
-                height: '40px',
+                width: '28px',
+                height: '28px',
                 borderRadius: '50%',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: '16px',
-                border: `2px solid ${textColor}30`
+                fontSize: '12px'
               }}>
                 {user.initials}
               </div>
-              
-              {!isMobile && (
-                <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
-                  <div style={{ 
-                    fontWeight: '600', 
-                    fontSize: '14px',
-                    color: textColor,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis'
-                  }}>
-                    <FiUser size={12} />
-                    {user.display_name}
-                  </div>
-                  <div style={{ 
-                    fontSize: '12px', 
-                    color: textColor,
-                    opacity: 0.8,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis'
-                  }}>
-                    <FiMail size={12} />
-                    {user.email}
-                  </div>
-                </div>
-              )}
             </div>
-
-            {/* Logout - آپ کی requirement کے مطابق */}
-            <button 
-              onClick={handleLogout}
+          ) : (
+            /* Desktop User Profile */
+            <div 
+              onClick={() => navigate("/profile")}
               style={{
-                background: logoutBgColor, // Light red background
-                color: logoutTextColor, // Red text
-                border: `1px solid ${logoutBorderColor}`, // Red border
-                padding: '8px 16px',
-                borderRadius: '8px',
+                background: `${textColor}10`,
+                border: `1px solid ${textColor}20`,
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px',
-                fontWeight: '600',
-                transition: 'all 0.2s ease'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = isDarkMode 
-                  ? 'rgba(239, 68, 68, 0.25)' 
-                  : 'rgba(239, 68, 68, 0.15)';
-                e.currentTarget.style.transform = 'translateY(-1px)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = logoutBgColor;
-                e.currentTarget.style.transform = 'translateY(0)';
+                padding: '6px 12px',
+                borderRadius: '8px',
+                flexShrink: 0,
+                minWidth: 0
               }}
             >
-              <FiLogOut style={{ color: logoutTextColor }} /> {/* Red icon */}
-              {!isMobile && <span>Logout</span>}
-            </button>
-          </div>
+              <div style={{
+                background: isDarkMode ? '#6AECE1' : '#2563EB',
+                color: isDarkMode ? '#000000' : '#FFFFFF',
+                fontWeight: 'bold',
+                width: '32px',
+                height: '32px',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '13px',
+                flexShrink: 0
+              }}>
+                {user.initials}
+              </div>
+              <div style={{ 
+                minWidth: 0,
+                overflow: 'hidden',
+                flexShrink: 1
+              }}>
+                <div style={{ 
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  color: textColor,
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis'
+                }}>
+                  {user.display_name}
+                </div>
+                <div style={{ 
+                  fontSize: '10px',
+                  color: textColor,
+                  opacity: 0.8,
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis'
+                }}>
+                  {user.email}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Logout */}
+          <button 
+            onClick={handleLogout}
+            style={{
+              background: logoutBgColor,
+              color: logoutTextColor,
+              border: `1px solid ${logoutBorderColor}`,
+              padding: isMobile ? '6px' : '8px 12px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              fontWeight: '600',
+              fontSize: isMobile ? '12px' : '13px',
+              flexShrink: 0
+            }}
+          >
+            <FiLogOut size={isMobile ? 14 : 16} />
+            {!isMobile && <span>Logout</span>}
+          </button>
         </div>
       </div>
     </div>
