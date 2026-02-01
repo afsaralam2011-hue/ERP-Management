@@ -1,0 +1,210 @@
+/* ========== GLOW BUTTON BASE STYLES ========== */
+.glow-button {
+  /* Positioning & Layout */
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  
+  /* Sizing */
+  min-width: 100px;
+  padding: 10px 20px;
+  
+  /* Typography */
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.5;
+  text-align: center;
+  
+  /* Colors & Background */
+  background-color: var(--glow-bg-color, rgba(37, 99, 235, 0.1));
+  color: var(--glow-text-color, #ffffff);
+  border: 2px solid var(--glow-border-color, #2563eb);
+  
+  /* Border & Effects */
+  border-radius: 8px;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+  z-index: 1;
+  outline: none;
+}
+
+/* ========== GLOW EFFECT ========== */
+.glow-button::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  
+  background: linear-gradient(
+    45deg,
+    #ff0000, #ff7300, #fffb00,
+    #48ff00, #00ffd5, #002bff,
+    #7a00ff, #ff00c8, #ff0000
+  );
+  background-size: 400% 400%;
+  filter: blur(8px);
+  z-index: -1;
+  opacity: 0.7;
+  animation: glow-animation 20s ease infinite;
+  border-radius: 10px;
+}
+
+.glow-button::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--glow-bg-color, rgba(37, 99, 235, 0.1));
+  border-radius: 6px;
+  z-index: -1;
+}
+
+/* ========== HOVER EFFECTS ========== */
+.glow-button:not(.glow-btn-disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 10px 25px rgba(0, 0, 0, 0.2),
+    0 0 20px var(--glow-primary-color, rgba(37, 99, 235, 0.3));
+}
+
+.glow-button:not(.glow-btn-disabled):active {
+  transform: translateY(0);
+  transition-duration: 0.1s;
+}
+
+/* ========== FOCUS STATE ========== */
+.glow-button:focus {
+  box-shadow: 
+    0 0 0 3px rgba(var(--glow-primary-color-rgb, 37, 99, 235), 0.3),
+    0 0 20px var(--glow-primary-color, rgba(37, 99, 235, 0.3));
+}
+
+/* ========== DISABLED STATE ========== */
+.glow-btn-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.glow-btn-disabled::before {
+  opacity: 0.3;
+  animation-duration: 40s;
+}
+
+/* ========== SIZE VARIANTS ========== */
+.glow-btn-sm {
+  min-width: 80px;
+  padding: 6px 12px;
+  font-size: 12px;
+  gap: 6px;
+}
+
+.glow-btn-sm .glow-button-icon {
+  font-size: 12px;
+}
+
+.glow-btn-lg {
+  min-width: 120px;
+  padding: 12px 24px;
+  font-size: 16px;
+  gap: 10px;
+}
+
+.glow-btn-lg .glow-button-icon {
+  font-size: 18px;
+}
+
+/* ========== VARIANT STYLES ========== */
+.glow-btn-primary {
+  --glow-bg-color: var(--glow-primary-color, #2563eb);
+  --glow-text-color: #ffffff;
+}
+
+.glow-btn-success {
+  --glow-primary-color: #10b981;
+  --glow-bg-color: var(--glow-primary-color, #10b981);
+  --glow-text-color: #ffffff;
+  border-color: #10b981;
+}
+
+.glow-btn-danger {
+  --glow-primary-color: #ef4444;
+  --glow-bg-color: var(--glow-primary-color, #ef4444);
+  --glow-text-color: #ffffff;
+  border-color: #ef4444;
+}
+
+.glow-btn-warning {
+  --glow-primary-color: #f59e0b;
+  --glow-bg-color: var(--glow-primary-color, #f59e0b);
+  --glow-text-color: #000000;
+  border-color: #f59e0b;
+}
+
+.glow-btn-outline {
+  --glow-bg-color: transparent;
+  --glow-text-color: var(--glow-primary-color, #2563eb);
+  background-color: transparent !important;
+}
+
+.glow-btn-outline::after {
+  background-color: transparent;
+}
+
+/* ========== ANIMATIONS ========== */
+@keyframes glow-animation {
+  0% {
+    background-position: 0% 50%;
+    opacity: 0.7;
+  }
+  50% {
+    background-position: 100% 50%;
+    opacity: 0.9;
+  }
+  100% {
+    background-position: 0% 50%;
+    opacity: 0.7;
+  }
+}
+
+/* ========== RESPONSIVE DESIGN ========== */
+@media (max-width: 768px) {
+  .glow-button {
+    min-width: 90px;
+    padding: 8px 16px;
+    font-size: 13px;
+  }
+  
+  .glow-btn-lg {
+    min-width: 110px;
+    padding: 10px 20px;
+    font-size: 15px;
+  }
+}
+
+/* ========== UTILITY CLASSES ========== */
+.glow-button-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+}
+
+.glow-button:not(.glow-btn-disabled):hover .glow-button-icon {
+  transform: scale(1.1);
+}
+
+.glow-button-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

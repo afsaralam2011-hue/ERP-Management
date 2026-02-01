@@ -4,8 +4,9 @@
 .header-container {
   width: 100%;
   background-color: var(--color-background);
-  color: var(--color-text-primary);
+  color: var(--color-text-primary, #1A237E); /* Default Indigo/Navy Blue */
   border-bottom: 1px solid var(--color-border);
+  transition: all 0.3s ease;
 }
 
 /* ==================== Ticker Bar ==================== */
@@ -47,7 +48,7 @@ body.dark-mode .ticker-logo,
 .ticker-text {
   font-size: 13px;
   font-weight: 500;
-  color: var(--color-text-primary);
+  color: var(--color-text-primary, #1A237E); /* Default Indigo/Navy Blue */
 }
 
 .ticker-badge {
@@ -63,7 +64,7 @@ body.dark-mode .ticker-logo,
 .ticker-separator {
   margin-left: 15px;
   font-weight: 300;
-  color: var(--color-text-secondary);
+  color: var(--color-text-secondary, #283593); /* Default Medium Indigo/Navy Blue */
 }
 
 /* ==================== Main Header ==================== */
@@ -109,14 +110,14 @@ body.dark-mode .header-logo,
   font-size: 22px;
   font-weight: 700;
   margin: 0;
-  color: var(--color-text-primary);
+  color: var(--color-text-primary, #1A237E); /* Default Indigo/Navy Blue */
 }
 
 .header-subtitle {
   font-size: 13px;
   font-weight: 400;
   margin: 4px 0 0 0;
-  color: var(--color-text-secondary);
+  color: var(--color-text-secondary, #283593); /* Default Medium Indigo/Navy Blue */
 }
 
 /* ==================== Right Section ==================== */
@@ -173,7 +174,7 @@ body.dark-mode .header-logo,
 /* ==================== Icon Button (Settings) ==================== */
 .icon-button {
   background-color: var(--color-surface);
-  color: var(--color-text-primary);
+  color: var(--color-text-primary, #1A237E); /* Default Indigo/Navy Blue */
   border: 1px solid var(--color-border);
   padding: 8px 12px;
   border-radius: 8px;
@@ -232,30 +233,30 @@ body.dark-mode .header-logo,
 .user-name {
   font-weight: 600;
   font-size: 14px;
-  color: var(--color-text-primary);
+  color: var(--color-text-primary, #1A237E); /* Default Indigo/Navy Blue */
   display: flex;
   align-items: center;
   gap: 6px;
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
+  text-overflow: ellipsis; /* ✅ FIXED: text-overflow with hyphen */
 }
 
 .user-email {
   font-size: 12px;
-  color: var(--color-text-secondary);
+  color: var(--color-text-secondary, #283593); /* Default Medium Indigo/Navy Blue */
   display: flex;
   align-items: center;
   gap: 6px;
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
+  text-overflow: ellipsis; /* ✅ FIXED: text-overflow with hyphen */
 }
 
 /* ==================== Logout Button ==================== */
 .logout-button {
   background-color: var(--color-surface);
-  color: var(--color-text-primary);
+  color: var(--color-text-primary, #1A237E); /* Default Indigo/Navy Blue */
   border: 1px solid var(--color-border);
   padding: 8px 16px;
   border-radius: 8px;
@@ -272,6 +273,60 @@ body.dark-mode .header-logo,
   background-color: var(--color-error-light);
   border-color: var(--color-error);
   color: var(--color-error-dark);
+}
+
+/* ==================== Theme-specific classes ==================== */
+.dark-mode .header-container {
+  --header-bg: #121212;
+  --header-text: #7986CB; /* Light Indigo */
+  --header-border: #333333;
+}
+
+.light-mode .header-container {
+  --header-bg: #ffffff;
+  --header-text: #1A237E; /* Deep Indigo/Navy Blue */
+  --header-border: #e0e0e0;
+}
+
+/* Dynamic theme variables */
+.header-container {
+  background-color: var(--header-bg, var(--color-background));
+  color: var(--header-text, var(--color-text-primary, #1A237E)); /* Fallback color */
+  border-bottom: 1px solid var(--header-border, var(--color-border));
+  transition: all 0.3s ease;
+}
+
+/* Logo filter for themes */
+.header-logo,
+.ticker-logo {
+  transition: filter 0.3s ease;
+}
+
+.dark-mode .header-logo,
+.dark-mode .ticker-logo {
+  filter: invert(1) brightness(2);
+}
+
+/* Hover effects with theme colors */
+.notification-icon:hover,
+.icon-button:hover,
+.user-profile:hover {
+  background-color: var(--color-hover, #e9ecef);
+  transition: all 0.2s ease;
+}
+
+/* Primary color accents */
+.icon-button:hover {
+  border-color: var(--color-primary, #3b82f6);
+}
+
+.user-profile:hover {
+  border-color: var(--color-primary, #3b82f6);
+}
+
+/* Logout button theme */
+.logout-button:hover {
+  background-color: rgba(239, 68, 68, 0.3);
 }
 
 /* ==================== Mobile Responsive ==================== */
@@ -312,6 +367,19 @@ body.dark-mode .header-logo,
   .header-actions {
     gap: 8px;
   }
+  
+  /* Mobile theme adjustments */
+  .header-container {
+    --header-padding: 8px 16px;
+  }
+  
+  .dark-mode .header-container.mobile {
+    --header-bg: #1a1a1a;
+  }
+  
+  .light-mode .header-container.mobile {
+    --header-bg: #f8f9fa;
+  }
 }
 
 @media (max-width: 480px) {
@@ -328,79 +396,18 @@ body.dark-mode .header-logo,
     padding: 8px;
   }
 }
-/* src/components/Header/Header.css میں یہ classes شامل کریں */
 
-/* Theme-specific classes */
-.dark-mode .header-container {
-  --header-bg: #121212;
-  --header-text: #ffffff;
-  --header-border: #333333;
-}
-
-.light-mode .header-container {
-  --header-bg: #ffffff;
-  --header-text: #333333;
-  --header-border: #e0e0e0;
-}
-
-/* Dynamic theme variables */
-.header-container {
-  background-color: var(--header-bg, var(--color-background));
-  color: var(--header-text, var(--color-text-primary));
-  border-bottom: 1px solid var(--header-border, var(--color-border));
-  transition: all 0.3s ease;
-}
-
-/* Ticker bar theme */
-.ticker-bar {
-  background-color: var(--color-surface, #f8f9fa);
-  border-bottom: 1px solid var(--color-border, #e0e0e0);
-}
-
-/* Logo filter for themes */
-.header-logo,
-.ticker-logo {
-  transition: filter 0.3s ease;
-}
-
-.dark-mode .header-logo,
-.dark-mode .ticker-logo {
-  filter: invert(1) brightness(2);
-}
-
-/* Hover effects with theme colors */
-.notification-icon:hover,
-.icon-button:hover,
-.user-profile:hover {
-  background-color: var(--color-hover, #e9ecef) !important;
-  transition: all 0.2s ease;
-}
-
-/* Primary color accents */
-.icon-button:hover {
-  border-color: var(--color-primary, #3b82f6) !important;
-}
-
-.user-profile:hover {
-  border-color: var(--color-primary, #3b82f6) !important;
-}
-
-/* Logout button theme */
-.logout-button:hover {
-  background-color: rgba(239, 68, 68, 0.3) !important;
-}
-
-/* Mobile theme adjustments */
-@media (max-width: 768px) {
-  .header-container {
-    --header-padding: 8px 16px;
+/* Ticker animation */
+@keyframes ticker-scroll {
+  0% {
+    transform: translateX(100%);
   }
-  
-  .dark-mode .header-container.mobile {
-    --header-bg: #1a1a1a;
+  100% {
+    transform: translateX(-100%);
   }
-  
-  .light-mode .header-container.mobile {
-    --header-bg: #f8f9fa;
-  }
+}
+
+/* ✅ CRITICAL FIX: Force colors to load immediately */
+.header-container * {
+  transition: color 0.1s ease, background-color 0.1s ease !important;
 }

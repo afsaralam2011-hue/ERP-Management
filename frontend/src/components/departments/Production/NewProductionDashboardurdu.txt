@@ -42,7 +42,8 @@ import "./NewProductionDashboard.css";
 
 const NewProductionDashboard = () => {
   const [selectedDepartment, setSelectedDepartment] = useState('Flattening Section');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [initialLoad, setInitialLoad] = useState(true);
   const [dateFilter, setDateFilter] = useState('today');
   const [productionData, setProductionData] = useState([]);
   const [lastEntry, setLastEntry] = useState(null);
@@ -72,6 +73,7 @@ const NewProductionDashboard = () => {
   
   const navigate = useNavigate();
   const { mode, isDarkMode } = useTheme();
+  const themeMode = mode || 'light';
   const darkMode = isDarkMode || mode === 'dark';
 
   // Departments configuration
@@ -156,58 +158,82 @@ const NewProductionDashboard = () => {
   ], []);
 
   const currentDept = useMemo(() => 
-    departments.find(dept => dept.name === selectedDepartment),
-    [departments, selectedDepartment]
+    departments.find(dept => dept.name === selectedDepartment), 
+    [selectedDepartment, departments]
   );
 
-  // 🔥 **Fix: Remove decimals completely**
+  // 🔥 **پرسنٹیج کے لیے کلر کا فنکشن**
+  const getEfficiencyColor = useCallback((efficiency) => {
+    if (!efficiency && efficiency !== 0) return 'efficiency-red';
+    
+    const eff = Number(efficiency);
+    if (eff >= 80) return 'efficiency-green';
+    if (eff >= 70) return 'efficiency-yellow';
+    return 'efficiency-red';
+  }, []);
+
+  // 🔥 **ڈیسیمل پوائنٹس ہٹانے کا فنکشن**
   const removeDecimals = useCallback((value) => {
     if (value === null || value === undefined || value === '') return '0';
     
-    // Handle string values
-    if (typeof value === 'string') {
-      // Remove any commas first
-      const cleanValue = value.replace(/,/g, '');
-      const num = parseFloat(cleanValue);
-      if (isNaN(num)) return '0';
-      return Math.floor(num).toLocaleString();
-    }
-    
-    // Handle number values
     const num = Number(value);
     if (isNaN(num)) return '0';
     
+    // ڈیسیمل سے پہلے کا حصہ لیں
     return Math.floor(num).toLocaleString();
   }, []);
 
-  // 🔥 **Fix: Comprehensive shift field detection**
+  // 🔥 **کمپرہینسو شفٹ فیلڈ ڈیٹکشن**
   const detectShiftField = useCallback(async (tableName) => {
     try {
+      // پہلے ایک ریکارڈ چیک کریں کہ کون سا فیلڈ موجود ہے
       const { data, error } = await supabase
         .from(tableName)
         .select('*')
-        .limit(5);
+        .limit(1);
       
       if (error || !data || data.length === 0) return 'shift_name';
       
-      // Check each record for shift fields
-      const shiftFields = ['shift_name', 'shift', 'shift_type', 'shift_code'];
+      const record = data[0];
       
-      for (const field of shiftFields) {
-        const hasData = data.some(record => 
-          record[field] && 
-          record[field].toString().trim() !== '' && 
-          record[field].toString().trim().toLowerCase() !== 'null'
-        );
-        if (hasData) return field;
-      }
+      // مختلف ممکنہ شفٹ فیلڈز چیک کریں
+      if (record.shift_name && record.shift_name.toString().trim() !== '') return 'shift_name';
+      if (record.shift && record.shift.toString().trim() !== '') return 'shift';
+      if (record.shift_type && record.shift_type.toString().trim() !== '') return 'shift_type';
+      if (record.shift_code && record.shift_code.toString().trim() !== '') return 'shift_code';
       
-      return 'shift_name';
+      return 'shift_name'; // ڈیفالٹ
     } catch (error) {
       console.error('Error detecting shift field:', error);
       return 'shift_name';
     }
   }, []);
+
+  // Icon Box Component
+  const IconBox = useCallback(({ icon: Icon, color, size = 24, label, className = "" }) => {
+    const darkColor = getDarkColor(color);
+    const lightColor = getLightColor(color);
+    
+    return (
+      <div className={`icon-box ${className}`}>
+        <div 
+          className="icon-box-inner"
+          style={{
+            width: `${size + 24}px`,
+            height: `${size + 24}px`,
+            borderColor: darkColor,
+            backgroundColor: lightColor,
+            color: darkColor
+          }}
+        >
+          <Icon size={size} />
+        </div>
+        {label && (
+          <span className="icon-box-label">{label}</span>
+        )}
+      </div>
+    );
+  }, [darkMode]);
 
   // Get dark version of color
   const getDarkColor = useCallback((color) => {
@@ -243,33 +269,51 @@ const NewProductionDashboard = () => {
     return colorMap[color] || `${color}15`;
   }, [darkMode]);
 
-  // Icon Box Component
-  const IconBox = useCallback(({ icon: Icon, color, size = 24, label, className = "" }) => {
-    const darkColor = getDarkColor(color);
-    const lightColor = getLightColor(color);
+  // 🔥 **شفٹ ڈیٹا کو الگ سے فچ کریں**
+  const fetchShiftData = useCallback(async () => {
+    if (!currentDept) return;
     
-    return (
-      <div className={`icon-box ${className}`}>
-        <div 
-          className="icon-box-inner"
-          style={{
-            width: `${size + 24}px`,
-            height: `${size + 24}px`,
-            borderColor: darkColor,
-            backgroundColor: lightColor,
-            color: darkColor
-          }}
-        >
-          <Icon size={size} />
-        </div>
-        {label && (
-          <span className="icon-box-label">{label}</span>
-        )}
-      </div>
-    );
-  }, [getDarkColor, getLightColor]);
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      
+      // پہلے شفٹ فیلڈ ڈیٹیکٹ کریں
+      const actualShiftField = await detectShiftField(currentDept.tableName);
+      
+      // ڈیٹا فچ کریں
+      const { data, error } = await supabase
+        .from(currentDept.tableName)
+        .select(`${actualShiftField}, ${currentDept.keyField}`)
+        .eq(currentDept.dateField, today);
+      
+      if (error) throw error;
+      
+      // Shift-wise production calculate کریں
+      const shiftProduction = {};
+      
+      data?.forEach(record => {
+        const shift = record[actualShiftField];
+        const production = Number(record[currentDept.keyField]) || 0;
+        
+        if (shift && shift.toString().trim() !== '') {
+          const shiftName = formatShiftName(shift.toString().trim());
+          const cleanProduction = Math.floor(production);
+          
+          if (!shiftProduction[shiftName]) {
+            shiftProduction[shiftName] = 0;
+          }
+          shiftProduction[shiftName] += cleanProduction;
+        }
+      });
+      
+      setShiftData(shiftProduction);
+      
+    } catch (error) {
+      console.error('Error fetching shift data:', error);
+      setShiftData({});
+    }
+  }, [currentDept, detectShiftField]);
 
-  // Shift name formatting
+  // Shift name کو فارمیٹ کریں
   const formatShiftName = useCallback((shiftName) => {
     if (!shiftName) return 'Unknown';
     
@@ -293,23 +337,23 @@ const NewProductionDashboard = () => {
       .join(' ');
   }, []);
 
-  // 🔥 **Weekly Data Fetch**
-  const fetchWeeklyData = useCallback(async (offset = 0, department = currentDept) => {
-    if (!department) return;
+  // 🔥 **ہفتہ وار ڈیٹا فچ کریں - درست طریقے سے**
+  const fetchWeeklyData = useCallback(async (offset = 0) => {
+    if (!currentDept) return;
     
     try {
       const today = new Date();
-      const startDate = new Date();
-      startDate.setDate(today.getDate() - (7 * offset) - 6);
-      const endDate = new Date();
-      endDate.setDate(today.getDate() - (7 * offset));
+      const startDate = new Date(today);
+      startDate.setDate(today.getDate() - (offset * 7) - 6);
+      const endDate = new Date(today);
+      endDate.setDate(today.getDate() - (offset * 7));
       
       const { data, error } = await supabase
-        .from(department.tableName)
+        .from(currentDept.tableName)
         .select('*')
-        .gte(department.dateField, startDate.toISOString().split('T')[0])
-        .lte(department.dateField, endDate.toISOString().split('T')[0])
-        .order(department.dateField, { ascending: true });
+        .gte(currentDept.dateField, startDate.toISOString().split('T')[0])
+        .lte(currentDept.dateField, endDate.toISOString().split('T')[0])
+        .order(currentDept.dateField, { ascending: true });
       
       if (error) throw error;
       
@@ -333,9 +377,9 @@ const NewProductionDashboard = () => {
       
       // Fill with actual data
       data?.forEach(record => {
-        const date = record[department.dateField];
+        const date = record[currentDept.dateField];
         if (dayGroups[date]) {
-          const production = Number(record[department.keyField]) || 0;
+          const production = Number(record[currentDept.keyField]) || 0;
           dayGroups[date].production += Math.floor(production);
         }
       });
@@ -350,11 +394,11 @@ const NewProductionDashboard = () => {
       console.error('Error fetching weekly data:', error);
       setWeeklyData([]);
     }
-  }, []);
+  }, [currentDept]);
 
-  // 🔥 **Monthly Data Fetch**
-  const fetchMonthlyData = useCallback(async (offset = 0, department = currentDept) => {
-    if (!department) return;
+  // 🔥 **ماہانہ ڈیٹا فچ کریں - درست طریقے سے**
+  const fetchMonthlyData = useCallback(async (offset = 0) => {
+    if (!currentDept) return;
     
     try {
       const today = new Date();
@@ -363,10 +407,10 @@ const NewProductionDashboard = () => {
       const lastDayOfMonth = new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 0);
       
       const { data, error } = await supabase
-        .from(department.tableName)
+        .from(currentDept.tableName)
         .select('*')
-        .gte(department.dateField, firstDayOfMonth.toISOString().split('T')[0])
-        .lte(department.dateField, lastDayOfMonth.toISOString().split('T')[0]);
+        .gte(currentDept.dateField, firstDayOfMonth.toISOString().split('T')[0])
+        .lte(currentDept.dateField, lastDayOfMonth.toISOString().split('T')[0]);
       
       if (error) throw error;
       
@@ -391,13 +435,13 @@ const NewProductionDashboard = () => {
       
       // Distribute data to weeks
       data?.forEach(record => {
-        const date = new Date(record[department.dateField]);
+        const date = new Date(record[currentDept.dateField]);
         const dayOfMonth = date.getDate();
         const weekNumber = Math.ceil(dayOfMonth / 7);
         const weekName = `Week ${weekNumber}`;
         
         if (weeklyGroups[weekName]) {
-          const production = Number(record[department.keyField]) || 0;
+          const production = Number(record[currentDept.keyField]) || 0;
           weeklyGroups[weekName].production += Math.floor(production);
           weeklyGroups[weekName].days += 1;
         }
@@ -420,21 +464,21 @@ const NewProductionDashboard = () => {
       console.error('Error fetching monthly data:', error);
       setMonthlyData([]);
     }
-  }, []);
+  }, [currentDept]);
 
-  // Current month daily data
-  const fetchCurrentMonthDailyData = useCallback(async (department = currentDept) => {
-    if (!department) return;
+  // Fetch current month daily data
+  const fetchCurrentMonthDailyData = useCallback(async () => {
+    if (!currentDept) return;
     
     try {
       const today = new Date();
       const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
       
       const { data, error } = await supabase
-        .from(department.tableName)
+        .from(currentDept.tableName)
         .select('*')
-        .gte(department.dateField, firstDayOfMonth.toISOString().split('T')[0])
-        .lte(department.dateField, today.toISOString().split('T')[0]);
+        .gte(currentDept.dateField, firstDayOfMonth.toISOString().split('T')[0])
+        .lte(currentDept.dateField, today.toISOString().split('T')[0]);
       
       if (error) throw error;
       
@@ -456,10 +500,10 @@ const NewProductionDashboard = () => {
       
       // Fill with actual data
       data?.forEach(record => {
-        const recordDate = record[department.dateField];
+        const recordDate = record[currentDept.dateField];
         const dayData = currentMonthDays.find(d => d.date === recordDate);
         if (dayData) {
-          const production = Number(record[department.keyField]) || 0;
+          const production = Number(record[currentDept.keyField]) || 0;
           dayData.production += Math.floor(production);
         }
       });
@@ -470,52 +514,13 @@ const NewProductionDashboard = () => {
       console.error('Error fetching current month daily data:', error);
       setDailyData([]);
     }
-  }, []);
+  }, [currentDept]);
 
-  // 🔥 **Correct Shift Data Fetch**
-  const fetchShiftData = useCallback(async (department = currentDept) => {
-    if (!department) return;
-    
-    try {
-      const today = new Date().toISOString().split('T')[0];
-      const actualShiftField = await detectShiftField(department.tableName);
-      
-      const { data, error } = await supabase
-        .from(department.tableName)
-        .select(`${actualShiftField}, ${department.keyField}`)
-        .eq(department.dateField, today);
-      
-      if (error) throw error;
-      
-      const shiftProduction = {};
-      
-      data?.forEach(record => {
-        const shift = record[actualShiftField];
-        const production = Number(record[department.keyField]) || 0;
-        
-        if (shift && shift.toString().trim() !== '' && shift.toString().trim().toLowerCase() !== 'null') {
-          const shiftName = formatShiftName(shift.toString().trim());
-          const cleanProduction = Math.floor(production);
-          
-          if (!shiftProduction[shiftName]) {
-            shiftProduction[shiftName] = 0;
-          }
-          shiftProduction[shiftName] += cleanProduction;
-        }
-      });
-      
-      setShiftData(shiftProduction);
-      
-    } catch (error) {
-      console.error('Error fetching shift data:', error);
-      setShiftData({});
-    }
-  }, [detectShiftField, formatShiftName]);
-
-  // 🔥 **Calculate Statistics**
-  const calculateStats = useCallback((data, department = currentDept) => {
-    if (!data || !data.length || !department) {
-      setStats({
+  // 🔥 **سٹیٹس کیلکولیٹ کریں - درست طریقے سے**
+  const calculateStats = useCallback((data) => {
+    if (!data || !data.length) {
+      setStats(prev => ({
+        ...prev,
         todayProduction: 0,
         avgEfficiency: 0,
         activeMachines: 0,
@@ -526,7 +531,7 @@ const NewProductionDashboard = () => {
         yesterdayProduction: 0,
         lastWeekProduction: 0,
         lastMonthProduction: 0
-      });
+      }));
       return;
     }
 
@@ -535,24 +540,23 @@ const NewProductionDashboard = () => {
     let efficiencyCount = 0;
     const machines = new Set();
     const uniqueOperators = new Set();
-    const shiftCount = {};
     const machineGroups = {};
     const operatorGroups = {};
     
     data.forEach(record => {
       // Total production
-      const production = Math.floor(Number(record[department.keyField]) || 0);
+      const production = Math.floor(Number(record[currentDept.keyField]) || 0);
       totalProduction += production;
       
-      // Efficiency (if available)
-      if (department.efficiencyField && record[department.efficiencyField]) {
-        const efficiency = Math.floor(Number(record[department.efficiencyField]) || 0);
+      // Efficiency
+      if (currentDept.efficiencyField && record[currentDept.efficiencyField]) {
+        const efficiency = Math.floor(Number(record[currentDept.efficiencyField]) || 0);
         totalEfficiency += efficiency;
         efficiencyCount++;
       }
       
       // Machines
-      let machineName = record.machine_no || record.machine_id || record.machine || 'Unknown';
+      let machineName = record.machine_no || record.machine_id || 'Unknown';
       machines.add(machineName);
       
       // Aggregate machine-wise data
@@ -565,30 +569,28 @@ const NewProductionDashboard = () => {
         };
       }
       machineGroups[machineName].production += production;
-      if (department.efficiencyField && record[department.efficiencyField]) {
-        machineGroups[machineName].efficiency += Math.floor(Number(record[department.efficiencyField]) || 0);
+      if (currentDept.efficiencyField && record[currentDept.efficiencyField]) {
+        machineGroups[machineName].efficiency += Math.floor(Number(record[currentDept.efficiencyField]) || 0);
         machineGroups[machineName].count++;
       }
       
       // Operators - unique only
-      if (record[department.operatorField]) {
-        const operator = record[department.operatorField].toString().trim();
-        if (operator) {
-          uniqueOperators.add(operator);
-          
-          if (!operatorGroups[operator]) {
-            operatorGroups[operator] = {
-              production: 0,
-              efficiency: 0,
-              count: 0,
-              machine: machineName
-            };
-          }
-          operatorGroups[operator].production += production;
-          if (department.efficiencyField && record[department.efficiencyField]) {
-            operatorGroups[operator].efficiency += Math.floor(Number(record[department.efficiencyField]) || 0);
-            operatorGroups[operator].count++;
-          }
+      if (record[currentDept.operatorField]) {
+        const operator = record[currentDept.operatorField].toString().trim();
+        uniqueOperators.add(operator);
+        
+        if (!operatorGroups[operator]) {
+          operatorGroups[operator] = {
+            production: 0,
+            efficiency: 0,
+            count: 0,
+            machine: machineName
+          };
+        }
+        operatorGroups[operator].production += production;
+        if (currentDept.efficiencyField && record[currentDept.efficiencyField]) {
+          operatorGroups[operator].efficiency += Math.floor(Number(record[currentDept.efficiencyField]) || 0);
+          operatorGroups[operator].count++;
         }
       }
     });
@@ -614,21 +616,21 @@ const NewProductionDashboard = () => {
     const lastWeekProduction = Math.floor(totalProduction * 5.5);
     const lastMonthProduction = Math.floor(totalProduction * 22);
     
-    setStats({
+    setStats(prev => ({
+      ...prev,
       todayProduction: totalProduction,
       avgEfficiency: efficiencyCount > 0 ? Math.floor(totalEfficiency / efficiencyCount) : 0,
       activeMachines: machines.size,
       totalOperators: uniqueOperators.size,
-      shiftWise: shiftCount,
       machineWise: machineWiseData,
       operatorWise: operatorWiseData,
       yesterdayProduction,
       lastWeekProduction,
       lastMonthProduction
-    });
-  }, []);
+    }));
+  }, [currentDept]);
 
-  // 🔥 **Main Fetch Function - Fixed with proper dependencies**
+  // 🔥 **مکمل ڈیٹا فچ کرنے کا فنکشن**
   const fetchDepartmentData = useCallback(async () => {
     if (!currentDept) return;
     
@@ -670,19 +672,17 @@ const NewProductionDashboard = () => {
       }
       
       // Calculate statistics
-      calculateStats(data || [], currentDept);
+      calculateStats(data || []);
       
-      // Fetch weekly data with current offset
-      fetchWeeklyData(weeklyOffset, currentDept);
+      // 🔥 **نیویگیشن کے لیے ڈیٹا فچ کریں**
+      await Promise.all([
+        fetchWeeklyData(weeklyOffset),
+        fetchMonthlyData(monthlyOffset),
+        fetchCurrentMonthDailyData(),
+        fetchShiftData()
+      ]);
       
-      // Fetch monthly data with current offset
-      fetchMonthlyData(monthlyOffset, currentDept);
-      
-      // Fetch current month daily data
-      fetchCurrentMonthDailyData(currentDept);
-      
-      // Fetch shift data
-      fetchShiftData(currentDept);
+      setInitialLoad(false);
       
     } catch (error) {
       console.error(`Error fetching data from ${currentDept.tableName}:`, error);
@@ -692,52 +692,68 @@ const NewProductionDashboard = () => {
       setMonthlyData([]);
       setDailyData([]);
       setShiftData({});
-      setStats({
+      
+      // Reset stats to prevent empty cards
+      setStats(prev => ({
+        ...prev,
         todayProduction: 0,
         avgEfficiency: 0,
         activeMachines: 0,
         totalOperators: 0,
-        shiftWise: {},
         machineWise: [],
         operatorWise: [],
         yesterdayProduction: 0,
         lastWeekProduction: 0,
         lastMonthProduction: 0
-      });
+      }));
     } finally {
       setLoading(false);
     }
-  }, [currentDept, dateFilter, weeklyOffset, monthlyOffset, 
-      calculateStats, fetchWeeklyData, fetchMonthlyData, 
-      fetchCurrentMonthDailyData, fetchShiftData]);
+  }, [
+    currentDept, 
+    dateFilter, 
+    calculateStats, 
+    fetchWeeklyData, 
+    weeklyOffset, 
+    fetchMonthlyData, 
+    monthlyOffset, 
+    fetchCurrentMonthDailyData, 
+    fetchShiftData
+  ]);
 
-  // Handle weekly navigation
-  const handleWeeklyPrev = useCallback(() => {
+  // 🔥 **ہفتہ وار نیویگیشن - درست طریقے سے**
+  const handleWeeklyPrev = () => {
     const newOffset = weeklyOffset + 1;
     setWeeklyOffset(newOffset);
-    fetchWeeklyData(newOffset, currentDept);
-  }, [weeklyOffset, currentDept, fetchWeeklyData]);
+    fetchWeeklyData(newOffset);
+  };
 
-  const handleWeeklyNext = useCallback(() => {
-    if (weeklyOffset === 0) return;
+  const handleWeeklyNext = () => {
+    if (weeklyOffset === 0) {
+      alert('آپ کرنٹ ویک میں ہیں۔ پچھلی ویکس دیکھنے کے لیے Previous پر کلک کریں۔');
+      return;
+    }
     const newOffset = weeklyOffset - 1;
     setWeeklyOffset(newOffset);
-    fetchWeeklyData(newOffset, currentDept);
-  }, [weeklyOffset, currentDept, fetchWeeklyData]);
+    fetchWeeklyData(newOffset);
+  };
 
-  // Handle monthly navigation
-  const handleMonthlyPrev = useCallback(() => {
+  // 🔥 **ماہانہ نیویگیشن - درست طریقے سے**
+  const handleMonthlyPrev = () => {
     const newOffset = monthlyOffset + 1;
     setMonthlyOffset(newOffset);
-    fetchMonthlyData(newOffset, currentDept);
-  }, [monthlyOffset, currentDept, fetchMonthlyData]);
+    fetchMonthlyData(newOffset);
+  };
 
-  const handleMonthlyNext = useCallback(() => {
-    if (monthlyOffset === 0) return;
+  const handleMonthlyNext = () => {
+    if (monthlyOffset === 0) {
+      alert('آپ کرنٹ مہینے میں ہیں۔ پچھلے مہینے دیکھنے کے لیے Previous پر کلک کریں۔');
+      return;
+    }
     const newOffset = monthlyOffset - 1;
     setMonthlyOffset(newOffset);
-    fetchMonthlyData(newOffset, currentDept);
-  }, [monthlyOffset, currentDept, fetchMonthlyData]);
+    fetchMonthlyData(newOffset);
+  };
 
   // Get current week range
   const getCurrentWeekRange = useCallback(() => {
@@ -760,33 +776,31 @@ const NewProductionDashboard = () => {
     const targetDate = new Date(today.getFullYear(), today.getMonth() - monthlyOffset, 1);
     
     const monthNames = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
+      'جنوری', 'فروری', 'مارچ', 'اپریل', 'مئی', 'جون',
+      'جولائی', 'اگست', 'ستمبر', 'اکتوبر', 'نومبر', 'دسمبر'
     ];
     
     return `${monthNames[targetDate.getMonth()]} ${targetDate.getFullYear()}`;
   }, [monthlyOffset]);
 
-  // 🔥 **Fix: Main useEffect - No infinite loop**
+  // 🔥 **بنیادی ڈیٹا لوڈنگ**
   useEffect(() => {
-    if (currentDept) {
-      fetchDepartmentData();
-    }
-  }, [currentDept, dateFilter, fetchDepartmentData]);
+    fetchDepartmentData();
+  }, [selectedDepartment, dateFilter, fetchDepartmentData]);
 
-  // 🔥 **Fix: Reset offsets when department changes**
+  // 🔥 **نیویگیشن کو ری سیٹ کریں جب ڈیپارٹمنٹ یا ڈیٹ فلٹر بدلے**
   useEffect(() => {
     setWeeklyOffset(0);
     setMonthlyOffset(0);
-  }, [selectedDepartment]);
+  }, [selectedDepartment, dateFilter]);
 
-  const handleRefresh = useCallback(() => {
+  const handleRefresh = () => {
     setWeeklyOffset(0);
     setMonthlyOffset(0);
     fetchDepartmentData();
-  }, [fetchDepartmentData]);
+  };
 
-  const handleExportData = useCallback(() => {
+  const handleExportData = () => {
     if (!productionData.length) {
       alert('No data to export!');
       return;
@@ -816,7 +830,7 @@ const NewProductionDashboard = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  }, [productionData, selectedDepartment, currentDept, dateFilter, lastEntry, weeklyData, monthlyData, dailyData, shiftData, stats]);
+  };
 
   // Get top operators (top 5)
   const getTopOperators = useCallback(() => {
@@ -831,23 +845,12 @@ const NewProductionDashboard = () => {
   // Format date for display
   const formatDate = useCallback((dateString) => {
     if (!dateString) return 'N/A';
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('en-US', { 
-        day: 'numeric', 
-        month: 'short', 
-        year: 'numeric' 
-      });
-    } catch (error) {
-      return 'Invalid Date';
-    }
-  }, []);
-
-  // Get efficiency class
-  const getEfficiencyClass = useCallback((efficiency) => {
-    if (efficiency > 90) return 'efficiency-high';
-    if (efficiency > 80) return 'efficiency-medium';
-    return 'efficiency-low';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      day: 'numeric', 
+      month: 'short', 
+      year: 'numeric' 
+    });
   }, []);
 
   // Format operator name for display
@@ -862,71 +865,83 @@ const NewProductionDashboard = () => {
     return name.length > 12 ? name.substring(0, 12) + '...' : name;
   }, []);
 
-  // 🔥 **Stats cards data - Fixed loading issue**
+  // 🔥 **سٹیٹس کارڈز - پرسنٹیج کلر کے ساتھ**
   const statsCards = useMemo(() => [
     { 
-      title: "Today's Production", 
-      value: loading ? "..." : removeDecimals(stats.todayProduction), 
+      title: "آج کی پیداوار", 
+      value: loading && initialLoad ? "..." : removeDecimals(stats.todayProduction), 
       change: "+15%", 
       icon: FiPackage, 
       color: currentDept?.color || "#3b82f6",
-      description: `${currentDept?.unit} produced today`,
+      description: `${currentDept?.unit} آج پیدا ہوئی`,
       isPositive: true,
       link: "#"
     },
     { 
-      title: "Yesterday's Production", 
-      value: loading ? "..." : removeDecimals(stats.yesterdayProduction), 
+      title: "کل کی پیداوار", 
+      value: loading && initialLoad ? "..." : removeDecimals(stats.yesterdayProduction), 
       change: "+5%", 
       icon: FaHistory, 
       color: "#8b5cf6",
-      description: `${currentDept?.unit} produced yesterday`,
+      description: `${currentDept?.unit} کل پیدا ہوئی`,
       isPositive: stats.yesterdayProduction > 0,
       link: "#"
     },
     { 
-      title: "Last Week Total", 
-      value: loading ? "..." : removeDecimals(stats.lastWeekProduction), 
+      title: "پچھلے ہفتے کی کل پیداوار", 
+      value: loading && initialLoad ? "..." : removeDecimals(stats.lastWeekProduction), 
       change: "+12%", 
       icon: FaCalendarAlt, 
       color: "#10b981",
-      description: `${currentDept?.unit} last week`,
+      description: `${currentDept?.unit} پچھلے ہفتے`,
       isPositive: true,
       link: "#"
     },
     { 
-      title: "Last Month Total", 
-      value: loading ? "..." : removeDecimals(stats.lastMonthProduction), 
+      title: "پچھلے مہینے کی کل پیداوار", 
+      value: loading && initialLoad ? "..." : removeDecimals(stats.lastMonthProduction), 
       change: "+18%", 
       icon: FaRegCalendarCheck, 
       color: "#ec4899",
-      description: `${currentDept?.unit} last month`,
+      description: `${currentDept?.unit} پچھلے مہینے`,
       isPositive: true,
       link: "#"
     },
     { 
-      title: "Avg Efficiency", 
-      value: loading ? "..." : `${stats.avgEfficiency}%`, 
+      title: "اوسط کارکردگی", 
+      value: loading && initialLoad ? "..." : `${stats.avgEfficiency}%`, 
       change: stats.avgEfficiency > 85 ? "+3%" : "-2%", 
       icon: FiActivity, 
       color: "#06b6d4",
-      description: "Average efficiency rate",
+      description: "اوسط کارکردگی کی شرح",
       isPositive: stats.avgEfficiency > 85,
-      link: "#"
+      link: "#",
+      efficiency: stats.avgEfficiency // 🔥 پرسنٹیج کلر کے لیے
     },
     { 
-      title: "Active Operators", 
-      value: loading ? "..." : stats.totalOperators.toString(), 
-      change: `Unique: ${stats.totalOperators}`, 
+      title: "فعال آپریٹرز", 
+      value: loading && initialLoad ? "..." : stats.totalOperators.toString(), 
+      change: `منفرد: ${stats.totalOperators}`, 
       icon: FiUsers, 
       color: "#f59e0b",
-      description: "Unique operators working today",
+      description: "آج کام کرنے والے منفرد آپریٹرز",
       isPositive: true,
       link: "#"
     }
-  ], [loading, stats, currentDept, removeDecimals]);
+  ], [
+    loading, 
+    initialLoad, 
+    stats.todayProduction, 
+    stats.yesterdayProduction, 
+    stats.lastWeekProduction, 
+    stats.lastMonthProduction, 
+    stats.avgEfficiency, 
+    stats.totalOperators, 
+    currentDept?.unit, 
+    currentDept?.color, 
+    removeDecimals
+  ]);
 
-  // 🔥 **Render function - Main component return**
   return (
     <div className={`production-dashboard ${darkMode ? 'dark-theme' : 'light-theme'}`}>
       {/* Header */}
@@ -938,7 +953,8 @@ const NewProductionDashboard = () => {
             color: "var(--color-text-primary)",
             display: "flex",
             alignItems: "center",
-            gap: "15px"
+            gap: "15px",
+            flexWrap: "wrap"
           }}>
             <div style={{
               width: "60px",
@@ -953,7 +969,7 @@ const NewProductionDashboard = () => {
             }}>
               {currentDept?.icon ? React.createElement(currentDept.icon, { size: 28 }) : <FaIndustry size={28} />}
             </div>
-            <span>Production Dashboard - Live Data</span>
+            <span>پروڈکشن ڈیش بورڈ - لائیو ڈیٹا</span>
           </h1>
           <p style={{ 
             margin: "10px 0 0 75px", 
@@ -968,11 +984,11 @@ const NewProductionDashboard = () => {
             <strong>{currentDept?.tableName}</strong>
             <span style={{ color: "var(--color-border)" }}>•</span>
             <IconBox icon={FiPackage} color="#10b981" size={16} />
-            <span>Unit: </span>
+            <span>یونٹ: </span>
             <strong>{currentDept?.unit}</strong>
             <span style={{ color: "var(--color-border)" }}>•</span>
             <IconBox icon={FiList} color="#8b5cf6" size={16} />
-            <span>Records: </span>
+            <span>رکارڈز: </span>
             <strong>{productionData.length}</strong>
             <span style={{ color: "var(--color-border)" }}>•</span>
             <span className={loading ? "badge badge-warning" : "badge badge-success"} style={{
@@ -994,7 +1010,7 @@ const NewProductionDashboard = () => {
                   }}>
                     <FaSpinner className="spin-animation" size={10} />
                   </div>
-                  Loading Data...
+                  ڈیٹا لوڈ ہو رہا ہے...
                 </>
               ) : (
                 <>
@@ -1011,7 +1027,7 @@ const NewProductionDashboard = () => {
                   }}>
                     ✓
                   </div>
-                  Data Loaded
+                  سپا بیس سے منسلک
                 </>
               )}
             </span>
@@ -1026,7 +1042,7 @@ const NewProductionDashboard = () => {
             alignItems: "center",
             gap: "10px"
           }}>
-            <IconBox icon={FiFilter} color="#8b5cf6" size={18} label="Filter" />
+            <IconBox icon={FiFilter} color="#8b5cf6" size={18} label="فلٹر" />
             
             <div style={{ 
               display: "flex", 
@@ -1036,10 +1052,10 @@ const NewProductionDashboard = () => {
               border: `1px solid var(--color-border)`
             }}>
               {[
-                { key: 'today', icon: FiPlay, color: '#10b981', label: 'Today' },
-                { key: 'yesterday', icon: FiRotateCw, color: '#f59e0b', label: 'Yesterday' },
-                { key: 'week', icon: FiCalendar, color: '#3b82f6', label: 'Week' },
-                { key: 'month', icon: FiBarChart, color: '#8b5cf6', label: 'Month' }
+                { key: 'today', icon: FiPlay, color: '#10b981', label: 'آج' },
+                { key: 'yesterday', icon: FiRotateCw, color: '#f59e0b', label: 'کل' },
+                { key: 'week', icon: FiCalendar, color: '#3b82f6', label: 'ہفتہ' },
+                { key: 'month', icon: FiBarChart, color: '#8b5cf6', label: 'مہینہ' }
               ].map(filter => (
                 <button
                   key={filter.key}
@@ -1082,7 +1098,7 @@ const NewProductionDashboard = () => {
             }}
           >
             <IconBox icon={FiRefreshCw} color="#64748b" size={16} />
-            {loading ? "Refreshing..." : "Refresh"}
+            {loading ? "ریفریش ہو رہا ہے..." : "ریفریش"}
           </button>
 
           {/* Export Button */}
@@ -1098,7 +1114,7 @@ const NewProductionDashboard = () => {
             }}
           >
             <IconBox icon={FiDownload} color={currentDept?.color || '#3b82f6'} size={16} />
-            Export Data
+            ڈیٹا ایکسپورٹ
           </button>
         </div>
       </div>
@@ -1115,8 +1131,8 @@ const NewProductionDashboard = () => {
           borderRight: `1px solid var(--color-border)`,
           marginBottom: "20px"
         }}>
-          <IconBox icon={FiGrid} color="#8b5cf6" size={20} label="Select" />
-          <span>Select Department:</span>
+          <IconBox icon={FiGrid} color="#8b5cf6" size={20} label="منتخب کریں" />
+          <span>ڈیپارٹمنٹ منتخب کریں:</span>
         </div>
         
         <div style={{
@@ -1153,7 +1169,7 @@ const NewProductionDashboard = () => {
                   color: "var(--color-text-secondary)",
                   marginTop: '4px'
                 }}>
-                  Table: {dept.tableName}
+                  ٹیبل: {dept.tableName}
                 </div>
               </div>
             </button>
@@ -1182,16 +1198,18 @@ const NewProductionDashboard = () => {
             alignItems: "center",
             marginBottom: "20px",
             position: "relative",
-            zIndex: 1
+            zIndex: 1,
+            flexWrap: "wrap",
+            gap: "15px"
           }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
-              <IconBox icon={FiList} color={currentDept?.color} size={28} label="Last Entry" />
+            <div style={{ display: "flex", alignItems: "center", gap: "20px", flexWrap: "wrap" }}>
+              <IconBox icon={FiList} color={currentDept?.color} size={28} label="آخری انٹری" />
               <div>
                 <h3 className="chart-title">
-                  Last Entry Added
+                  آخری شامل شدہ انٹری
                 </h3>
                 <p className="data-label">
-                  Most recent production record
+                  تازہ ترین پیداوار ریکارڈ
                 </p>
               </div>
             </div>
@@ -1205,7 +1223,7 @@ const NewProductionDashboard = () => {
             <div>
               <div className="data-label">
                 <IconBox icon={FaCog} color="#8b5cf6" size={14} />
-                Machine
+                مشین
               </div>
               <div className="data-value">
                 {lastEntry.machine_no || lastEntry.machine_id || 'N/A'}
@@ -1214,7 +1232,7 @@ const NewProductionDashboard = () => {
             <div>
               <div className="data-label">
                 <IconBox icon={FiPackage} color={currentDept?.color} size={14} />
-                Production Quantity
+                پیداواری مقدار
               </div>
               <div className="data-value" style={{ color: getDarkColor(currentDept?.color) }}>
                 {lastEntry.production_quantity ? removeDecimals(lastEntry.production_quantity) : '0'} {currentDept?.unit}
@@ -1223,7 +1241,7 @@ const NewProductionDashboard = () => {
             <div>
               <div className="data-label">
                 <IconBox icon={FiUser} color="#f59e0b" size={14} />
-                Operator
+                آپریٹر
               </div>
               <div className="data-value">
                 {lastEntry.operator_name || lastEntry.received_by || 'N/A'}
@@ -1232,13 +1250,9 @@ const NewProductionDashboard = () => {
             <div>
               <div className="data-label">
                 <IconBox icon={FiActivity} color="#10b981" size={14} />
-                Efficiency
+                کارکردگی
               </div>
-              <div className="data-value" style={{ 
-                color: lastEntry.efficiency > 90 ? "var(--color-success)" :
-                       lastEntry.efficiency > 80 ? "var(--color-primary)" :
-                       lastEntry.efficiency > 70 ? "var(--color-warning)" : "var(--color-error)"
-              }}>
+              <div className={`data-value efficiency-badge ${getEfficiencyColor(lastEntry.efficiency)}`}>
                 {lastEntry.efficiency ? `${removeDecimals(lastEntry.efficiency)}%` : 'N/A'}
               </div>
             </div>
@@ -1254,226 +1268,231 @@ const NewProductionDashboard = () => {
             alignItems: "center",
             gap: "10px",
             position: "relative",
-            zIndex: 1
+            zIndex: 1,
+            flexWrap: "wrap"
           }}>
             <IconBox icon={FiAlertCircle} color="#f59e0b" size={12} />
-            <span>This is the most recent entry in the database</span>
+            <span>یہ ڈیٹا بیس میں تازہ ترین انٹری ہے</span>
           </div>
         </div>
       )}
 
-      {/* Stats Cards - 🔥 Fixed loading issue */}
+      {/* Stats Cards - FIXED RENDERING ISSUE */}
       <div className="grid-cards">
         {statsCards.map((stat, index) => (
-          <div className="dashboard-card" key={index}>
-            <StatCard
-              title={stat.title}
-              value={stat.value}
-              icon={stat.icon}
-              color={stat.color}
-              change={stat.change}
-              description={stat.description}
-              link={stat.link}
-              loading={loading}
-              isPositive={stat.isPositive}
-              darkMode={darkMode}
-            />
+          <div className="dashboard-card stat-card-container" key={index}>
+            <div className={`card-content ${loading ? 'card-loading' : ''}`}>
+              <StatCard
+                title={stat.title}
+                value={stat.value}
+                icon={stat.icon}
+                color={stat.color}
+                change={stat.change}
+                description={stat.description}
+                link={stat.link}
+                loading={loading && initialLoad}
+                isPositive={stat.isPositive}
+                darkMode={darkMode}
+                efficiency={stat.efficiency} // 🔥 پرسنٹیج کلر کے لیے
+                efficiencyColor={getEfficiencyColor(stat.efficiency)} // 🔥 کلر کلاس
+              />
+            </div>
           </div>
         ))}
       </div>
 
-      {/* Charts Section */}
+      {/* 🔥 **ہفتہ وار پروڈکشن ٹرینڈ - نیویگیشن کے ساتھ** */}
+      <div className="dashboard-section">
+        <div className="chart-controls">
+          <h3 className="chart-title">
+            <IconBox icon={FaChartLine} color="#3b82f6" size={20} />
+            7-دن پیداواری رجحان
+          </h3>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+            <span className="badge badge-primary">
+              {currentDept?.unit}
+            </span>
+            <span className="chart-period">
+              {getCurrentWeekRange()}
+            </span>
+          </div>
+        </div>
+        
+        {/* 🔥 **نیویگیشن بٹنز - درست طریقے سے** */}
+        <div className="chart-controls">
+          <button
+            onClick={handleWeeklyPrev}
+            disabled={loading}
+            className="chart-nav-btn"
+          >
+            <FiChevronLeft size={16} />
+            پچھلا ہفتہ
+          </button>
+          
+          <div style={{ flex: 1, textAlign: "center" }}>
+            <span style={{ 
+              fontSize: "14px", 
+              color: "var(--color-text-primary)",
+              fontWeight: "600"
+            }}>
+              {weeklyOffset === 0 ? "کرنٹ ویک" : `${weeklyOffset} ہفتہ پہلے`}
+            </span>
+          </div>
+          
+          <button
+            onClick={handleWeeklyNext}
+            disabled={loading}
+            className="chart-nav-btn"
+          >
+            اگلا ہفتہ
+            <FiChevronRight size={16} />
+          </button>
+        </div>
+        
+        {loading && initialLoad ? (
+          <div className="loading-state">
+            ہفتہ وار ڈیٹا لوڈ ہو رہا ہے...
+          </div>
+        ) : weeklyData.length > 0 ? (
+          <div className="fade-in">
+            <ProductionBarChart 
+              title={null}
+              labels={weeklyData.map(d => d.day.substring(0, 3))}
+              data={weeklyData.map(d => d.production)}
+              colors={['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#ef4444']}
+              height={250}
+              darkMode={darkMode}
+            />
+            
+            <div className="week-chart-labels">
+              {weeklyData.map((day, index) => (
+                <div key={index} className="week-label">
+                  <div className="week-label-day">{day.day}</div>
+                  <div className="week-label-date">{day.formattedDate}</div>
+                  <div className="week-label-quantity">
+                    {removeDecimals(day.production)} {currentDept?.unit}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="empty-state">
+            ہفتہ وار ڈیٹا دستیاب نہیں
+          </div>
+        )}
+      </div>
+
+      {/* 🔥 **ماہانہ ڈیٹا - نیویگیشن کے ساتھ** */}
+      <div className="dashboard-section">
+        <div className="chart-controls">
+          <h3 className="chart-title">
+            <IconBox icon={FaChartBar} color="#10b981" size={20} />
+            ماہانہ پیداوار
+          </h3>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+            <span className="badge badge-success">
+              {currentDept?.unit}
+            </span>
+            <span className="chart-period">
+              {getCurrentMonthName()}
+            </span>
+          </div>
+        </div>
+        
+        {/* 🔥 **نیویگیشن بٹنز - درست طریقے سے** */}
+        <div className="chart-controls">
+          <button
+            onClick={handleMonthlyPrev}
+            disabled={loading}
+            className="chart-nav-btn"
+          >
+            <FiChevronLeft size={16} />
+            پچھلا مہینہ
+          </button>
+          
+          <div style={{ flex: 1, textAlign: "center" }}>
+            <span style={{ 
+              fontSize: "14px", 
+              color: "var(--color-text-primary)",
+              fontWeight: "600"
+            }}>
+              {monthlyOffset === 0 ? "کرنٹ مہینہ" : `${monthlyOffset} مہینہ پہلے`}
+            </span>
+          </div>
+          
+          <button
+            onClick={handleMonthlyNext}
+            disabled={loading}
+            className="chart-nav-btn"
+          >
+            اگلا مہینہ
+            <FiChevronRight size={16} />
+          </button>
+        </div>
+        
+        {loading && initialLoad ? (
+          <div className="loading-state">
+            ماہانہ ڈیٹا لوڈ ہو رہا ہے...
+          </div>
+        ) : monthlyData.length > 0 ? (
+          <div className="fade-in">
+            <ProductionBarChart 
+              title={null}
+              labels={monthlyData.map(m => `${m.week}\n(${m.range})`)}
+              data={monthlyData.map(m => m.production)}
+              colors={['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899']}
+              height={250}
+              darkMode={darkMode}
+            />
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: `repeat(${monthlyData.length}, 1fr)`,
+              gap: "10px",
+              marginTop: "15px"
+            }}>
+              {monthlyData.map((week, index) => (
+                <div key={index} className="dashboard-card" style={{ padding: "10px", textAlign: "center" }}>
+                  <div className="data-label" style={{ fontSize: "12px", marginBottom: "5px" }}>
+                    {week.week} ({week.range})
+                  </div>
+                  <div className="data-value" style={{ fontSize: "16px" }}>
+                    {removeDecimals(week.production)}
+                  </div>
+                  <div className="data-unit">
+                    {week.actualDays} دن • {currentDept?.unit}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="empty-state">
+            ماہانہ ڈیٹا دستیاب نہیں
+          </div>
+        )}
+      </div>
+
+      {/* Charts Grid */}
       <div className="grid-charts">
-        {/* Weekly Production Trend with Navigation */}
-        <div className="dashboard-section">
-          <div className="chart-controls">
-            <h3 className="chart-title">
-              <IconBox icon={FaChartLine} color="#3b82f6" size={20} />
-              7-Day Production Trend
-            </h3>
-            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-              <span className="badge badge-primary">
-                {currentDept?.unit}
-              </span>
-              <span className="chart-period">
-                {getCurrentWeekRange()}
-              </span>
-            </div>
-          </div>
-          
-          {/* Navigation Buttons */}
-          <div className="chart-controls">
-            <button
-              onClick={handleWeeklyPrev}
-              disabled={loading}
-              className="chart-nav-btn"
-            >
-              <FiChevronLeft size={16} />
-              Previous Week
-            </button>
-            
-            <div style={{ flex: 1, textAlign: "center" }}>
-              <span style={{ 
-                fontSize: "14px", 
-                color: "var(--color-text-primary)",
-                fontWeight: "600"
-              }}>
-                Week {weeklyOffset === 0 ? "Current" : `-${weeklyOffset}`}
-              </span>
-            </div>
-            
-            <button
-              onClick={handleWeeklyNext}
-              disabled={weeklyOffset === 0 || loading}
-              className="chart-nav-btn"
-            >
-              Next Week
-              <FiChevronRight size={16} />
-            </button>
-          </div>
-          
-          {loading ? (
-            <div className="loading-state">
-              Loading weekly data...
-            </div>
-          ) : weeklyData.length > 0 ? (
-            <div>
-              <ProductionBarChart 
-                title={null}
-                labels={weeklyData.map(d => d.day.substring(0, 3))}
-                data={weeklyData.map(d => d.production)}
-                colors={['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#ef4444']}
-                height={250}
-                darkMode={darkMode}
-              />
-              
-              <div className="week-chart-labels">
-                {weeklyData.map((day, index) => (
-                  <div key={index} className="week-label">
-                    <div className="week-label-day">{day.day}</div>
-                    <div className="week-label-date">{day.formattedDate}</div>
-                    <div className="week-label-quantity">
-                      {removeDecimals(day.production)} {currentDept?.unit}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <div className="empty-state">
-              No weekly data available
-            </div>
-          )}
-        </div>
-
-        {/* Monthly Data with Navigation */}
-        <div className="dashboard-section">
-          <div className="chart-controls">
-            <h3 className="chart-title">
-              <IconBox icon={FaChartBar} color="#10b981" size={20} />
-              Monthly Production
-            </h3>
-            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-              <span className="badge badge-success">
-                {currentDept?.unit}
-              </span>
-              <span className="chart-period">
-                {getCurrentMonthName()}
-              </span>
-            </div>
-          </div>
-          
-          {/* Navigation Buttons */}
-          <div className="chart-controls">
-            <button
-              onClick={handleMonthlyPrev}
-              disabled={loading}
-              className="chart-nav-btn"
-            >
-              <FiChevronLeft size={16} />
-              Previous Month
-            </button>
-            
-            <div style={{ flex: 1, textAlign: "center" }}>
-              <span style={{ 
-                fontSize: "14px", 
-                color: "var(--color-text-primary)",
-                fontWeight: "600"
-              }}>
-                {monthlyOffset === 0 ? "Current Month" : `${monthlyOffset} Month${monthlyOffset > 1 ? 's' : ''} Ago`}
-              </span>
-            </div>
-            
-            <button
-              onClick={handleMonthlyNext}
-              disabled={monthlyOffset === 0 || loading}
-              className="chart-nav-btn"
-            >
-              Next Month
-              <FiChevronRight size={16} />
-            </button>
-          </div>
-          
-          {loading ? (
-            <div className="loading-state">
-              Loading monthly data...
-            </div>
-          ) : monthlyData.length > 0 ? (
-            <div>
-              <ProductionBarChart 
-                title={null}
-                labels={monthlyData.map(m => `${m.week}\n(${m.range})`)}
-                data={monthlyData.map(m => m.production)}
-                colors={['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899']}
-                height={250}
-                darkMode={darkMode}
-              />
-              <div style={{
-                display: "grid",
-                gridTemplateColumns: `repeat(${monthlyData.length}, 1fr)`,
-                gap: "10px",
-                marginTop: "15px"
-              }}>
-                {monthlyData.map((week, index) => (
-                  <div key={index} className="dashboard-card" style={{ padding: "10px", textAlign: "center" }}>
-                    <div className="data-label" style={{ fontSize: "12px", marginBottom: "5px" }}>
-                      {week.week} ({week.range})
-                    </div>
-                    <div className="data-value" style={{ fontSize: "16px" }}>
-                      {removeDecimals(week.production)}
-                    </div>
-                    <div className="data-unit">
-                      {week.actualDays} days • {currentDept?.unit}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <div className="empty-state">
-              No monthly data available
-            </div>
-          )}
-        </div>
-
         {/* Current Month Daily Production */}
         <div className="dashboard-section">
           <div className="chart-controls">
             <h3 className="chart-title">
               <IconBox icon={FaChartArea} color="#ec4899" size={20} />
-              Current Month Daily Production
+              موجودہ مہینے کی روزانہ پیداوار
             </h3>
             <span className="badge badge-error">
-              {dailyData.length} days
+              {dailyData.length} دن
             </span>
           </div>
           
-          {loading ? (
+          {loading && initialLoad ? (
             <div className="loading-state">
-              Loading daily data...
+              روزانہ ڈیٹا لوڈ ہو رہا ہے...
             </div>
           ) : dailyData.length > 0 ? (
-            <div>
+            <div className="fade-in">
               <ProductionLineChart 
                 title={null}
                 labels={dailyData.map(d => d.day.toString())}
@@ -1488,47 +1507,49 @@ const NewProductionDashboard = () => {
                 justifyContent: "space-between",
                 marginTop: "15px",
                 fontSize: "12px",
-                color: "var(--color-text-secondary)"
+                color: "var(--color-text-secondary)",
+                flexWrap: "wrap",
+                gap: "15px"
               }}>
                 <div>
-                  <div style={{ fontWeight: "600", marginBottom: "5px", color: "var(--color-text-primary)" }}>Start Date</div>
+                  <div style={{ fontWeight: "600", marginBottom: "5px", color: "var(--color-text-primary)" }}>شروع تاریخ</div>
                   <div>{dailyData[0]?.date || 'N/A'}</div>
                 </div>
                 <div>
-                  <div style={{ fontWeight: "600", marginBottom: "5px", color: "var(--color-text-primary)" }}>End Date</div>
+                  <div style={{ fontWeight: "600", marginBottom: "5px", color: "var(--color-text-primary)" }}>اختتام تاریخ</div>
                   <div>{dailyData[dailyData.length - 1]?.date || 'N/A'}</div>
                 </div>
                 <div>
-                  <div style={{ fontWeight: "600", marginBottom: "5px", color: "var(--color-text-primary)" }}>Total</div>
+                  <div style={{ fontWeight: "600", marginBottom: "5px", color: "var(--color-text-primary)" }}>کل</div>
                   <div>{removeDecimals(dailyData.reduce((sum, day) => sum + day.production, 0))} {currentDept?.unit}</div>
                 </div>
               </div>
             </div>
           ) : (
             <div className="empty-state">
-              No daily data available for current month
+              موجودہ مہینے کا روزانہ ڈیٹا دستیاب نہیں
             </div>
           )}
         </div>
 
-        {/* 🔥 Shift-wise Production - Fixed */}
+        {/* 🔥 **شفٹ وائز پروڈکشن** */}
         <div className="dashboard-section">
           <div className="chart-controls">
             <h3 className="chart-title">
               <IconBox icon={FiClock} color="#f59e0b" size={20} />
-              Shift-wise Production
+              شفٹ وار پیداوار
             </h3>
             <span className="badge badge-warning">
-              {Object.keys(shiftData).length} Shifts
+              {Object.keys(shiftData).length} شفٹس
             </span>
           </div>
           
-          {loading ? (
+          {loading && initialLoad ? (
             <div className="loading-state">
-              Loading shift data...
+              شفٹ ڈیٹا لوڈ ہو رہا ہے...
             </div>
           ) : Object.keys(shiftData).length > 0 ? (
-            <div>
+            <div className="fade-in">
               <ProductionPieChart 
                 title={null}
                 labels={Object.keys(shiftData)}
@@ -1581,32 +1602,29 @@ const NewProductionDashboard = () => {
             </div>
           ) : (
             <div className="empty-state">
-              No shift data available for today
+              آج کے لیے شفٹ ڈیٹا دستیاب نہیں
             </div>
           )}
         </div>
-      </div>
 
-      {/* 🔥 Machine-wise and Operator-wise Charts Section - NEW */}
-      <div className="grid-charts">
-        {/* Machine-wise Production Chart */}
+        {/* 🔥 **مشین وائز پروڈکشن چارٹ** */}
         <div className="dashboard-section">
           <div className="chart-controls">
             <h3 className="chart-title">
               <IconBox icon={FaCog} color="#8b5cf6" size={20} />
-              Machine-wise Production
+              مشین وار پیداوار
             </h3>
             <span className="badge badge-primary">
-              Top {Math.min(5, stats.machineWise.length)} Machines
+              ٹاپ {Math.min(5, stats.machineWise.length)} مشینیں
             </span>
           </div>
           
-          {loading ? (
+          {loading && initialLoad ? (
             <div className="loading-state">
-              Loading machine data...
+              مشین ڈیٹا لوڈ ہو رہا ہے...
             </div>
           ) : stats.machineWise.length > 0 ? (
-            <div>
+            <div className="fade-in">
               <ProductionBarChart 
                 title={null}
                 labels={stats.machineWise.slice(0, 5).map(m => formatMachineName(m.name))}
@@ -1621,10 +1639,10 @@ const NewProductionDashboard = () => {
                 <div className="chart-details-header">
                   <div className="chart-details-title">
                     <IconBox icon={FaCogs} color="#8b5cf6" size={16} />
-                    Machine Performance Details
+                    مشین کارکردگی کی تفصیلات
                   </div>
                   <div className="badge badge-primary">
-                    {stats.activeMachines} Active Machines
+                    {stats.activeMachines} فعال مشینیں
                   </div>
                 </div>
                 
@@ -1643,21 +1661,17 @@ const NewProductionDashboard = () => {
                       <div className="chart-detail-value">
                         {removeDecimals(machine.production)} {currentDept?.unit}
                       </div>
-                      <div style={{
-                        fontSize: '13px',
-                        color: machine.efficiency > 90 ? "var(--color-success)" :
-                               machine.efficiency > 80 ? "var(--color-primary)" :
-                               machine.efficiency > 70 ? "var(--color-warning)" : "var(--color-error)",
-                        marginTop: '5px'
-                      }}>
-                        Efficiency: {machine.efficiency}%
+                      <div style={{ marginTop: '5px' }}>
+                        <span className={`efficiency-badge ${getEfficiencyColor(machine.efficiency)}`}>
+                          کارکردگی: {machine.efficiency}%
+                        </span>
                       </div>
                       <div style={{
                         fontSize: '12px',
                         color: "var(--color-text-secondary)",
                         marginTop: '3px'
                       }}>
-                        Operator: {machine.operator}
+                        آپریٹر: {machine.operator}
                       </div>
                     </div>
                   ))}
@@ -1685,11 +1699,10 @@ const NewProductionDashboard = () => {
                         {removeDecimals(machine.production)} {currentDept?.unit}
                       </div>
                       <div className="top-performer-stats">
-                        <div>Operator: {machine.operator}</div>
+                        <div>آپریٹر: {machine.operator}</div>
                         <div style={{ marginTop: '5px' }}>
-                          Efficiency: 
-                          <span className={`top-performer-efficiency ${getEfficiencyClass(machine.efficiency)}`}>
-                            {machine.efficiency}%
+                          <span className={`efficiency-badge ${getEfficiencyColor(machine.efficiency)}`}>
+                            کارکردگی: {machine.efficiency}%
                           </span>
                         </div>
                       </div>
@@ -1703,37 +1716,35 @@ const NewProductionDashboard = () => {
               <div className="chart-empty-icon">
                 <FaCogs />
               </div>
-              <div>No machine data available</div>
+              <div>مشین ڈیٹا دستیاب نہیں</div>
               <div style={{ fontSize: '14px', color: 'var(--color-text-tertiary)' }}>
-                Machine production data will appear here
+                مشین پیداوار ڈیٹا یہاں ظاہر ہوگا
               </div>
             </div>
           )}
         </div>
 
-        {/* Operator-wise Production Chart */}
+        {/* 🔥 **اپریٹر وائز پروڈکشن چارٹ** */}
         <div className="dashboard-section">
           <div className="chart-controls">
             <h3 className="chart-title">
               <IconBox icon={FiUser} color="#10b981" size={20} />
-              Operator-wise Production
+              آپریٹر وار پیداوار
             </h3>
             <span className="badge badge-success">
-              Top {Math.min(5, stats.operatorWise.length)} Operators
+              ٹاپ {Math.min(5, stats.operatorWise.length)} آپریٹرز
             </span>
           </div>
           
-          {loading ? (
+          {loading && initialLoad ? (
             <div className="loading-state">
-              Loading operator data...
+              آپریٹر ڈیٹا لوڈ ہو رہا ہے...
             </div>
           ) : stats.operatorWise.length > 0 ? (
-            <div>
+            <div className="fade-in">
               <ProductionBarChart 
                 title={null}
-                labels={stats.operatorWise.slice(0, 5).map(o => 
-                  formatOperatorName(o.name)
-                )}
+                labels={stats.operatorWise.slice(0, 5).map(o => formatOperatorName(o.name))}
                 data={stats.operatorWise.slice(0, 5).map(o => o.production)}
                 colors={['#10b981', '#06b6d4', '#3b82f6', '#8b5cf6', '#f59e0b']}
                 height={250}
@@ -1745,10 +1756,10 @@ const NewProductionDashboard = () => {
                 <div className="chart-details-header">
                   <div className="chart-details-title">
                     <IconBox icon={FiUsers} color="#10b981" size={16} />
-                    Operator Performance Details
+                    آپریٹر کارکردگی کی تفصیلات
                   </div>
                   <div className="badge badge-success">
-                    {stats.totalOperators} Unique Operators
+                    {stats.totalOperators} منفرد آپریٹرز
                   </div>
                 </div>
                 
@@ -1762,26 +1773,22 @@ const NewProductionDashboard = () => {
                           borderRadius: '50%',
                           backgroundColor: ['#10b981', '#06b6d4', '#3b82f6'][index % 3]
                         }}></span>
-                        {formatOperatorName(operator.name)}
+                        {operator.name}
                       </div>
                       <div className="chart-detail-value">
                         {removeDecimals(operator.production)} {currentDept?.unit}
                       </div>
-                      <div style={{
-                        fontSize: '13px',
-                        color: operator.efficiency > 90 ? "var(--color-success)" :
-                               operator.efficiency > 80 ? "var(--color-primary)" :
-                               operator.efficiency > 70 ? "var(--color-warning)" : "var(--color-error)",
-                        marginTop: '5px'
-                      }}>
-                        Efficiency: {operator.efficiency}%
+                      <div style={{ marginTop: '5px' }}>
+                        <span className={`efficiency-badge ${getEfficiencyColor(operator.efficiency)}`}>
+                          کارکردگی: {operator.efficiency}%
+                        </span>
                       </div>
                       <div style={{
                         fontSize: '12px',
                         color: "var(--color-text-secondary)",
                         marginTop: '3px'
                       }}>
-                        Machine: {operator.machine}
+                        مشین: {operator.machine}
                       </div>
                     </div>
                   ))}
@@ -1803,17 +1810,16 @@ const NewProductionDashboard = () => {
                         {index + 1}
                       </div>
                       <div className="top-performer-name">
-                        {formatOperatorName(operator.name)}
+                        {operator.name}
                       </div>
                       <div className="top-performer-production">
                         {removeDecimals(operator.production)} {currentDept?.unit}
                       </div>
                       <div className="top-performer-stats">
-                        <div>Machine: {operator.machine}</div>
+                        <div>مشین: {operator.machine}</div>
                         <div style={{ marginTop: '5px' }}>
-                          Efficiency: 
-                          <span className={`top-performer-efficiency ${getEfficiencyClass(operator.efficiency)}`}>
-                            {operator.efficiency}%
+                          <span className={`efficiency-badge ${getEfficiencyColor(operator.efficiency)}`}>
+                            کارکردگی: {operator.efficiency}%
                           </span>
                         </div>
                       </div>
@@ -1833,7 +1839,9 @@ const NewProductionDashboard = () => {
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    marginBottom: '10px'
+                    marginBottom: '10px',
+                    flexWrap: 'wrap',
+                    gap: '10px'
                   }}>
                     <div style={{
                       fontSize: '14px',
@@ -1844,10 +1852,10 @@ const NewProductionDashboard = () => {
                       gap: '8px'
                     }}>
                       <IconBox icon={FiActivity} color="#f59e0b" size={14} />
-                      Operator Performance Summary
+                      آپریٹر کارکردگی کا خلاصہ
                     </div>
                     <div className="badge badge-warning">
-                      {stats.operatorWise.length} Operators
+                      {stats.operatorWise.length} آپریٹرز
                     </div>
                   </div>
                   
@@ -1859,25 +1867,20 @@ const NewProductionDashboard = () => {
                     color: 'var(--color-text-secondary)'
                   }}>
                     <div>
-                      <div>Top Operator:</div>
+                      <div>ٹاپ آپریٹر:</div>
                       <div style={{ fontWeight: '600', color: 'var(--color-text-primary)' }}>
                         {stats.operatorWise[0]?.name || 'N/A'}
                       </div>
                     </div>
                     <div>
-                      <div>Total Production:</div>
+                      <div>کل پیداوار:</div>
                       <div style={{ fontWeight: '600', color: 'var(--color-text-primary)' }}>
                         {removeDecimals(stats.operatorWise.reduce((sum, op) => sum + op.production, 0))} {currentDept?.unit}
                       </div>
                     </div>
                     <div>
-                      <div>Avg Efficiency:</div>
-                      <div style={{ 
-                        fontWeight: '600',
-                        color: stats.avgEfficiency > 90 ? "var(--color-success)" :
-                               stats.avgEfficiency > 80 ? "var(--color-primary)" :
-                               stats.avgEfficiency > 70 ? "var(--color-warning)" : "var(--color-error)"
-                      }}>
+                      <div>اوسط کارکردگی:</div>
+                      <div className={`efficiency-badge ${getEfficiencyColor(stats.avgEfficiency)}`}>
                         {stats.avgEfficiency}%
                       </div>
                     </div>
@@ -1890,167 +1893,10 @@ const NewProductionDashboard = () => {
               <div className="chart-empty-icon">
                 <FiUsers />
               </div>
-              <div>No operator data available</div>
+              <div>آپریٹر ڈیٹا دستیاب نہیں</div>
               <div style={{ fontSize: '14px', color: 'var(--color-text-tertiary)' }}>
-                Operator production data will appear here
+                آپریٹر پیداوار ڈیٹا یہاں ظاہر ہوگا
               </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Top Performers Section */}
-      <div className="grid-charts">
-        {/* Top Operators Table */}
-        <div className="dashboard-section">
-          <h3 className="chart-title">
-            <IconBox icon={FiStar} color="#f59e0b" size={20} />
-            Top Operators Performance (Unique)
-          </h3>
-          
-          {loading ? (
-            <div className="loading-state">
-              Loading operator data...
-            </div>
-          ) : stats.operatorWise.length > 0 ? (
-            <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                <thead>
-                  <tr className="table-header">
-                    <th style={{ padding: "12px", textAlign: "left" }}>Rank</th>
-                    <th style={{ padding: "12px", textAlign: "left" }}>Operator</th>
-                    <th style={{ padding: "12px", textAlign: "left" }}>Production</th>
-                    <th style={{ padding: "12px", textAlign: "left" }}>Efficiency</th>
-                    <th style={{ padding: "12px", textAlign: "left" }}>Machine</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {getTopOperators().map((operator, index) => (
-                    <tr 
-                      key={index}
-                      className="table-row"
-                    >
-                      <td style={{ padding: "12px" }}>
-                        <div style={{
-                          width: "24px",
-                          height: "24px",
-                          background: index === 0 ? "#f59e0b" : 
-                                    index === 1 ? "#94a3b8" : 
-                                    index === 2 ? "#8b5cf6" : "var(--color-border)",
-                          color: "white",
-                          borderRadius: "50%",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          fontSize: "12px",
-                          fontWeight: "700"
-                        }}>
-                          {index + 1}
-                        </div>
-                      </td>
-                      <td style={{ padding: "12px", fontWeight: "500" }}>
-                        {operator.name}
-                      </td>
-                      <td style={{ padding: "12px", fontWeight: "600" }}>
-                        {removeDecimals(operator.production)} {currentDept?.unit}
-                      </td>
-                      <td style={{ 
-                        padding: "12px",
-                        fontWeight: "600",
-                        color: operator.efficiency > 90 ? "var(--color-success)" :
-                               operator.efficiency > 80 ? "var(--color-primary)" :
-                               operator.efficiency > 70 ? "var(--color-warning)" : "var(--color-error)"
-                      }}>
-                        {operator.efficiency}%
-                      </td>
-                      <td style={{ padding: "12px", color: "var(--color-text-secondary)" }}>
-                        {operator.machine}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="empty-state">
-              No operator data available
-            </div>
-          )}
-        </div>
-
-        {/* Top Machines Table */}
-        <div className="dashboard-section">
-          <h3 className="chart-title">
-            <IconBox icon={FiAward} color="#06b6d4" size={20} />
-            Top Machines Performance
-          </h3>
-          
-          {loading ? (
-            <div className="loading-state">
-              Loading machine data...
-            </div>
-          ) : stats.machineWise.length > 0 ? (
-            <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                <thead>
-                  <tr className="table-header">
-                    <th style={{ padding: "12px", textAlign: "left" }}>Rank</th>
-                    <th style={{ padding: "12px", textAlign: "left" }}>Machine</th>
-                    <th style={{ padding: "12px", textAlign: "left" }}>Production</th>
-                    <th style={{ padding: "12px", textAlign: "left" }}>Efficiency</th>
-                    <th style={{ padding: "12px", textAlign: "left" }}>Operator</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {getTopMachines().map((machine, index) => (
-                    <tr 
-                      key={index}
-                      className="table-row"
-                    >
-                      <td style={{ padding: "12px" }}>
-                        <div style={{
-                          width: "24px",
-                          height: "24px",
-                          background: index === 0 ? "#f59e0b" : 
-                                    index === 1 ? "#94a3b8" : 
-                                    index === 2 ? "#8b5cf6" : "var(--color-border)",
-                          color: "white",
-                          borderRadius: "50%",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          fontSize: "12px",
-                          fontWeight: "700"
-                        }}>
-                          {index + 1}
-                        </div>
-                      </td>
-                      <td style={{ padding: "12px", fontWeight: "500" }}>
-                        {machine.name}
-                      </td>
-                      <td style={{ padding: "12px", fontWeight: "600" }}>
-                        {removeDecimals(machine.production)} {currentDept?.unit}
-                      </td>
-                      <td style={{ 
-                        padding: "12px",
-                        fontWeight: "600",
-                        color: machine.efficiency > 90 ? "var(--color-success)" :
-                               machine.efficiency > 80 ? "var(--color-primary)" :
-                               machine.efficiency > 70 ? "var(--color-warning)" : "var(--color-error)"
-                      }}>
-                        {machine.efficiency}%
-                      </td>
-                      <td style={{ padding: "12px", color: "var(--color-text-secondary)" }}>
-                        {machine.operator}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="empty-state">
-              No machine data available
             </div>
           )}
         </div>
@@ -2061,9 +1907,9 @@ const NewProductionDashboard = () => {
         <div className="chart-controls">
           <h3 className="chart-title">
             <IconBox icon={FaTable} color="#8b5cf6" size={20} />
-            Production Records ({productionData.length} records)
+            پیداوار ریکارڈز ({productionData.length} ریکارڈز)
           </h3>
-          <div style={{ display: "flex", gap: "10px" }}>
+          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
             <button
               onClick={() => navigate(`/add-record?table=${currentDept.tableName}`)}
               className="btn btn-primary"
@@ -2074,7 +1920,7 @@ const NewProductionDashboard = () => {
               }}
             >
               <IconBox icon={FiCheckSquare} color={currentDept?.color} size={14} />
-              Add Record
+              ریکارڈ شامل کریں
             </button>
             <button
               onClick={() => navigate(`/view-all?table=${currentDept.tableName}`)}
@@ -2085,27 +1931,27 @@ const NewProductionDashboard = () => {
               }}
             >
               <IconBox icon={FiColumns} color={currentDept?.color} size={14} />
-              View All
+              تمام دیکھیں
             </button>
           </div>
         </div>
         
-        {loading ? (
+        {loading && initialLoad ? (
           <div className="loading-state">
-            Loading production data...
+            پیداوار ڈیٹا لوڈ ہو رہا ہے...
           </div>
         ) : productionData.length > 0 ? (
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr className="table-header">
-                  <th style={{ padding: "12px", textAlign: "left" }}>Machine</th>
-                  <th style={{ padding: "12px", textAlign: "left" }}>Item</th>
-                  <th style={{ padding: "12px", textAlign: "left" }}>Production</th>
-                  <th style={{ padding: "12px", textAlign: "left" }}>Efficiency</th>
-                  <th style={{ padding: "12px", textAlign: "left" }}>Operator</th>
-                  <th style={{ padding: "12px", textAlign: "left" }}>Shift</th>
-                  <th style={{ padding: "12px", textAlign: "left" }}>Date</th>
+                  <th style={{ padding: "12px", textAlign: "left" }}>مشین</th>
+                  <th style={{ padding: "12px", textAlign: "left" }}>آئٹم</th>
+                  <th style={{ padding: "12px", textAlign: "left" }}>پیداوار</th>
+                  <th style={{ padding: "12px", textAlign: "left" }}>کارکردگی</th>
+                  <th style={{ padding: "12px", textAlign: "left" }}>آپریٹر</th>
+                  <th style={{ padding: "12px", textAlign: "left" }}>شفٹ</th>
+                  <th style={{ padding: "12px", textAlign: "left" }}>تاریخ</th>
                 </tr>
               </thead>
               <tbody>
@@ -2123,14 +1969,10 @@ const NewProductionDashboard = () => {
                     <td style={{ padding: "12px", fontWeight: "600" }}>
                       {record.production_quantity ? removeDecimals(record.production_quantity) : '0'} {currentDept?.unit}
                     </td>
-                    <td style={{ 
-                      padding: "12px",
-                      fontWeight: "600",
-                      color: record.efficiency > 90 ? "var(--color-success)" :
-                             record.efficiency > 80 ? "var(--color-primary)" :
-                             record.efficiency > 70 ? "var(--color-warning)" : "var(--color-error)"
-                    }}>
-                      {record.efficiency ? `${removeDecimals(record.efficiency)}%` : 'N/A'}
+                    <td style={{ padding: "12px" }}>
+                      <span className={`efficiency-badge ${getEfficiencyColor(record.efficiency)}`}>
+                        {record.efficiency ? `${removeDecimals(record.efficiency)}%` : 'N/A'}
+                      </span>
                     </td>
                     <td style={{ padding: "12px", color: "var(--color-text-secondary)" }}>
                       {record.operator_name || record.received_by || 'Unknown'}
@@ -2159,13 +2001,13 @@ const NewProductionDashboard = () => {
               }}
               onClick={() => navigate(`/view-all?table=${currentDept.tableName}`)}
               >
-                View all {productionData.length} records →
+                تمام {productionData.length} ریکارڈز دیکھیں →
               </div>
             )}
           </div>
         ) : (
           <div className="empty-state">
-            No production records found for selected date filter
+            منتخب ڈیٹ فلٹر کے لیے پیداوار ریکارڈز نہیں ملے
           </div>
         )}
       </div>
@@ -2178,7 +2020,7 @@ const NewProductionDashboard = () => {
           <div>
             <div className="data-label">
               <IconBox icon={FaIndustry} color={currentDept?.color} size={12} />
-              Department
+              ڈیپارٹمنٹ
             </div>
             <div className="data-value" style={{ color: getDarkColor(currentDept?.color) }}>
               {selectedDepartment}
@@ -2187,7 +2029,7 @@ const NewProductionDashboard = () => {
           <div>
             <div className="data-label">
               <IconBox icon={FiDatabase} color="#3b82f6" size={12} />
-              Database Table
+              ڈیٹا بیس ٹیبل
             </div>
             <div className="data-value">
               {currentDept?.tableName}
@@ -2196,19 +2038,21 @@ const NewProductionDashboard = () => {
           <div>
             <div className="data-label">
               <IconBox icon={FiFilter} color="#8b5cf6" size={12} />
-              Date Filter
+              ڈیٹ فلٹر
             </div>
             <div className="data-value">
-              {dateFilter.charAt(0).toUpperCase() + dateFilter.slice(1)}
+              {dateFilter === 'today' ? 'آج' : 
+               dateFilter === 'yesterday' ? 'کل' :
+               dateFilter === 'week' ? 'ہفتہ' : 'مہینہ'}
             </div>
           </div>
           <div>
             <div className="data-label">
               <IconBox icon={FiClock} color="#f59e0b" size={12} />
-              Last Updated
+              آخری اپ ڈیٹ
             </div>
             <div className="data-value">
-              {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              {new Date().toLocaleTimeString('ur-PK', { hour: '2-digit', minute: '2-digit' })}
             </div>
           </div>
         </div>

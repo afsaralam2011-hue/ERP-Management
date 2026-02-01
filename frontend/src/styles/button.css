@@ -1,0 +1,173 @@
+/* ========== GLOW BUTTON STYLES ========== */
+
+/* Basic Button Reset */
+.glow-btn {
+  position: relative;
+  padding: 12px 30px;
+  font-size: 16px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-weight: 600;
+  color: white;
+  background: #111;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  z-index: 1;
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
+  min-width: 120px;
+}
+
+/* Glow Effect Background */
+.glow-btn::before {
+  content: "";
+  background: linear-gradient(
+    45deg,
+    #FF0000, #FF7300, #FFF800,
+    #00FFD5, #002BFF, #FF00C8, #FF0000
+  );
+  background-size: 400%;
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  width: calc(100% + 4px);
+  height: calc(100% + 4px);
+  filter: blur(8px);
+  z-index: -1;
+  opacity: 0.8;
+  animation: glowing 20s linear infinite;
+}
+
+/* Background layer to hide glow behind button */
+.glow-btn::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #111;
+  border-radius: 8px;
+  z-index: -1;
+}
+
+/* Hover Effects */
+.glow-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+  color: #fff;
+}
+
+.glow-btn:active {
+  transform: translateY(-1px);
+}
+
+/* Animation for glowing effect */
+@keyframes glowing {
+  0% {
+    background-position: 0 0;
+  }
+  50% {
+    background-position: 400% 0;
+  }
+  100% {
+    background-position: 0 0;
+  }
+}
+
+/* ========== BUTTON VARIANTS ========== */
+
+/* Primary Button */
+.btn-primary {
+  background: #2563eb;
+}
+
+.btn-primary::after {
+  background: #2563eb;
+}
+
+/* Success Button */
+.btn-success {
+  background: #059669;
+}
+
+.btn-success::after {
+  background: #059669;
+}
+
+/* Danger Button */
+.btn-danger {
+  background: #dc2626;
+}
+
+.btn-danger::after {
+  background: #dc2626;
+}
+
+/* Warning Button */
+.btn-warning {
+  background: #d97706;
+  color: #000;
+}
+
+.btn-warning::after {
+  background: #d97706;
+}
+
+/* Outline Button */
+.btn-outline {
+  background: transparent;
+  border: 2px solid #fff;
+}
+
+.btn-outline::after {
+  background: transparent;
+}
+
+/* Small Button */
+.btn-sm {
+  padding: 8px 20px;
+  font-size: 14px;
+  min-width: 100px;
+}
+
+/* Large Button */
+.btn-lg {
+  padding: 16px 40px;
+  font-size: 18px;
+  min-width: 150px;
+}
+
+/* Full Width Button */
+.btn-block {
+  display: block;
+  width: 100%;
+}
+
+/* Disabled Button */
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn:disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+/* ========== RESPONSIVE DESIGN ========== */
+@media (max-width: 768px) {
+  .glow-btn {
+    padding: 10px 20px;
+    font-size: 14px;
+    min-width: 110px;
+  }
+  
+  .btn-lg {
+    padding: 14px 30px;
+    font-size: 16px;
+  }
+}

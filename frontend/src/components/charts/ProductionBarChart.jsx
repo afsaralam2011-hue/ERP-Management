@@ -24,19 +24,44 @@ const ProductionBarChart = ({
   title = 'Production Output',
   data,
   labels,
-  colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
-  height = 300
+  colors = null,
+  height = 300,
+  darkMode = false,
+  unit = 'Kg'
 }) => {
+  const getThemeColor = (colorName) => {
+    if (typeof document === 'undefined') return '#000000';
+    const color = getComputedStyle(document.documentElement)
+      .getPropertyValue(`--color-${colorName}`)
+      .trim();
+    return color || '#000000';
+  };
+
+  const themeColors = {
+    textPrimary: getThemeColor('text-primary') || (darkMode ? '#7986CB' : '#1A237E'),
+    textSecondary: getThemeColor('text-secondary') || (darkMode ? '#9FA8DA' : '#283593'),
+    border: getThemeColor('border'),
+    primary: getThemeColor('primary'),
+    background: getThemeColor('background'),
+  };
+
+  const indigoColors = [
+    '#1A237E', '#283593', '#303F9F', '#3949AB', 
+    '#3F51B5', '#5C6BC0', '#7986CB', '#9FA8DA'
+  ];
+
+  const barColors = colors || indigoColors;
+
   const chartData = {
     labels: labels || ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
     datasets: [
       {
-        label: 'Production',
+        label: `Production (${unit})`,
         data: data || [120, 190, 150, 220, 180, 250],
-        backgroundColor: colors,
-        borderColor: colors.map(color => color.replace('0.8', '1')),
+        backgroundColor: barColors,
+        borderColor: barColors.map(color => color),
         borderWidth: 1,
-        borderRadius: 6,
+        borderRadius: 8,
         borderSkipped: false,
       },
     ],
@@ -49,89 +74,61 @@ const ProductionBarChart = ({
       legend: {
         position: 'top',
         labels: {
-          font: {
-            size: 12,
-            family: "'Inter', sans-serif"
-          },
-          color: '#64748b'
+          font: { size: 13, family: "'Inter', sans-serif" },
+          color: themeColors.textSecondary,
         }
       },
       title: {
         display: !!title,
         text: title,
-        font: {
-          size: 16,
-          weight: '600',
-          family: "'Inter', sans-serif"
-        },
-        color: '#1e293b',
-        padding: {
-          bottom: 20
-        }
+        font: { size: 18, weight: '600', family: "'Inter', sans-serif" },
+        color: themeColors.textPrimary,
+        padding: { bottom: 25, top: 10 }
       },
       tooltip: {
-        backgroundColor: 'rgba(30, 41, 59, 0.9)',
-        titleColor: '#f8fafc',
-        bodyColor: '#f8fafc',
-        titleFont: {
-          size: 13,
-          family: "'Inter', sans-serif"
-        },
-        bodyFont: {
-          size: 13,
-          family: "'Inter', sans-serif"
-        },
-        padding: 12,
-        cornerRadius: 8,
-        displayColors: false,
+        backgroundColor: darkMode ? 'rgba(30, 30, 30, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+        titleColor: themeColors.textPrimary,
+        bodyColor: themeColors.textSecondary,
+        titleFont: { size: 14, family: "'Inter', sans-serif", weight: '600' },
+        bodyFont: { size: 13, family: "'Inter', sans-serif" },
+        padding: 16,
+        cornerRadius: 10,
+        displayColors: true,
+        callbacks: {
+          label: function(context) {
+            let label = context.dataset.label || '';
+            if (label) label += ': ';
+            if (context.parsed.y !== null) {
+              label += context.parsed.y.toLocaleString() + ' ' + unit;
+            }
+            return label;
+          }
+        }
       }
     },
     scales: {
       x: {
-        grid: {
-          display: false,
-        },
+        grid: { display: false },
         ticks: {
-          color: '#64748b',
-          font: {
-            size: 12,
-            family: "'Inter', sans-serif"
-          }
+          color: themeColors.textSecondary,
+          font: { size: 12, family: "'Inter', sans-serif", weight: '500' }
         },
-        border: {
-          display: false
-        }
+        border: { display: false }
       },
       y: {
         beginAtZero: true,
         grid: {
-          color: 'rgba(226, 232, 240, 0.5)',
+          color: darkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
         },
         ticks: {
-          color: '#64748b',
-          font: {
-            size: 12,
-            family: "'Inter', sans-serif"
-          },
+          color: themeColors.textSecondary,
+          font: { size: 12, family: "'Inter', sans-serif", weight: '500' },
           callback: function(value) {
-            return value.toLocaleString();
+            return value.toLocaleString() + ' ' + unit;
           }
         },
-        border: {
-          dash: [4, 4],
-          display: false
-        }
+        border: { display: false }
       },
-    },
-    interaction: {
-      intersect: false,
-      mode: 'index',
-    },
-    animations: {
-      tension: {
-        duration: 1000,
-        easing: 'linear'
-      }
     }
   };
 

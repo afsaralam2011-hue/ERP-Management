@@ -21,19 +21,19 @@ const Header = ({ title = "Pakistan Wire Industries", subtitle = "SPI & CCD Dash
     return getComputedStyle(document.documentElement).getPropertyValue(varName).trim() || '#000000';
   };
   
-  // ایک ہی بار میں تمام colors لے لیں
+  // ایک ہی بار میں تمام colors لے لیں - INDIGO/NAVY BLUE میں تبدیل کیا
   const themeColors = {
     background: getColor('--color-background'),
-    textPrimary: getColor('--color-text-primary'),
-    textSecondary: getColor('--color-text-secondary'),
+    textPrimary: getColor('--color-text-primary') || (isDarkMode ? '#7986CB' : '#1A237E'), // Deep Indigo/Navy Blue
+    textSecondary: getColor('--color-text-secondary') || (isDarkMode ? '#9FA8DA' : '#283593'), // Medium Indigo/Navy Blue
     surface: getColor('--color-surface'),
     border: getColor('--color-border'),
     primary: getColor('--color-primary')
   };
   
   const backgroundColor = themeColors.background;
-  const textColor = themeColors.textPrimary;
-  const textSecondaryColor = themeColors.textSecondary;
+  const textColor = themeColors.textPrimary; // Indigo/Navy Blue
+  const textSecondaryColor = themeColors.textSecondary; // Medium Indigo/Navy Blue
   const surfaceColor = themeColors.surface;
   const borderColor = themeColors.border;
   const primaryColor = themeColors.primary;
@@ -133,7 +133,7 @@ const Header = ({ title = "Pakistan Wire Industries", subtitle = "SPI & CCD Dash
       <div style={{
         width: "100%",
         background: backgroundColor,
-        color: textColor,
+        color: textColor, // Indigo/Navy Blue
         height: '60px',
         display: 'flex',
         alignItems: 'center',
@@ -148,7 +148,7 @@ const Header = ({ title = "Pakistan Wire Industries", subtitle = "SPI & CCD Dash
     <div style={{
       width: "100%",
       background: backgroundColor,
-      color: textColor,
+      color: textColor, // Indigo/Navy Blue
       borderBottom: `1px solid ${borderColor}`
     }}>
       {/* Ticker Bar */}
@@ -193,7 +193,7 @@ const Header = ({ title = "Pakistan Wire Industries", subtitle = "SPI & CCD Dash
                 <span style={{ 
                   fontSize: '12px',
                   fontWeight: '500',
-                  color: textColor,
+                  color: textColor, // Indigo/Navy Blue
                   marginRight: '12px'
                 }}>
                   Pakistan Wire Industries
@@ -210,7 +210,7 @@ const Header = ({ title = "Pakistan Wire Industries", subtitle = "SPI & CCD Dash
                   SPI & CCD
                 </span>
                 <span style={{ 
-                  color: textSecondaryColor,
+                  color: textSecondaryColor, // Medium Indigo/Navy Blue
                   marginRight: '15px'
                 }}>
                   |
@@ -257,7 +257,7 @@ const Header = ({ title = "Pakistan Wire Industries", subtitle = "SPI & CCD Dash
             <div style={{
               fontSize: isMobile ? '14px' : '16px',
               fontWeight: '700',
-              color: textColor,
+              color: textColor, // Indigo/Navy Blue
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis'
@@ -267,7 +267,7 @@ const Header = ({ title = "Pakistan Wire Industries", subtitle = "SPI & CCD Dash
             {!isMobile && (
               <div style={{
                 fontSize: '11px',
-                color: textSecondaryColor,
+                color: textSecondaryColor, // Medium Indigo/Navy Blue
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis'
@@ -298,7 +298,7 @@ const Header = ({ title = "Pakistan Wire Industries", subtitle = "SPI & CCD Dash
             justifyContent: 'center',
             flexShrink: 0
           }}>
-            <FiBell size={isMobile ? 16 : 18} style={{ color: textColor }} />
+            <FiBell size={isMobile ? 16 : 18} style={{ color: textColor }} /> {/* Indigo/Navy Blue */}
             <span style={{
               position: 'absolute',
               top: '-2px',
@@ -323,7 +323,7 @@ const Header = ({ title = "Pakistan Wire Industries", subtitle = "SPI & CCD Dash
             onClick={() => navigate("/settings/theme")}
             style={{
               background: surfaceColor,
-              color: textColor,
+              color: textColor, // Indigo/Navy Blue
               border: `1px solid ${borderColor}`,
               padding: isMobile ? '6px' : '8px',
               borderRadius: '6px',
@@ -407,7 +407,7 @@ const Header = ({ title = "Pakistan Wire Industries", subtitle = "SPI & CCD Dash
                 <div style={{ 
                   fontSize: '12px',
                   fontWeight: '600',
-                  color: textColor,
+                  color: textColor, // Indigo/Navy Blue
                   whiteSpace: 'nowrap',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis'
@@ -416,7 +416,7 @@ const Header = ({ title = "Pakistan Wire Industries", subtitle = "SPI & CCD Dash
                 </div>
                 <div style={{ 
                   fontSize: '10px',
-                  color: textSecondaryColor,
+                  color: textSecondaryColor, // Medium Indigo/Navy Blue
                   whiteSpace: 'nowrap',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis'

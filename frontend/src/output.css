@@ -656,6 +656,10 @@ video {
   display: table;
 }
 
+.table-row {
+  display: table-row;
+}
+
 .grid {
   display: grid;
 }
@@ -698,10 +702,6 @@ video {
 
 .gap-2 {
   gap: 0.5rem;
-}
-
-.break-all {
-  word-break: break-all;
 }
 
 .rounded {
