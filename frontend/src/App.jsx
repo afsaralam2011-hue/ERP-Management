@@ -1,23 +1,22 @@
-// src/App.jsx
-import React from "react";
+// src/App.jsx - COMPLETE FILE
+import React, { useEffect } from "react";
 import {
   BrowserRouter as Router,
   Routes,
   Route,
   Navigate,
 } from "react-router-dom";
-import { ThemeProvider } from "./contexts/ThemeContext";
 import { AuthProvider } from "./context/AuthContext";
-import './styles/global.css';
-import './output.css';
+import { ThemeProvider, useTheme } from "./contexts/ThemeContext";
+import "./styles/global.css";
+import "./output.css";
 import Layout from "./components/common/Layout";
 import ProtectedRoute from "./pages/auth/ProtectedRoute";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
-import ThemeSettings from './components/Settings/ThemeSettings';
-import ThemeSettingsBenchmarks from './components/Settings/ThemeSettingsBenchmarks';
+import ThemeSettings from "./components/Settings/ThemeSettings";
 import Dashboard from "./pages/dashboard/Dashboard";
 import HRDashboard from "./pages/departments/HR/HRDashboard";
 import FinanceDashboard from "./pages/departments/Finance/FinanceDashboard";
@@ -25,12 +24,14 @@ import SalesDashboard from "./pages/departments/Sales/SalesDashboard";
 import ITDashboard from "./pages/departments/IT/ITDashboard";
 import LogisticsDashboard from "./pages/departments/Logistics/LogisticsDashboard";
 import ProductionDashboard from "./components/departments/Production/ProductionDashboard";
+import NewProductionDashboard from "./components/departments/Production/NewProductionDashboard";
 import ProductionSections from "./pages/ProductionSections/Production";
 import FlatteningPage from "./pages/ProductionSections/FlatteningSection/FlatteningPage";
 import FlatteningForm from "./pages/ProductionSections/FlatteningSection/FlatteningForm";
 import FlatteningEditForm from "./pages/ProductionSections/FlatteningSection/FlatteningEditForm";
 import FlatteningView from "./pages/ProductionSections/FlatteningSection/FlatteningView";
 import FlatteningSmartForm from "./pages/ProductionSections/FlatteningSection/FlatteningSmartForm";
+import FlatteningMultiEntryForm from "./pages/ProductionSections/FlatteningSection/FlatteningMultiEntryForm"; // Added import
 import SpiralPage from "./pages/ProductionSections/SpiralSection/SpiralPage";
 import SpiralForm from "./pages/ProductionSections/SpiralSection/SpiralForm";
 import SpiralEditForm from "./pages/ProductionSections/SpiralSection/SpiralEditForm";
@@ -53,339 +54,582 @@ import DailyProductionReport from "./pages/ProductionReports/DailyProductionRepo
 import FlatteningInventoryReport from "./components/FlatteningInventoryReport";
 import FlatteningInventoryLedger from "./components/FlatteningInventoryLedger";
 
+// تھیم انیشیلائزیشن کمپوننٹ
+const ThemeInitializer = ({ children }) => {
+  const { currentTheme, mode, isDarkMode } = useTheme();
+
+  useEffect(() => {
+    // تھیم کلاسز کو body پر اپلائی کریں
+    document.body.classList.remove(
+      "theme-light",
+      "theme-dark",
+      "light-mode",
+      "dark-mode",
+    );
+    document.body.classList.add(`theme-${mode}`, `${mode}-mode`);
+
+    if (currentTheme) {
+      document.body.setAttribute("data-theme", currentTheme.id);
+      document.body.setAttribute("data-theme-mode", mode);
+    }
+
+    console.log(`Theme initialized: ${currentTheme?.name} (${mode})`);
+  }, [currentTheme, mode]);
+
+  return (
+    <div className={`app-wrapper ${isDarkMode ? "dark-mode" : "light-mode"}`}>
+      {children}
+    </div>
+  );
+};
+
+// Layout کمپوننٹ میں تھیم ٹوگل شامل کریں
+const EnhancedLayout = ({
+  title,
+  subtitle,
+  children,
+  showThemeToggle = true,
+}) => {
+  const { toggleMode, isDarkMode, mode } = useTheme();
+
+  return (
+    <Layout title={title} subtitle={subtitle}>
+      {showThemeToggle && (
+        <div
+          className="theme-toggle-container"
+          style={{
+            position: "absolute",
+            top: "20px",
+            right: "20px",
+            zIndex: 1000,
+          }}
+        >
+          <button
+            onClick={toggleMode}
+            className="theme-toggle-button"
+            style={{
+              background: "var(--color-primary)",
+              color: "white",
+              border: "none",
+              padding: "8px 16px",
+              borderRadius: "20px",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              fontSize: "14px",
+              fontWeight: 500,
+            }}
+            title={`Switch to ${isDarkMode ? "Light" : "Dark"} Mode`}
+          >
+            <span>{isDarkMode ? "☀️" : "🌙"}</span>
+            <span>{isDarkMode ? "Light Mode" : "Dark Mode"}</span>
+          </button>
+        </div>
+      )}
+      {children}
+    </Layout>
+  );
+};
+
 function App() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <Router>
-          <div className="App">
-            <main>
-              <Routes>
-                {/* Public Routes - Authentication */}
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-                <Route path="/forgot-password" element={<ForgotPassword />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
+    <AuthProvider>
+      <ThemeProvider>
+        <ThemeInitializer>
+          <Router>
+            <div className="App">
+              <main>
+                <Routes>
+                  {/* Public Routes - Authentication */}
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
+                  <Route path="/forgot-password" element={<ForgotPassword />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
 
-                {/* Protected Routes */}
-                <Route element={<ProtectedRoute />}>
-                  {/* Main Dashboard */}
+                  {/* Protected Routes */}
+                  <Route element={<ProtectedRoute />}>
+                    {/* Main Dashboard */}
+                    <Route
+                      path="/dashboard"
+                      element={
+                        <EnhancedLayout
+                          title="ERP Dashboard"
+                          subtitle="Welcome to Pakistan Wire Industries"
+                          showThemeToggle={true}
+                        >
+                          <Dashboard />
+                        </EnhancedLayout>
+                      }
+                    />
+
+                    {/* Theme Settings Route */}
+                    <Route
+                      path="/settings/theme"
+                      element={
+                        <EnhancedLayout
+                          title="Theme Settings"
+                          subtitle="Customize Your Dashboard Appearance"
+                          showThemeToggle={true}
+                        >
+                          <ThemeSettings />
+                        </EnhancedLayout>
+                      }
+                    />
+
+                    {/* باقی routes وہی رہیں گے */}
+                    {/* Department Dashboards */}
+                    <Route
+                      path="/hr"
+                      element={
+                        <EnhancedLayout
+                          title="HR Department"
+                          subtitle="Human Resources Management"
+                          showThemeToggle={true}
+                        >
+                          <HRDashboard />
+                        </EnhancedLayout>
+                      }
+                    />
+                    <Route
+                      path="/finance"
+                      element={
+                        <EnhancedLayout
+                          title="Finance Department"
+                          subtitle="Financial Management System"
+                          showThemeToggle={true}
+                        >
+                          <FinanceDashboard />
+                        </EnhancedLayout>
+                      }
+                    />
+                    <Route
+                      path="/sales"
+                      element={
+                        <EnhancedLayout
+                          title="Sales Department"
+                          subtitle="Sales & Customer Management"
+                          showThemeToggle={true}
+                        >
+                          <SalesDashboard />
+                        </EnhancedLayout>
+                      }
+                    />
+                    <Route
+                      path="/it"
+                      element={
+                        <EnhancedLayout
+                          title="IT Department"
+                          subtitle="Information Technology"
+                          showThemeToggle={true}
+                        >
+                          <ITDashboard />
+                        </EnhancedLayout>
+                      }
+                    />
+                    <Route
+                      path="/logistics"
+                      element={
+                        <EnhancedLayout
+                          title="Logistics Department"
+                          subtitle="Supply Chain Management"
+                          showThemeToggle={true}
+                        >
+                          <LogisticsDashboard />
+                        </EnhancedLayout>
+                      }
+                    />
+                    <Route
+                      path="/production"
+                      element={
+                        <EnhancedLayout
+                          title="Production Department"
+                          subtitle="Manufacturing Operations"
+                          showThemeToggle={true}
+                        >
+                          <ProductionDashboard />
+                        </EnhancedLayout>
+                      }
+                    />
+                    <Route
+                      path="/production/new"
+                      element={
+                        <EnhancedLayout
+                          title="Production Department"
+                          subtitle="Manufacturing Operations"
+                          showThemeToggle={true}
+                        >
+                          <NewProductionDashboard />
+                        </EnhancedLayout>
+                      }
+                    />
+
+                    {/* Production Sections */}
+                    <Route
+                      path="/production-sections"
+                      element={
+                        <EnhancedLayout
+                          title="Production Sections"
+                          subtitle="Manage Production Processes"
+                          showThemeToggle={true}
+                        >
+                          <ProductionSections />
+                        </EnhancedLayout>
+                      }
+                    />
+
+                    {/* Flattening Section Routes */}
+                    <Route
+                      path="/production-sections/flattening"
+                      element={
+                        <EnhancedLayout
+                          title="Flattening Section"
+                          subtitle="Wire Flattening Operations"
+                          showThemeToggle={true}
+                        >
+                          <FlatteningPage />
+                        </EnhancedLayout>
+                      }
+                    />
+                    <Route
+                      path="/production-sections/flattening/new"
+                      element={
+                        <EnhancedLayout
+                          title="New Flattening Entry"
+                          subtitle="Add New Flattening Record"
+                          showThemeToggle={true}
+                        >
+                          <FlatteningForm />
+                        </EnhancedLayout>
+                      }
+                    />
+                    <Route
+                      path="/production-sections/flattening/edit/:id"
+                      element={
+                        <EnhancedLayout
+                          title="Edit Flattening"
+                          subtitle="Update Flattening Record"
+                          showThemeToggle={true}
+                        >
+                          <FlatteningEditForm />
+                        </EnhancedLayout>
+                      }
+                    />
+                    <Route
+                      path="/production-sections/flattening/view/:id"
+                      element={
+                        <EnhancedLayout
+                          title="View Flattening"
+                          subtitle="Flattening Record Details"
+                          showThemeToggle={true}
+                        >
+                          <FlatteningView />
+                        </EnhancedLayout>
+                      }
+                    />
+                    <Route
+                      path="/production-sections/flattening/smart-entry"
+                      element={
+                        <EnhancedLayout
+                          title="Smart Entry"
+                          subtitle="Quick Flattening Entry"
+                          showThemeToggle={true}
+                        >
+                          <FlatteningSmartForm />
+                        </EnhancedLayout>
+                      }
+                    />
+                    {/* New Flattening Multi Entry Route */}
+                    <Route
+                      path="/production-sections/flattening/multi-entry"
+                      element={
+                        <EnhancedLayout
+                          title="Multi Entry"
+                          subtitle="Batch Flattening Entry"
+                          showThemeToggle={true}
+                        >
+                          <FlatteningMultiEntryForm />
+                        </EnhancedLayout>
+                      }
+                    />
+
+                    {/* Spiral Section Routes */}
+                    <Route
+                      path="/production-sections/spiral"
+                      element={
+                        <EnhancedLayout
+                          title="Spiral Section"
+                          subtitle="Wire Spiral Operations"
+                          showThemeToggle={true}
+                        >
+                          <SpiralPage />
+                        </EnhancedLayout>
+                      }
+                    />
+                    <Route
+                      path="/production-sections/spiral/new"
+                      element={
+                        <EnhancedLayout
+                          title="New Spiral Entry"
+                          subtitle="Add New Spiral Record"
+                          showThemeToggle={true}
+                        >
+                          <SpiralForm />
+                        </EnhancedLayout>
+                      }
+                    />
+                    <Route
+                      path="/production-sections/spiral/edit/:id"
+                      element={
+                        <EnhancedLayout
+                          title="Edit Spiral"
+                          subtitle="Update Spiral Record"
+                          showThemeToggle={true}
+                        >
+                          <SpiralEditForm />
+                        </EnhancedLayout>
+                      }
+                    />
+                    <Route
+                      path="/production-sections/spiral/view/:id"
+                      element={
+                        <EnhancedLayout
+                          title="View Spiral"
+                          subtitle="Spiral Record Details"
+                          showThemeToggle={true}
+                        >
+                          <SpiralView />
+                        </EnhancedLayout>
+                      }
+                    />
+                    <Route
+                      path="/production-sections/spiral/smart-entry"
+                      element={
+                        <EnhancedLayout
+                          title="Smart Spiral Entry"
+                          subtitle="Quick Spiral Entry"
+                          showThemeToggle={true}
+                        >
+                          <SpiralSmartForm />
+                        </EnhancedLayout>
+                      }
+                    />
+                    <Route
+                      path="/production-sections/spiral/multi-entry"
+                      element={
+                        <EnhancedLayout
+                          title="Multi Entry"
+                          subtitle="Batch Spiral Entry"
+                          showThemeToggle={true}
+                        >
+                          <SpiralMultiEntryForm />
+                        </EnhancedLayout>
+                      }
+                    />
+
+                    {/* Raw Material Section Routes */}
+                    <Route
+                      path="/production-sections/raw-material"
+                      element={
+                        <EnhancedLayout
+                          title="Raw Material"
+                          subtitle="Material Inventory Management"
+                          showThemeToggle={true}
+                        >
+                          <RawMaterialPage />
+                        </EnhancedLayout>
+                      }
+                    />
+                    <Route
+                      path="/production-sections/raw-material/new"
+                      element={
+                        <EnhancedLayout
+                          title="New Material Entry"
+                          subtitle="Add New Material"
+                          showThemeToggle={true}
+                        >
+                          <RawMaterialForm />
+                        </EnhancedLayout>
+                      }
+                    />
+                    <Route
+                      path="/production-sections/raw-material/edit/:id"
+                      element={
+                        <EnhancedLayout
+                          title="Edit Material"
+                          subtitle="Update Material Record"
+                          showThemeToggle={true}
+                        >
+                          <RawMaterialEditForm />
+                        </EnhancedLayout>
+                      }
+                    />
+                    <Route
+                      path="/production-sections/raw-material/new-log"
+                      element={
+                        <EnhancedLayout
+                          title="Material Log"
+                          subtitle="Material Transaction Log"
+                          showThemeToggle={true}
+                        >
+                          <RawMaterialLogForm />
+                        </EnhancedLayout>
+                      }
+                    />
+                    <Route
+                      path="/production-sections/raw-material/material-received"
+                      element={
+                        <EnhancedLayout
+                          title="Material Received"
+                          subtitle="Record Received Materials"
+                          showThemeToggle={true}
+                        >
+                          <MaterialReceivedForm />
+                        </EnhancedLayout>
+                      }
+                    />
+                    <Route
+                      path="/production-sections/raw-material/material-issue"
+                      element={
+                        <EnhancedLayout
+                          title="Material Issue"
+                          subtitle="Issue Materials to Production"
+                          showThemeToggle={true}
+                        >
+                          <MaterialIssueForm />
+                        </EnhancedLayout>
+                      }
+                    />
+
+                    {/* PVC Coating Section Routes */}
+                    <Route
+                      path="/production-sections/pvc-coating"
+                      element={
+                        <EnhancedLayout
+                          title="PVC Coating"
+                          subtitle="PVC Coating Operations"
+                          showThemeToggle={true}
+                        >
+                          <PVCCoatingPage />
+                        </EnhancedLayout>
+                      }
+                    />
+                    <Route
+                      path="/production-sections/pvc-coating/new"
+                      element={
+                        <EnhancedLayout
+                          title="New PVC Entry"
+                          subtitle="Add New PVC Coating Record"
+                          showThemeToggle={true}
+                        >
+                          <PVCCoatingForm />
+                        </EnhancedLayout>
+                      }
+                    />
+                    <Route
+                      path="/production-sections/pvc-coating/edit/:id"
+                      element={
+                        <EnhancedLayout
+                          title="Edit PVC"
+                          subtitle="Update PVC Coating Record"
+                          showThemeToggle={true}
+                        >
+                          <PVCCoatingEditForm />
+                        </EnhancedLayout>
+                      }
+                    />
+                    <Route
+                      path="/production-sections/pvc-coating/view/:id"
+                      element={
+                        <EnhancedLayout
+                          title="View PVC"
+                          subtitle="PVC Coating Record Details"
+                          showThemeToggle={true}
+                        >
+                          <PVCCoatingView />
+                        </EnhancedLayout>
+                      }
+                    />
+                    <Route
+                      path="/production-sections/pvc-coating/smart-form"
+                      element={
+                        <EnhancedLayout
+                          title="Smart PVC Entry"
+                          subtitle="Quick PVC Coating Entry"
+                          showThemeToggle={true}
+                        >
+                          <PVCSmartForm />
+                        </EnhancedLayout>
+                      }
+                    />
+                    <Route
+                      path="/production-sections/pvc-coating/multi-entry"
+                      element={
+                        <EnhancedLayout
+                          title="Multi Entry"
+                          subtitle="Batch PVC Coating Entry"
+                          showThemeToggle={true}
+                        >
+                          <PVCCoatingMultiEntryForm />
+                        </EnhancedLayout>
+                      }
+                    />
+
+                    {/* Production Reports */}
+                    <Route
+                      path="/production-reports/daily"
+                      element={
+                        <EnhancedLayout
+                          title="Daily Production Report"
+                          subtitle="Daily Production Summary"
+                          showThemeToggle={true}
+                        >
+                          <DailyProductionReport />
+                        </EnhancedLayout>
+                      }
+                    />
+                    <Route
+                      path="/flattening-inventory"
+                      element={
+                        <EnhancedLayout
+                          title="Inventory Report"
+                          subtitle="Flattening Inventory Status"
+                          showThemeToggle={true}
+                        >
+                          <FlatteningInventoryReport />
+                        </EnhancedLayout>
+                      }
+                    />
+                    <Route
+                      path="/flattening-ledger"
+                      element={
+                        <EnhancedLayout
+                          title="Inventory Ledger"
+                          subtitle="Flattening Inventory Transactions"
+                          showThemeToggle={true}
+                        >
+                          <FlatteningInventoryLedger />
+                        </EnhancedLayout>
+                      }
+                    />
+                  </Route>
+
+                  {/* Default & Fallback Routes */}
                   <Route
-                    path="/dashboard"
-                    element={
-                      <Layout title="ERP Dashboard" subtitle="Welcome to Pakistan Wire Industries">
-                        <Dashboard />
-                      </Layout>
-                    }
+                    path="/"
+                    element={<Navigate to="/dashboard" replace />}
                   />
-                  
-                  {/* Settings Routes */}
-                  <Route 
-                    path="/settings/theme" 
-                    element={
-                      <Layout title="Theme Settings" subtitle="Customize Your Dashboard Appearance">
-                        <ThemeSettings />
-                      </Layout>
-                    } 
+                  <Route
+                    path="*"
+                    element={<Navigate to="/dashboard" replace />}
                   />
-
-                  {/* Performance Benchmarks Route */}
-                  <Route 
-                    path="/settings/performance-benchmarks" 
-                    element={
-                      <Layout title="Performance Benchmarks" subtitle="Theme Settings Performance Targets">
-                        <ThemeSettingsBenchmarks />
-                      </Layout>
-                    } 
-                  />
-                  {/* Department Dashboards */}
-                  <Route 
-                    path="/hr" 
-                    element={
-                      <Layout title="HR Department" subtitle="Human Resources Management">
-                        <HRDashboard />
-                      </Layout>
-                    } 
-                  />
-                  <Route 
-                    path="/finance" 
-                    element={
-                      <Layout title="Finance Department" subtitle="Financial Management System">
-                        <FinanceDashboard />
-                      </Layout>
-                    } 
-                  />
-                  <Route 
-                    path="/sales" 
-                    element={
-                      <Layout title="Sales Department" subtitle="Sales & Customer Management">
-                        <SalesDashboard />
-                      </Layout>
-                    } 
-                  />
-                  <Route 
-                    path="/it" 
-                    element={
-                      <Layout title="IT Department" subtitle="Information Technology">
-                        <ITDashboard />
-                      </Layout>
-                    } 
-                  />
-                  <Route 
-                    path="/logistics" 
-                    element={
-                      <Layout title="Logistics Department" subtitle="Supply Chain Management">
-                        <LogisticsDashboard />
-                      </Layout>
-                    } 
-                  />
-                  <Route 
-                    path="/production" 
-                    element={
-                      <Layout title="Production Department" subtitle="Manufacturing Operations">
-                        <ProductionDashboard />
-                      </Layout>
-                    } 
-                  />
-
-                  {/* Production Sections */}
-                  <Route 
-                    path="/production-sections" 
-                    element={
-                      <Layout title="Production Sections" subtitle="Manage Production Processes">
-                        <ProductionSections />
-                      </Layout>
-                    } 
-                  />
-
-                  {/* Flattening Section Routes */}
-                  <Route 
-                    path="/production-sections/flattening" 
-                    element={
-                      <Layout title="Flattening Section" subtitle="Wire Flattening Operations">
-                        <FlatteningPage />
-                      </Layout>
-                    } 
-                  />
-                  <Route 
-                    path="/production-sections/flattening/new" 
-                    element={
-                      <Layout title="New Flattening Entry" subtitle="Add New Flattening Record">
-                        <FlatteningForm />
-                      </Layout>
-                    } 
-                  />
-                  <Route 
-                    path="/production-sections/flattening/edit/:id" 
-                    element={
-                      <Layout title="Edit Flattening" subtitle="Update Flattening Record">
-                        <FlatteningEditForm />
-                      </Layout>
-                    } 
-                  />
-                  <Route 
-                    path="/production-sections/flattening/view/:id" 
-                    element={
-                      <Layout title="View Flattening" subtitle="Flattening Record Details">
-                        <FlatteningView />
-                      </Layout>
-                    } 
-                  />
-                  <Route 
-                    path="/production-sections/flattening/smart-entry" 
-                    element={
-                      <Layout title="Smart Entry" subtitle="Quick Flattening Entry">
-                        <FlatteningSmartForm />
-                      </Layout>
-                    } 
-                  />
-
-                  {/* Spiral Section Routes */}
-                  <Route 
-                    path="/production-sections/spiral" 
-                    element={
-                      <Layout title="Spiral Section" subtitle="Wire Spiral Operations">
-                        <SpiralPage />
-                      </Layout>
-                    } 
-                  />
-                  <Route 
-                    path="/production-sections/spiral/new" 
-                    element={
-                      <Layout title="New Spiral Entry" subtitle="Add New Spiral Record">
-                        <SpiralForm />
-                      </Layout>
-                    } 
-                  />
-                  <Route 
-                    path="/production-sections/spiral/edit/:id" 
-                    element={
-                      <Layout title="Edit Spiral" subtitle="Update Spiral Record">
-                        <SpiralEditForm />
-                      </Layout>
-                    } 
-                  />
-                  <Route 
-                    path="/production-sections/spiral/view/:id" 
-                    element={
-                      <Layout title="View Spiral" subtitle="Spiral Record Details">
-                        <SpiralView />
-                      </Layout>
-                    } 
-                  />
-                  <Route 
-                    path="/production-sections/spiral/smart-entry" 
-                    element={
-                      <Layout title="Smart Spiral Entry" subtitle="Quick Spiral Entry">
-                        <SpiralSmartForm />
-                      </Layout>
-                    } 
-                  />
-                  <Route 
-                    path="/production-sections/spiral/multi-entry" 
-                    element={
-                      <Layout title="Multi Entry" subtitle="Batch Spiral Entry">
-                        <SpiralMultiEntryForm />
-                      </Layout>
-                    } 
-                  />
-
-                  {/* Raw Material Section Routes */}
-                  <Route 
-                    path="/production-sections/raw-material" 
-                    element={
-                      <Layout title="Raw Material" subtitle="Material Inventory Management">
-                        <RawMaterialPage />
-                      </Layout>
-                    } 
-                  />
-                  <Route 
-                    path="/production-sections/raw-material/new" 
-                    element={
-                      <Layout title="New Material Entry" subtitle="Add New Material">
-                        <RawMaterialForm />
-                      </Layout>
-                    } 
-                  />
-                  <Route 
-                    path="/production-sections/raw-material/edit/:id" 
-                    element={
-                      <Layout title="Edit Material" subtitle="Update Material Record">
-                        <RawMaterialEditForm />
-                      </Layout>
-                    } 
-                  />
-                  <Route 
-                    path="/production-sections/raw-material/new-log" 
-                    element={
-                      <Layout title="Material Log" subtitle="Material Transaction Log">
-                        <RawMaterialLogForm />
-                      </Layout>
-                    } 
-                  />
-                  <Route 
-                    path="/production-sections/raw-material/material-received" 
-                    element={
-                      <Layout title="Material Received" subtitle="Record Received Materials">
-                        <MaterialReceivedForm />
-                      </Layout>
-                    } 
-                  />
-                  <Route 
-                    path="/production-sections/raw-material/material-issue" 
-                    element={
-                      <Layout title="Material Issue" subtitle="Issue Materials to Production">
-                        <MaterialIssueForm />
-                      </Layout>
-                    } 
-                  />
-
-                  {/* PVC Coating Section Routes */}
-                  <Route 
-                    path="/production-sections/pvc-coating" 
-                    element={
-                      <Layout title="PVC Coating" subtitle="PVC Coating Operations">
-                        <PVCCoatingPage />
-                      </Layout>
-                    } 
-                  />
-                  <Route 
-                    path="/production-sections/pvc-coating/new" 
-                    element={
-                      <Layout title="New PVC Entry" subtitle="Add New PVC Coating Record">
-                        <PVCCoatingForm />
-                      </Layout>
-                    } 
-                  />
-                  <Route 
-                    path="/production-sections/pvc-coating/edit/:id" 
-                    element={
-                      <Layout title="Edit PVC" subtitle="Update PVC Coating Record">
-                        <PVCCoatingEditForm />
-                      </Layout>
-                    } 
-                  />
-                  <Route 
-                    path="/production-sections/pvc-coating/view/:id" 
-                    element={
-                      <Layout title="View PVC" subtitle="PVC Coating Record Details">
-                        <PVCCoatingView />
-                      </Layout>
-                    } 
-                  />
-                  <Route 
-                    path="/production-sections/pvc-coating/smart-form" 
-                    element={
-                      <Layout title="Smart PVC Entry" subtitle="Quick PVC Coating Entry">
-                        <PVCSmartForm />
-                      </Layout>
-                    } 
-                  />
-                  <Route 
-                    path="/production-sections/pvc-coating/multi-entry" 
-                    element={
-                      <Layout title="Multi Entry" subtitle="Batch PVC Coating Entry">
-                        <PVCCoatingMultiEntryForm />
-                      </Layout>
-                    } 
-                  />
-                  
-                  {/* Production Reports */}
-                  <Route 
-                    path="/production-reports/daily" 
-                    element={
-                      <Layout title="Daily Production Report" subtitle="Daily Production Summary">
-                        <DailyProductionReport />
-                      </Layout>
-                    } 
-                  />
-                  <Route 
-                    path="/flattening-inventory" 
-                    element={
-                      <Layout title="Inventory Report" subtitle="Flattening Inventory Status">
-                        <FlatteningInventoryReport />
-                      </Layout>
-                    } 
-                  />
-                  <Route 
-                    path="/flattening-ledger" 
-                    element={
-                      <Layout title="Inventory Ledger" subtitle="Flattening Inventory Transactions">
-                        <FlatteningInventoryLedger />
-                      </Layout>
-                    } 
-                  />
-                </Route>
-                
-                {/* Default & Fallback Routes */}
-                <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                <Route path="*" element={<Navigate to="/dashboard" replace />} />
-              </Routes>
-            </main>
-          </div>
-        </Router>
-      </AuthProvider>
-    </ThemeProvider>
+                </Routes>
+              </main>
+            </div>
+          </Router>
+        </ThemeInitializer>
+      </ThemeProvider>
+    </AuthProvider>
   );
 }
 

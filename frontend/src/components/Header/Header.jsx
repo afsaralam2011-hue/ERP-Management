@@ -12,25 +12,31 @@ const Header = ({ title = "Pakistan Wire Industries", subtitle = "SPI & CCD Dash
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [user, setUser] = useState(null);
   
-  // Theme Context سے mode لے رہے ہیں
-  const themeContext = useTheme();
-  
-  // 🔴 سادہ طریقہ: بس mode چیک کریں
-  let mode = 'light';
-  
-  // سب possibilities چیک کریں
-  if (themeContext.mode) {
-    mode = themeContext.mode; // اگر direct mode ہے
-  } else if (themeContext.theme && themeContext.theme.mode) {
-    mode = themeContext.theme.mode; // اگر theme object میں mode ہے
-  } else if (themeContext.currentTheme && themeContext.currentTheme.mode) {
-    mode = themeContext.currentTheme.mode; // اگر currentTheme میں mode ہے
-  }
-  
-  // بس colors طے کریں
+  // ✅ Theme Context
+  const { mode } = useTheme();
   const isDarkMode = mode === 'dark';
-  const backgroundColor = isDarkMode ? '#000000' : '#FFFFFF';
-  const textColor = isDarkMode ? '#FFFFFF' : '#000000';
+  
+  // ✅ CSS Variables سے Colors لیں - Optimized version
+  const getColor = (varName) => {
+    return getComputedStyle(document.documentElement).getPropertyValue(varName).trim() || '#000000';
+  };
+  
+  // ایک ہی بار میں تمام colors لے لیں
+  const themeColors = {
+    background: getColor('--color-background'),
+    textPrimary: getColor('--color-text-primary'),
+    textSecondary: getColor('--color-text-secondary'),
+    surface: getColor('--color-surface'),
+    border: getColor('--color-border'),
+    primary: getColor('--color-primary')
+  };
+  
+  const backgroundColor = themeColors.background;
+  const textColor = themeColors.textPrimary;
+  const textSecondaryColor = themeColors.textSecondary;
+  const surfaceColor = themeColors.surface;
+  const borderColor = themeColors.border;
+  const primaryColor = themeColors.primary;
   const logoFilter = isDarkMode ? 'invert(1) brightness(2)' : 'none';
   
   // Logout button colors
@@ -38,7 +44,7 @@ const Header = ({ title = "Pakistan Wire Industries", subtitle = "SPI & CCD Dash
   const logoutBorderColor = '#EF4444';
   const logoutTextColor = '#EF4444';
   
-  // localStorage/sessionStorage سے REAL user data لائیں
+  // User data
   useEffect(() => {
     const loadUserData = () => {
       let userData = localStorage.getItem("user");
@@ -52,22 +58,18 @@ const Header = ({ title = "Pakistan Wire Industries", subtitle = "SPI & CCD Dash
       if (userData && token) {
         try {
           const parsedUser = JSON.parse(userData);
-          
           const userName = parsedUser.user_metadata?.full_name || 
                           parsedUser.user_metadata?.name || 
                           parsedUser.email?.split('@')[0] || 
                           "User";
-          
           const userEmail = parsedUser.email || "No email";
           
           setUser({
             display_name: userName,
             email: userEmail,
-            initials: getInitials(userName),
-            full_user: parsedUser
+            initials: userName.split(' ').map(word => word[0]).join('').toUpperCase().substring(0, 2)
           });
         } catch (error) {
-          console.error("Error parsing user data:", error);
           setUser({
             display_name: "Guest User",
             email: "guest@example.com",
@@ -75,7 +77,6 @@ const Header = ({ title = "Pakistan Wire Industries", subtitle = "SPI & CCD Dash
           });
         }
       } else {
-        console.warn("No user data found in storage");
         setUser({
           display_name: "Guest User",
           email: "guest@example.com",
@@ -85,21 +86,9 @@ const Header = ({ title = "Pakistan Wire Industries", subtitle = "SPI & CCD Dash
     };
     
     loadUserData();
-    
     const interval = setInterval(loadUserData, 5000);
     return () => clearInterval(interval);
   }, [navigate]);
-  
-  // Initials نکالنے کے لیے function
-  const getInitials = (name) => {
-    if (!name) return "U";
-    return name
-      .split(' ')
-      .map(word => word[0])
-      .join('')
-      .toUpperCase()
-      .substring(0, 2);
-  };
 
   // Mobile check
   useEffect(() => {
@@ -109,46 +98,24 @@ const Header = ({ title = "Pakistan Wire Industries", subtitle = "SPI & CCD Dash
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // Ticker animation - SEAMLESS CONTINUOUS
+  // Ticker animation
   useEffect(() => {
     if (isMobile || !tickerRef.current) return;
     
-    // پہلے موجودہ animation روکیں
     if (animationRef.current) {
       cancelAnimationFrame(animationRef.current);
     }
     
-    const startTicker = () => {
-      let position = 0;
-      const tickerContent = tickerRef.current;
-      
-      // Content کو دو بار duplicate کریں seamless animation کے لیے
-      const originalContent = tickerContent.innerHTML;
-      tickerContent.innerHTML = originalContent + originalContent;
-      
-      const singleWidth = tickerContent.children[0].offsetWidth;
-      const speed = 1; // Pixels per frame
-      
-      const animate = () => {
-        position -= speed;
-        
-        // جب پہلا set ختم ہو جائے تو reset کریں
-        if (position <= -singleWidth) {
-          position = 0;
-        }
-        
-        tickerContent.style.transform = `translateX(${position}px)`;
-        animationRef.current = requestAnimationFrame(animate);
-      };
-      
+    let position = 0;
+    const animate = () => {
+      position -= 0.8;
+      if (position <= -400) position = 0;
+      if (tickerRef.current) tickerRef.current.style.transform = `translateX(${position}px)`;
       animationRef.current = requestAnimationFrame(animate);
     };
-    
-    // Thoda delay dein DOM ready hone ke liye
-    const timer = setTimeout(startTicker, 100);
+    animationRef.current = requestAnimationFrame(animate);
     
     return () => {
-      clearTimeout(timer);
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
       }
@@ -182,13 +149,13 @@ const Header = ({ title = "Pakistan Wire Industries", subtitle = "SPI & CCD Dash
       width: "100%",
       background: backgroundColor,
       color: textColor,
-      borderBottom: `1px solid ${isDarkMode ? '#333' : '#ddd'}`
+      borderBottom: `1px solid ${borderColor}`
     }}>
-      {/* Ticker Bar - SEAMLESS CONTINUOUS WITH LOGO */}
+      {/* Ticker Bar */}
       {!isMobile && (
         <div style={{ 
-          background: isDarkMode ? '#111' : '#f8f8f8',
-          borderBottom: `1px solid ${isDarkMode ? '#222' : '#eee'}`,
+          background: surfaceColor,
+          borderBottom: `1px solid ${borderColor}`,
           height: '28px',
           overflow: 'hidden',
           position: 'relative',
@@ -206,7 +173,6 @@ const Header = ({ title = "Pakistan Wire Industries", subtitle = "SPI & CCD Dash
               alignItems: 'center'
             }}
           >
-            {/* Multiple copies for seamless animation */}
             {[...Array(8)].map((_, copyIndex) => (
               <div key={copyIndex} style={{
                 display: 'flex',
@@ -228,7 +194,6 @@ const Header = ({ title = "Pakistan Wire Industries", subtitle = "SPI & CCD Dash
                   fontSize: '12px',
                   fontWeight: '500',
                   color: textColor,
-                  opacity: 0.8,
                   marginRight: '12px'
                 }}>
                   Pakistan Wire Industries
@@ -238,15 +203,14 @@ const Header = ({ title = "Pakistan Wire Industries", subtitle = "SPI & CCD Dash
                   borderRadius: '3px',
                   fontSize: '10px',
                   fontWeight: '600',
-                  background: isDarkMode ? '#6AECE1' : '#2563EB',
+                  background: primaryColor,
                   color: isDarkMode ? '#000' : '#FFF',
                   marginRight: '15px'
                 }}>
                   SPI & CCD
                 </span>
                 <span style={{ 
-                  color: textColor,
-                  opacity: 0.3,
+                  color: textSecondaryColor,
                   marginRight: '15px'
                 }}>
                   |
@@ -257,7 +221,7 @@ const Header = ({ title = "Pakistan Wire Industries", subtitle = "SPI & CCD Dash
         </div>
       )}
 
-      {/* Main Header - ایک ہی row میں سب کچھ */}
+      {/* Main Header */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
@@ -267,7 +231,7 @@ const Header = ({ title = "Pakistan Wire Industries", subtitle = "SPI & CCD Dash
         width: '100%',
         gap: isMobile ? '8px' : '16px'
       }}>
-        {/* Left Side - Logo + Title */}
+        {/* Left Side */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
@@ -303,8 +267,7 @@ const Header = ({ title = "Pakistan Wire Industries", subtitle = "SPI & CCD Dash
             {!isMobile && (
               <div style={{
                 fontSize: '11px',
-                color: textColor,
-                opacity: 0.7,
+                color: textSecondaryColor,
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis'
@@ -315,7 +278,7 @@ const Header = ({ title = "Pakistan Wire Industries", subtitle = "SPI & CCD Dash
           </div>
         </div>
 
-        {/* Right Side - All Icons in ONE ROW */}
+        {/* Right Side */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
@@ -328,7 +291,8 @@ const Header = ({ title = "Pakistan Wire Industries", subtitle = "SPI & CCD Dash
             cursor: 'pointer',
             padding: isMobile ? '6px' : '8px',
             borderRadius: '6px',
-            background: `${textColor}10`,
+            background: surfaceColor,
+            border: `1px solid ${borderColor}`,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -358,9 +322,9 @@ const Header = ({ title = "Pakistan Wire Industries", subtitle = "SPI & CCD Dash
           <button 
             onClick={() => navigate("/settings/theme")}
             style={{
-              background: `${textColor}10`,
+              background: surfaceColor,
               color: textColor,
-              border: `1px solid ${textColor}20`,
+              border: `1px solid ${borderColor}`,
               padding: isMobile ? '6px' : '8px',
               borderRadius: '6px',
               cursor: 'pointer',
@@ -373,13 +337,13 @@ const Header = ({ title = "Pakistan Wire Industries", subtitle = "SPI & CCD Dash
             <FiSettings size={isMobile ? 16 : 18} />
           </button>
 
-          {/* User Avatar Only (Mobile) */}
+          {/* User */}
           {isMobile ? (
             <div 
               onClick={() => navigate("/profile")}
               style={{
-                background: `${textColor}10`,
-                border: `1px solid ${textColor}20`,
+                background: surfaceColor,
+                border: `1px solid ${borderColor}`,
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
@@ -390,7 +354,7 @@ const Header = ({ title = "Pakistan Wire Industries", subtitle = "SPI & CCD Dash
               }}
             >
               <div style={{
-                background: isDarkMode ? '#6AECE1' : '#2563EB',
+                background: primaryColor,
                 color: isDarkMode ? '#000000' : '#FFFFFF',
                 fontWeight: 'bold',
                 width: '28px',
@@ -405,12 +369,11 @@ const Header = ({ title = "Pakistan Wire Industries", subtitle = "SPI & CCD Dash
               </div>
             </div>
           ) : (
-            /* Desktop User Profile */
             <div 
               onClick={() => navigate("/profile")}
               style={{
-                background: `${textColor}10`,
-                border: `1px solid ${textColor}20`,
+                background: surfaceColor,
+                border: `1px solid ${borderColor}`,
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
@@ -422,7 +385,7 @@ const Header = ({ title = "Pakistan Wire Industries", subtitle = "SPI & CCD Dash
               }}
             >
               <div style={{
-                background: isDarkMode ? '#6AECE1' : '#2563EB',
+                background: primaryColor,
                 color: isDarkMode ? '#000000' : '#FFFFFF',
                 fontWeight: 'bold',
                 width: '32px',
@@ -453,8 +416,7 @@ const Header = ({ title = "Pakistan Wire Industries", subtitle = "SPI & CCD Dash
                 </div>
                 <div style={{ 
                   fontSize: '10px',
-                  color: textColor,
-                  opacity: 0.8,
+                  color: textSecondaryColor,
                   whiteSpace: 'nowrap',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis'

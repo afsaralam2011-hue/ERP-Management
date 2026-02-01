@@ -6,7 +6,6 @@
   background-color: var(--color-background);
   color: var(--color-text-primary);
   border-bottom: 1px solid var(--color-border);
-  transition: all var(--transition-base);
 }
 
 /* ==================== Ticker Bar ==================== */
@@ -327,5 +326,81 @@ body.dark-mode .header-logo,
   .icon-button,
   .logout-button {
     padding: 8px;
+  }
+}
+/* src/components/Header/Header.css میں یہ classes شامل کریں */
+
+/* Theme-specific classes */
+.dark-mode .header-container {
+  --header-bg: #121212;
+  --header-text: #ffffff;
+  --header-border: #333333;
+}
+
+.light-mode .header-container {
+  --header-bg: #ffffff;
+  --header-text: #333333;
+  --header-border: #e0e0e0;
+}
+
+/* Dynamic theme variables */
+.header-container {
+  background-color: var(--header-bg, var(--color-background));
+  color: var(--header-text, var(--color-text-primary));
+  border-bottom: 1px solid var(--header-border, var(--color-border));
+  transition: all 0.3s ease;
+}
+
+/* Ticker bar theme */
+.ticker-bar {
+  background-color: var(--color-surface, #f8f9fa);
+  border-bottom: 1px solid var(--color-border, #e0e0e0);
+}
+
+/* Logo filter for themes */
+.header-logo,
+.ticker-logo {
+  transition: filter 0.3s ease;
+}
+
+.dark-mode .header-logo,
+.dark-mode .ticker-logo {
+  filter: invert(1) brightness(2);
+}
+
+/* Hover effects with theme colors */
+.notification-icon:hover,
+.icon-button:hover,
+.user-profile:hover {
+  background-color: var(--color-hover, #e9ecef) !important;
+  transition: all 0.2s ease;
+}
+
+/* Primary color accents */
+.icon-button:hover {
+  border-color: var(--color-primary, #3b82f6) !important;
+}
+
+.user-profile:hover {
+  border-color: var(--color-primary, #3b82f6) !important;
+}
+
+/* Logout button theme */
+.logout-button:hover {
+  background-color: rgba(239, 68, 68, 0.3) !important;
+}
+
+/* Mobile theme adjustments */
+@media (max-width: 768px) {
+  .header-container {
+    --header-padding: 8px 16px;
+  }
+  
+  .dark-mode .header-container.mobile {
+    --header-bg: #1a1a1a;
+  }
+  
+  .light-mode .header-container.mobile {
+    --header-bg: #f8f9fa;
   }
 }

@@ -29,18 +29,8 @@
     <!-- Manifest for PWA -->
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
     
-    <!-- Fonts for Better Typography -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
     <!-- Tailwind CSS -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    
-    <!-- REMOVED: External theme CSS files (They conflict with React ThemeContext) -->
-    <!-- <link rel="stylesheet" href="%PUBLIC_URL%/theme-variables.css"> -->
-    <!-- <link rel="stylesheet" href="%PUBLIC_URL%/light-theme.css"> -->
-    <!-- <link rel="stylesheet" href="%PUBLIC_URL%/dark-theme.css"> -->
     
     <title>Pakistan Wire Industries</title>
     
@@ -55,15 +45,6 @@
         padding: 0;
       }
       
-      /* Allow text selection for inputs */
-      input, textarea, select {
-        -webkit-user-select: text;
-        -moz-user-select: text;
-        -ms-user-select: text;
-        user-select: text;
-        font-size: 16px; /* Prevent iOS zoom */
-      }
-      
       html {
         font-size: 14px;
         height: 100%;
@@ -76,17 +57,17 @@
         }
       }
       
-      /* Body Styles - USING CSS VARIABLES FROM REACT THEMECONTEXT */
+      /* Body Styles */
       body {
         margin: 0;
         padding: 0;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', 'Roboto', 'Oxygen',
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
           'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
           sans-serif;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
-        background-color: var(--bg-primary, #FFFFFF); /* Fallback to white */
-        color: var(--text-primary, #1F2937); /* Fallback to dark gray */
+        background-color: #FFFFFF;
+        color: #1F2937;
         line-height: 1.5;
         height: 100%;
         overflow-x: hidden;
@@ -100,14 +81,14 @@
         min-height: 100vh;
       }
       
-      /* Welcome Screen Styles - USING CSS VARIABLES */
+      /* Welcome Screen Styles */
       .welcome-screen {
         position: fixed;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
-        background: linear-gradient(135deg, var(--primary-color, #005461), #00363d);
+        background: linear-gradient(135deg, #005461, #00363d);
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -156,7 +137,7 @@
         font-size: 3rem;
         font-weight: bold;
         margin: 2rem 0;
-        color: #00B7B5; /* Fixed color for visibility */
+        color: #00B7B5;
         text-shadow: 0 2px 10px rgba(0, 183, 181, 0.3);
         animation: countdownPulse 1s infinite;
       }
@@ -185,7 +166,7 @@
         justify-content: center;
         align-items: center;
         height: 100vh;
-        background: linear-gradient(135deg, var(--primary-color, #005461), #00363d);
+        background: linear-gradient(135deg, #005461, #00363d);
         color: white;
       }
       
@@ -197,46 +178,6 @@
         border-top-color: white;
         animation: spin 1s linear infinite;
         margin-bottom: 20px;
-      }
-      
-      /* Theme Toggle Button Styles - USING CSS VARIABLES */
-      .theme-toggle-button {
-        background: var(--bg-card, #FFFFFF);
-        color: var(--text-primary, #1F2937);
-        border: 1px solid var(--border, #E5E7EB);
-        border-radius: 12px;
-        padding: 10px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 44px;
-        height: 44px;
-      }
-      
-      .theme-toggle-button:hover {
-        background: var(--bg-secondary, #F8FAFC);
-        transform: translateY(-2px);
-      }
-      
-      /* Theme Change Notification - USING CSS VARIABLES */
-      .theme-change-notification {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: var(--bg-card, #FFFFFF);
-        color: var(--text-primary, #1F2937);
-        padding: 12px 20px;
-        border-radius: 12px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-        z-index: 9999;
-        font-weight: 600;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        border: 1px solid var(--border, #E5E7EB);
-        animation: slideIn 0.3s ease, fadeOut 0.3s ease 2s forwards;
       }
       
       /* Animations */
@@ -351,46 +292,7 @@
           font-size: 2rem;
         }
       }
-      
-      /* DARK THEME OVERRIDES - REMOVED data-theme selectors since React handles themes */
-      /* All theme colors are now handled by React ThemeContext via CSS Variables */
-      
-      /* Ensure text colors have proper contrast */
-      .text-contrast {
-        color: var(--text-primary) !important;
-      }
-      
-      /* Ensure background colors are properly themed */
-      .bg-themed {
-        background-color: var(--bg-card) !important;
-      }
-      
-      /* Table header specific styling */
-      .table-header-fix {
-        background-color: var(--table-header) !important;
-        color: var(--text-primary) !important;
-      }
-      
-      /* Dropdown/Select specific styling */
-      .select-fix {
-        background-color: var(--bg-secondary) !important;
-        color: var(--text-primary) !important;
-        border-color: var(--border) !important;
-      }
-      
-      /* Button specific styling */
-      .btn-primary-fix {
-        background-color: var(--primary-color) !important;
-        color: var(--btn-text-color, white) !important;
-      }
     </style>
-    
-    <!-- Background Music (Optional) -->
-    <audio id="background-music" preload="auto">
-      <source src="%PUBLIC_URL%/audio/welcome-music.mp3" type="audio/mpeg">
-      <source src="%PUBLIC_URL%/audio/welcome-music.ogg" type="audio/ogg">
-      Your browser does not support the audio element.
-    </audio>
   </head>
   <body>
     <noscript>
@@ -445,7 +347,6 @@
     <!-- Welcome Screen -->
     <div id="welcome-screen" class="welcome-screen">
       <div class="welcome-logo">
-        <!-- Try multiple logo paths to ensure it works -->
         <img 
           src="%PUBLIC_URL%/logoA.png" 
           alt="Pakistan Wire Industries Logo" 
@@ -484,17 +385,6 @@
         </span>
       </button>
       
-      <!-- Theme Toggle Button for Welcome Screen -->
-      <div class="mt-8">
-        <button 
-          id="welcome-theme-toggle"
-          class="px-6 py-2 bg-white/10 hover:bg-white/20 text-white font-medium rounded-lg transition-all duration-300 backdrop-blur-sm border border-white/20 hover:border-white/40 hover:shadow-md flex items-center gap-2"
-        >
-          <span id="theme-icon">🌙</span>
-          <span id="theme-text">Switch Theme</span>
-        </button>
-      </div>
-      
       <div class="mt-10 text-sm opacity-70">
         <p>ERP System v2.0 | © 2024 Pakistan Wire Industries</p>
         <p class="mt-1" style="font-size: 0.8rem;">All Rights Reserved</p>
@@ -523,13 +413,9 @@
       // Global variables
       let countdownInterval = null;
       let hasRedirected = false;
-      let backgroundMusicStarted = false;
       
       // Function to handle logo loading error
       function handleLogoError(imgElement) {
-        console.log('Logo failed to load from all sources');
-        
-        // Create a fallback logo
         const logoContainer = imgElement.parentElement;
         logoContainer.innerHTML = `
           <div style="
@@ -552,7 +438,6 @@
       
       // Function to check if user is authenticated
       function isUserAuthenticated() {
-        // Check multiple possible auth storage locations
         const authToken = localStorage.getItem('authToken') ||
                          sessionStorage.getItem('authToken') ||
                          localStorage.getItem('token') ||
@@ -568,27 +453,19 @@
       
       // Function to check if welcome screen should be shown
       function shouldShowWelcomeScreen() {
-        // Check if user has already seen welcome screen today
         const lastWelcomeDate = localStorage.getItem('pwi_last_welcome_date');
         const today = new Date().toDateString();
         const welcomeDisabled = localStorage.getItem('pwi_welcome_disabled') === 'true';
         
-        // Don't show if:
-        // 1. User is already authenticated
-        // 2. Welcome screen is disabled
-        // 3. User saw welcome screen today
         if (isUserAuthenticated()) {
-          console.log('User authenticated, skipping welcome screen');
           return false;
         }
         
         if (welcomeDisabled) {
-          console.log('Welcome screen disabled by user');
           return false;
         }
         
         if (lastWelcomeDate === today) {
-          console.log('Welcome screen already shown today');
           return false;
         }
         
@@ -599,109 +476,45 @@
       function markWelcomeScreenShown() {
         const today = new Date().toDateString();
         localStorage.setItem('pwi_last_welcome_date', today);
-        console.log('Welcome screen marked as shown for today:', today);
       }
       
       // Function to disable welcome screen permanently
       function disableWelcomeScreen() {
         localStorage.setItem('pwi_welcome_disabled', 'true');
-        console.log('Welcome screen disabled permanently');
-      }
-      
-      // Function to start background music
-      function startBackgroundMusic() {
-        if (backgroundMusicStarted) return;
-        
-        const backgroundMusic = document.getElementById('background-music');
-        if (backgroundMusic) {
-          // Only start music if user has interacted with the page
-          const startMusic = () => {
-            backgroundMusic.volume = 0.15; // Low volume
-            backgroundMusic.play().then(() => {
-              console.log('Background music started');
-              backgroundMusicStarted = true;
-            }).catch(error => {
-              console.log('Could not play background music:', error.message);
-            });
-          };
-          
-          // Add click event to start music
-          document.addEventListener('click', startMusic, { once: true });
-          document.addEventListener('touchstart', startMusic, { once: true });
-          
-          // Also try to start after a delay
-          setTimeout(() => {
-            if (!backgroundMusicStarted) {
-              startMusic();
-            }
-          }, 2000);
-        }
-      }
-      
-      // Function to stop background music
-      function stopBackgroundMusic() {
-        const backgroundMusic = document.getElementById('background-music');
-        if (backgroundMusic) {
-          backgroundMusic.pause();
-          backgroundMusic.currentTime = 0;
-          backgroundMusicStarted = false;
-          console.log('Background music stopped');
-        }
       }
       
       // Function to trigger app navigation
       function triggerAppNavigation() {
-        if (hasRedirected) {
-          console.log('Navigation already triggered, skipping');
-          return;
-        }
+        if (hasRedirected) return;
         
         hasRedirected = true;
         
-        // Stop background music
-        stopBackgroundMusic();
-        
-        // Clear countdown interval
         if (countdownInterval) {
           clearInterval(countdownInterval);
           countdownInterval = null;
         }
         
-        // Mark welcome screen as shown
         markWelcomeScreenShown();
         
-        // Get current path
         const currentPath = window.location.pathname;
-        console.log('Current path:', currentPath);
-        
-        // Check authentication
         const isAuthenticated = isUserAuthenticated();
-        console.log('User authenticated:', isAuthenticated);
         
-        // Determine where to navigate
         let targetPath = '/login';
         
         if (isAuthenticated) {
-          // Already logged in, go to dashboard
           if (currentPath === '/' || currentPath === '/login' || currentPath === '') {
             targetPath = '/dashboard';
           } else {
-            // Stay on current page
             targetPath = currentPath;
           }
         } else {
-          // Not authenticated, go to login
           if (currentPath !== '/login' && currentPath !== '/register') {
             targetPath = '/login';
           } else {
-            // Already on auth page
             targetPath = currentPath;
           }
         }
         
-        console.log('Navigating to:', targetPath);
-        
-        // Fade out welcome screen
         const welcomeScreen = document.getElementById('welcome-screen');
         if (welcomeScreen) {
           welcomeScreen.style.opacity = '0';
@@ -710,14 +523,11 @@
           setTimeout(() => {
             welcomeScreen.style.display = 'none';
             
-            // Show loading screen briefly
             const loadingScreen = document.getElementById('loading-screen');
             if (loadingScreen) {
               loadingScreen.style.display = 'flex';
               loadingScreen.style.opacity = '1';
               
-              // Dispatch app-ready event for React to handle
-              console.log('Dispatching app-ready event');
               const event = new CustomEvent('app-ready', {
                 detail: {
                   timestamp: new Date().toISOString(),
@@ -727,12 +537,10 @@
               });
               window.dispatchEvent(event);
               
-              // Also call global function if it exists
               if (window.triggerReactNavigation) {
                 window.triggerReactNavigation(targetPath, isAuthenticated);
               }
               
-              // Hide loading screen after React takes over
               setTimeout(() => {
                 if (loadingScreen) {
                   loadingScreen.style.opacity = '0';
@@ -744,8 +552,6 @@
             }
           }, 500);
         } else {
-          // Welcome screen not found, trigger event immediately
-          console.log('Dispatching app-ready event (no welcome screen)');
           const event = new CustomEvent('app-ready', {
             detail: {
               timestamp: new Date().toISOString(),
@@ -764,7 +570,6 @@
         const progressFill = document.getElementById('progress-fill');
         
         if (!countdownElement || !countdownText || !progressFill) {
-          console.error('Countdown elements not found');
           triggerAppNavigation();
           return;
         }
@@ -775,145 +580,43 @@
         countdownInterval = setInterval(() => {
           timeLeft--;
           
-          // Update display
           countdownElement.textContent = timeLeft;
           countdownText.textContent = timeLeft;
           
-          // Update progress bar
           const progressPercentage = ((totalTime - timeLeft) / totalTime) * 100;
           progressFill.style.width = `${progressPercentage}%`;
           
-          // Change color when 5 seconds remain
           if (timeLeft <= 5) {
             countdownElement.style.color = '#EF4444';
             countdownElement.style.animation = 'none';
           }
           
-          // Navigate when countdown reaches 0
           if (timeLeft <= 0) {
             triggerAppNavigation();
           }
         }, 1000);
       }
       
-      // Function to setup theme toggle for welcome screen
-      function setupWelcomeThemeToggle() {
-        const welcomeThemeToggle = document.getElementById('welcome-theme-toggle');
-        const themeIcon = document.getElementById('theme-icon');
-        const themeText = document.getElementById('theme-text');
-        
-        if (!welcomeThemeToggle) return;
-        
-        // Function to update welcome screen theme button
-        function updateWelcomeThemeButton(theme) {
-          if (theme === 'dark') {
-            themeIcon.textContent = '☀️';
-            themeText.textContent = 'Light Mode';
-          } else {
-            themeIcon.textContent = '🌙';
-            themeText.textContent = 'Dark Mode';
-          }
-        }
-        
-        // REMOVED: Theme management from HTML (Now handled by React)
-        // Just show a simple toggle that doesn't interfere with React
-        
-        // Get current theme from localStorage if exists
-        const savedTheme = localStorage.getItem('pwi_theme') || 'light';
-        updateWelcomeThemeButton(savedTheme);
-        
-        // Add click event
-        welcomeThemeToggle.addEventListener('click', function() {
-          // Just show notification, let React handle theme changes
-          const currentTheme = localStorage.getItem('pwi_theme') || 'light';
-          const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-          
-          // Save to localStorage (React will read this)
-          localStorage.setItem('pwi_theme', newTheme);
-          updateWelcomeThemeButton(newTheme);
-          
-          // Show notification
-          const notification = document.createElement('div');
-          notification.className = 'theme-change-notification';
-          notification.innerHTML = `
-            <span>Theme preference saved: ${newTheme === 'dark' ? 'Dark' : 'Light'}</span>
-            <span style="font-size: 1.2em;">${newTheme === 'dark' ? '🌙' : '☀️'}</span>
-          `;
-          document.body.appendChild(notification);
-          
-          setTimeout(() => {
-            if (notification.parentNode) {
-              notification.parentNode.removeChild(notification);
-            }
-          }, 2300);
-        });
-      }
-      
       // Function to initialize welcome screen
       function initializeWelcomeScreen() {
-        console.log('Initializing welcome screen...');
-        
-        // Check if welcome screen should be shown
         if (!shouldShowWelcomeScreen()) {
-          console.log('Skipping welcome screen');
           triggerAppNavigation();
           return;
         }
         
-        // Setup theme toggle for welcome screen
-        setupWelcomeThemeToggle();
-        
-        // Start background music
-        startBackgroundMusic();
-        
-        // Start countdown
         startCountdown();
         
-        // Setup skip button
         const skipButton = document.getElementById('skip-button');
         if (skipButton) {
           skipButton.addEventListener('click', function() {
-            console.log('Skip button clicked');
             disableWelcomeScreen();
             triggerAppNavigation();
           });
         }
-        
-        // Add double-click to disable welcome permanently
-        const welcomeScreen = document.getElementById('welcome-screen');
-        if (welcomeScreen) {
-          let clickCount = 0;
-          let clickTimer;
-          
-          welcomeScreen.addEventListener('click', function(e) {
-            if (e.target.id !== 'skip-button' && e.target.id !== 'welcome-theme-toggle' && 
-                e.target.parentElement.id !== 'welcome-theme-toggle') {
-              clickCount++;
-              
-              if (clickCount === 1) {
-                clickTimer = setTimeout(() => {
-                  clickCount = 0;
-                }, 500);
-              }
-              
-              if (clickCount === 3) {
-                clearTimeout(clickTimer);
-                clickCount = 0;
-                disableWelcomeScreen();
-                alert('Welcome screen has been disabled permanently. Refresh to skip.');
-              }
-            }
-          });
-        }
-        
-        console.log('Welcome screen initialized');
       }
       
       // Initialize when DOM is loaded
       document.addEventListener('DOMContentLoaded', function() {
-        console.log('DOM loaded, starting initialization...');
-        
-        // Small delay to ensure everything is ready
         setTimeout(() => {
           initializeWelcomeScreen();
         }, 300);
@@ -921,9 +624,6 @@
       
       // Global functions for React to call
       window.reactAppLoaded = function() {
-        console.log('React app loaded callback received');
-        
-        // Hide any remaining loading screens
         const loadingScreen = document.getElementById('loading-screen');
         if (loadingScreen && loadingScreen.style.display !== 'none') {
           loadingScreen.style.opacity = '0';
@@ -932,39 +632,6 @@
           }, 300);
         }
       };
-      
-      // Handle page visibility changes
-      document.addEventListener('visibilitychange', function() {
-        if (document.visibilityState === 'visible') {
-          document.title = 'Pakistan Wire Industries';
-          
-          // Resume music if it was playing
-          const backgroundMusic = document.getElementById('background-music');
-          if (backgroundMusic && backgroundMusicStarted) {
-            backgroundMusic.play().catch(e => {
-              console.log('Could not resume music:', e.message);
-            });
-          }
-        } else {
-          // Pause music when page is hidden
-          const backgroundMusic = document.getElementById('background-music');
-          if (backgroundMusic) {
-            backgroundMusic.pause();
-          }
-        }
-      });
-      
-      // Performance monitoring
-      window.addEventListener('load', function() {
-        if (window.performance) {
-          const perfData = window.performance.getEntriesByType('navigation')[0];
-          const loadTime = perfData.loadEventEnd - perfData.fetchStart;
-          console.log(`Page loaded in: ${loadTime.toFixed(2)}ms`);
-          
-          // Store performance data
-          localStorage.setItem('pwi_last_load_time', loadTime.toFixed(2));
-        }
-      });
     </script>
   </body>
 </html>

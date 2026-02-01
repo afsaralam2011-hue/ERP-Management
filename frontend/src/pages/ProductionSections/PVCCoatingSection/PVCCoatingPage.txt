@@ -1,565 +1,481 @@
-/// src/pages/ProductionSections/PVCcoatingSection/PVCcoatingPage.jsx
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  FiPlus,
-  FiEdit,
-  FiTrash2,
-  FiSearch,
-  FiFilter,
-  FiDownload,
-  FiRefreshCw,
-  FiPackage,
-  FiCalendar,
-  FiBarChart2,
-  FiPrinter,
-  FiCalendar as FiCal,
-  FiHome,
-  FiTrendingUp,
-  FiClock,
-  FiActivity,
-  FiAlertCircle,
-  FiChevronLeft,
-  FiChevronRight,
-  FiDatabase,
-  FiCheckCircle,
-  FiXCircle,
-  FiGrid,
-  FiX,
-  FiEye,
-  FiCpu,
-  FiBox,
-  FiDroplet,
-  FiTrendingUp as FiTrendingUp2,
-  FiLayers as FiCoating,
-  FiDatabase as FiDatabaseIcon,
-  FiWatch,
+  FiPlus, FiEdit, FiTrash2, FiDownload,
+  FiRefreshCw, FiPackage, FiCalendar,
+  FiTrendingUp, FiClock, FiActivity, FiChevronLeft,
+  FiChevronRight, FiDatabase, FiCheckCircle, FiXCircle, FiGrid,
+  FiEye, FiCpu, FiDroplet,
+  FiSun, FiMoon, FiArrowLeft, FiZap, FiPercent,
+  FiHash, FiUser, FiWatch, FiBox, FiFilter,
+  FiX, FiArrowUp, FiArrowDown,
+  FiAlertCircle, FiPrinter, FiBarChart2,
+  FiMessageSquare, FiLogIn, FiUserCheck
 } from "react-icons/fi";
+import { FaWhatsapp } from "react-icons/fa";
 import { supabase } from "../../../supabaseClient";
 import "./PVCCoatingPage.css";
 
 const PVCcoatingPage = () => {
   const navigate = useNavigate();
+  
+  // Theme state
+  const [theme, setTheme] = useState(() => {
+    return localStorage.getItem("app-theme") || "light";
+  });
+  
+  // Apply theme
+  useEffect(() => {
+    document.documentElement.className = `theme-${theme}`;
+    localStorage.setItem("app-theme", theme);
+  }, [theme]);
+  
+  const toggleTheme = () => {
+    const themes = ['light', 'dark', 'cream'];
+    const nextIndex = (themes.indexOf(theme) + 1) % themes.length;
+    setTheme(themes[nextIndex]);
+  };
+
+  // Data states
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterType, setFilterType] = useState("");
-  const [filterDate, setFilterDate] = useState("");
-  const [showReport, setShowReport] = useState(false);
-  // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
+  
+  // ✅ Filter states
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterProduct, setFilterProduct] = useState("");
+  const [filterDate, setFilterDate] = useState("");
+  const [showReport, setShowReport] = useState(false);
+  const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
+  const [showExportOptions, setShowExportOptions] = useState(false);
+  const [whatsAppMessage, setWhatsAppMessage] = useState("");
 
-  // Report data
   const [reportData, setReportData] = useState({
     date: "",
     formattedDate: "",
+    itemWise: {},
+    productWise: {},
     machineWise: {},
     shiftWise: {},
-    finishedProductWise: {},
     totalProduction: 0,
     totalWeight: 0,
     avgEfficiency: 0,
     recordCount: 0,
   });
 
-  // Stats states
-  const [stats, setStats] = useState({
-    totalRecords: 0,
-    totalProduction: 0,
-    totalWeight: 0,
-    avgEfficiency: 0,
-    toDayProduction: 0,
-    lastDayWeight: 0,
-    lastDayEfficiency: 0,
-    todayRecords: 0,
-    todayProduction: 0,
-    todayWeight: 0,
-    todayAvgEfficiency: 0,
-    machineWiseToday: {},
-    finishedProductWiseToday: {},
-    shiftWiseToday: {},
-  });
-
-  // PVC Coating specific options
-  const coatingTypes = [
-    "Transparent PVC",
-    "White PVC",
-    "Black PVC",
-    "Grey PVC",
-    "Color PVC",
-    "Special Coating",
-    "UV Protected",
-    "Fire Retardant",
-    "Other",
-  ];
-
-  // Check if supabase is connected
   const isSupabaseConnected = supabase && process.env.REACT_APP_SUPABASE_URL;
+  const loggedInUser = localStorage.getItem("userName") || "Admin";
 
-  // Fetch data function
+  // ✅ Helper function to format numbers without decimal
+  const formatInteger = (number) => {
+    if (!number && number !== 0) return "0";
+    const num = parseFloat(number);
+    if (isNaN(num)) return "0";
+    return Math.round(num).toLocaleString();
+  };
+
+  // ✅ Helper function to format weight without decimal
+  const formatWeight = (weight) => {
+    if (!weight && weight !== 0) return "0";
+    const w = parseFloat(weight);
+    if (isNaN(w)) return "0";
+    return Math.round(w).toLocaleString();
+  };
+
+  // Fetch data
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-
-      if (!supabase) {
-        throw new Error("Supabase client not initialized");
-      }
-
-      // PVC Coating table
-      const { data: recordsData, error: recordsError } = await supabase
+      const { data, error } = await supabase
         .from("pvcsection")
         .select("*")
         .order("created_at", { ascending: false });
 
-      if (recordsError) throw recordsError;
-
-      setRecords(recordsData || []);
-      calculateStats(recordsData || []);
+      if (error) throw error;
+      setRecords(data || []);
+      
+      // Extract unique products
+      const uniqueProducts = [...new Set(data.map(r => r.raw_material_Spiralsize).filter(Boolean))];
+      setProducts(uniqueProducts);
     } catch (error) {
-      console.error("Error fetching data:", error);
+      console.error("Error:", error);
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => {
-    fetchData();
+  useEffect(() => { 
+    fetchData(); 
   }, [fetchData]);
 
-  // Calculate stats
-  const calculateStats = (recordsData) => {
-    if (!recordsData || recordsData.length === 0) {
-      setStats({
+  // ✅ **واحد درست فارمولا: Unique Date+Shift+Machine**
+  const calculateEfficiencyForRecords = useCallback((records) => {
+    if (!records || records.length === 0) return 0;
+
+    const uniqueEntries = new Map();
+    
+    records.forEach(record => {
+      const key = `${record.production_date}_${record.shift_name}_${record.machine_no}`;
+      
+      if (!uniqueEntries.has(key)) {
+        uniqueEntries.set(key, {
+          production: parseFloat(record.production_quantity) || 0,
+          target: parseFloat(record.target_qty) || 0
+        });
+      } else {
+        const existing = uniqueEntries.get(key);
+        existing.production += parseFloat(record.production_quantity) || 0;
+      }
+    });
+
+    // Calculate total production and target
+    let totalProduction = 0;
+    let totalTarget = 0;
+    
+    uniqueEntries.forEach(entry => {
+      totalProduction += entry.production;
+      totalTarget += entry.target;
+    });
+
+    return totalTarget > 0 ? (totalProduction / totalTarget) * 100 : 0;
+  }, []);
+
+  // ✅ درست فارمولا: لاسٹ انٹری کے لیے
+  const calculateLastEntryStats = useCallback((records) => {
+    if (!records || records.length === 0) {
+      return {
+        lastEntryRecords: 0,
+        lastEntryProduction: 0,
+        lastEntryWeight: 0,
+        lastEntryEfficiency: 0,
+        shiftWise: {},
+        machineWise: {},
+        productWise: {},
+        lastEntryDate: null
+      };
+    }
+
+    // آخری entry کی تاریخ تلاش کریں
+    const latestRecord = records[0];
+    const lastEntryDate = latestRecord?.production_date || latestRecord?.entry_date;
+    
+    if (!lastEntryDate) {
+      return {
+        lastEntryRecords: 0,
+        lastEntryProduction: 0,
+        lastEntryWeight: 0,
+        lastEntryEfficiency: 0,
+        shiftWise: {},
+        machineWise: {},
+        productWise: {},
+        lastEntryDate: null
+      };
+    }
+
+    // صرف آخری entry تاریخ کے ریکارڈز
+    const lastEntryRecords = records.filter(record => {
+      const recordDate = record.production_date || record.entry_date;
+      if (!recordDate) return false;
+      return recordDate === lastEntryDate;
+    });
+
+    // Calculate totals
+    const lastEntryProduction = lastEntryRecords.reduce((sum, record) => 
+      sum + (parseFloat(record.production_quantity) || 0), 0);
+    
+    const lastEntryWeight = lastEntryRecords.reduce((sum, record) => 
+      sum + (parseFloat(record.weight) || 0), 0);
+
+    const lastEntryEfficiency = calculateEfficiencyForRecords(lastEntryRecords);
+
+    // ✅ **Shift-wise حساب (درست)**
+    const shiftWise = {};
+    const shiftMap = new Map();
+    
+    lastEntryRecords.forEach(record => {
+      const shiftKey = `${record.production_date}_${record.shift_name}`;
+      const shift = record.shift_name || 'N/A';
+      
+      if (!shiftMap.has(shiftKey)) {
+        shiftMap.set(shiftKey, {
+          shift: shift,
+          production: parseFloat(record.production_quantity) || 0,
+          target: parseFloat(record.target_qty) || 0,
+          weight: parseFloat(record.weight) || 0,
+          count: 1
+        });
+      } else {
+        const existing = shiftMap.get(shiftKey);
+        existing.production += parseFloat(record.production_quantity) || 0;
+        existing.weight += parseFloat(record.weight) || 0;
+        existing.count += 1;
+      }
+    });
+
+    shiftMap.forEach((data, key) => {
+      const shift = data.shift;
+      if (!shiftWise[shift]) {
+        shiftWise[shift] = { 
+          production: data.production,
+          target: data.target,
+          weight: data.weight,
+          count: data.count,
+          efficiency: data.target > 0 ? (data.production / data.target) * 100 : 0
+        };
+      } else {
+        shiftWise[shift].production += data.production;
+        shiftWise[shift].weight += data.weight;
+        shiftWise[shift].count += data.count;
+      }
+    });
+
+    // ✅ **Machine-wise حساب (درست)**
+    const machineWise = {};
+    const machineMap = new Map();
+    
+    lastEntryRecords.forEach(record => {
+      const machineKey = `${record.production_date}_${record.shift_name}_${record.machine_no}`;
+      const machine = record.machine_no || 'N/A';
+      
+      if (!machineMap.has(machineKey)) {
+        machineMap.set(machineKey, {
+          machine: machine,
+          production: parseFloat(record.production_quantity) || 0,
+          target: parseFloat(record.target_qty) || 0,
+          weight: parseFloat(record.weight) || 0,
+          count: 1
+        });
+      } else {
+        const existing = machineMap.get(machineKey);
+        existing.production += parseFloat(record.production_quantity) || 0;
+        existing.weight += parseFloat(record.weight) || 0;
+        existing.count += 1;
+      }
+    });
+
+    machineMap.forEach((data, key) => {
+      const machine = data.machine;
+      if (!machineWise[machine]) {
+        machineWise[machine] = { 
+          production: data.production,
+          target: data.target,
+          weight: data.weight,
+          count: data.count,
+          efficiency: data.target > 0 ? (data.production / data.target) * 100 : 0
+        };
+      } else {
+        machineWise[machine].production += data.production;
+        machineWise[machine].target += data.target;
+        machineWise[machine].weight += data.weight;
+        machineWise[machine].count += data.count;
+        machineWise[machine].efficiency = machineWise[machine].target > 0 
+          ? (machineWise[machine].production / machineWise[machine].target) * 100 
+          : 0;
+      }
+    });
+
+    // ✅ **Product-wise حساب**
+    const productWise = {};
+    lastEntryRecords.forEach(record => {
+      const product = record.raw_material_Spiralsize || 'N/A';
+      if (!productWise[product]) {
+        productWise[product] = { 
+          production: 0,
+          weight: 0,
+          count: 0
+        };
+      }
+      productWise[product].production += parseFloat(record.production_quantity || 0);
+      productWise[product].weight += parseFloat(record.weight || 0);
+      productWise[product].count += 1;
+    });
+
+    return {
+      lastEntryRecords: lastEntryRecords.length,
+      lastEntryProduction,
+      lastEntryWeight,
+      lastEntryEfficiency,
+      shiftWise,
+      machineWise,
+      productWise,
+      lastEntryDate
+    };
+  }, [calculateEfficiencyForRecords]);
+
+  // Calculate all statistics
+  const calculateAllStats = useCallback((records) => {
+    if (!records || records.length === 0) {
+      return {
         totalRecords: 0,
         totalProduction: 0,
         totalWeight: 0,
-        avgEfficiency: 0,
-        toDayProduction: 0,
-        lastDayWeight: 0,
-        lastDayEfficiency: 0,
-        todayRecords: 0,
-        todayProduction: 0,
-        todayWeight: 0,
-        todayAvgEfficiency: 0,
-        machineWiseToday: {},
-        finishedProductWiseToday: {},
-        shiftWiseToday: {},
-      });
+        avgEfficiency: 0
+      };
+    }
+
+    const totalProduction = records.reduce((sum, record) => 
+      sum + (parseFloat(record.production_quantity) || 0), 0);
+    
+    const totalWeight = records.reduce((sum, record) => 
+      sum + (parseFloat(record.weight) || 0), 0);
+    
+    const avgEfficiency = calculateEfficiencyForRecords(records);
+
+    return {
+      totalRecords: records.length,
+      totalProduction,
+      totalWeight,
+      avgEfficiency
+    };
+  }, [calculateEfficiencyForRecords]);
+
+  const lastEntryStats = calculateLastEntryStats(records);
+  const allStats = calculateAllStats(records);
+
+  // ✅ Efficiency color calculator
+  const getEfficiencyColor = (efficiency) => {
+    const eff = parseFloat(efficiency) || 0;
+    if (eff >= 80) return '#10b981';
+    if (eff >= 70) return '#f59e0b';
+    return '#ef4444';
+  };
+
+  const getEfficiencyTextColor = (efficiency) => {
+    const eff = parseFloat(efficiency) || 0;
+    if (eff >= 80) return '#10b981';
+    if (eff >= 70) return '#f59e0b';
+    return '#ef4444';
+  };
+
+  // Get unique values for filters
+  const [products, setProducts] = useState([]);
+
+  // ✅ Filter records function
+  const filteredRecords = records.filter(record => {
+    const matchesSearch = 
+      (record.item_name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+      (record.machine_no?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+      (record.operator_name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+      (record.users_name?.toLowerCase() || "").includes(searchTerm.toLowerCase());
+    
+    const matchesProduct = !filterProduct || record.raw_material_Spiralsize === filterProduct;
+
+    const recordDate = record.production_date || new Date(record.created_at).toISOString().split("T")[0];
+    const matchesDate = !filterDate || recordDate === filterDate;
+    
+    return matchesSearch && matchesProduct && matchesDate;
+  });
+
+  // ✅ Function to generate report data - DYNAMIC SHIFT FORMULA
+  const generateReport = () => {
+    if (!filterDate) {
+      alert("Please select a date first");
       return;
     }
 
-    const today = new Date().toISOString().split("T")[0];
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayStr = yesterday.toISOString().split("T")[0];
-
-    const todayRecords = recordsData.filter((record) => {
-      const recordDate = new Date(record.created_at)
-        .toISOString()
-        .split("T")[0];
-      return recordDate === today;
-    });
-
-    const yesterdayRecords = recordsData.filter((record) => {
-      const recordDate = new Date(record.created_at)
-        .toISOString()
-        .split("T")[0];
-      return recordDate === yesterdayStr;
-    });
-
-    const totalProduction = recordsData.reduce(
-      (sum, record) => sum + (parseFloat(record.production_quantity) || 0),
-      0
-    );
-
-    const totalWeight = recordsData.reduce(
-      (sum, record) => sum + (parseFloat(record.weight) || 0),
-      0
-    );
-
-    const totalEfficiency = recordsData.reduce(
-      (sum, record) => sum + (parseFloat(record.efficiency) || 0),
-      0
-    );
-
-    const avgEfficiency =
-      recordsData.length > 0 ? totalEfficiency / recordsData.length : 0;
-
-    const toDayProduction = todayRecords.reduce(
-      (sum, record) => sum + (parseFloat(record.production_quantity) || 0),
-      0
-    );
-
-    const lastDayWeight = yesterdayRecords.reduce(
-      (sum, record) => sum + (parseFloat(record.weight) || 0),
-      0
-    );
-
-    const lastDayEfficiencySum = yesterdayRecords.reduce(
-      (sum, record) => sum + (parseFloat(record.efficiency) || 0),
-      0
-    );
-
-    const lastDayEfficiency =
-      yesterdayRecords.length > 0
-        ? lastDayEfficiencySum / yesterdayRecords.length
-        : 0;
-
-    // Today's stats
-    const todayProduction = todayRecords.reduce(
-      (sum, record) => sum + (parseFloat(record.production_quantity) || 0),
-      0
-    );
-
-    const todayWeight = todayRecords.reduce(
-      (sum, record) => sum + (parseFloat(record.weight) || 0),
-      0
-    );
-
-    const todayEfficiencySum = todayRecords.reduce(
-      (sum, record) => sum + (parseFloat(record.efficiency) || 0),
-      0
-    );
-
-    const todayAvgEfficiency =
-      todayRecords.length > 0 ? todayEfficiencySum / todayRecords.length : 0;
-
-    // Machine-wise today
-    const machineWiseToday = {};
-    const finishedProductWiseToday = {};
-    const shiftWiseToday = {};
-
-    todayRecords.forEach((record) => {
-      // Machine data
-      const machine = record.machine_no || "Unknown";
-      if (!machineWiseToday[machine]) {
-        machineWiseToday[machine] = {
-          production: 0,
-          weight: 0,
-          efficiency: 0,
-          count: 0,
-        };
-      }
-      machineWiseToday[machine].production +=
-        parseFloat(record.production_quantity) || 0;
-      machineWiseToday[machine].weight += parseFloat(record.weight) || 0;
-      machineWiseToday[machine].efficiency +=
-        parseFloat(record.efficiency) || 0;
-      machineWiseToday[machine].count += 1;
-
-      // Finished Product data
-      const product = record.finishedproductname || "Unknown";
-      if (!finishedProductWiseToday[product]) {
-        finishedProductWiseToday[product] = {
-          production: 0,
-          weight: 0,
-          efficiency: 0,
-          count: 0,
-        };
-      }
-      finishedProductWiseToday[product].production +=
-        parseFloat(record.production_quantity) || 0;
-      finishedProductWiseToday[product].weight +=
-        parseFloat(record.weight) || 0;
-      finishedProductWiseToday[product].efficiency +=
-        parseFloat(record.efficiency) || 0;
-      finishedProductWiseToday[product].count += 1;
-
-      // Shift-wise data
-      const shift = record.shift_name || "Unknown";
-      if (!shiftWiseToday[shift]) {
-        shiftWiseToday[shift] = {
-          production: 0,
-          weight: 0,
-          efficiency: 0,
-          count: 0,
-        };
-      }
-      shiftWiseToday[shift].production +=
-        parseFloat(record.production_quantity) || 0;
-      shiftWiseToday[shift].weight += parseFloat(record.weight) || 0;
-      shiftWiseToday[shift].efficiency += parseFloat(record.efficiency) || 0;
-      shiftWiseToday[shift].count += 1;
-    });
-
-    setStats({
-      totalRecords: recordsData.length,
-      totalProduction,
-      totalWeight,
-      avgEfficiency,
-      toDayProduction,
-      lastDayWeight,
-      lastDayEfficiency,
-      todayRecords: todayRecords.length,
-      todayProduction,
-      todayWeight,
-      todayAvgEfficiency,
-      machineWiseToday,
-      finishedProductWiseToday,
-      shiftWiseToday,
-    });
-  };
-
-  // Filter records
-  const filteredRecords = records.filter((record) => {
-    const matchesSearch =
-      (record.item_name?.toLowerCase() || "").includes(
-        searchTerm.toLowerCase()
-      ) ||
-      (record.material_type?.toLowerCase() || "").includes(
-        searchTerm.toLowerCase()
-      ) ||
-      (record.finishedproductname?.toLowerCase() || "").includes(
-        searchTerm.toLowerCase()
-      ) ||
-      (record.users_name?.toLowerCase() || "").includes(
-        searchTerm.toLowerCase()
-      ) ||
-      (record.raw_material_flatsize?.toLowerCase() || "").includes(
-        searchTerm.toLowerCase()
-      ) ||
-      (record.machine_no?.toLowerCase() || "").includes(
-        searchTerm.toLowerCase()
-      ) ||
-      (record.operator_name?.toLowerCase() || "").includes(
-        searchTerm.toLowerCase()
-      );
-
-    const matchesType = !filterType || record.material_type === filterType;
-
-    const recordDate = new Date(record.created_at).toISOString().split("T")[0];
-    const matchesDate = !filterDate || recordDate === filterDate;
-
-    return matchesSearch && matchesType && matchesDate;
-  });
-
-  // Pagination
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentRecords = filteredRecords.slice(
-    indexOfFirstItem,
-    indexOfLastItem
-  );
-  const totalPages = Math.ceil(filteredRecords.length / itemsPerPage);
-
-  // Generate report
-  const generateReport = useCallback((selectedDate) => {
-    const dateRecords = records.filter((record) => {
-      const recordDate = new Date(record.created_at)
-        .toISOString()
-        .split("T")[0];
-      return recordDate === selectedDate;
+    const dateRecords = records.filter(record => {
+      const recordDate = record.production_date || new Date(record.created_at).toISOString().split("T")[0];
+      return recordDate === filterDate;
     });
 
     if (dateRecords.length === 0) {
-      setReportData({
-        date: selectedDate,
-        formattedDate: new Date(selectedDate).toLocaleDateString("en-US", {
-          weekday: "long",
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        }),
-        machineWise: {},
-        shiftWise: {},
-        finishedProductWise: {},
-        totalProduction: 0,
-        totalWeight: 0,
-        avgEfficiency: 0,
-        recordCount: 0,
-      });
+      alert("No records found for selected date");
       return;
     }
 
-    const machineWise = {};
-    const shiftWise = {};
-    const finishedProductWise = {};
-    let totalProduction = 0;
-    let totalWeight = 0;
-    let totalEfficiency = 0;
+    // Calculate report data
+    const totalProduction = dateRecords.reduce((sum, record) => sum + (parseFloat(record.production_quantity) || 0), 0);
+    const totalWeight = dateRecords.reduce((sum, record) => sum + (parseFloat(record.weight) || 0), 0);
+    const avgEfficiency = calculateEfficiencyForRecords(dateRecords);
 
-    dateRecords.forEach((record) => {
-      const machine = record.machine_no || "Unknown";
-      const shift = record.shift_name || "Unknown";
-      const product = record.finishedproductname || "Unknown";
-      const production = parseFloat(record.production_quantity) || 0;
-      const weight = parseFloat(record.weight) || 0;
-      const efficiency = parseFloat(record.efficiency) || 0;
-
-      // Machine wise
-      if (!machineWise[machine]) {
-        machineWise[machine] = {
+    // Item-wise data
+    const itemWise = {};
+    dateRecords.forEach(record => {
+      const item = record.item_name || 'N/A';
+      if (!itemWise[item]) {
+        itemWise[item] = {
           production: 0,
           weight: 0,
-          efficiency: 0,
           count: 0,
+          efficiency: 0
         };
       }
-      machineWise[machine].production += production;
-      machineWise[machine].weight += weight;
-      machineWise[machine].efficiency += efficiency;
-      machineWise[machine].count += 1;
+      itemWise[item].production += parseFloat(record.production_quantity) || 0;
+      itemWise[item].weight += parseFloat(record.weight) || 0;
+      itemWise[item].count += 1;
+      itemWise[item].efficiency += parseFloat(record.efficiency) || 0;
+    });
 
-      // Shift wise
+    // ✅ DYNAMIC SHIFT-WISE DATA - جو بھی شفٹ ہو وہ آئے
+    const shiftWise = {};
+    dateRecords.forEach(record => {
+      const shift = record.shift_name || 'N/A';
       if (!shiftWise[shift]) {
         shiftWise[shift] = {
           production: 0,
           weight: 0,
-          efficiency: 0,
           count: 0,
+          efficiency: 0,
+          machines: {}
         };
       }
-      shiftWise[shift].production += production;
-      shiftWise[shift].weight += weight;
-      shiftWise[shift].efficiency += efficiency;
+      shiftWise[shift].production += parseFloat(record.production_quantity) || 0;
+      shiftWise[shift].weight += parseFloat(record.weight) || 0;
       shiftWise[shift].count += 1;
-
-      // Finished Product wise
-      if (!finishedProductWise[product]) {
-        finishedProductWise[product] = {
+      shiftWise[shift].efficiency += parseFloat(record.efficiency) || 0;
+      
+      // Machine-wise data for each shift
+      const machine = record.machine_no || 'N/A';
+      if (!shiftWise[shift].machines[machine]) {
+        shiftWise[shift].machines[machine] = {
           production: 0,
-          weight: 0,
           efficiency: 0,
-          count: 0,
+          operator: record.operator_name || 'N/A',
+          weight: 0,
+          count: 0
         };
       }
-      finishedProductWise[product].production += production;
-      finishedProductWise[product].weight += weight;
-      finishedProductWise[product].efficiency += efficiency;
-      finishedProductWise[product].count += 1;
-
-      totalProduction += production;
-      totalWeight += weight;
-      totalEfficiency += efficiency;
+      shiftWise[shift].machines[machine].production += parseFloat(record.production_quantity) || 0;
+      shiftWise[shift].machines[machine].efficiency += parseFloat(record.efficiency) || 0;
+      shiftWise[shift].machines[machine].weight += parseFloat(record.weight) || 0;
+      shiftWise[shift].machines[machine].count += 1;
     });
 
-    const avgEfficiency =
-      dateRecords.length > 0 ? totalEfficiency / dateRecords.length : 0;
+    // Calculate average efficiency for each shift
+    Object.keys(shiftWise).forEach(shift => {
+      shiftWise[shift].avgEfficiency = shiftWise[shift].count > 0 
+        ? shiftWise[shift].efficiency / shiftWise[shift].count 
+        : 0;
+    });
+
+    const formattedDate = new Date(filterDate).toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
 
     setReportData({
-      date: selectedDate,
-      formattedDate: new Date(selectedDate).toLocaleDateString("en-US", {
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      }),
-      machineWise,
+      date: filterDate,
+      formattedDate,
+      itemWise,
+      productWise: itemWise,
+      machineWise: {},
       shiftWise,
-      finishedProductWise,
       totalProduction,
       totalWeight,
       avgEfficiency,
       recordCount: dateRecords.length,
     });
-  }, [records]);
 
-  // Handle report generation when date changes
-  useEffect(() => {
-    if (filterDate) {
-      generateReport(filterDate);
-    }
-  }, [filterDate, generateReport]);
-
-  // Handlers
-  const handleEdit = (id) => {
-    navigate(`/production-sections/pvc-coating/edit/${id}`);
+    setShowReport(true);
   };
 
-  const handleView = (id) => {
-    navigate(`/production-sections/pvc-coating/view/${id}`);
-  };
-
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this record?")) return;
-
-    try {
-      const { error } = await supabase.from("pvcsection").delete().eq("id", id);
-
-      if (error) throw error;
-
-      alert("Record deleted successfully");
-      fetchData();
-    } catch (error) {
-      console.error("Error deleting record:", error);
-      alert("Failed to delete record: " + error.message);
-    }
-  };
-
-  // Export all records
-  const handleExport = () => {
-    if (filteredRecords.length === 0) {
-      alert("No records to export");
-      return;
-    }
-
-    const csvContent = [
-      [
-        "ID",
-        "Item Name",
-        "Raw Material Size",
-        "Material Type",
-        "Finished Product",
-        "Machine ID",
-        "Machine No",
-        "Production",
-        "Unit",
-        "Weight",
-        "Per Meter WT",
-        "Efficiency %",
-        "Operator",
-        "User Name",
-        "Shift Code",
-        "Shift Name",
-        "Remarks",
-        "Item Code",
-        "Section Name",
-        "Created At",
-      ],
-      ...filteredRecords.map((record) => [
-        record.id,
-        `"${record.item_name || ""}"`,
-        `"${record.raw_material_flatsize || ""}"`,
-        `"${record.material_type || ""}"`,
-        `"${record.finishedproductname || ""}"`,
-        `"${record.machine_id || ""}"`,
-        `"${record.machine_no || ""}"`,
-        parseFloat(record.production_quantity) || 0,
-        `"${record.unit || "Meter"}"`,
-        parseFloat(record.weight) || 0,
-        parseFloat(record.per_meter_wt) || 0,
-        parseFloat(record.efficiency) || 0,
-        `"${record.operator_name || ""}"`,
-        `"${record.users_name || ""}"`,
-        `"${record.shift_code || ""}"`,
-        `"${record.shift_name || ""}"`,
-        `"${record.remarks || ""}"`,
-        `"${record.item_code || ""}"`,
-        `"${record.section_name || ""}"`,
-        `"${new Date(record.created_at).toLocaleString()}"`,
-      ]),
-    ]
-      .map((row) => row.join(","))
-      .join("\n");
-
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `pvc-coating-records-${
-      new Date().toISOString().split("T")[0]
-    }-Afsar.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
-  // Print report
+  // ✅ Print Report Function - DYNAMIC SHIFT
   const handlePrintReport = () => {
     if (!reportData || reportData.recordCount === 0) {
-      alert("No report data to print");
+      alert("No report data to print. Please generate report first.");
       return;
     }
 
@@ -568,33 +484,64 @@ const PVCcoatingPage = () => {
       <!DOCTYPE html>
       <html>
       <head>
-        <title>PVC Coating Section Production Report - ${
-          reportData.formattedDate
-        }</title>
+        <title>PVC Coating Production Report - ${reportData.formattedDate}</title>
         <style>
-          body { font-family: Arial, sans-serif; margin: 40px; }
-          .header { text-align: center; margin-bottom: 30px; }
-          .header h1 { color: #8b5cf6; margin-bottom: 10px; }
-          .header .date { color: #666; font-size: 18px; }
-          .table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+          body { 
+            font-family: Arial, sans-serif; 
+            margin: 40px; 
+            color: #005461;
+            background: white;
+          }
+          .header { 
+            text-align: center; 
+            margin-bottom: 30px; 
+            padding: 20px;
+            background: #3b82f6;
+            color: #FFFFFF;
+          }
+          .header h1 { 
+            margin-bottom: 10px; 
+          }
+          .header .date { 
+            font-size: 18px; 
+          }
+          .table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin: 20px 0; 
+          }
           .table th, .table td { 
-            border: 1px solid #ddd; 
+            border: 1px solid #3b82f6; 
             padding: 12px; 
             text-align: left; 
           }
-          .table th { background-color: #f8f9fa; }
+          .table th { 
+            background-color: #3b82f6; 
+            color: #FFFFFF;
+          }
           .summary { 
-            background-color: #f8f9fa; 
+            background-color: #F4F4F4; 
             padding: 20px; 
             margin: 20px 0; 
-            border-radius: 8px; 
+            border: 1px solid #3b82f6;
           }
-          .summary h3 { margin-top: 0; }
+          .shift-section { 
+            margin: 20px 0; 
+            padding: 15px; 
+            border-left: 4px solid #3b82f6;
+            background: #F4F4F4;
+          }
+          .shift-header { 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+            margin-bottom: 10px; 
+          }
           .footer { 
-            margin-top: 40px; 
+            margin-top: 4px; 
             text-align: center; 
-            color: #666; 
-            font-size: 12px; 
+            font-size: 1px; 
+            color: #005461;
           }
           @media print {
             body { margin: 20px; }
@@ -604,33 +551,48 @@ const PVCcoatingPage = () => {
       </head>
       <body>
         <div class="header">
-          <h1>PVC Coating Section Production Report</h1>
+          <h1>PVC Coating Production Report</h1>
           <div class="date">${reportData.formattedDate}</div>
-          <div class="date">Report Generated by: Afsar</div>
+          <div class="date">Report Generated by: ${loggedInUser}</div>
         </div>
         
-        <h3>Machine-wise Summary:</h3>
+        ${Object.entries(reportData.shiftWise).map(([shift, data]) => `
+          <div class="shift-section">
+            <div class="shift-header">
+              <h3 style="margin: 0; color: #005461;">${shift} Shift Summary</h3>
+            </div>
+            <p><strong>Production:</strong> ${Math.round(data.production)} Meter</p>
+            <p><strong>Weight:</strong> ${Math.round(data.weight)} KG</p>
+            <p><strong>Average Efficiency:</strong> ${Math.round(data.avgEfficiency)}%</p>
+            <p><strong>Records:</strong> ${data.count}</p>
+          </div>
+        `).join('')}
+        
+        <h3>Item-wise Summary:</h3>
         <table class="table">
           <thead>
             <tr>
-              <th>Machine Name</th>
+              <th>Item Name</th>
               <th>Production (Meter)</th>
+              <th>Target (Meter)</th>
               <th>Weight (KG)</th>
               <th>Avg Efficiency</th>
+              <th>Target Efficiency</th>
             </tr>
           </thead>
           <tbody>
-            ${Object.entries(reportData.machineWise)
+            ${Object.entries(reportData.itemWise)
               .map(
-                ([machine, data]) => `
+                ([item, data]) => `
               <tr>
-                <td>${machine}</td>
-                <td>${data.production.toFixed(2)}</td>
-                <td>${data.weight.toFixed(2)}</td>
-                <td>${(data.count > 0
-                  ? data.efficiency / data.count
-                  : 0
-                ).toFixed(2)}%</td>
+                <td>${item}</td>
+                <td>${Math.round(data.production)}</td>
+                <td>${Math.round(data.production * 1.2)}</td>
+                <td>${Math.round(data.weight)}</td>
+                <td>${Math.round(
+                  data.count > 0 ? data.efficiency / data.count : 0
+                )}%</td>
+                <td>85%</td>
               </tr>
             `
               )
@@ -638,88 +600,68 @@ const PVCcoatingPage = () => {
           </tbody>
         </table>
         
-        <h3>Shift-wise Summary:</h3>
-        <table class="table">
-          <thead>
-            <tr>
-              <th>Shift Name</th>
-              <th>Production (Meter)</th>
-              <th>Weight (KG)</th>
-              <th>Avg Efficiency</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${Object.entries(reportData.shiftWise)
-              .map(
-                ([shift, data]) => `
+        ${Object.entries(reportData.shiftWise).map(([shift, shiftData]) => `
+          <h3>Machine-wise Summary - ${shift} Shift:</h3>
+          <table class="table">
+            <thead>
               <tr>
-                <td>${shift}</td>
-                <td>${data.production.toFixed(2)}</td>
-                <td>${data.weight.toFixed(2)}</td>
-                <td>${(data.count > 0
-                  ? data.efficiency / data.count
-                  : 0
-                ).toFixed(2)}%</td>
+                <th>Machine No</th>
+                <th>Production (Meter)</th>
+                <th>Target (Meter)</th>
+                <th>Weight (KG)</th>
+                <th>Avg Efficiency</th>
+                <th>Operator</th>
               </tr>
-            `
-              )
-              .join("")}
-          </tbody>
-        </table>
-        
-        <h3>Finished Product-wise Summary:</h3>
-        <table class="table">
-          <thead>
-            <tr>
-              <th>Finished Product</th>
-              <th>Production (Meter)</th>
-              <th>Weight (KG)</th>
-              <th>Avg Efficiency</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${Object.entries(reportData.finishedProductWise)
-              .map(
-                ([product, data]) => `
-              <tr>
-                <td>${product}</td>
-                <td>${data.production.toFixed(2)}</td>
-                <td>${data.weight.toFixed(2)}</td>
-                <td>${(data.count > 0
-                  ? data.efficiency / data.count
-                  : 0
-                ).toFixed(2)}%</td>
-              </tr>
-            `
-              )
-              .join("")}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              ${Object.entries(shiftData.machines).map(([machine, data]) => {
+                const efficiency = data.count > 0 ? Math.round(data.efficiency / data.count) : 0;
+                return `
+                  <tr>
+                    <td>${machine}</td>
+                    <td>${Math.round(data.production)}</td>
+                    <td>${Math.round(data.production * 1.2)}</td>
+                    <td>${Math.round(data.weight || 0)}</td>
+                    <td>${efficiency}%</td>
+                    <td>${data.operator || "Operator Absent"}</td>
+                  </tr>
+                `;
+              }).join("")}
+            </tbody>
+          </table>
+        `).join('')}
         
         <div class="summary">
           <h3>Summary:</h3>
-          <p><strong>Total Production:</strong> ${reportData.totalProduction.toFixed(
-            2
+          <p><strong>Total Production:</strong> ${Math.round(
+            reportData.totalProduction
           )} Meter</p>
-          <p><strong>Total Weight:</strong> ${reportData.totalWeight.toFixed(
-            2
+          <p><strong>Target Production:</strong> ${Math.round(
+            reportData.totalProduction * 1.2
+          )} Meter</p>
+          <p><strong>Total Weight:</strong> ${Math.round(
+            reportData.totalWeight
           )} KG</p>
-          <p><strong>Average Efficiency:</strong> ${reportData.avgEfficiency.toFixed(
-            2
+          <p><strong>Average Efficiency:</strong> ${Math.round(
+            reportData.avgEfficiency
           )}%</p>
+          <p><strong>Target Efficiency:</strong> 85%</p>
           <p><strong>Total Records:</strong> ${reportData.recordCount}</p>
+          ${Object.entries(reportData.shiftWise).map(([shift, data]) => `
+            <p><strong>${shift} Shift Records:</strong> ${data.count}</p>
+          `).join('')}
         </div>
         
         <div class="footer">
-          Generated on ${new Date().toLocaleString()} by Afsar<br/>
+          Generated on ${new Date().toLocaleString()} by ${loggedInUser}<br/>
           PVC Coating Section - Production Management System
         </div>
         
         <div class="no-print" style="margin-top: 20px;">
-          <button onclick="window.print()" style="padding: 10px 20px; background: #8b5cf6; color: white; border: none; border-radius: 5px; cursor: pointer;">
+          <button onclick="window.print()" style="padding: 10px 20px; background: #3b82f6; color: #FFFFFF; border: none; cursor: pointer;">
             Print Report
           </button>
-          <button onclick="window.close()" style="padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer; margin-left: 10px;">
+          <button onclick="window.close()" style="padding: 10px 20px; background: #005461; color: #FFFFFF; border: none; cursor: pointer; margin-left: 10px;">
             Close
           </button>
         </div>
@@ -735,1271 +677,2068 @@ const PVCcoatingPage = () => {
     printWindow.document.close();
   };
 
-  // Export report
-  const handleExportReport = () => {
+  // ✅ WhatsApp Report Function - DYNAMIC SHIFT
+  const prepareWhatsAppReport = (type = "report") => {
     if (!reportData || reportData.recordCount === 0) {
-      alert("No report data to export");
+      return "No report data available.";
+    }
+
+    if (type === "custom") {
+      return whatsAppMessage;
+    }
+
+    let message = `📊 *PVC Coating Production Report*\n`;
+    message += `📅 Date: ${reportData.formattedDate}\n`;
+    message += `👤 Generated by: ${loggedInUser}\n\n`;
+
+    message += `📈 *Overall Summary:*\n`;
+    message += `• Total Production: ${Math.round(
+      reportData.totalProduction
+    )} M\n`;
+    message += `• Total Weight: ${Math.round(reportData.totalWeight)} KG\n`;
+    message += `• Average Efficiency: ${Math.round(
+      reportData.avgEfficiency
+    )}%\n`;
+    message += `• Total Records: ${reportData.recordCount}\n\n`;
+
+    message += `🕒 *Shift-wise Summary:*\n\n`;
+
+    Object.entries(reportData.shiftWise).forEach(([shift, data]) => {
+      message += `*${shift} Shift:*\n`;
+      message += `• Production: ${Math.round(data.production)} M\n`;
+      message += `• Weight: ${Math.round(data.weight)} KG\n`;
+      message += `• Avg Efficiency: ${Math.round(data.avgEfficiency)}%\n`;
+      message += `• Records: ${data.count}\n\n`;
+    });
+
+    if (Object.keys(reportData.itemWise).length > 0) {
+      message += `📋 *Item-wise Summary:*\n`;
+      Object.entries(reportData.itemWise).forEach(([item, data], index) => {
+        message += `${index + 1}. ${item}: ${Math.round(
+          data.production
+        )} M, ${Math.round(data.weight)} KG\n`;
+      });
+      message += `\n`;
+    }
+
+    Object.entries(reportData.shiftWise).forEach(([shift, shiftData]) => {
+      message += `🏭 *Machine-wise Summary - ${shift} Shift:*\n`;
+      Object.entries(shiftData.machines).forEach(([machine, data], index) => {
+        const efficiency = data.count > 0 ? Math.round(data.efficiency / data.count) : 0;
+        const operator = data.operator || "Operator Absent";
+        message += `${index + 1}. ${machine}: ${Math.round(
+          data.production
+        )} M, ${efficiency}% | ${operator}\n`;
+      });
+      message += `\n`;
+    });
+
+    message += `📝 *Report Summary:*\n`;
+    message += `• Target Production: ${Math.round(
+      reportData.totalProduction * 1.2
+    )} M\n`;
+    message += `• Target Efficiency: 85%\n\n`;
+
+    message += `✅ Generated via PVC Coating Management System`;
+
+    return message;
+  };
+
+  const sendReportViaWhatsApp = () => {
+    const reportMessage = prepareWhatsAppReport("report");
+    const encodedMessage = encodeURIComponent(reportMessage);
+
+    const whatsappUrl = `whatsapp://send?text=${encodedMessage}`;
+
+    try {
+      window.location.href = whatsappUrl;
+
+      setTimeout(() => {
+        if (document.hasFocus()) {
+          alert(
+            "WhatsApp Desktop is not opening. Please open WhatsApp manually and paste:"
+          );
+          navigator.clipboard
+            .writeText(reportMessage)
+            .then(() =>
+              alert("Report copied to clipboard. Please paste in WhatsApp.")
+            );
+        }
+      }, 1000);
+    } catch (error) {
+      console.error("Error opening WhatsApp:", error);
+      navigator.clipboard.writeText(reportMessage).then(() => {
+        alert("Report copied to clipboard. Please paste in WhatsApp.");
+      });
+    }
+
+    setShowWhatsAppModal(false);
+    setWhatsAppMessage("");
+  };
+
+  // ✅ Excel Export Functions
+  const handleExportExcel = () => {
+    if (filteredRecords.length === 0) {
+      alert("No records to export");
       return;
     }
 
     const csvContent = [
-      ["PVC Coating Section Production Report", reportData.formattedDate],
-      ["Generated by: Afsar"],
-      [],
-      ["Machine-wise Summary"],
-      ["Machine Name", "Production (Meter)", "Weight (KG)", "Avg Efficiency"],
-      ...Object.entries(reportData.machineWise).map(([machine, data]) => [
-        machine,
-        data.production.toFixed(2),
-        data.weight.toFixed(2),
-        (data.count > 0 ? data.efficiency / data.count : 0).toFixed(2) + "%",
-      ]),
-      [],
-      ["Shift-wise Summary"],
-      ["Shift Name", "Production (Meter)", "Weight (KG)", "Avg Efficiency"],
-      ...Object.entries(reportData.shiftWise).map(([shift, data]) => [
-        shift,
-        data.production.toFixed(2),
-        data.weight.toFixed(2),
-        (data.count > 0 ? data.efficiency / data.count : 0).toFixed(2) + "%",
-      ]),
-      [],
-      ["Finished Product-wise Summary"],
       [
+        "ID",
+        "Item Name",
         "Finished Product",
-        "Production (Meter)",
+        "Machine No",
+        "Production Date",
+        "Shift",
+        "Production (M)",
+        "Target (M)",
         "Weight (KG)",
-        "Avg Efficiency",
+        "Per Meter WT",
+        "Efficiency %",
+        "Operator",
+        "User Name",
+        "Remarks",
+        "Created At",
       ],
-      ...Object.entries(reportData.finishedProductWise).map(
-        ([product, data]) => [
-          product,
-          data.production.toFixed(2),
-          data.weight.toFixed(2),
-          (data.count > 0 ? data.efficiency / data.count : 0).toFixed(2) + "%",
-        ]
-      ),
-      [],
-      ["SUMMARY"],
-      ["Total Production (Meter):", reportData.totalProduction.toFixed(2)],
-      ["Total Weight (KG):", reportData.totalWeight.toFixed(2)],
-      ["Average Efficiency:", reportData.avgEfficiency.toFixed(2) + "%"],
-      ["Total Records:", reportData.recordCount],
-      [],
-      ["Generated by: Afsar"],
-      ["Generated on:", new Date().toLocaleString()],
+      ...filteredRecords.map((record) => [
+        record.id,
+        `"${record.item_name || ""}"`,
+        `"${record.raw_material_Spiralsize || ""}"`,
+        `"${record.machine_no || ""}"`,
+        `"${record.production_date || ""}"`,
+        `"${record.shift_name || ""}"`,
+        parseFloat(record.production_quantity) || 0,
+        parseFloat(record.target_qty) || 0,
+        parseFloat(record.weight) || 0,
+        parseFloat(record.per_meter_wt) || 0,
+        parseFloat(record.efficiency) || 0,
+        `"${record.operator_name || ""}"`,
+        `"${record.users_name || ""}"`,
+        `"${record.remarks || ""}"`,
+        `"${new Date(record.created_at).toLocaleString()}"`,
+      ]),
     ]
       .map((row) => row.join(","))
+      .join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `pvc-coating-records-${
+      new Date().toISOString().split("T")[0]
+    }-${loggedInUser}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExportReport = () => {
+    if (!reportData || reportData.recordCount === 0) {
+      alert("No report data to export. Please generate report first.");
+      return;
+    }
+
+    const csvContent = [
+      ["PVC Coating Production Report", reportData.formattedDate],
+      ["Generated by: " + loggedInUser],
+      [],
+      ["SHIFT-WISE SUMMARY"],
+      ...Object.entries(reportData.shiftWise).flatMap(([shift, data]) => [
+        [],
+        [`${shift} Shift Summary`],
+        ["Production (Meter):", Math.round(data.production)],
+        ["Weight (KG):", Math.round(data.weight)],
+        ["Average Efficiency:", Math.round(data.avgEfficiency) + "%"],
+        ["Records:", data.count],
+      ]),
+      [],
+      ["Item-wise Summary"],
+      [
+        "Item Name",
+        "Production (Meter)",
+        "Target (Meter)",
+        "Weight (KG)",
+        "Avg Efficiency",
+        "Target Efficiency",
+      ],
+      ...Object.entries(reportData.itemWise).map(([item, data]) => [
+        item,
+        Math.round(data.production),
+        Math.round(data.production * 1.2),
+        Math.round(data.weight),
+        Math.round(data.count > 0 ? data.efficiency / data.count : 0) + "%",
+        "85%",
+      ]),
+      ...Object.entries(reportData.shiftWise).flatMap(([shift, shiftData]) => [
+        [],
+        [`Machine-wise Summary - ${shift} Shift`],
+        [
+          "Machine No",
+          "Production (Meter)",
+          "Target (Meter)",
+          "Weight (KG)",
+          "Avg Efficiency",
+          "Operator",
+        ],
+        ...Object.entries(shiftData.machines).map(([machine, data]) => {
+          const efficiency = data.count > 0 ? Math.round(data.efficiency / data.count) : 0;
+          return [
+            machine,
+            Math.round(data.production),
+            Math.round(data.production * 1.2),
+            Math.round(data.weight || 0),
+            efficiency + "%",
+            data.operator || "Operator Absent",
+          ];
+        }),
+      ]),
+      [],
+      ["SUMMARY"],
+      ["Total Production (Meter):", Math.round(reportData.totalProduction)],
+      [
+        "Target Production (Meter):",
+        Math.round(reportData.totalProduction * 1.2),
+      ],
+      ["Total Weight (KG):", Math.round(reportData.totalWeight)],
+      ["Average Efficiency:", Math.round(reportData.avgEfficiency) + "%"],
+      ["Target Efficiency:", "85%"],
+      ["Total Records:", reportData.recordCount],
+      ...Object.entries(reportData.shiftWise).map(([shift, data]) => [
+        [`${shift} Shift Records:`, data.count],
+      ]).flat(),
+      [],
+      ["Generated by: " + loggedInUser],
+      ["Generated on:", new Date().toLocaleString()],
+    ]
+      .map((row) => Array.isArray(row) ? row.join(",") : row)
       .join("\n");
 
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `pvc-coating-report-${filterDate}-Afsar.csv`;
+    a.download = `pvc-coating-report-${filterDate}-${loggedInUser}.csv`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
   };
 
-  // Pagination handlers
-  const handleNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
+  // ✅ Delete Function
+  const handleDeleteRecord = async (recordId) => {
+    if (!window.confirm(`Are you sure you want to delete record #${recordId}?`)) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("pvcsection")
+        .delete()
+        .eq("id", recordId);
+
+      if (error) throw error;
+
+      alert(`Record #${recordId} deleted successfully!`);
+      fetchData(); // Refresh data
+    } catch (error) {
+      console.error("Error deleting record:", error);
+      alert("Error deleting record. Please try again.");
     }
   };
 
-  const handlePrevPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
+  // Pagination
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentRecords = filteredRecords.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredRecords.length / itemsPerPage);
 
-  // Stats cards
-  const statCards = [
-    {
-      id: "total-records",
-      title: "Total Records",
-      value: stats.totalRecords,
-      icon: FiDatabaseIcon,
-      gradientColors: ["#8b5cf6", "#7c3aed"],
-      iconBg: "#8b5cf6",
-    },
-    {
-      id: "total-production",
-      title: "Total Production",
-      value: `${stats.totalProduction.toLocaleString()} M`,
-      icon: FiCoating,
-      gradientColors: ["#8b5cf6", "#7c3aed"],
-      iconBg: "#8b5cf6",
-    },
-    {
-      id: "total-weight",
-      title: "Total Weight",
-      value: `${stats.totalWeight.toLocaleString()} KG`,
-      icon: FiDroplet,
-      gradientColors: ["#a78bfa", "#8b5cf6"],
-      iconBg: "#a78bfa",
-    },
-    {
-      id: "avg-efficiency",
-      title: "Avg Efficiency",
-      value: `${stats.avgEfficiency.toFixed(2)}%`,
-      icon: FiTrendingUp2,
-      gradientColors: ["#c084fc", "#a855f7"],
-      iconBg: "#c084fc",
-    },
-    {
-      id: "today-records",
-      title: "Today's Records",
-      value: stats.todayRecords,
-      icon: FiClock,
-      gradientColors: ["#8b5cf6", "#7c3aed"],
-      iconBg: "#8b5cf6",
-    },
-    {
-      id: "today-production",
-      title: "Today's Production",
-      value: `${stats.todayProduction.toLocaleString()} M`,
-      icon: FiPackage,
-      gradientColors: ["#8b5cf6", "#7c3aed"],
-      iconBg: "#8b5cf6",
-    },
-    {
-      id: "today-weight",
-      title: "Today's Weight",
-      value: `${stats.todayWeight.toLocaleString()} KG`,
-      icon: FiDroplet,
-      gradientColors: ["#a78bfa", "#8b5cf6"],
-      iconBg: "#a78bfa",
-    },
-    {
-      id: "today-avg-efficiency",
-      title: "Today's Avg Efficiency",
-      value: `${stats.todayAvgEfficiency.toFixed(2)}%`,
-      icon: FiActivity,
-      gradientColors: ["#c084fc", "#a855f7"],
-      iconBg: "#c084fc",
-    },
-  ];
+  // ✅ WhatsApp Modal Component
+  const WhatsAppModal = () => (
+    <div className="modal-overlay" onClick={() => setShowWhatsAppModal(false)}>
+      <div className="modal-container" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <h2>
+            <FaWhatsapp className="whatsapp-icon" /> Send Report via WhatsApp
+          </h2>
+          <button
+            onClick={() => setShowWhatsAppModal(false)}
+            className="modal-close-btn"
+          >
+            &times;
+          </button>
+        </div>
 
-  // Render loading state
+        <div className="modal-body">
+          <div className="whatsapp-modal-content">
+            <FaWhatsapp size={48} className="whatsapp-icon-large" />
+            <h3>Send to WhatsApp Desktop</h3>
+            <p className="whatsapp-modal-text">
+              Select one of the options below. Report will automatically open in
+              WhatsApp Desktop.
+            </p>
+          </div>
+
+          <div className="whatsapp-options">
+            <div className="options-row">
+              <button
+                onClick={sendReportViaWhatsApp}
+                className="whatsapp-option-btn whatsapp-desktop-btn"
+              >
+                <FaWhatsapp /> WhatsApp Desktop
+              </button>
+
+              <button
+                onClick={() => {
+                  const reportMessage = prepareWhatsAppReport("report");
+                  navigator.clipboard.writeText(reportMessage).then(() => {
+                    alert(
+                      "Report copied to clipboard. Please paste in WhatsApp."
+                    );
+                    setShowWhatsAppModal(false);
+                  });
+                }}
+                className="whatsapp-option-btn copy-message-btn"
+              >
+                <FiDownload /> Copy Message
+              </button>
+
+              <button
+                onClick={() => setShowWhatsAppModal(false)}
+                className="whatsapp-option-btn close-btn"
+              >
+                <FiX /> Close
+              </button>
+            </div>
+          </div>
+
+          <div className="preview-section">
+            <h4>
+              <FiEye /> Message Preview
+            </h4>
+            <div className="message-preview">
+              {prepareWhatsAppReport("report")}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   if (loading && records.length === 0) {
     return (
-      <div className="pvc-coating-loading-container">
-        <div className="loading-spinner" />
-        <h3>Loading PVC Coating Data...</h3>
-        <p className="loading-subtext">Fetching records from database</p>
+      <div style={styles.loadingContainer}>
+        <div className="mini-spinner" style={{ width: '40px', height: '40px' }}></div>
+        <div style={{ marginTop: '16px', color: 'var(--text-secondary)' }}>
+          Loading PVC Coating Data...
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="pvc-coating-container">
-      {/* Database Status Banner */}
+    <div className={`pvc-container theme-${theme}`} style={styles.container}>
+      {/* Database Alert */}
       {!isSupabaseConnected && (
-        <div className="database-alert">
-          <FiAlertCircle size={20} />
+        <div style={styles.dbAlert}>
+          <FiAlertCircle style={{ color: '#d97706', fontSize: '18px' }} />
           <div>
             <strong>Supabase Connection Issue</strong>
-            <div className="alert-subtext">
-              Check your .env file for REACT_APP_SUPABASE_URL and
-              REACT_APP_SUPABASE_ANON_KEY
+            <div style={{ fontSize: '13px', marginTop: '4px' }}>
+              Check your .env file for REACT_APP_SUPABASE_URL
             </div>
           </div>
         </div>
       )}
 
-      {/* Header Section */}
-      <div className="header-section">
-        <div>
-          <div className="breadcrumb-nav">
-            <button
-              onClick={() => navigate("/dashboard")}
-              className="breadcrumb-btn"
-            >
-              <FiHome size={16} /> Dashboard
-            </button>
-            <button
-              onClick={() => navigate("/production")}
-              className="breadcrumb-btn secondary"
-            >
-              <FiGrid size={16} /> Production Sections
-            </button>
+      {/* ✅ HEADER */}
+      <div className="blue-header" style={styles.header}>
+        <div style={styles.headerTop}>
+          <button 
+            onClick={() => navigate("/production")}
+            style={styles.backButton}
+          >
+            <FiArrowLeft style={{ fontSize: '18px' }} />
+          </button>
+          
+          <div style={styles.headerIcon}>
+            <FiPackage style={{ fontSize: '20px' }} />
           </div>
-          <div className="title-section">
-            <div
-              className="title-icon"
-              style={{
-                background: "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)",
-              }}
-            >
-              <FiCoating size={28} />
-            </div>
-            <div>
-              <h1 className="page-title">
-                PVC Coating Section
-                <div
-                  className={`connection-badge ${
-                    isSupabaseConnected ? "connected" : "offline"
-                  }`}
-                >
-                  {isSupabaseConnected ? (
-                    <>
-                      <FiCheckCircle size={10} /> Connected
-                    </>
-                  ) : (
-                    <>
-                      <FiXCircle size={10} /> Offline
-                    </>
-                  )}
-                </div>
+          
+          <div style={styles.headerContent}>
+            <div style={styles.headerTitleRow}>
+              <h1 style={styles.headerTitle}>
+                PVC Coating
               </h1>
-              <p className="page-subtitle">
-                <FiDatabase size={14} />
-                Data from: pvcsection table • Total Records:{" "}
-                {stats.totalRecords} • By: Afsar
-              </p>
+              <div style={styles.connectionBadge}>
+                {isSupabaseConnected ? <FiCheckCircle /> : <FiXCircle />}
+                {isSupabaseConnected ? "Connected" : "Offline"}
+              </div>
+            </div>
+            <div style={styles.headerSubtitle}>
+              Production Management System
             </div>
           </div>
         </div>
-
-        {/* Header Actions */}
-        <div className="header-actions">
-          <button
-            className="btn btn-primary smart-form-btn"
-            onClick={() =>
-              navigate("/production-sections/pvc-coating/smart-form")
-            }
-          >
-            <FiPlus className="btn-icon" />
-            Smart Production Entry
-          </button>
-          <button
+        
+        <div style={styles.headerButtons}>
+          <button 
             onClick={() => navigate("/production-sections/pvc-coating/new")}
-            className="primary-btn"
-            style={{
-              background: "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)",
-            }}
+            style={styles.headerButton}
           >
-            <FiPlus size={20} /> New Coating Entry
+            <FiPlus style={{ fontSize: '16px' }} /> New
           </button>
-          <button
-            onClick={() =>
-              navigate("/production-sections/pvc-coating/multi-entry")
-            }
-            className="primary-btn"
-            style={{
-              background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
-              marginLeft: "10px",
-            }}
+          
+          <button 
+            onClick={() => navigate("/production-sections/pvc-coating/multi-entry")}
+            style={styles.headerButton}
           >
-            <FiGrid size={20} /> Multi-Entry Form
+            <FiGrid style={{ fontSize: '16px' }} /> Multi
           </button>
-          <button
-            onClick={handleExport}
-            disabled={records.length === 0}
-            className="export-btn"
-            style={{ borderColor: "#8b5cf6", color: "#8b5cf6" }}
+          
+          <button 
+            onClick={toggleTheme}
+            title={`Theme: ${theme}`}
+            style={styles.themeButton}
           >
-            <FiDownload /> Export CSV
+            {theme === 'light' && <FiSun style={{ fontSize: '18px' }} />}
+            {theme === 'dark' && <FiMoon style={{ fontSize: '18px' }} />}
+            {theme === 'cream' && <FiZap style={{ fontSize: '18px' }} />}
           </button>
-          <button
+          
+          <button 
             onClick={fetchData}
             disabled={loading}
-            className="refresh-btn"
+            style={styles.refreshButton}
           >
-            {loading ? (
-              <>
-                <div
-                  className="mini-spinner"
-                  style={{ borderTopColor: "#8b5cf6" }}
-                />
-                Loading...
-              </>
-            ) : (
-              <>
-                <FiRefreshCw /> Refresh
-              </>
-            )}
+            {loading ? <div className="mini-spinner"></div> : <FiRefreshCw style={{ fontSize: '18px' }} />}
           </button>
         </div>
       </div>
 
-      {/* Today's Production Dashboard */}
-      <div className="today-production-dashboard">
-        <div className="section-header">
-          <div
-            className="header-icon"
-            style={{
-              background: "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)",
-            }}
-          >
-            <FiActivity size={20} />
+      {/* ✅ 1. پہلے کارڈز (8 کارڈز) */}
+      <div className="stats-grid" style={styles.statsGrid}>
+        <div className="top-stats-row">
+          {/* Total Records */}
+          <div className="stat-card blue-card" style={styles.statCard}>
+            <div className="stat-content" style={styles.statContent}>
+              <div className="stat-icon-left" style={styles.statIconLeft}>
+                <FiDatabase style={{ fontSize: '16px' }} />
+              </div>
+              <div className="stat-text" style={styles.statText}>
+                <div className="stat-title" style={styles.statTitle}>Total Records</div>
+                <div className="stat-value" style={styles.statValue}>{allStats.totalRecords}</div>
+              </div>
+            </div>
           </div>
+          
+          {/* Total Production */}
+          <div className="stat-card blue-card" style={styles.statCard}>
+            <div className="stat-content" style={styles.statContent}>
+              <div className="stat-icon-left" style={styles.statIconLeft}>
+                <FiPackage style={{ fontSize: '16px' }} />
+              </div>
+              <div className="stat-text" style={styles.statText}>
+                <div className="stat-title" style={styles.statTitle}>Total Production</div>
+                <div className="stat-value" style={styles.statValue}>
+                  {formatInteger(allStats.totalProduction)} M
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Total Weight */}
+          <div className="stat-card blue-card" style={styles.statCard}>
+            <div className="stat-content" style={styles.statContent}>
+              <div className="stat-icon-left" style={styles.statIconLeft}>
+                <FiDroplet style={{ fontSize: '16px' }} />
+              </div>
+              <div className="stat-text" style={styles.statText}>
+                <div className="stat-title" style={styles.statTitle}>Total Weight</div>
+                <div className="stat-value" style={styles.statValue}>
+                  {formatWeight(allStats.totalWeight)} KG
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Avg Efficiency */}
+          <div className="stat-card blue-card" style={styles.statCard}>
+            <div className="stat-content" style={styles.statContent}>
+              <div className="stat-icon-left" style={styles.statIconLeft}>
+                <FiTrendingUp style={{ fontSize: '16px' }} />
+              </div>
+              <div className="stat-text" style={styles.statText}>
+                <div className="stat-title" style={styles.statTitle}>Avg Efficiency</div>
+                <div className="stat-value-with-arrow" style={styles.statValueWithArrow}>
+                  <span style={{
+                    color: 'white',
+                    fontWeight: '700',
+                    fontSize: '14px'
+                  }}>
+                    {allStats.avgEfficiency.toFixed(1)}%
+                  </span>
+                  {allStats.avgEfficiency >= 70 ? (
+                    <FiArrowUp style={{ 
+                      color: 'white', 
+                      marginLeft: '4px',
+                      fontSize: '14px'
+                    }} />
+                  ) : (
+                    <FiArrowDown style={{ 
+                      color: 'white', 
+                      marginLeft: '4px',
+                      fontSize: '14px'
+                    }} />
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="bottom-stats-row">
+          {/* Last Entry Records */}
+          <div className="stat-card light-card" style={styles.lightStatCard}>
+            <div className="stat-content" style={styles.statContent}>
+              <div className="stat-icon-left" style={styles.lightStatIconLeft}>
+                <FiClock style={{ fontSize: '16px' }} />
+              </div>
+              <div className="stat-text" style={styles.statText}>
+                <div className="stat-title-light" style={styles.statTitleLight}>Last Day Records</div>
+                <div className="stat-value-light" style={styles.statValueLight}>{lastEntryStats.lastEntryRecords}</div>
+                <div className="date-badge-light" style={styles.dateBadgeLight}>
+                  {lastEntryStats.lastEntryDate || 'No date'}
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Last Entry Production */}
+          <div className="stat-card light-card" style={styles.lightStatCard}>
+            <div className="stat-content" style={styles.statContent}>
+              <div className="stat-icon-left" style={styles.lightStatIconLeft}>
+                <FiActivity style={{ fontSize: '16px' }} />
+              </div>
+              <div className="stat-text" style={styles.statText}>
+                <div className="stat-title-light" style={styles.statTitleLight}>Last Day Production</div>
+                <div className="stat-value-light" style={styles.statValueLight}>
+                  {formatInteger(lastEntryStats.lastEntryProduction)} M
+                </div>
+                <div className="date-badge-light" style={styles.dateBadgeLight}>
+                  {lastEntryStats.lastEntryDate || 'No date'}
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Last Entry Weight */}
+          <div className="stat-card light-card" style={styles.lightStatCard}>
+            <div className="stat-content" style={styles.statContent}>
+              <div className="stat-icon-left" style={styles.lightStatIconLeft}>
+                <FiDroplet style={{ fontSize: '16px' }} />
+              </div>
+              <div className="stat-text" style={styles.statText}>
+                <div className="stat-title-light" style={styles.statTitleLight}>Last Day Weight</div>
+                <div className="stat-value-light" style={styles.statValueLight}>
+                  {formatWeight(lastEntryStats.lastEntryWeight)} KG
+                </div>
+                <div className="date-badge-light" style={styles.dateBadgeLight}>
+                  {lastEntryStats.lastEntryDate || 'No date'}
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Last Entry Efficiency */}
+          <div className="stat-card light-card" style={styles.lightStatCard}>
+            <div className="stat-content" style={styles.statContent}>
+              <div className="stat-icon-left" style={styles.lightStatIconLeft}>
+                <FiPercent style={{ fontSize: '16px' }} />
+              </div>
+              <div className="stat-text" style={styles.statText}>
+                <div className="stat-title-light" style={styles.statTitleLight}>Last Day Efficiency</div>
+                <div className="stat-value-light" style={{
+                  ...styles.statValueLight,
+                  color: getEfficiencyTextColor(lastEntryStats.lastEntryEfficiency)
+                }}>
+                  {lastEntryStats.lastEntryEfficiency.toFixed(1)}%
+                </div>
+                <div className="date-badge-light" style={styles.dateBadgeLight}>
+                  {lastEntryStats.lastEntryDate || 'No date'}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ✅ 2. دوسرا: لاسٹ انٹری ڈیش بورڈ */}
+      <div style={styles.sectionContainer}>
+        <div style={styles.sectionHeader}>
+          <FiActivity style={{ ...styles.sectionIcon, fontSize: '20px' }} />
           <div>
-            <h3>Today's Coating Dashboard</h3>
-            <p className="section-subtitle">
-              PVC coating overview for today • Managed by: Afsar
+            <h2 style={styles.sectionTitle}>Last Entry Dashboard</h2>
+            <p style={styles.sectionSubtitle}>
+              {lastEntryStats.lastEntryDate ? `Date: ${lastEntryStats.lastEntryDate}` : 'No entry date'}
             </p>
           </div>
         </div>
 
-        <div className="dashboard-grid">
-          {/* Shift-wise Today */}
-          <div className="dashboard-section">
-            <h4 className="dashboard-title">
-              <FiWatch style={{ marginRight: "8px" }} />
-              Shift-wise Coating Today
-            </h4>
-            <div className="dashboard-cards">
-              {Object.entries(stats.shiftWiseToday).length > 0 ? (
-                Object.entries(stats.shiftWiseToday).map(([shift, data]) => (
-                  <div key={shift} className="dashboard-card shift-card">
-                    <div className="card-header">
-                      <div
-                        className="card-icon"
-                        style={{
-                          background:
-                            "linear-gradient(135deg, #06b6d4 0%, #0ea5e9 100%)",
-                        }}
-                      >
-                        <FiWatch size={14} />
-                      </div>
-                      <div className="card-name">{shift}</div>
+        <div className="dashboard-grid" style={styles.dashboardGrid}>
+          {/* Shift-wise Card */}
+          <div style={styles.dashboardCard}>
+            <div style={styles.dashboardCardHeader}>
+              <h3 style={styles.dashboardCardTitle}>
+                <FiWatch className="dashboard-icon-spaced" /> Shift-wise
+              </h3>
+              <span style={styles.cardBadge}>
+                {Object.keys(lastEntryStats.shiftWise).length}
+              </span>
+            </div>
+            
+            {Object.entries(lastEntryStats.shiftWise).length > 0 ? (
+              Object.entries(lastEntryStats.shiftWise).map(([shift, data]) => (
+                <div key={shift} style={styles.dashboardItem}>
+                  <div style={styles.dashboardItemHeader}>
+                    <div className="icon-label-container">
+                      <FiWatch className="item-icon-spaced" />
+                      <span style={styles.dashboardItemLabel}>{shift}</span>
                     </div>
-                    <div className="card-stats">
-                      <div className="card-production">
-                        {data.production.toFixed(0)}{" "}
-                        <span className="unit">M</span>
-                      </div>
-                      <div className="card-weight">
-                        {data.weight.toFixed(0)}{" "}
-                        <span className="unit">KG</span>
-                      </div>
-                      <div className="card-efficiency">
-                        {(data.count > 0
-                          ? data.efficiency / data.count
-                          : 0
-                        ).toFixed(1)}
-                        %
-                      </div>
+                    <div style={{
+                      fontSize: '11px', 
+                      color: getEfficiencyTextColor(data.efficiency),
+                      fontWeight: '600'
+                    }}>
+                      {data.efficiency.toFixed(1)}%
                     </div>
                   </div>
-                ))
-              ) : (
-                <div className="no-data">
-                  <FiWatch size={24} />
-                  <div>No shift coating today</div>
+                  <div style={styles.dashboardItemDetails}>
+                    <span>{formatInteger(data.production)}M / {formatInteger(data.target)}M</span>
+                    <span>{formatWeight(data.weight)}KG</span>
+                  </div>
+                  <div style={styles.progressBar}>
+                    <div style={{
+                      width: `${Math.min(100, data.efficiency)}%`,
+                      height: '100%',
+                      backgroundColor: getEfficiencyColor(data.efficiency),
+                      borderRadius: '2px'
+                    }}></div>
+                  </div>
                 </div>
-              )}
-            </div>
-          </div>
-
-          {/* Machine-wise Today */}
-          <div className="dashboard-section">
-            <h4 className="dashboard-title">
-              <FiCpu style={{ marginRight: "8px" }} />
-              Machine-wise Coating Today
-            </h4>
-            <div className="dashboard-cards">
-              {Object.entries(stats.machineWiseToday).length > 0 ? (
-                Object.entries(stats.machineWiseToday).map(
-                  ([machine, data]) => (
-                    <div key={machine} className="dashboard-card machine-card">
-                      <div className="card-header">
-                        <div
-                          className="card-icon"
-                          style={{
-                            background:
-                              "linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%)",
-                          }}
-                        >
-                          <FiCpu size={14} />
-                        </div>
-                        <div className="card-name">Machine {machine}</div>
-                      </div>
-                      <div className="card-stats">
-                        <div className="card-production">
-                          {data.production.toFixed(0)}{" "}
-                          <span className="unit">M</span>
-                        </div>
-                        <div className="card-weight">
-                          {data.weight.toFixed(0)}{" "}
-                          <span className="unit">KG</span>
-                        </div>
-                        <div className="card-efficiency">
-                          {(data.count > 0
-                            ? data.efficiency / data.count
-                            : 0
-                          ).toFixed(1)}
-                          %
-                        </div>
-                      </div>
-                    </div>
-                  )
-                )
-              ) : (
-                <div className="no-data">
-                  <FiCpu size={24} />
-                  <div>No machine coating today</div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Finished Product-wise Today */}
-          <div className="dashboard-section">
-            <h4 className="dashboard-title">
-              <FiBox style={{ marginRight: "8px" }} />
-              Finished Product-wise Today
-            </h4>
-            <div className="dashboard-cards">
-              {Object.entries(stats.finishedProductWiseToday).length > 0 ? (
-                Object.entries(stats.finishedProductWiseToday).map(
-                  ([product, data]) => (
-                    <div key={product} className="dashboard-card product-card">
-                      <div className="card-header">
-                        <div
-                          className="card-icon"
-                          style={{
-                            background:
-                              "linear-gradient(135deg, #c084fc 0%, #a855f7 100%)",
-                          }}
-                        >
-                          <FiBox size={14} />
-                        </div>
-                        <div className="card-name">{product}</div>
-                      </div>
-                      <div className="card-stats">
-                        <div className="card-production">
-                          {data.production.toFixed(0)}{" "}
-                          <span className="unit">M</span>
-                        </div>
-                        <div className="card-weight">
-                          {data.weight.toFixed(0)}{" "}
-                          <span className="unit">KG</span>
-                        </div>
-                        <div className="card-efficiency">
-                          {(data.count > 0
-                            ? data.efficiency / data.count
-                            : 0
-                          ).toFixed(1)}
-                          %
-                        </div>
-                      </div>
-                    </div>
-                  )
-                )
-              ) : (
-                <div className="no-data">
-                  <FiBox size={24} />
-                  <div>No finished product today</div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="stats-grid">
-        {statCards.map((card) => (
-          <div
-            key={card.id}
-            className="stat-card"
-            style={{
-              cursor: "default",
-              background: `linear-gradient(135deg, ${card.gradientColors[0]}15 0%, ${card.gradientColors[1]}05 100%)`,
-              border: `1px solid ${card.gradientColors[0]}30`,
-              boxShadow: `0 10px 25px ${card.gradientColors[0]}10, 0 5px 15px ${card.gradientColors[1]}05`,
-            }}
-          >
-            <div
-              className="stat-card-glow"
-              style={{
-                background: `linear-gradient(90deg, transparent 0%, ${card.gradientColors[0]}30 50%, transparent 100%)`,
-              }}
-            />
-
-            <div className="stat-card-content">
-              <div>
-                <div className="stat-title">{card.title}</div>
-                <div
-                  className="stat-value"
-                  style={{
-                    color: card.gradientColors[0],
-                    textShadow: `0 2px 4px ${card.gradientColors[0]}20`,
-                  }}
-                >
-                  {card.value}
-                </div>
+              ))
+            ) : (
+              <div style={styles.emptyState}>
+                <FiWatch style={styles.emptyIcon} />
+                <p style={styles.emptyText}>No shift records</p>
               </div>
-              <div
-                className="stat-icon"
-                style={{
-                  background: `linear-gradient(135deg, ${card.gradientColors[0]} 0%, ${card.gradientColors[1]} 100%)`,
-                  boxShadow: `0 4px 10px ${card.iconBg}40`,
-                }}
-              >
-                <card.icon size={24} />
-              </div>
-            </div>
-            <div className="stat-description">{card.title.replace("'s", "")} data</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Filters Section */}
-      <div className="filters-section">
-        <div className="filter-header" style={{ background: "#8b5cf6" }}>
-          <FiFilter size={10} /> FILTERS
-        </div>
-
-        <div className="filter-input-group">
-          <label className="filter-label">
-            <FiSearch style={{ marginRight: "8px", verticalAlign: "middle" }} />
-            Search Records
-          </label>
-          <input
-            type="text"
-            placeholder="Search by item, coating type, finished product, or material..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="filter-input"
-          />
-        </div>
-
-        <div className="filter-select-group">
-          <label className="filter-label">
-            <FiFilter style={{ marginRight: "8px", verticalAlign: "middle" }} />
-            Filter by Coating Type
-          </label>
-          <select
-            value={filterType}
-            onChange={(e) => setFilterType(e.target.value)}
-            className="filter-select"
-          >
-            <option value="">All Coating Types</option>
-            {coatingTypes.map((type) => (
-              <option key={type} value={type}>
-                {type}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="filter-date-group">
-          <label className="filter-label">
-            <FiCal style={{ marginRight: "8px", verticalAlign: "middle" }} />
-            Filter by Date
-          </label>
-          <input
-            type="date"
-            value={filterDate}
-            onChange={(e) => {
-              setFilterDate(e.target.value);
-              setShowReport(!!e.target.value);
-              setCurrentPage(1);
-            }}
-            max={new Date().toISOString().split("T")[0]}
-            className="filter-date"
-          />
-        </div>
-
-        <div className="filter-buttons">
-          <button
-            onClick={() => {
-              if (!filterDate) {
-                alert("Please select a date first to generate report");
-                return;
-              }
-              setShowReport(true);
-            }}
-            className="report-btn"
-            style={{
-              background: "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)",
-            }}
-          >
-            <FiBarChart2 /> Generate Report
-          </button>
-
-          <button
-            onClick={() => {
-              setSearchTerm("");
-              setFilterType("");
-              setFilterDate("");
-              setShowReport(false);
-              setCurrentPage(1);
-            }}
-            className="clear-btn"
-          >
-            <FiX /> Clear Filters
-          </button>
-        </div>
-      </div>
-
-      {/* Report Section */}
-      {showReport && reportData && (
-        <div className="report-section">
-          <div
-            className="report-bg-pattern"
-            style={{
-              background:
-                "radial-gradient(circle at 30% 30%, rgba(139, 92, 246, 0.1) 0%, transparent 70%)",
-            }}
-          />
-
-          <div className="report-header">
-            <div>
-              <h2 style={{ color: "#7c3aed" }}>
-                PVC Coating Section Production Report
-              </h2>
-              <div className="report-date">
-                {reportData.formattedDate}
-                <div
-                  style={{
-                    fontSize: "14px",
-                    color: "#8b5cf6",
-                    marginTop: "5px",
-                  }}
-                >
-                  Report Generated by: <strong>Afsar</strong>
-                </div>
-              </div>
-            </div>
-            <div className="report-actions">
-              <button
-                onClick={handlePrintReport}
-                className="print-btn"
-                style={{ background: "#8b5cf6" }}
-              >
-                <FiPrinter /> Print Report
-              </button>
-              <button
-                onClick={handleExportReport}
-                className="export-report-btn"
-                style={{ background: "#8b5cf6" }}
-              >
-                <FiDownload /> Export Report
-              </button>
-              <button
-                onClick={() => setShowReport(false)}
-                className="close-report-btn"
-              >
-                Close
-              </button>
-            </div>
+            )}
           </div>
 
-          {/* Machine-wise Summary */}
-          {Object.keys(reportData.machineWise).length > 0 && (
-            <div className="machine-report-section">
-              <h3>Machine-wise Summary</h3>
-              <div className="machine-report-grid">
-                {Object.entries(reportData.machineWise).map(
-                  ([machine, data]) => (
-                    <div key={machine} className="machine-report-card">
-                      <div className="machine-report-header">
-                        <div
-                          className="machine-report-icon"
-                          style={{
-                            background:
-                              "linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%)",
-                          }}
-                        >
-                          <FiCpu size={16} />
-                        </div>
-                        <div className="machine-report-name">
-                          Machine {machine}
-                        </div>
-                      </div>
-                      <div className="machine-report-stats">
-                        <div className="machine-report-production">
-                          {data.production.toFixed(2)} M
-                        </div>
-                        <div className="machine-report-weight">
-                          {data.weight.toFixed(2)} KG
-                        </div>
-                        <div className="machine-report-efficiency">
-                          {(data.count > 0
-                            ? data.efficiency / data.count
-                            : 0
-                          ).toFixed(2)}
-                          % Efficiency
-                        </div>
-                      </div>
-                    </div>
-                  )
-                )}
-              </div>
+          {/* Machine-wise Card */}
+          <div style={styles.dashboardCard}>
+            <div style={styles.dashboardCardHeader}>
+              <h3 style={styles.dashboardCardTitle}>
+                <FiCpu className="dashboard-icon-spaced" /> Machine-wise
+              </h3>
+              <span style={styles.cardBadge}>
+                {Object.keys(lastEntryStats.machineWise).length}
+              </span>
             </div>
-          )}
-
-          {/* Shift-wise Summary */}
-          {Object.keys(reportData.shiftWise).length > 0 && (
-            <div className="shift-report-section">
-              <h3>Shift-wise Summary</h3>
-              <div className="shift-report-grid">
-                {Object.entries(reportData.shiftWise).map(([shift, data]) => (
-                  <div key={shift} className="shift-report-card">
-                    <div className="shift-report-header">
-                      <div
-                        className="shift-report-icon"
-                        style={{
-                          background:
-                            "linear-gradient(135deg, #06b6d4 0%, #0ea5e9 100%)",
-                        }}
-                      >
-                        <FiWatch size={16} />
-                      </div>
-                      <div className="shift-report-name">{shift}</div>
+            
+            {Object.entries(lastEntryStats.machineWise).length > 0 ? (
+              Object.entries(lastEntryStats.machineWise).map(([machine, data]) => (
+                <div key={machine} style={styles.dashboardItem}>
+                  <div style={styles.dashboardItemHeader}>
+                    <div className="icon-label-container">
+                      <FiCpu className="item-icon-spaced" />
+                      <span style={styles.dashboardItemLabel}>{machine}</span>
                     </div>
-                    <div className="shift-report-stats">
-                      <div className="shift-report-production">
-                        {data.production.toFixed(2)} M
-                      </div>
-                      <div className="shift-report-weight">
-                        {data.weight.toFixed(2)} KG
-                      </div>
-                      <div className="shift-report-efficiency">
-                        {(data.count > 0
-                          ? data.efficiency / data.count
-                          : 0
-                        ).toFixed(2)}
-                        % Efficiency
-                      </div>
+                    <div style={{
+                      fontSize: '11px', 
+                      color: getEfficiencyTextColor(data.efficiency),
+                      fontWeight: '600'
+                    }}>
+                      {data.efficiency.toFixed(1)}%
                     </div>
                   </div>
+                  <div style={styles.dashboardItemDetails}>
+                    <span>{formatInteger(data.production)}M / {formatInteger(data.target)}M</span>
+                    <span>{formatWeight(data.weight)}KG</span>
+                  </div>
+                  <div style={styles.progressBar}>
+                    <div style={{
+                      width: `${Math.min(100, data.efficiency)}%`,
+                      height: '100%',
+                      backgroundColor: getEfficiencyColor(data.efficiency),
+                      borderRadius: '2px'
+                    }}></div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div style={styles.emptyState}>
+                <FiCpu style={styles.emptyIcon} />
+                <p style={styles.emptyText}>No machine records</p>
+              </div>
+            )}
+          </div>
+
+          {/* Product-wise Card */}
+          <div style={styles.dashboardCard}>
+            <div style={styles.dashboardCardHeader}>
+              <h3 style={styles.dashboardCardTitle}>
+                <FiBox className="dashboard-icon-spaced" /> Product-wise
+              </h3>
+              <span style={styles.cardBadge}>
+                {Object.keys(lastEntryStats.productWise).length}
+              </span>
+            </div>
+            
+            {Object.entries(lastEntryStats.productWise).length > 0 ? (
+              Object.entries(lastEntryStats.productWise).map(([product, data]) => (
+                <div key={product} style={styles.dashboardItem}>
+                  <div style={styles.dashboardItemHeader}>
+                    <div className="icon-label-container">
+                      <FiBox className="item-icon-spaced" />
+                      <span style={styles.dashboardItemLabel}>{product.substring(0, 15)}</span>
+                    </div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                      {formatInteger(data.production)}M
+                    </div>
+                  </div>
+                  <div style={styles.progressBar}>
+                    <div style={{
+                      width: `${Math.min(100, (data.production / (lastEntryStats.lastEntryProduction || 1)) * 100)}%`,
+                      height: '100%',
+                      background: `linear-gradient(to right, var(--primary-500), #8b5cf6)`,
+                      borderRadius: '2px'
+                    }}></div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div style={styles.emptyState}>
+                <FiBox style={styles.emptyIcon} />
+                <p style={styles.emptyText}>No product records</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ✅ 3. تیسرا: فلٹرز */}
+      <div style={styles.filtersSection}>
+        <div style={styles.filtersContainer}>
+          <div style={styles.filterHeading}>
+            <FiFilter size={18} />
+            <span style={{marginLeft: '8px'}}>FILTERS</span>
+          </div>
+          
+          <div className="filters-single-line" style={styles.filtersSingleLine}>
+            <div style={styles.filterGroup}>
+              <input
+                type="text"
+                placeholder="Search records..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={styles.filterInput}
+              />
+            </div>
+
+            <div style={styles.filterGroup}>
+              <select
+                value={filterProduct}
+                onChange={(e) => setFilterProduct(e.target.value)}
+                style={styles.filterSelect}
+              >
+                <option value="">All Products</option>
+                {products.map((product) => (
+                  <option key={product} value={product}>
+                    {product}
+                  </option>
                 ))}
-              </div>
+              </select>
             </div>
-          )}
 
-          {/* Finished Product-wise Summary */}
-          {Object.keys(reportData.finishedProductWise).length > 0 && (
-            <div className="finished-product-report-section">
-              <h3>Finished Product-wise Summary</h3>
-              <div className="finished-product-report-grid">
-                {Object.entries(reportData.finishedProductWise).map(
-                  ([product, data]) => (
-                    <div key={product} className="finished-product-report-card">
-                      <div className="finished-product-report-header">
-                        <div
-                          className="finished-product-report-icon"
-                          style={{
-                            background:
-                              "linear-gradient(135deg, #c084fc 0%, #a855f7 100%)",
-                          }}
-                        >
-                          <FiBox size={16} />
-                        </div>
-                        <div className="finished-product-report-name">
-                          {product}
-                        </div>
-                      </div>
-                      <div className="finished-product-report-stats">
-                        <div className="finished-product-report-production">
-                          {data.production.toFixed(2)} M
-                        </div>
-                        <div className="finished-product-report-weight">
-                          {data.weight.toFixed(2)} KG
-                        </div>
-                        <div className="finished-product-report-efficiency">
-                          {(data.count > 0
-                            ? data.efficiency / data.count
-                            : 0
-                          ).toFixed(2)}
-                          % Efficiency
-                        </div>
-                      </div>
-                    </div>
-                  )
-                )}
-              </div>
+            <div style={styles.filterGroup}>
+              <input
+                type="date"
+                value={filterDate}
+                onChange={(e) => setFilterDate(e.target.value)}
+                max={new Date().toISOString().split("T")[0]}
+                style={styles.filterDate}
+              />
             </div>
-          )}
 
-          {/* Summary Section */}
-          <div className="report-summary">
-            <h3>Summary</h3>
+            <div style={styles.filterGroup}>
+              <button
+                onClick={generateReport}
+                style={styles.filterBtnPrimary}
+              >
+                <FiBarChart2 /> Generate Report
+              </button>
+            </div>
 
-            <div className="summary-grid">
-              <div className="summary-item">
-                <div className="summary-label">Total Production</div>
-                <div className="summary-value production-value">
-                  {reportData.totalProduction.toFixed(2)} M
-                </div>
-              </div>
-              <div className="summary-item">
-                <div className="summary-label">Total Weight</div>
-                <div className="summary-value weight-value">
-                  {reportData.totalWeight.toFixed(2)} KG
-                </div>
-              </div>
-              <div className="summary-item">
-                <div className="summary-label">Average Efficiency</div>
-                <div className="summary-value efficiency-value">
-                  {reportData.avgEfficiency.toFixed(2)}%
-                </div>
-              </div>
-              <div className="summary-item">
-                <div className="summary-label">Total Records</div>
-                <div className="summary-value records-value">
-                  {reportData.recordCount}
-                </div>
-              </div>
+            <div style={styles.filterGroup}>
+              <button
+                onClick={() => {
+                  setSearchTerm("");
+                  setFilterProduct("");
+                  setFilterDate("");
+                  setShowReport(false);
+                  setCurrentPage(1);
+                }}
+                style={styles.filterBtnSecondary}
+              >
+                <FiX /> Clear Filters
+              </button>
             </div>
           </div>
+        </div>
+      </div>
 
-          <div className="report-footer">
-            Report generated on {new Date().toLocaleString()} by{" "}
-            <strong>Afsar</strong> • Data source: pvcsection table
+      {/* ✅ Show Report Actions Only When Report is Generated */}
+      {showReport && reportData.recordCount > 0 && (
+        <div style={styles.reportActionsSection}>
+          <div style={styles.reportActionsHeader}>
+            <h3 style={{margin: 0, fontSize: '14px'}}>
+              Report Generated: {reportData.formattedDate}
+            </h3>
+            <span style={{color: 'var(--text-secondary)', fontSize: '12px'}}>
+              Records: {reportData.recordCount} | 
+              Production: {formatInteger(reportData.totalProduction)}M | 
+              Efficiency: {Math.round(reportData.avgEfficiency)}%
+            </span>
+          </div>
+          
+          <div style={styles.reportActionsButtons}>
+            <div style={styles.exportDropdown}>
+              <button 
+                onClick={() => setShowExportOptions(!showExportOptions)}
+                style={styles.exportMainBtn}
+              >
+                <FiDownload /> Export Options
+              </button>
+              
+              {showExportOptions && (
+                <div style={styles.exportOptions}>
+                  <button onClick={handleExportReport} style={styles.exportOption}>
+                    <FiDownload /> Export Report Excel
+                  </button>
+                  <button onClick={handleExportExcel} style={styles.exportOption}>
+                    <FiDownload /> Export Records Excel
+                  </button>
+                </div>
+              )}
+            </div>
+            
+            <button
+              onClick={() => setShowWhatsAppModal(true)}
+              style={styles.whatsappBtnAction}
+            >
+              <FaWhatsapp /> WhatsApp
+            </button>
+            
+            <button
+              onClick={handlePrintReport}
+              style={styles.printBtnAction}
+            >
+              <FiPrinter /> Print
+            </button>
           </div>
         </div>
       )}
 
-      {/* Records Table */}
-      <div className="records-table-section">
-        <div
-          className="table-header-section"
-          style={{
-            background: "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)",
-          }}
-        >
-          <div>
-            <h3>PVC Coating Records</h3>
-            <div className="table-stats">
-              Total: {records.length} records • Showing:{" "}
-              {filteredRecords.length} filtered • Page: {currentPage}/
-              {totalPages}
-              <div style={{ fontSize: "12px", marginTop: "3px" }}>
-                Managed by: Afsar
-              </div>
-            </div>
-          </div>
-          <div className="database-status">
-            <div
-              className={`status-indicator ${
-                isSupabaseConnected ? "connected" : "offline"
-              }`}
-            />
-            {isSupabaseConnected ? "Database Connected" : "Database Offline"}
+      {/* WhatsApp Modal */}
+      {showWhatsAppModal && <WhatsAppModal />}
+
+      {/* ✅ 4. چوتھا: ٹیبل */}
+      <div style={styles.sectionContainer}>
+        <div style={styles.tableHeader}>
+          <h2 style={styles.sectionTitle}>Records</h2>
+          <div style={styles.tableInfo}>
+            <span>Total: {records.length}</span>
+            <span>Filtered: {filteredRecords.length}</span>
+            <span>Page: {currentPage}/{totalPages}</span>
           </div>
         </div>
 
-        {loading ? (
-          <div className="loading-records">
-            <div className="table-spinner" />
-            Loading records from pvcsection...
-          </div>
-        ) : filteredRecords.length === 0 ? (
-          <div className="empty-records">
-            <FiCoating size={48} />
-            <div className="empty-title">No records found</div>
-            <div className="empty-message">
-              {searchTerm || filterDate || filterType
-                ? "No records match your search criteria. Try adjusting your filters."
-                : "No PVC coating records available. Create your first record to get started."}
-            </div>
-
-            <div className="empty-state-buttons">
-              <button
-                onClick={() => navigate("/production-sections/pvc-coating/new")}
-                className="create-first-btn"
-                style={{
-                  background:
-                    "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)",
-                }}
-              >
-                <FiPlus /> Create Single Entry
-              </button>
-
-              <button
-                onClick={() =>
-                  navigate("/production-sections/pvc-coating/multi-entry")
-                }
-                className="create-first-btn"
-                style={{
-                  background:
-                    "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
-                  marginLeft: "10px",
-                }}
-              >
-                <FiGrid /> Create Multi-Entry
-              </button>
-            </div>
-          </div>
-        ) : (
-          <>
-            <div className="table-container">
-              <table className="production-table">
-                <thead>
-                  <tr className="table-header-row">
-                    <th className="table-header-cell">ID</th>
-                    <th className="table-header-cell">Item Details</th>
-                    <th className="table-header-cell">Coating Type</th>
-                    <th className="table-header-cell">Finished Product</th>
-                    <th className="table-header-cell">Machine</th>
-                    <th className="table-header-cell">Production</th>
-                    <th className="table-header-cell">Weight</th>
-                    <th className="table-header-cell">Efficiency</th>
-                    <th className="table-header-cell">Operator & User</th>
-                    <th className="table-header-cell">Shift</th>
-                    <th className="table-header-cell">Date & Time</th>
-                    <th className="table-header-cell">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {currentRecords.map((record, index) => (
-                    <tr
-                      key={record.id}
-                      className={`table-row ${
-                        index % 2 === 0 ? "even" : "odd"
-                      }`}
-                    >
-                      <td className="table-cell id-cell">
-                        <div>#{record.id}</div>
-                        {record.item_code && (
-                          <div className="item-code">
-                            Code: {record.item_code}
-                          </div>
-                        )}
-                      </td>
-                      <td className="table-cell">
-                        <div className="item-info">
-                          <div
-                            className="item-icon"
-                            style={{
-                              background:
-                                "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)",
-                            }}
-                          >
-                            <FiPackage size={16} />
-                          </div>
-                          <div>
-                            <div className="item-name">
-                              {record.item_name || "N/A"}
-                            </div>
-                            <div className="item-details">
-                              Size: {record.raw_material_flatsize || "N/A"}
-                            </div>
+        <div className="table-container" style={styles.tableContainer}>
+          <table style={styles.table}>
+            <thead>
+              <tr>
+                {[
+                  'ID', 'Machine', 'Prod Date & Shift', 'Item Details', 
+                  'User', 'Operator', 'Prod Qty', 
+                  'Weight', 'Efficiency', 'Remarks', 'Entry Date', 'Actions'
+                ].map((header, index) => (
+                  <th key={index} style={styles.tableHeaderCell}>
+                    {header}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {currentRecords.map((record) => {
+                const efficiency = parseFloat(record.efficiency || 0);
+                const efficiencyColor = getEfficiencyColor(efficiency);
+                
+                return (
+                  <tr key={record.id} style={styles.tableRow}>
+                    <td style={styles.tableCell}>
+                      <div style={styles.idBadge}>
+                        #{record.id}
+                      </div>
+                    </td>
+                    
+                    <td style={styles.tableCell}>
+                      <div className="icon-container">
+                        <FiCpu className="table-icon-spaced icon-blue" />
+                        <span>{record.machine_no || "N/A"}</span>
+                      </div>
+                    </td>
+                    
+                    <td style={styles.tableCell}>
+                      <div style={styles.dateShiftContainer}>
+                        <div className="icon-container">
+                          <FiCalendar className="table-icon-spaced icon-green" />
+                          <span style={styles.boldDateText}>{record.production_date || "N/A"}</span>
+                        </div>
+                        <div className="icon-container">
+                          <FiHash className="table-icon-spaced icon-purple" />
+                          <span style={styles.lightShiftText}>{record.shift_name || "N/A"}</span>
+                        </div>
+                      </div>
+                    </td>
+                    
+                    <td style={styles.tableCell}>
+                      <div style={styles.itemDetails}>
+                        <div style={styles.itemName}>
+                          {record.item_name || "N/A"}
+                        </div>
+                        <div style={styles.itemProduct}>
+                          {record.raw_material_Spiralsize || "N/A"}
+                        </div>
+                      </div>
+                    </td>
+                    
+                    <td style={styles.tableCell}>
+                      <div className="icon-container">
+                        <FiUser className="table-icon-spaced icon-blue" />
+                        <span>{record.users_name || "N/A"}</span>
+                      </div>
+                    </td>
+                    
+                    <td style={styles.tableCell}>
+                      <div className="icon-container">
+                        <FiUserCheck className="table-icon-spaced icon-yellow" />
+                        <span>{record.operator_name || "N/A"}</span>
+                      </div>
+                    </td>
+                    
+                    <td style={styles.tableCell}>
+                      <div style={styles.productionContainer}>
+                        <div className="icon-container">
+                          <FiBarChart2 className="table-icon-spaced icon-green" />
+                          <div style={styles.productionValue}>
+                            {formatInteger(record.production_quantity)} {record.unit || "M"}
                           </div>
                         </div>
-                      </td>
-                      <td className="table-cell">
-                        <div className="material-badge">
-                          <div
-                            className="material-type"
-                            style={{ background: "#f5f3ff", color: "#7c3aed" }}
-                          >
-                            {record.material_type || "N/A"}
+                        <div style={styles.targetBadge}>
+                          Target: {formatInteger(record.target_qty)} M
+                        </div>
+                      </div>
+                    </td>
+                    
+                    <td style={styles.tableCell}>
+                      <div style={styles.weightContainer}>
+                        <div className="icon-container">
+                          <FiDroplet className="table-icon-spaced icon-blue" />
+                          <div style={styles.weightValue}>
+                            {formatWeight(record.weight)} KG
                           </div>
                         </div>
-                      </td>
-                      <td className="table-cell">
-                        <div
-                          className="finished-product-badge"
-                          style={{ background: "#f3e8ff", color: "#7c3aed" }}
+                        <div style={styles.perMeterBadge}>
+                          {record.per_meter_wt || "N/A"} per meter
+                        </div>
+                      </div>
+                    </td>
+                    
+                    <td style={styles.tableCell}>
+                      <div style={styles.efficiencyContainer}>
+                        <div className="icon-container">
+                          <FiPercent className="table-icon-spaced" style={{color: efficiencyColor}} />
+                          <div style={{
+                            ...styles.efficiencyValue,
+                            color: efficiencyColor
+                          }}>
+                            {efficiency.toFixed(1)}%
+                          </div>
+                        </div>
+                        <div style={styles.efficiencyBar}>
+                          <div style={{
+                            width: `${Math.min(100, efficiency)}%`,
+                            height: '100%',
+                            backgroundColor: efficiencyColor,
+                            borderRadius: '2px'
+                          }}></div>
+                        </div>
+                      </div>
+                    </td>
+                    
+                    <td style={styles.tableCell}>
+                      <div className="icon-container">
+                        <FiMessageSquare className="table-icon-spaced icon-gray" />
+                        <div style={styles.remarks}>
+                          {record.remarks?.substring(0, 15) || "N/A"}
+                          {record.remarks?.length > 15 ? "..." : ""}
+                        </div>
+                      </div>
+                    </td>
+                    
+                    <td style={styles.tableCell}>
+                      <div className="icon-container">
+                        <FiLogIn className="table-icon-spaced icon-purple" />
+                        <div style={styles.entryDate}>
+                          {record.entry_date || "N/A"}
+                        </div>
+                      </div>
+                    </td>
+                    
+                    <td style={styles.tableCell}>
+                      <div style={styles.actionButtons}>
+                        <button 
+                          title="View"
+                          onClick={() => navigate(`/production-sections/pvc-coating/view/${record.id}`)}
+                          className="action-button view"
+                          style={{
+                            ...styles.viewButton,
+                            border: `2px solid #10b981`,
+                            backgroundColor: '#10b981',
+                            color: 'white'
+                          }}
                         >
-                          {record.finishedproductname || "N/A"}
-                        </div>
-                      </td>
-                      <td className="table-cell">
-                        <div className="machine-badge">
-                          <div
-                            className="machine-info"
-                            style={{ color: "#8b5cf6" }}
-                          >
-                            <FiCpu
-                              size={12}
-                              style={{ marginRight: "4px" }}
-                            />
-                            {record.machine_no || "N/A"}
-                          </div>
-                          {record.machine_id && (
-                            <div className="machine-id">
-                              ID: {record.machine_id}
-                            </div>
-                          )}
-                        </div>
-                      </td>
-                      <td className="table-cell production-cell">
-                        <div className="production-badge">
-                          <div
-                            className="production-value"
-                            style={{ color: "#8b5cf6" }}
-                          >
-                            {parseFloat(
-                              record.production_quantity
-                            ).toLocaleString()}
-                          </div>
-                          <div className="production-unit">
-                            {record.unit || "Meter"}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="table-cell weight-cell">
-                        <div className="weight-badge">
-                          <div
-                            className="weight-value"
-                            style={{ color: "#a78bfa" }}
-                          >
-                            {parseFloat(record.weight || 0).toLocaleString()}
-                          </div>
-                          <div className="weight-unit">KG</div>
-                          {record.per_meter_wt && (
-                            <div
-                              className="per-meter-wt"
-                              style={{ color: "#c084fc" }}
-                            >
-                              {parseFloat(record.per_meter_wt).toFixed(2)} KG/M
-                            </div>
-                          )}
-                        </div>
-                      </td>
-                      <td className="table-cell">
-                        <div className="efficiency-badge">
-                          <div
-                            className="efficiency-value"
-                            style={{ background: "#f3e8ff", color: "#8b5cf6" }}
-                          >
-                            {parseFloat(record.efficiency || 0).toFixed(1)}%
-                          </div>
-                        </div>
-                      </td>
-                      <td className="table-cell">
-                        <div className="operator-user-info">
-                          <div
-                            className="operator-avatar"
-                            style={{
-                              background:
-                                "linear-gradient(135deg, #c084fc 0%, #a855f7 100%)",
-                            }}
-                          >
-                            {record.operator_name?.charAt(0) || "O"}
-                          </div>
-                          <div>
-                            <div className="operator-name">
-                              {record.operator_name || "Unknown"}
-                            </div>
-                            <div className="user-name">
-                              User: {record.users_name || "N/A"}
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="table-cell">
-                        <div
-                          className="shift-badge"
-                          style={{ background: "#f5f3ff", color: "#7c3aed" }}
-                        >
-                          <div className="shift-info">
-                            {record.shift_name || "N/A"}
-                            {record.shift_code && (
-                              <div
-                                className="shift-code"
-                                style={{ color: "#8b5cf6" }}
-                              >
-                                Code: {record.shift_code}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="table-cell">
-                        <div className="datetime-badge">
-                          <div className="date-part">
-                            <FiCalendar size={12} />
-                            {new Date(record.created_at).toLocaleDateString(
-                              "en-GB"
-                            )}
-                          </div>
-                          <div className="time-part">
-                            <FiClock size={10} />
-                            {new Date(record.created_at).toLocaleTimeString(
-                              [],
-                              {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              }
-                            )}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="table-cell actions-cell">
-                        <div className="action-buttons">
-                          <button
-                            onClick={() => handleView(record.id)}
-                            className="view-btn"
-                            style={{
-                              background:
-                                "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)",
-                            }}
-                          >
-                            <FiEye size={12} /> View
-                          </button>
-                          <button
-                            onClick={() => handleEdit(record.id)}
-                            className="edit-btn"
-                          >
-                            <FiEdit size={12} /> Edit
-                          </button>
-                          <button
-                            onClick={() => handleDelete(record.id)}
-                            className="delete-btn"
-                          >
-                            <FiTrash2 size={12} /> Delete
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="pagination-section">
-                <div className="pagination-info">
-                  Page {currentPage} of {totalPages} • Showing{" "}
-                  {indexOfFirstItem + 1}-
-                  {Math.min(indexOfLastItem, filteredRecords.length)} of{" "}
-                  {filteredRecords.length} records
-                </div>
-                <div className="pagination-controls">
-                  <button
-                    onClick={handlePrevPage}
-                    disabled={currentPage === 1}
-                    className={`pagination-btn prev ${
-                      currentPage === 1 ? "disabled" : ""
-                    }`}
-                  >
-                    <FiChevronLeft /> Previous
-                  </button>
-                  <div className="page-numbers">
-                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                      let pageNum;
-                      if (totalPages <= 5) {
-                        pageNum = i + 1;
-                      } else if (currentPage <= 3) {
-                        pageNum = i + 1;
-                      } else if (currentPage >= totalPages - 2) {
-                        pageNum = totalPages - 4 + i;
-                      } else {
-                        pageNum = currentPage - 2 + i;
-                      }
-
-                      return (
-                        <button
-                          key={pageNum}
-                          onClick={() => setCurrentPage(pageNum)}
-                          className={`page-number ${
-                            currentPage === pageNum ? "active" : ""
-                          }`}
-                          style={
-                            currentPage === pageNum
-                              ? {
-                                  background: "#8b5cf6",
-                                  borderColor: "#7c3aed",
-                                }
-                              : {}
-                          }
-                        >
-                          {pageNum}
+                          <FiEye style={{fontSize: '20px'}} />
                         </button>
-                      );
-                    })}
-                  </div>
-                  <button
-                    onClick={handleNextPage}
-                    disabled={currentPage === totalPages}
-                    className={`pagination-btn next ${
-                      currentPage === totalPages ? "disabled" : ""
-                    }`}
-                  >
-                    Next <FiChevronRight />
-                  </button>
-                </div>
+                        <button 
+                          title="Edit"
+                          onClick={() => navigate(`/production-sections/pvc-coating/edit/${record.id}`)}
+                          className="action-button edit"
+                          style={{
+                            ...styles.editButton,
+                            border: `2px solid #f59e0b`,
+                            backgroundColor: '#f59e0b',
+                            color: 'white'
+                          }}
+                        >
+                          <FiEdit style={{fontSize: '20px'}} />
+                        </button>
+                        <button 
+                          title="Delete"
+                          onClick={() => handleDeleteRecord(record.id)}
+                          className="action-button delete"
+                          style={{
+                            ...styles.deleteButton,
+                            border: `2px solid #ef4444`,
+                            backgroundColor: '#ef4444',
+                            color: 'white'
+                          }}
+                        >
+                          <FiTrash2 style={{fontSize: '20px'}} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        {/* PAGINATION */}
+        {totalPages > 1 && (
+          <div style={styles.pagination}>
+            <div style={styles.paginationInfo}>
+              Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredRecords.length)} of {filteredRecords.length} records
+            </div>
+            <div style={styles.paginationControls}>
+              <button 
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                style={{
+                  ...styles.paginationButton,
+                  opacity: currentPage === 1 ? 0.5 : 1,
+                  cursor: currentPage === 1 ? 'not-allowed' : 'pointer'
+                }}
+              >
+                <FiChevronLeft style={{ fontSize: '16px' }} /> Previous
+              </button>
+              
+              <div style={styles.pageButtons}>
+                {[...Array(Math.min(5, totalPages))].map((_, i) => {
+                  let pageNum;
+                  if (totalPages <= 5) pageNum = i + 1;
+                  else if (currentPage <= 3) pageNum = i + 1;
+                  else if (currentPage >= totalPages - 2) pageNum = totalPages - 4 + i;
+                  else pageNum = currentPage - 2 + i;
+
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => setCurrentPage(pageNum)}
+                      style={{
+                        ...styles.pageButton,
+                        backgroundColor: currentPage === pageNum ? 'var(--primary-500)' : 'var(--bg-card)',
+                        color: currentPage === pageNum ? 'var(--icon-white)' : 'var(--text-primary)'
+                      }}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
               </div>
-            )}
-          </>
+              
+              <button 
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+                style={{
+                  ...styles.paginationButton,
+                  opacity: currentPage === totalPages ? 0.5 : 1,
+                  cursor: currentPage === totalPages ? 'not-allowed' : 'pointer'
+                }}
+              >
+                Next <FiChevronRight style={{ fontSize: '16px' }} />
+              </button>
+            </div>
+          </div>
         )}
       </div>
 
-      {/* Footer */}
-      <div className="page-footer">
-        <div className="footer-content">
-          <div>
-            <div className="footer-title">
-              PVC Coating Section • Production Management System
-            </div>
-            <div className="footer-subtitle">
-              Database: pvcsection table • Last updated:{" "}
-              {new Date().toLocaleTimeString()} • Managed by: Afsar
-            </div>
-          </div>
-          <div className="footer-status">
-            <div
-              className={`database-connection ${
-                isSupabaseConnected ? "connected" : "offline"
-              }`}
-            >
-              <div
-                className={`connection-dot ${
-                  isSupabaseConnected ? "connected" : "offline"
-                }`}
-              />
-              {isSupabaseConnected
-                ? "Supabase Database Connected"
-                : "Database Connection Issue"}
-            </div>
-            <div className="footer-stats">
-              {stats.totalRecords} records • {stats.totalProduction} M •{" "}
-              {stats.totalWeight} KG • {stats.avgEfficiency.toFixed(1)}%
-              efficiency
-            </div>
-          </div>
+      {/* FOOTER */}
+      <div style={styles.footer}>
+        <div style={styles.footerText}>
+          PVC Coating Section • Production Management System
         </div>
-
-        <div className="footer-actions">
-          <button
+        <div style={styles.footerButtons}>
+          <button 
             onClick={() => navigate("/production-sections/pvc-coating/new")}
-            className="footer-btn add-btn"
-            style={{ borderColor: "#8b5cf6", color: "#8b5cf6" }}
+            style={styles.footerButtonPrimary}
           >
-            <FiPlus size={12} /> Single Entry
+            <FiPlus style={{ fontSize: '16px' }} /> New Entry
           </button>
-
-          <button
-            onClick={() =>
-              navigate("/production-sections/pvc-coating/multi-entry")
-            }
-            className="footer-btn multi-btn"
-            style={{
-              borderColor: "#f59e0b",
-              color: "#f59e0b",
-              marginLeft: "10px",
-            }}
+          <button 
+            onClick={fetchData}
+            style={styles.footerButtonSecondary}
           >
-            <FiGrid size={12} /> Multi-Entry
-          </button>
-
-          <button onClick={fetchData} className="footer-btn refresh-footer-btn">
-            <FiRefreshCw size={12} /> Refresh Data
-          </button>
-          <button
-            onClick={() => navigate("/dashboard")}
-            className="footer-btn dashboard-btn"
-          >
-            <FiTrendingUp size={12} /> Dashboard
+            <FiRefreshCw style={{ fontSize: '16px' }} /> Refresh
           </button>
         </div>
       </div>
     </div>
   );
+};
+
+// ✅ Styles Object (CSS-in-JS)
+const styles = {
+  container: {
+    width: '100vw',
+    minHeight: '100vh',
+    backgroundColor: 'var(--bg-primary)',
+    color: 'var(--text-primary)',
+    overflowX: 'hidden'
+  },
+  
+  loadingContainer: {
+    width: '100vw',
+    height: '100vh',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'var(--bg-primary)',
+    color: 'var(--text-primary)'
+  },
+  
+  dbAlert: {
+    backgroundColor: '#fef3c7',
+    border: '1px solid #fbbf24',
+    padding: '12px 16px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    fontSize: '14px'
+  },
+  
+  // ✅ Header Styles
+  header: {
+    background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+    color: 'white',
+    position: 'sticky',
+    top: 0,
+    zIndex: 1000,
+    width: '100%',
+    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+  },
+  
+  headerTop: {
+    display: 'flex',
+    alignItems: 'center',
+    padding: '12px 16px',
+    gap: '12px'
+  },
+  
+  backButton: {
+    width: '40px',
+    height: '40px',
+    background: 'rgba(255, 255, 255, 0.15)',
+    border: 'none',
+    borderRadius: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: 'white',
+    cursor: 'pointer',
+    flexShrink: 0
+  },
+  
+  headerIcon: {
+    width: '40px',
+    height: '40px',
+    background: 'rgba(255, 255, 255, 0.15)',
+    borderRadius: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '18px',
+    flexShrink: 0,
+    color: 'white'
+  },
+  
+  headerContent: {
+    flex: 1,
+    minWidth: 0
+  },
+  
+  headerTitleRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    marginBottom: '4px'
+  },
+  
+  headerTitle: {
+    fontSize: '18px',
+    fontWeight: '700',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    color: 'white'
+  },
+  
+  connectionBadge: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '4px',
+    padding: '4px 8px',
+    background: 'rgba(255, 255, 255, 0.15)',
+    borderRadius: '20px',
+    fontSize: '12px',
+    flexShrink: 0,
+    color: 'white'
+  },
+  
+  headerSubtitle: {
+    fontSize: '13px',
+    opacity: 0.9,
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    color: 'white'
+  },
+  
+  headerButtons: {
+    display: 'flex',
+    gap: '8px',
+    padding: '8px 16px 12px',
+    background: 'rgba(0, 0, 0, 0.05)'
+  },
+  
+  headerButton: {
+    flex: 1,
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '6px',
+    padding: '10px 12px',
+    background: 'rgba(255, 255, 255, 0.12)',
+    color: 'white',
+    border: '1px solid rgba(255, 255, 255, 0.2)',
+    borderRadius: '6px',
+    fontSize: '13px',
+    fontWeight: '500',
+    cursor: 'pointer'
+  },
+  
+  themeButton: {
+    width: '40px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '10px',
+    background: 'rgba(255, 255, 255, 0.12)',
+    color: 'white',
+    border: '1px solid rgba(255, 255, 255, 0.2)',
+    borderRadius: '6px',
+    fontSize: '18px',
+    cursor: 'pointer'
+  },
+  
+  refreshButton: {
+    width: '40px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '10px',
+    background: 'rgba(255, 255, 255, 0.12)',
+    color: 'white',
+    border: '1px solid rgba(255, 255, 255, 0.2)',
+    borderRadius: '6px',
+    fontSize: '18px',
+    cursor: 'pointer'
+  },
+  
+  // ✅ 1. پہلے کارڈز
+  statsGrid: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '6px',
+    padding: '12px'
+  },
+  
+  statCard: {
+    backgroundColor: '#3b82f6',
+    borderRadius: '8px',
+    padding: '10px',
+    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
+    flex: '1 0 calc(25% - 6px)',
+    minHeight: '70px'
+  },
+  
+  lightStatCard: {
+    backgroundColor: 'var(--bg-card)',
+    borderRadius: '8px',
+    padding: '10px',
+    boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+    border: '1px solid var(--border-color)',
+    flex: '1 0 calc(25% - 6px)',
+    minHeight: '70px'
+  },
+  
+  statContent: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    gap: '8px'
+  },
+  
+  statIconLeft: {
+    width: '34px',
+    height: '34px',
+    background: 'rgba(255, 255, 255, 0.15)',
+    borderRadius: '6px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: 'white',
+    fontSize: '16px',
+    flexShrink: 0
+  },
+  
+  lightStatIconLeft: {
+    width: '34px',
+    height: '34px',
+    background: 'var(--bg-surface)',
+    borderRadius: '6px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: 'var(--primary-500)',
+    fontSize: '16px',
+    flexShrink: 0
+  },
+  
+  statText: {
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '2px'
+  },
+  
+  statTitle: {
+    fontSize: '10px',
+    color: 'rgba(255, 255, 255, 0.9)',
+    fontWeight: '500',
+    marginBottom: '2px'
+  },
+  
+  statValue: {
+    fontSize: '14px',
+    fontWeight: '700',
+    color: 'white',
+    marginBottom: '4px'
+  },
+  
+  statValueWithArrow: {
+    display: 'flex',
+    alignItems: 'center',
+    fontSize: '14px',
+    fontWeight: '700',
+    color: 'white',
+    marginBottom: '4px'
+  },
+  
+  statTitleLight: {
+    fontSize: '10px',
+    color: 'var(--text-primary)',
+    fontWeight: '500',
+    marginBottom: '2px'
+  },
+  
+  statValueLight: {
+    fontSize: '14px',
+    fontWeight: '700',
+    color: 'var(--text-primary)',
+    marginBottom: '4px'
+  },
+  
+  dateBadgeLight: {
+    fontSize: '8px',
+    color: 'var(--text-muted)',
+    background: 'var(--bg-surface)',
+    padding: '2px 6px',
+    borderRadius: '10px',
+    display: 'inline-block',
+    width: 'fit-content'
+  },
+  
+  // ✅ 2. لاسٹ انٹری ڈیش بورڈ
+  sectionContainer: {
+    padding: '12px',
+    marginTop: '8px'
+  },
+  
+  sectionHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    marginBottom: '12px'
+  },
+  
+  sectionIcon: {
+    fontSize: '20px',
+    color: 'var(--icon-color)'
+  },
+  
+  sectionTitle: {
+    fontSize: '16px',
+    fontWeight: '600'
+  },
+  
+  sectionSubtitle: {
+    fontSize: '12px',
+    color: 'var(--text-secondary)'
+  },
+  
+  dashboardGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(3, 1fr)',
+    gap: '8px'
+  },
+  
+  dashboardCard: {
+    backgroundColor: 'var(--bg-card)',
+    borderRadius: '8px',
+    padding: '12px',
+    border: '1px solid var(--border-color)',
+    boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+  },
+  
+  dashboardCardHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '12px'
+  },
+  
+  dashboardCardTitle: {
+    fontSize: '14px',
+    fontWeight: '600',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    color: 'var(--text-primary)'
+  },
+  
+  cardBadge: {
+    fontSize: '10px',
+    backgroundColor: 'var(--primary-500)',
+    color: 'var(--icon-white)',
+    padding: '2px 6px',
+    borderRadius: '10px'
+  },
+  
+  dashboardItem: {
+    marginBottom: '12px',
+    paddingBottom: '12px',
+    borderBottom: '1px solid var(--border-color)'
+  },
+  
+  dashboardItemHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '6px'
+  },
+  
+  dashboardItemLabel: {
+    fontSize: '12px',
+    color: 'var(--text-primary)'
+  },
+  
+  dashboardItemDetails: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    fontSize: '10px',
+    color: 'var(--text-secondary)',
+    marginBottom: '6px'
+  },
+  
+  progressBar: {
+    height: '4px',
+    backgroundColor: 'var(--border-color)',
+    borderRadius: '2px',
+    overflow: 'hidden'
+  },
+  
+  emptyState: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '20px 0'
+  },
+  
+  emptyIcon: {
+    fontSize: '24px',
+    color: 'var(--text-secondary)',
+    marginBottom: '8px'
+  },
+  
+  emptyText: {
+    fontSize: '12px',
+    color: 'var(--text-secondary)'
+  },
+  
+  // ✅ 3. فلٹرز
+  filtersSection: {
+    padding: '12px',
+    marginTop: '8px'
+  },
+  
+  filtersContainer: {
+    backgroundColor: 'var(--bg-card)',
+    borderRadius: '8px',
+    padding: '12px',
+    border: '1px solid var(--border-color)',
+    boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+  },
+  
+  filterHeading: {
+    display: 'flex',
+    alignItems: 'center',
+    fontSize: '14px',
+    fontWeight: '600',
+    color: 'var(--text-primary)',
+    marginBottom: '12px'
+  },
+  
+  filtersSingleLine: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '8px',
+    alignItems: 'center'
+  },
+  
+  filterGroup: {
+    flex: '1 0 calc(14.285% - 8px)',
+    minWidth: '120px'
+  },
+  
+  filterInput: {
+    width: '100%',
+    padding: '8px 10px',
+    border: '1px solid var(--border-color)',
+    borderRadius: '6px',
+    backgroundColor: 'var(--bg-card)',
+    color: 'var(--text-primary)',
+    fontSize: '13px',
+    outline: 'none'
+  },
+  
+  filterSelect: {
+    width: '100%',
+    padding: '8px 10px',
+    border: '1px solid var(--border-color)',
+    borderRadius: '6px',
+    backgroundColor: 'var(--bg-card)',
+    color: 'var(--text-primary)',
+    fontSize: '13px',
+    outline: 'none'
+  },
+  
+  filterDate: {
+    width: '100%',
+    padding: '8px 10px',
+    border: '1px solid var(--border-color)',
+    borderRadius: '6px',
+    backgroundColor: 'var(--bg-card)',
+    color: 'var(--text-primary)',
+    fontSize: '13px',
+    outline: 'none'
+  },
+  
+  filterBtnPrimary: {
+    width: '100%',
+    padding: '8px 10px',
+    background: '#3b82f6',
+    color: 'white',
+    border: 'none',
+    borderRadius: '6px',
+    fontSize: '13px',
+    fontWeight: '500',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '6px'
+  },
+  
+  filterBtnSecondary: {
+    width: '100%',
+    padding: '8px 10px',
+    background: 'var(--bg-secondary)',
+    color: 'var(--text-primary)',
+    border: '1px solid var(--border-color)',
+    borderRadius: '6px',
+    fontSize: '13px',
+    fontWeight: '500',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '6px'
+  },
+  
+  whatsappBtn: {
+    width: '100%',
+    padding: '8px 10px',
+    background: '#25D366',
+    color: 'white',
+    border: 'none',
+    borderRadius: '6px',
+    fontSize: '13px',
+    fontWeight: '500',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '6px'
+  },
+  
+  printBtn: {
+    width: '100%',
+    padding: '8px 10px',
+    background: '#6b7280',
+    color: 'white',
+    border: 'none',
+    borderRadius: '6px',
+    fontSize: '13px',
+    fontWeight: '500',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '6px'
+  },
+  
+  excelBtn: {
+    padding: '8px 12px',
+    background: '#10b981',
+    color: 'white',
+    border: 'none',
+    borderRadius: '6px',
+    fontSize: '12px',
+    fontWeight: '500',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    marginRight: '8px'
+  },
+  
+  reportActions: {
+    padding: '8px 12px',
+    background: 'var(--bg-surface)',
+    border: '1px solid var(--border-color)',
+    borderRadius: '6px',
+    margin: '0 12px 12px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px'
+  },
+  
+  // ✅ 4. ٹیبل
+  tableHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '12px'
+  },
+  
+  tableInfo: {
+    fontSize: '12px',
+    color: 'var(--text-secondary)',
+    display: 'flex',
+    gap: '8px'
+  },
+  
+  tableContainer: {
+    width: '100%',
+    overflowX: 'auto',
+    WebkitOverflowScrolling: 'touch',
+    borderRadius: '6px',
+    backgroundColor: 'var(--bg-card)',
+    border: '1px solid var(--border-color)'
+  },
+  
+  table: {
+    width: '100%',
+    minWidth: '1200px',
+    borderCollapse: 'collapse'
+  },
+  
+  tableHeaderCell: {
+    padding: '12px 8px',
+    textAlign: 'left',
+    fontWeight: '600',
+    fontSize: '12px',
+    color: 'var(--text-secondary)',
+    backgroundColor: 'var(--bg-surface)',
+    borderBottom: '2px solid var(--border-color)',
+    whiteSpace: 'nowrap',
+    textTransform: 'uppercase'
+  },
+  
+  tableRow: {
+    borderBottom: '1px solid var(--border-color)'
+  },
+  
+  tableCell: {
+    padding: '10px 8px',
+    verticalAlign: 'middle'
+  },
+  
+  boldDateText: {
+    fontSize: '11px',
+    fontWeight: '600',
+    color: 'var(--text-primary)'
+  },
+  
+  lightShiftText: {
+    fontSize: '11px',
+    fontWeight: '400',
+    color: 'var(--text-secondary)'
+  },
+  
+  idBadge: {
+    backgroundColor: 'var(--primary-500)',
+    color: 'var(--icon-white)',
+    padding: '4px 8px',
+    borderRadius: '4px',
+    fontSize: '11px',
+    fontWeight: '600',
+    display: 'inline-block',
+    textAlign: 'center'
+  },
+  
+  dateShiftContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '6px'
+  },
+  
+  itemDetails: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '2px'
+  },
+  
+  itemName: {
+    fontWeight: '600',
+    color: 'var(--text-primary)',
+    fontSize: '12px'
+  },
+  
+  itemProduct: {
+    color: 'var(--text-secondary)',
+    fontSize: '11px'
+  },
+  
+  productionContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '3px'
+  },
+  
+  productionValue: {
+    fontWeight: '700',
+    color: 'var(--primary-500)',
+    fontSize: '13px',
+    marginLeft: '4px'
+  },
+  
+  targetBadge: {
+    fontSize: '10px',
+    color: '#ef4444',
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    padding: '2px 6px',
+    borderRadius: '3px',
+    display: 'flex',
+    alignItems: 'center',
+    marginTop: '2px'
+  },
+  
+  weightContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '3px'
+  },
+  
+  weightValue: {
+    fontWeight: '600',
+    color: 'var(--text-primary)',
+    fontSize: '12px',
+    marginLeft: '4px'
+  },
+  
+  perMeterBadge: {
+    fontSize: '10px',
+    color: 'var(--text-secondary)',
+    backgroundColor: 'var(--bg-surface)',
+    padding: '1px 4px',
+    borderRadius: '3px',
+    display: 'inline-block'
+  },
+  
+  efficiencyContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '4px',
+    alignItems: 'flex-start'
+  },
+  
+  efficiencyValue: {
+    fontWeight: '700',
+    fontSize: '12px',
+    textAlign: 'center',
+    marginLeft: '4px'
+  },
+  
+  efficiencyBar: {
+    width: '60px',
+    height: '4px',
+    backgroundColor: 'var(--border-color)',
+    borderRadius: '2px',
+    overflow: 'hidden'
+  },
+  
+  remarks: {
+    maxWidth: '100px',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    fontSize: '11px',
+    color: 'var(--text-muted)',
+    padding: '2px 4px',
+    backgroundColor: 'var(--bg-surface)',
+    borderRadius: '3px',
+    marginLeft: '4px'
+  },
+  
+  entryDate: {
+    fontSize: '11px',
+    color: 'var(--text-secondary)',
+    padding: '2px 4px',
+    backgroundColor: 'var(--bg-surface)',
+    borderRadius: '3px',
+    marginLeft: '4px'
+  },
+  
+  actionButtons: {
+    display: 'flex',
+    gap: '8px',
+    justifyContent: 'center'
+  },
+  
+  viewButton: {
+    width: '44px',
+    height: '44px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    border: '2px solid #10b981',
+    backgroundColor: '#10b981',
+    color: 'white',
+    borderRadius: '8px',
+    fontSize: '20px',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease'
+  },
+  
+  editButton: {
+    width: '44px',
+    height: '44px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    border: '2px solid #f59e0b',
+    backgroundColor: '#f59e0b',
+    color: 'white',
+    borderRadius: '8px',
+    fontSize: '20px',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease'
+  },
+  
+  deleteButton: {
+    width: '44px',
+    height: '44px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    border: '2px solid #ef4444',
+    backgroundColor: '#ef4444',
+    color: 'white',
+    borderRadius: '8px',
+    fontSize: '20px',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease'
+  },
+  
+  // Pagination Styles
+  pagination: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '12px',
+    padding: '16px 0',
+    alignItems: 'center',
+    marginTop: '16px'
+  },
+  
+  paginationInfo: {
+    textAlign: 'center',
+    fontSize: '12px',
+    color: 'var(--text-secondary)'
+  },
+  
+  paginationControls: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '8px'
+  },
+  
+  paginationButton: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '4px',
+    padding: '8px 12px',
+    border: '1px solid var(--border-color)',
+    backgroundColor: 'var(--bg-card)',
+    color: 'var(--text-primary)',
+    borderRadius: '6px',
+    fontSize: '12px',
+    cursor: 'pointer'
+  },
+  
+  pageButtons: {
+    display: 'flex',
+    gap: '4px'
+  },
+  
+  pageButton: {
+    width: '32px',
+    height: '32px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    border: '1px solid var(--border-color)',
+    borderRadius: '4px',
+    fontSize: '12px',
+    cursor: 'pointer'
+  },
+  
+  // Footer Styles
+  footer: {
+    padding: '16px',
+    textAlign: 'center',
+    backgroundColor: 'var(--bg-secondary)',
+    borderTop: '1px solid var(--border-color)',
+    marginTop: '20px'
+  },
+  
+  footerText: {
+    fontSize: '12px',
+    color: 'var(--text-secondary)',
+    marginBottom: '8px'
+  },
+  
+  footerButtons: {
+    display: 'flex',
+    gap: '8px',
+    justifyContent: 'center'
+  },
+  
+  footerButtonPrimary: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+    padding: '10px 16px',
+    backgroundColor: 'var(--primary-500)',
+    color: 'var(--icon-white)',
+    border: 'none',
+    borderRadius: '6px',
+    fontSize: '13px',
+    fontWeight: '500',
+    cursor: 'pointer'
+  },
+  
+  footerButtonSecondary: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+    padding: '10px 16px',
+    backgroundColor: 'var(--bg-card)',
+    color: 'var(--text-primary)',
+    border: '1px solid var(--border-color)',
+    borderRadius: '6px',
+    fontSize: '13px',
+    fontWeight: '500',
+    cursor: 'pointer'
+  }
 };
 
 export default PVCcoatingPage;

@@ -1,38 +1,26 @@
-module.exports = {
+﻿module.exports = {
+  style: {
+    postcss: {
+      mode: 'extends',
+    },
+  },
   eslint: {
     enable: false,
   },
-  style: {
-    postcss: {
-      plugins: [
-        require('@tailwindcss/postcss'),
-        require('cssnano')({
-          preset: ['default', {
-            calc: false,
-          }],
-        }),
-      ],
-    },
-  },
   webpack: {
-    configure: (webpackConfig, { env, paths }) => {
-      // Increase memory limit for build
-      webpackConfig.performance = {
-        maxAssetSize: 2 * 1024 * 1024, // 2MB
-        maxEntrypointSize: 2 * 1024 * 1024, // 2MB
-        hints: false // Turn off size warnings
-      };
-
-      // Ignore all warnings
+    configure: (webpackConfig) => {
+      // Remove eslint-webpack-plugin to avoid the error
+      webpackConfig.plugins = webpackConfig.plugins.filter(
+        plugin => plugin.constructor.name !== "ESLintWebpackPlugin"
+      );
+      
+      // Ignore source map warnings
       webpackConfig.ignoreWarnings = [
         { message: /Failed to parse source map/ },
-        { message: /autoprefixer/ },
-        { message: /tailwindcss/ },
-        { message: /unused/ },
-        { message: /asset size limit/ }
+        { message: /ESLintWebpackPlugin/ },
       ];
-
+      
       return webpackConfig;
-    }
-  }
+    },
+  },
 };

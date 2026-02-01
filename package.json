@@ -1,43 +1,87 @@
 {
-  "name": "erp-system",
-  "version": "1.0.0",
-  "description": "ERP Management System",
+  "name": "erp-frontend",
+  "version": "0.1.0",
   "private": true,
-  "scripts": {
-    "install:all": "cd frontend && npm install && cd ../backend && npm install",
-    "dev:frontend": "cd frontend && npm start",
-    "dev:backend": "cd backend && npm run dev",
-    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
-    "build:frontend": "cd frontend && npm run build",
-    "build": "cd frontend && npm install && npm run build",
-    "start:backend": "cd backend && npm start"
-  },
   "proxy": "http://localhost:5000",
-  "keywords": [
-    "erp-system",
-    "management-system"
-  ],
-  "author": "",
-  "license": "ISC",
-  "devDependencies": {
-    "concurrently": "^8.0.0",
-    "eslint-webpack-plugin": "^5.0.2",
-    "sequelize-cli": "^6.6.3"
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
   },
   "dependencies": {
+    "@craco/craco": "^7.1.0",
+    "@fontsource/inter": "^5.2.8",
+    "@fortawesome/free-solid-svg-icons": "^7.1.0",
+    "@fortawesome/react-fontawesome": "^3.1.1",
+    "@react-pdf/renderer": "^4.3.2",
+    "@supabase/supabase-js": "^2.89.0",
     "@tailwindcss/cli": "^4.1.18",
     "@tailwindcss/postcss": "^4.1.18",
-    "sequelize": "^6.37.7",
-    "tailwindcss": "^4.1.18"
+    "axios": "^1.13.2",
+    "framer-motion": "^12.25.0",
+    "http-proxy-middleware": "^3.0.5",
+    "jspdf": "^4.0.0",
+    "jspdf-autotable": "^5.0.7",
+    "lucide-react": "^0.563.0",
+    "pdf-lib": "^1.17.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-icons": "^5.5.0",
+    "react-router-dom": "^7.11.0",
+    "react-scripts": "^5.0.1",
+    "recharts": "^3.6.0",
+    "svgo": "^4.0.0",
+    "xlsx": "^0.18.5"
   },
-  "main": "index.js",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/afsaralam2011-hue/ERP-Management.git"
+  "devDependencies": {
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+    "concurrently": "^9.2.1",
+    "cross-env": "^10.1.0",
+    "cssnano": "^7.1.2",
+    "eslint-plugin-react-hooks": "^4.6.2"
   },
-  "type": "commonjs",
-  "bugs": {
-    "url": "https://github.com/afsaralam2011-hue/ERP-Management/issues"
+  "scripts": {
+    "start": "craco start",
+    "build": "cross-env CI=false GENERATE_SOURCEMAP=false craco build --max-old-space-size=4096",
+    "test": "craco test",
+    "vercel-build": "CI=false npm ci --legacy-peer-deps && npm run build",
+    "eject": "react-scripts eject",
+    "tailwind:watch": "tailwindcss -i ./src/index.css -o ./src/output.css --watch",
+    "tailwind:build": "tailwindcss -i ./src/index.css -o ./src/output.css --minify",
+    "dev:all": "concurrently \"npm start\" \"cd ../backend && npm run dev\"",
+    "dev:full": "concurrently \"npm run tailwind:watch\" \"npm start\" \"cd ../backend && npm run dev\"",
+    "dev": "npm run dev:full"
   },
-  "homepage": "https://github.com/afsaralam2011-hue/ERP-Management#readme"
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ],
+    "plugins": [
+      "react-hooks"
+    ],
+    "rules": {
+      "unicode-bom": "off",
+      "react-hooks/rules-of-hooks": "error",
+      "react-hooks/exhaustive-deps": "warn",
+      "no-unused-vars": "off"
+    }
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "description": "React-based frontend for the Devine Water ERP Management System.",
+  "main": "eslint.config.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs"
 }

@@ -6,8 +6,19 @@ import {
   FiBarChart2, FiTrendingUp, FiCalendar, FiActivity,
   FiCheckCircle, FiClock, FiTarget,
   FiGrid, FiArrowUpRight, FiLayers, FiScissors, FiCheckSquare, FiColumns,
-  FiDatabase as FiDatabaseIcon
+  FiDatabase as FiDatabaseIcon,
+  FiAlertCircle
 } from "react-icons/fi";
+import { 
+  FaIndustry, 
+  FaCogs, 
+  FaShieldAlt, 
+  FaCut, 
+  FaBoxOpen, 
+  FaWarehouse,
+  FaSpinner,
+  FaDatabase
+} from "react-icons/fa";
 import { useNavigate, Link } from "react-router-dom";
 
 // Import new dashboard components
@@ -17,67 +28,95 @@ import ProductionMetrics from "./DashboardComponents/ProductionMetrics";
 import YesterdayStats from "./DashboardComponents/YesterdayStats";
 import EfficiencyAnalytics from "./DashboardComponents/EfficiencyAnalytics";
 
+// Departments array from ProductionMetrics.jsx with table names
+const departments = [
+  { 
+    id: 1, 
+    name: 'Raw Material Section', 
+    icon: FaWarehouse, 
+    color: '#f59e0b', 
+    tableName: 'raw_material_log',
+    unit: 'KG'
+  },
+  { 
+    id: 2, 
+    name: 'Flatting Section', 
+    icon: FaIndustry, 
+    color: '#3b82f6', 
+    tableName: 'flatteningsection',
+    unit: 'KG'
+  },
+  { 
+    id: 3, 
+    name: 'Spiral Section', 
+    icon: FaCogs, 
+    color: '#8b5cf6', 
+    tableName: 'spiralsection',
+    unit: 'Meter'
+  },
+  { 
+    id: 4, 
+    name: 'PVC Coating Section', 
+    icon: FaShieldAlt, 
+    color: '#10b981', 
+    tableName: 'pvcsection',
+    unit: 'Meter'
+  },
+  { 
+    id: 5, 
+    name: 'Cutting & Packing Section', 
+    icon: FaCut, 
+    color: '#ec4899', 
+    tableName: 'cuttingpacking',
+    unit: 'Meter'
+  },
+  { 
+    id: 6, 
+    name: 'Finishing Goods Section', 
+    icon: FaBoxOpen, 
+    color: '#06b6d4', 
+    tableName: 'finishinggoods',
+    unit: 'Meter'
+  }
+];
+
 const ProductionDashboard = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState(new Date());
+  const [selectedDepartment, setSelectedDepartment] = useState('Flatting Section');
+  const [isSupabaseConnected, setIsSupabaseConnected] = useState(true);
   const navigate = useNavigate();
 
-  // Production Sections for switcher
-  const productionSections = [
-    {
-      id: "raw-material",
-      name: "Raw Material Section",
-      icon: FiDatabaseIcon,
-      path: "/production-sections/raw-material",
-      color: "#06b6d4",
-    },
-    {
-      id: "flattening",
-      name: "Flattening Section",
-      icon: FiPackage,
-      path: "/production-sections/flattening",
-      color: "#10b981",
-    },
-    {
-      id: "spiral",
-      name: "Spiral Section",
-      icon: FiColumns,
-      path: "/production-sections/spiral",
-      color: "#3b82f6",
-    },
-    {
-      id: "pvc-coating",
-      name: "PVC Coating Section",
-      icon: FiLayers,
-      path: "/production-sections/pvc-coating",
-      color: "#8b5cf6",
-    },
-    {
-      id: "cutting-packing",
-      name: "Cutting & Packing Section",
-      icon: FiScissors,
-      path: "/production-sections/cutting-packing",
-      color: "#f59e0b",
-    },
-    {
-      id: "finished-goods",
-      name: "Finished Goods Section",
-      icon: FiCheckSquare,
-      path: "/production-sections/finished-goods",
-      color: "#ec4899",
-    },
-  ];
+  // Production Sections for switcher (using departments data)
+  const productionSections = departments.map(dept => ({
+    id: dept.name.toLowerCase().replace(/\s+/g, '-'),
+    name: dept.name,
+    icon: dept.icon,
+    path: `/production-sections/${dept.name.toLowerCase().replace(/\s+/g, '-')}`,
+    color: dept.color,
+    tableName: dept.tableName,
+    unit: dept.unit
+  }));
 
-  // Simulate data fetching
+  const getCurrentDepartment = () => {
+    return departments.find(dept => dept.name === selectedDepartment);
+  };
+
+  // Simulate data fetching with departments data
   useEffect(() => {
     const fetchDashboardData = () => {
       setLoading(true);
       
       // Simulate API call
       setTimeout(() => {
+        const currentDept = getCurrentDepartment();
         const mockData = {
+          department: currentDept.name,
+          unit: currentDept.unit,
+          tableName: currentDept.tableName,
+          
           // Cards data
           stats: [
             { 
@@ -85,9 +124,9 @@ const ProductionDashboard = () => {
               label: "Daily Output", 
               value: "2,850", 
               change: "+15%", 
-              icon: "FiPackage", 
+              icon: FiPackage, 
               color: "#f59e0b",
-              description: "Units produced today",
+              description: `${currentDept.unit} produced today in ${currentDept.name}`,
               isPositive: true,
               link: "/production/today-output"
             },
@@ -96,9 +135,9 @@ const ProductionDashboard = () => {
               label: "Efficiency", 
               value: "92%", 
               change: "+3%", 
-              icon: "FiActivity", 
+              icon: FiActivity, 
               color: "#10b981",
-              description: "Overall production efficiency",
+              description: `Overall production efficiency for ${currentDept.name}`,
               isPositive: true,
               link: "/production/efficiency"
             },
@@ -107,9 +146,9 @@ const ProductionDashboard = () => {
               label: "Downtime", 
               value: "2%", 
               change: "-1%", 
-              icon: "FiClock", 
+              icon: FiClock, 
               color: "#ef4444",
-              description: "Machine downtime percentage",
+              description: `Machine downtime percentage in ${currentDept.name}`,
               isPositive: false,
               link: "/production/downtime"
             },
@@ -118,9 +157,9 @@ const ProductionDashboard = () => {
               label: "Quality Pass", 
               value: "98.5%", 
               change: "+0.5%", 
-              icon: "FiCheckCircle", 
+              icon: FiCheckCircle, 
               color: "#3b82f6",
-              description: "Quality inspection pass rate",
+              description: `Quality inspection pass rate for ${currentDept.name}`,
               isPositive: true,
               link: "/production/quality"
             },
@@ -129,9 +168,9 @@ const ProductionDashboard = () => {
               label: "Last Day Production", 
               value: "385", 
               change: "+5%", 
-              icon: "FiCalendar", 
+              icon: FiCalendar, 
               color: "#8b5cf6",
-              description: "Yesterday's total production",
+              description: `Yesterday's total production in ${currentDept.name}`,
               isPositive: true,
               link: "/production/analytics/last-day",
               isYesterday: true
@@ -141,9 +180,9 @@ const ProductionDashboard = () => {
               label: "Last Day Efficiency", 
               value: "88.2%", 
               change: "+1.8%", 
-              icon: "FiTarget", 
+              icon: FiTarget, 
               color: "#ec4899",
-              description: "Yesterday's average efficiency",
+              description: `Yesterday's average efficiency in ${currentDept.name}`,
               isPositive: true,
               link: "/production/analytics/last-day",
               isYesterday: true
@@ -173,7 +212,9 @@ const ProductionDashboard = () => {
               totalHours: 24,
               downtime: '1.2 hours',
               avgQuality: '96.7%'
-            }
+            },
+            department: currentDept.name,
+            unit: currentDept.unit
           },
           
           // Efficiency analytics data
@@ -214,7 +255,9 @@ const ProductionDashboard = () => {
               qualityRate: '96.7%',
               oee: '84.3%',
               utilization: '92.5%'
-            }
+            },
+            department: currentDept.name,
+            unit: currentDept.unit
           },
           
           // Charts data
@@ -241,7 +284,9 @@ const ProductionDashboard = () => {
               { section: 'Cutting', efficiency: 95, production: 1200 },
               { section: 'Packing', efficiency: 93, production: 1100 },
               { section: 'Finished Goods', efficiency: 97, production: 2000 }
-            ]
+            ],
+            department: currentDept.name,
+            unit: currentDept.unit
           },
           
           // Metrics data
@@ -261,7 +306,6 @@ const ProductionDashboard = () => {
                 operator: 'John Doe',
                 machine: 'FLT-001'
               },
-              // ... more records
             ],
             summary: {
               totalRecords: 8,
@@ -273,60 +317,23 @@ const ProductionDashboard = () => {
               pending: 1
             },
             sections: ['Flattening', 'Spiral', 'PVC Coating', 'Cutting', 'Packing', 'Finished Goods'],
-            statusOptions: ['completed', 'in-progress', 'pending']
+            statusOptions: ['completed', 'in-progress', 'pending'],
+            department: currentDept.name,
+            unit: currentDept.unit
           },
           
           // Production lines data
-          productionLines: [
-            { 
-              id: 1, 
-              name: "Flattening Line", 
-              status: "Running", 
-              output: "1,250", 
-              efficiency: "94%",
-              section: "flattening"
-            },
-            { 
-              id: 2, 
-              name: "Spiral Line", 
-              status: "Running", 
-              output: "850", 
-              efficiency: "90%",
-              section: "spiral" 
-            },
-            { 
-              id: 3, 
-              name: "Galvanizing Line", 
-              status: "Maintenance", 
-              output: "0", 
-              efficiency: "0%",
-              section: "galvanizing"
-            },
-            { 
-              id: 4, 
-              name: "PVC Coating", 
-              status: "Running", 
-              output: "750", 
-              efficiency: "92%",
-              section: "pvc-coating"
-            },
-            { 
-              id: 5, 
-              name: "Cutting & Packing", 
-              status: "Running", 
-              output: "1,200", 
-              efficiency: "95%",
-              section: "cutting-packing"
-            },
-            { 
-              id: 6, 
-              name: "Finished Goods", 
-              status: "Running", 
-              output: "2,000", 
-              efficiency: "97%",
-              section: "finished-goods"
-            },
-          ]
+          productionLines: departments.map(dept => ({
+            id: dept.id,
+            name: dept.name,
+            status: "Running",
+            output: Math.floor(Math.random() * 2000) + 500,
+            efficiency: `${Math.floor(Math.random() * 15) + 85}%`,
+            section: dept.name.toLowerCase().replace(/\s+/g, '-'),
+            icon: dept.icon,
+            color: dept.color,
+            unit: dept.unit
+          }))
         };
         
         setDashboardData(mockData);
@@ -341,7 +348,7 @@ const ProductionDashboard = () => {
     const interval = setInterval(fetchDashboardData, 5 * 60 * 1000);
     
     return () => clearInterval(interval);
-  }, []);
+  }, [selectedDepartment]);
 
   // === Navigation functions ===
   const handleOpenProductionSections = () => {
@@ -361,23 +368,41 @@ const ProductionDashboard = () => {
   };
 
   const handleExportDashboard = () => {
-    console.log('Exporting dashboard data...');
-    // Implement export logic here
+    if (!dashboardData) return;
+    
+    const exportData = {
+      timestamp: new Date().toISOString(),
+      dashboard: 'Production Dashboard',
+      selectedDepartment: dashboardData.department,
+      data: dashboardData,
+      lastRefresh: lastRefresh.toISOString()
+    };
+    
+    const dataStr = JSON.stringify(exportData, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+    const exportFileDefaultName = `production-dashboard-${dashboardData.department}-${new Date().toISOString().split('T')[0]}.json`;
+    
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
+    
+    alert(`Dashboard data exported as ${exportFileDefaultName}`);
   };
 
   const handleCardClick = (card) => {
     console.log('Card clicked:', card);
     if (card.link) {
-      navigate(card.link);
+      navigate(`${card.link}?department=${encodeURIComponent(dashboardData.department)}`);
     }
   };
 
   const handleViewRecord = (record) => {
-    navigate(`/production/records/${record.id}`);
+    navigate(`/production/records/${record.id}?department=${dashboardData.department}`);
   };
 
   const handleEditRecord = (record) => {
-    navigate(`/production/records/${record.id}/edit`);
+    navigate(`/production/records/${record.id}/edit?department=${dashboardData.department}`);
   };
 
   const handleDeleteRecord = (record) => {
@@ -397,6 +422,17 @@ const ProductionDashboard = () => {
     // Implement chart export logic here
   };
 
+  const handleDepartmentChange = (deptName) => {
+    setSelectedDepartment(deptName);
+    setLoading(true);
+    // Trigger data refresh for new department
+    setTimeout(() => {
+      setLoading(false);
+    }, 500);
+  };
+
+  const currentDept = getCurrentDepartment();
+
   if (loading && !dashboardData) {
     return (
       <div style={{ padding: "20px", background: "#f8fafc", minHeight: "100vh" }}>
@@ -413,7 +449,7 @@ const ProductionDashboard = () => {
             width: '60px',
             height: '60px',
             border: '5px solid #e2e8f0',
-            borderTopColor: '#4f46e5',
+            borderTopColor: currentDept?.color || '#4f46e5',
             borderRadius: '50%',
             margin: '0 auto 20px',
             animation: 'spin 1s linear infinite'
@@ -422,7 +458,10 @@ const ProductionDashboard = () => {
             Loading Production Dashboard
           </h3>
           <p style={{ color: '#64748b' }}>
-            Please wait while we load the latest production data...
+            Please wait while we load data for {selectedDepartment}...
+          </p>
+          <p style={{ fontSize: '13px', color: '#94a3b8', marginTop: '5px' }}>
+            Table: {currentDept?.tableName} • Unit: {currentDept?.unit}
           </p>
         </div>
         <style>{`
@@ -457,28 +496,94 @@ const ProductionDashboard = () => {
             <div style={{
               width: "60px",
               height: "60px",
-              background: "linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)",
+              background: `linear-gradient(135deg, ${currentDept?.color || '#3b82f6'} 0%, ${currentDept?.color || '#1d4ed8'}80 100%)`,
               borderRadius: "15px",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               color: "white"
             }}>
-              <FiPackage size={28} />
+              {currentDept?.icon ? React.createElement(currentDept.icon, { size: 28 }) : <FiPackage size={28} />}
             </div>
-            Production Dashboard 1
+            Production Dashboard
           </h1>
           <p style={{ 
             margin: "10px 0 0 75px", 
             color: "#64748b",
-            fontSize: "16px"
+            fontSize: "16px",
+            display: "flex",
+            alignItems: "center",
+            gap: "10px"
           }}>
-            Real-time monitoring, analytics and management of production operations
+            Real-time monitoring, analytics and management of {selectedDepartment}
+            {!isSupabaseConnected && (
+              <span style={{
+                fontSize: "12px",
+                background: "#fee2e2",
+                color: "#dc2626",
+                padding: "4px 8px",
+                borderRadius: "20px",
+                display: "flex",
+                alignItems: "center",
+                gap: "5px",
+                marginLeft: "10px"
+              }}>
+                <FaDatabase size={10} /> Database Disconnected
+              </span>
+            )}
           </p>
         </div>
         
         {/* Dashboard Controls */}
         <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+          {/* Department Selection */}
+          <div style={{ 
+            display: "flex", 
+            flexWrap: "wrap", 
+            gap: "6px",
+            background: "#f8fafc",
+            padding: "6px",
+            borderRadius: "8px",
+            border: "1px solid #e2e8f0"
+          }}>
+            {departments.map(dept => (
+              <button
+                key={dept.id}
+                onClick={() => handleDepartmentChange(dept.name)}
+                style={{
+                  background: selectedDepartment === dept.name ? 
+                    `${dept.color}15` : 'transparent',
+                  color: selectedDepartment === dept.name ? dept.color : '#64748b',
+                  border: `1px solid ${selectedDepartment === dept.name ? dept.color : '#e2e8f0'}`,
+                  padding: '6px 12px',
+                  borderRadius: '20px',
+                  fontSize: '12px',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={(e) => {
+                  if (selectedDepartment !== dept.name) {
+                    e.target.style.background = '#ffffff';
+                    e.target.style.borderColor = '#cbd5e1';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (selectedDepartment !== dept.name) {
+                    e.target.style.background = 'transparent';
+                    e.target.style.borderColor = '#e2e8f0';
+                  }
+                }}
+              >
+                {React.createElement(dept.icon, { size: 12 })}
+                {dept.name.split(' ')[0]}
+              </button>
+            ))}
+          </div>
+
           <div style={{
             background: 'white',
             padding: '8px 16px',
@@ -524,7 +629,7 @@ const ProductionDashboard = () => {
           <button
             onClick={handleExportDashboard}
             style={{
-              background: '#3b82f6',
+              background: currentDept?.color || '#3b82f6',
               color: 'white',
               border: 'none',
               padding: '10px 20px',
@@ -538,11 +643,11 @@ const ProductionDashboard = () => {
               transition: 'all 0.2s'
             }}
             onMouseEnter={(e) => {
-              e.target.style.background = '#2563eb';
+              e.target.style.background = currentDept?.color ? `${currentDept.color}cc` : '#2563eb';
               e.target.style.transform = 'translateY(-2px)';
             }}
             onMouseLeave={(e) => {
-              e.target.style.background = '#3b82f6';
+              e.target.style.background = currentDept?.color || '#3b82f6';
               e.target.style.transform = 'translateY(0)';
             }}
           >
@@ -552,7 +657,7 @@ const ProductionDashboard = () => {
           
           {/* Daily Report Button */}
           <Link
-            to="/production-reports/daily"
+            to={`/production-reports/daily?department=${encodeURIComponent(selectedDepartment)}`}
             style={{
               background: "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)",
               color: "white",
@@ -652,7 +757,7 @@ const ProductionDashboard = () => {
           <div
             className="switcher-icon"
             style={{
-              background: "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)",
+              background: `linear-gradient(135deg, ${currentDept?.color || '#8b5cf6'} 0%, ${currentDept?.color || '#7c3aed'}80 100%)`,
               width: '45px',
               height: '45px',
               borderRadius: '12px',
@@ -676,9 +781,16 @@ const ProductionDashboard = () => {
             </div>
             <div className="switcher-subtitle" style={{
               fontSize: '14px',
-              color: '#64748b'
+              color: '#64748b',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px'
             }}>
-              Click any section to switch instantly
+              <span>Current: {selectedDepartment}</span>
+              <span style={{ color: '#cbd5e1' }}>•</span>
+              <span>Table: {currentDept?.tableName}</span>
+              <span style={{ color: '#cbd5e1' }}>•</span>
+              <span>Unit: {currentDept?.unit}</span>
             </div>
           </div>
         </div>
@@ -694,19 +806,22 @@ const ProductionDashboard = () => {
             <div
               key={section.id}
               className="section-card-wrapper"
-              onClick={() => navigate(section.path)}
+              onClick={() => {
+                handleDepartmentChange(section.name);
+                navigate(section.path);
+              }}
               style={{
                 cursor: 'pointer',
                 position: 'relative'
               }}
             >
               <div
-                className={`section-card ${section.id === "pvc-coating" ? "active" : ""}`}
+                className={`section-card ${selectedDepartment === section.name ? "active" : ""}`}
                 style={{
                   background: 'white',
                   borderRadius: '10px',
                   padding: '20px',
-                  border: `2px solid ${section.id === "pvc-coating" ? section.color : '#e2e8f0'}`,
+                  border: `2px solid ${selectedDepartment === section.name ? section.color : '#e2e8f0'}`,
                   position: 'relative',
                   overflow: 'hidden',
                   transition: 'all 0.3s ease',
@@ -724,8 +839,8 @@ const ProductionDashboard = () => {
                 <div
                   className="section-card-highlight"
                   style={{
-                    background: section.id === "pvc-coating"
-                      ? "linear-gradient(90deg, #8b5cf6, #7c3aed)"
+                    background: selectedDepartment === section.name
+                      ? `linear-gradient(90deg, ${section.color}, ${section.color}80)`
                       : "transparent",
                     position: 'absolute',
                     top: 0,
@@ -737,8 +852,8 @@ const ProductionDashboard = () => {
                 <div
                   className="section-icon-container"
                   style={{
-                    background: section.id === "pvc-coating"
-                      ? "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)"
+                    background: selectedDepartment === section.name
+                      ? `linear-gradient(135deg, ${section.color} 0%, ${section.color}80 100%)`
                       : "linear-gradient(135deg, #6b7280 0%, #4b5563 100%)",
                     width: '50px',
                     height: '50px',
@@ -751,7 +866,7 @@ const ProductionDashboard = () => {
                     position: 'relative'
                   }}
                 >
-                  <section.icon size={22} />
+                  {React.createElement(section.icon, { size: 22 })}
                 </div>
                 <div className="section-text-content">
                   <div className="section-name" style={{
@@ -762,19 +877,43 @@ const ProductionDashboard = () => {
                   }}>
                     {section.name}
                   </div>
+                  <div className="section-info" style={{
+                    fontSize: '12px',
+                    color: '#64748b',
+                    marginBottom: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <FaDatabase size={10} />
+                      {section.tableName}
+                    </span>
+                    <span>•</span>
+                    <span>{section.unit}</span>
+                  </div>
                   <div className="section-hint" style={{
                     fontSize: '13px',
-                    color: '#64748b',
+                    color: selectedDepartment === section.name ? section.color : '#64748b',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '6px'
                   }}>
-                    <span>📊</span>
-                    <span>Click to open section</span>
+                    {selectedDepartment === section.name ? (
+                      <>
+                        <FaSpinner style={{ animation: 'spin 1s linear infinite' }} />
+                        <span>Current Section</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>📊</span>
+                        <span>Click to switch</span>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
-              {section.id !== "pvc-coating" && (
+              {selectedDepartment !== section.name && (
                 <div className="section-bottom-shadow" style={{
                   position: 'absolute',
                   bottom: '-4px',
@@ -803,7 +942,7 @@ const ProductionDashboard = () => {
           zIndex: 1
         }}>
           <FiArrowUpRight size={10} />
-          <span>Click any card above to navigate to that production section</span>
+          <span>Click any card to navigate and switch to that production section</span>
         </div>
       </div>
 
@@ -820,7 +959,7 @@ const ProductionDashboard = () => {
         <button
           onClick={() => setActiveTab('overview')}
           style={{
-            background: activeTab === 'overview' ? '#3b82f6' : 'transparent',
+            background: activeTab === 'overview' ? (currentDept?.color || '#3b82f6') : 'transparent',
             color: activeTab === 'overview' ? 'white' : '#64748b',
             border: 'none',
             padding: '10px 20px',
@@ -828,10 +967,13 @@ const ProductionDashboard = () => {
             cursor: 'pointer',
             fontSize: '14px',
             fontWeight: '600',
-            transition: 'all 0.2s'
+            transition: 'all 0.2s',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
           }}
         >
-          <FiPackage style={{ marginRight: '8px' }} />
+          <FiPackage size={16} />
           Overview
         </button>
         
@@ -846,17 +988,20 @@ const ProductionDashboard = () => {
             cursor: 'pointer',
             fontSize: '14px',
             fontWeight: '600',
-            transition: 'all 0.2s'
+            transition: 'all 0.2s',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
           }}
         >
-          <FiBarChart2 style={{ marginRight: '8px' }} />
+          <FiBarChart2 size={16} />
           Analytics
         </button>
         
         <button
           onClick={() => setActiveTab('records')}
           style={{
-            background: activeTab === 'records' ? '#2910b9ff' : 'transparent',
+            background: activeTab === 'records' ? '#10b981' : 'transparent',
             color: activeTab === 'records' ? 'white' : '#64748b',
             border: 'none',
             padding: '10px 20px',
@@ -864,10 +1009,13 @@ const ProductionDashboard = () => {
             cursor: 'pointer',
             fontSize: '14px',
             fontWeight: '600',
-            transition: 'all 0.2s'
+            transition: 'all 0.2s',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
           }}
         >
-          <FiActivity style={{ marginRight: '8px' }} />
+          <FiActivity size={16} />
           Records
         </button>
         
@@ -882,10 +1030,13 @@ const ProductionDashboard = () => {
             cursor: 'pointer',
             fontSize: '14px',
             fontWeight: '600',
-            transition: 'all 0.2s'
+            transition: 'all 0.2s',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
           }}
         >
-          <FiSettings style={{ marginRight: '8px' }} />
+          <FiSettings size={16} />
           Sections
         </button>
       </div>
@@ -941,7 +1092,7 @@ const ProductionDashboard = () => {
             Advanced Analytics
           </h2>
           <p style={{ color: '#64748b', marginBottom: '30px' }}>
-            Detailed analytical views and reports for production performance
+            Detailed analytical views and reports for {selectedDepartment} performance
           </p>
           
           {/* Yesterday Stats in Analytics Tab */}
@@ -1004,11 +1155,11 @@ const ProductionDashboard = () => {
                 alignItems: "center",
                 gap: "12px"
               }}>
-                <FiActivity style={{ color: "rgba(185, 86, 16, 1)" }} />
+                {React.createElement(currentDept?.icon || FaIndustry, { style: { color: currentDept?.color || "rgba(185, 86, 16, 1)" } })}
                 Production Lines Status
               </h2>
-              <p style={{ margin: "0", color: "#8b7164ff", fontSize: "15px" }}>
-                6 active production lines • Real-time monitoring
+              <p style={{ margin: "0", color: "#64748b", fontSize: "15px" }}>
+                {departments.length} active production sections • Real-time monitoring
               </p>
             </div>
             
@@ -1016,7 +1167,7 @@ const ProductionDashboard = () => {
               <button
                 onClick={handleOpenProductionSections}
                 style={{
-                  background: "#3b82f6",
+                  background: currentDept?.color || "#3b82f6",
                   color: "white",
                   border: "none",
                   padding: "12px 24px",
@@ -1030,11 +1181,11 @@ const ProductionDashboard = () => {
                   transition: "all 0.2s ease"
                 }}
                 onMouseEnter={(e) => {
-                  e.target.style.background = "rgba(245, 6, 6, 1)";
+                  e.target.style.background = currentDept?.color ? `${currentDept.color}cc` : "#2563eb";
                   e.target.style.transform = "translateY(-2px)";
                 }}
                 onMouseLeave={(e) => {
-                  e.target.style.background = "rgba(19, 55, 213, 1)";
+                  e.target.style.background = currentDept?.color || "#3b82f6";
                   e.target.style.transform = "translateY(0)";
                 }}
               >
@@ -1076,180 +1227,187 @@ const ProductionDashboard = () => {
             gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", 
             gap: "20px" 
           }}>
-            {dashboardData?.productionLines.map(line => (
-              <div 
-                key={line.id} 
-                style={{
-                  padding: "24px",
-                  background: line.status === "Running" ? "#f0fdf4" : 
-                             line.status === "Maintenance" ? "#fffbeb" : "#fef2f2",
-                  borderRadius: "12px",
-                  border: `2px solid ${line.status === "Running" ? "#10b981" : 
-                          line.status === "Maintenance" ? "#f59e0b" : "#ef4444"}`,
-                  transition: "all 0.3s ease",
-                  cursor: "pointer"
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = "translateY(-5px)";
-                  e.currentTarget.style.boxShadow = "0 10px 25px rgba(0, 0, 0, 0.1)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = "translateY(0)";
-                  e.currentTarget.style.boxShadow = "none";
-                }}
-                onClick={() => handleOpenSection(line.section)}
-              >
-                <div style={{ 
-                  display: "flex", 
-                  justifyContent: "space-between", 
-                  alignItems: "flex-start", 
-                  marginBottom: "20px" 
-                }}>
-                  <div>
-                    <h3 style={{ 
-                      margin: "0 0 8px 0", 
-                      fontSize: "18px", 
-                      color: "#1e293b",
+            {dashboardData?.productionLines.map(line => {
+              const lineDept = departments.find(d => d.name === line.name);
+              return (
+                <div 
+                  key={line.id} 
+                  style={{
+                    padding: "24px",
+                    background: line.status === "Running" ? "#f0fdf4" : 
+                              line.status === "Maintenance" ? "#fffbeb" : "#fef2f2",
+                    borderRadius: "12px",
+                    border: `2px solid ${line.status === "Running" ? (lineDept?.color || "#10b981") : 
+                            line.status === "Maintenance" ? "#f59e0b" : "#ef4444"}`,
+                    transition: "all 0.3s ease",
+                    cursor: "pointer"
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = "translateY(-5px)";
+                    e.currentTarget.style.boxShadow = "0 10px 25px rgba(0, 0, 0, 0.1)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = "translateY(0)";
+                    e.currentTarget.style.boxShadow = "none";
+                  }}
+                  onClick={() => handleOpenSection(line.section)}
+                >
+                  <div style={{ 
+                    display: "flex", 
+                    justifyContent: "space-between", 
+                    alignItems: "flex-start", 
+                    marginBottom: "20px" 
+                  }}>
+                    <div>
+                      <h3 style={{ 
+                        margin: "0 0 8px 0", 
+                        fontSize: "18px", 
+                        color: "#1e293b",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px"
+                      }}>
+                        <div style={{
+                          width: "12px",
+                          height: "12px",
+                          background: line.status === "Running" ? (lineDept?.color || "#10b981") : 
+                                    line.status === "Maintenance" ? "#f59e0b" : "#ef4444",
+                          borderRadius: "50%"
+                        }} />
+                        {line.name}
+                      </h3>
+                      <p style={{ 
+                        margin: "0", 
+                        fontSize: "13px", 
+                        color: "#64748b",
+                        fontFamily: "monospace",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px"
+                      }}>
+                        <FaDatabase size={10} />
+                        Table: {lineDept?.tableName || "N/A"}
+                      </p>
+                    </div>
+                    <span style={{
+                      padding: "6px 16px",
+                      borderRadius: "20px",
+                      fontSize: "13px",
+                      fontWeight: "600",
+                      background: line.status === "Running" ? "#d1fae5" : 
+                                line.status === "Maintenance" ? "#fef3c7" : "#fee2e2",
+                      color: line.status === "Running" ? "#059669" : 
+                            line.status === "Maintenance" ? "#d97706" : "#dc2626",
                       display: "flex",
                       alignItems: "center",
-                      gap: "10px"
+                      gap: "8px"
                     }}>
                       <div style={{
-                        width: "12px",
-                        height: "12px",
-                        background: line.status === "Running" ? "#10b981" : 
-                                   line.status === "Maintenance" ? "#f59e0b" : "#ef4444",
-                        borderRadius: "50%"
+                        width: "8px",
+                        height: "8px",
+                        background: line.status === "Running" ? "#059669" : 
+                                  line.status === "Maintenance" ? "#d97706" : "#dc2626",
+                        borderRadius: "50%",
+                        animation: line.status === "Running" ? "pulse 1.5s infinite" : "none"
                       }} />
-                      {line.name}
-                    </h3>
-                    <p style={{ 
-                      margin: "0", 
-                      fontSize: "13px", 
-                      color: "#64748b",
-                      fontFamily: "monospace"
-                    }}>
-                      Line ID: PROD-{line.id.toString().padStart(3, '0')}
-                    </p>
+                      {line.status}
+                    </span>
                   </div>
-                  <span style={{
-                    padding: "6px 16px",
-                    borderRadius: "20px",
-                    fontSize: "13px",
-                    fontWeight: "600",
-                    background: line.status === "Running" ? "#d1fae5" : 
-                               line.status === "Maintenance" ? "#fef3c7" : "#fee2e2",
-                    color: line.status === "Running" ? "#059669" : 
-                          line.status === "Maintenance" ? "#d97706" : "#dc2626",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px"
+                  
+                  <div style={{ 
+                    display: "grid", 
+                    gridTemplateColumns: "1fr 1fr", 
+                    gap: "20px",
+                    marginBottom: "20px"
                   }}>
-                    <div style={{
-                      width: "8px",
-                      height: "8px",
-                      background: line.status === "Running" ? "#059669" : 
-                                 line.status === "Maintenance" ? "#d97706" : "#dc2626",
-                      borderRadius: "50%",
-                      animation: line.status === "Running" ? "pulse 1.5s infinite" : "none"
-                    }} />
-                    {line.status}
-                  </span>
-                </div>
-                
-                <div style={{ 
-                  display: "grid", 
-                  gridTemplateColumns: "1fr 1fr", 
-                  gap: "20px",
-                  marginBottom: "20px"
-                }}>
-                  <div>
-                    <div style={{ 
-                      fontSize: "14px", 
-                      color: "#64748b", 
-                      marginBottom: "8px",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px"
-                    }}>
-                      <FiPackage size={16} /> Output
-                    </div>
-                    <div style={{ 
-                      fontSize: "24px", 
-                      fontWeight: "700", 
-                      color: "#1e293b",
-                      display: "flex",
-                      alignItems: "baseline"
-                    }}>
-                      {line.output}
-                      <span style={{ 
-                        fontSize: "15px", 
-                        fontWeight: "normal", 
-                        color: "#64748b",
-                        marginLeft: "6px"
+                    <div>
+                      <div style={{ 
+                        fontSize: "14px", 
+                        color: "#64748b", 
+                        marginBottom: "8px",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px"
                       }}>
-                        units
-                      </span>
+                        <FiPackage size={16} /> Output
+                      </div>
+                      <div style={{ 
+                        fontSize: "24px", 
+                        fontWeight: "700", 
+                        color: "#1e293b",
+                        display: "flex",
+                        alignItems: "baseline"
+                      }}>
+                        {line.output.toLocaleString()}
+                        <span style={{ 
+                          fontSize: "15px", 
+                          fontWeight: "normal", 
+                          color: "#64748b",
+                          marginLeft: "6px"
+                        }}>
+                          {line.unit}
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ 
+                        fontSize: "14px", 
+                        color: "#64748b", 
+                        marginBottom: "8px",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px"
+                      }}>
+                        <FiTrendingUp size={16} /> Efficiency
+                      </div>
+                      <div style={{ 
+                        fontSize: "24px", 
+                        fontWeight: "700", 
+                        color: "#10b981" 
+                      }}>
+                        {line.efficiency}
+                      </div>
                     </div>
                   </div>
-                  <div>
-                    <div style={{ 
-                      fontSize: "14px", 
-                      color: "#64748b", 
-                      marginBottom: "8px",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px"
-                    }}>
-                      <FiTrendingUp size={16} /> Efficiency
-                    </div>
-                    <div style={{ 
-                      fontSize: "24px", 
-                      fontWeight: "700", 
-                      color: "#10b981" 
-                    }}>
-                      {line.efficiency}
-                    </div>
-                  </div>
-                </div>
-                
-                <div style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  paddingTop: "18px",
-                  borderTop: "1px solid rgba(0, 0, 0, 0.1)"
-                }}>
-                  <span style={{
-                    fontSize: "13px",
-                    color: "#64748b",
-                    fontStyle: "italic"
-                  }}>
-                    Click to view details
-                  </span>
+                  
                   <div style={{
                     display: "flex",
                     alignItems: "center",
-                    gap: "8px",
-                    color: "#3b82f6",
-                    fontWeight: "500"
+                    justifyContent: "space-between",
+                    paddingTop: "18px",
+                    borderTop: "1px solid rgba(0, 0, 0, 0.1)"
                   }}>
-                    <span>View Section</span>
-                    <FiArrowRight />
+                    <span style={{
+                      fontSize: "13px",
+                      color: "#64748b",
+                      fontStyle: "italic"
+                    }}>
+                      Click to view details
+                    </span>
+                    <div style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      color: lineDept?.color || "#3b82f6",
+                      fontWeight: "500"
+                    }}>
+                      <span>View Section</span>
+                      <FiArrowRight />
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>
 
       {/* Daily Production Report Card */}
       <div style={{
-        background: "linear-gradient(135deg, #f16363ff 0%, #4f46e5 100%)",
+        background: `linear-gradient(135deg, ${currentDept?.color || '#4f46e5'} 0%, ${currentDept?.color || '#3730a3'}80 100%)`,
         padding: "25px",
         borderRadius: "12px",
-        border: "2px solid #4f46e5",
+        border: `2px solid ${currentDept?.color || '#4f46e5'}`,
         marginTop: "20px",
         marginBottom: "20px",
         color: "white",
@@ -1282,7 +1440,7 @@ const ProductionDashboard = () => {
               gap: "12px"
             }}>
               <FiBarChart2 size={24} />
-              Daily Production Report
+              Daily Production Report - {selectedDepartment}
             </h3>
             <p style={{ 
               margin: "0", 
@@ -1291,16 +1449,20 @@ const ProductionDashboard = () => {
               lineHeight: "1.5"
             }}>
               View detailed daily production analysis, section-wise performance, 
-              material consumption, and generate exportable reports.
+              material consumption, and generate exportable reports for {selectedDepartment}.
+              <br />
+              <span style={{ fontSize: "13px", opacity: "0.7", marginTop: "5px", display: "block" }}>
+                Table: {currentDept?.tableName} • Unit: {currentDept?.unit}
+              </span>
             </p>
           </div>
           
           <div style={{ display: "flex", gap: "12px" }}>
             <Link
-              to="/production-reports/daily"
+              to={`/production-reports/daily?department=${encodeURIComponent(selectedDepartment)}`}
               style={{
                 background: "white",
-                color: "#4f46e5",
+                color: currentDept?.color || "#4f46e5",
                 border: "none",
                 padding: "12px 24px",
                 borderRadius: "8px",
@@ -1328,11 +1490,7 @@ const ProductionDashboard = () => {
             </Link>
             
             <button
-              onClick={() => {
-                // Quick view functionality
-                console.log("Opening quick report view");
-                navigate("/production-reports/daily");
-              }}
+              onClick={handleExportDashboard}
               style={{
                 background: "rgba(255, 255, 255, 0.2)",
                 color: "white",
@@ -1383,6 +1541,9 @@ const ProductionDashboard = () => {
             <div style={{ fontSize: "24px", fontWeight: "700" }}>
               {dashboardData?.stats[0]?.value || "2,850"}
             </div>
+            <div style={{ fontSize: "12px", opacity: "0.7" }}>
+              {currentDept?.unit}
+            </div>
           </div>
           
           <div style={{
@@ -1397,6 +1558,9 @@ const ProductionDashboard = () => {
             <div style={{ fontSize: "24px", fontWeight: "700", color: "#a5b4fc" }}>
               {dashboardData?.stats[1]?.value || "92%"}
             </div>
+            <div style={{ fontSize: "12px", opacity: "0.7" }}>
+              Overall
+            </div>
           </div>
           
           <div style={{
@@ -1409,7 +1573,10 @@ const ProductionDashboard = () => {
               Active Sections
             </div>
             <div style={{ fontSize: "24px", fontWeight: "700" }}>
-              {dashboardData?.productionLines?.length || "6"}
+              {dashboardData?.productionLines?.length || departments.length}
+            </div>
+            <div style={{ fontSize: "12px", opacity: "0.7" }}>
+              Total
             </div>
           </div>
           
@@ -1420,10 +1587,13 @@ const ProductionDashboard = () => {
             backdropFilter: "blur(10px)"
           }}>
             <div style={{ fontSize: "14px", opacity: "0.8", marginBottom: "8px" }}>
-              Report Date
+              Current Department
             </div>
             <div style={{ fontSize: "16px", fontWeight: "600" }}>
-              {new Date().toLocaleDateString()}
+              {selectedDepartment}
+            </div>
+            <div style={{ fontSize: "12px", opacity: "0.7" }}>
+              {currentDept?.tableName}
             </div>
           </div>
         </div>
@@ -1434,19 +1604,34 @@ const ProductionDashboard = () => {
         background: "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)",
         padding: "25px",
         borderRadius: "12px",
-        border: "2px solid #e2e8f0",
-        marginTop: "20px"
+        border: `2px solid ${currentDept?.color || '#e2e8f0'}30`,
+        marginTop: "20px",
+        position: "relative",
+        overflow: "hidden"
       }}>
+        <div style={{
+          position: "absolute",
+          top: "0",
+          right: "0",
+          width: "100px",
+          height: "100px",
+          background: `${currentDept?.color || '#3b82f6'}10`,
+          borderRadius: "50%",
+          transform: "translate(30px, -30px)"
+        }}></div>
+        
         <div style={{ 
           display: "flex", 
           alignItems: "center", 
           gap: "20px", 
-          marginBottom: "20px" 
+          marginBottom: "20px",
+          position: "relative",
+          zIndex: 1
         }}>
           <div style={{
             width: "60px",
             height: "60px",
-            background: "linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)",
+            background: `linear-gradient(135deg, ${currentDept?.color || '#3b82f6'} 0%, ${currentDept?.color || '#1d4ed8'}80 100%)`,
             borderRadius: "12px",
             display: "flex",
             alignItems: "center",
@@ -1462,7 +1647,7 @@ const ProductionDashboard = () => {
               fontSize: "20px", 
               color: "#1e293b" 
             }}>
-              Production Dashboard Overview Afsar
+              Production Dashboard Overview
             </h3>
             <p style={{ 
               margin: "0", 
@@ -1470,8 +1655,12 @@ const ProductionDashboard = () => {
               fontSize: "15px",
               lineHeight: "1.5"
             }}>
-              This dashboard provides comprehensive monitoring of all production operations. 
-              Use the tabs above to navigate between different views: Overview, Analytics, Records, and Sections.
+              This dashboard provides comprehensive monitoring of {selectedDepartment} operations. 
+              <br />
+              <span style={{ fontSize: "13px", color: "#94a3b8", marginTop: "5px", display: "block" }}>
+                Table: {currentDept?.tableName} • Unit: {currentDept?.unit} • 
+                Data Source: Supabase Database
+              </span>
             </p>
           </div>
         </div>
@@ -1480,13 +1669,15 @@ const ProductionDashboard = () => {
           display: "grid",
           gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
           gap: "15px",
-          marginTop: "25px"
+          marginTop: "25px",
+          position: "relative",
+          zIndex: 1
         }}>
           <div style={{
             background: "white",
             padding: "18px",
             borderRadius: "10px",
-            borderLeft: "4px solid #3b82f6",
+            borderLeft: `4px solid ${currentDept?.color || '#3b82f6'}`,
             boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)"
           }}>
             <div style={{ fontSize: "14px", color: "#64748b", marginBottom: "8px" }}>
@@ -1506,18 +1697,18 @@ const ProductionDashboard = () => {
             background: "white",
             padding: "18px",
             borderRadius: "10px",
-            borderLeft: "4px solid #10b981",
+            borderLeft: `4px solid ${currentDept?.color || '#10b981'}`,
             boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)"
           }}>
             <div style={{ fontSize: "14px", color: "#64748b", marginBottom: "8px" }}>
-              Total Records
+              Current Department
             </div>
             <div style={{ 
               fontSize: "16px", 
               fontWeight: "600", 
-              color: "#1e293b"
+              color: currentDept?.color || "#1e293b"
             }}>
-              {dashboardData?.metricsData?.summary.totalRecords || 0} records
+              {selectedDepartment}
             </div>
           </div>
           
@@ -1525,7 +1716,7 @@ const ProductionDashboard = () => {
             background: "white",
             padding: "18px",
             borderRadius: "10px",
-            borderLeft: "4px solid #8b5cf6",
+            borderLeft: `4px solid ${currentDept?.color || '#8b5cf6'}`,
             boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)"
           }}>
             <div style={{ fontSize: "14px", color: "#64748b", marginBottom: "8px" }}>
@@ -1544,18 +1735,18 @@ const ProductionDashboard = () => {
             background: "white",
             padding: "18px",
             borderRadius: "10px",
-            borderLeft: "4px solid #f59e0b",
+            borderLeft: `4px solid ${currentDept?.color || '#f59e0b'}`,
             boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)"
           }}>
             <div style={{ fontSize: "14px", color: "#64748b", marginBottom: "8px" }}>
-              Auto Refresh
+              Data Status
             </div>
             <div style={{ 
               fontSize: "16px", 
               fontWeight: "600", 
-              color: "#1e293b"
+              color: isSupabaseConnected ? "#10b981" : "#ef4444"
             }}>
-              Every 5 minutes
+              {isSupabaseConnected ? "Connected" : "Disconnected"}
             </div>
           </div>
         </div>
@@ -1566,6 +1757,9 @@ const ProductionDashboard = () => {
         @keyframes pulse {
           0%, 100% { opacity: 1; }
           50% { opacity: 0.5; }
+        }
+        @keyframes spin {
+          to { transform: rotate(360deg); }
         }
       `}</style>
     </div>

@@ -14,28 +14,15 @@ import {
 } from "react-icons/fi";
 import { FaWhatsapp } from "react-icons/fa";
 import { supabase } from "../../../supabaseClient";
+import { useTheme } from "../../../contexts/ThemeContext"; // ✅ تھیم کونٹیکسٹ شامل کیا
 import "./PVCCoatingPage.css";
 
 const PVCcoatingPage = () => {
   const navigate = useNavigate();
   
-  // Theme state
-  const [theme, setTheme] = useState(() => {
-    return localStorage.getItem("app-theme") || "light";
-  });
+  // ✅ Theme Context استعمال کریں
+  const { currentTheme, mode, isDarkMode, toggleMode } = useTheme();
   
-  // Apply theme
-  useEffect(() => {
-    document.documentElement.className = `theme-${theme}`;
-    localStorage.setItem("app-theme", theme);
-  }, [theme]);
-  
-  const toggleTheme = () => {
-    const themes = ['light', 'dark', 'cream'];
-    const nextIndex = (themes.indexOf(theme) + 1) % themes.length;
-    setTheme(themes[nextIndex]);
-  };
-
   // Data states
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -333,12 +320,12 @@ const PVCcoatingPage = () => {
   const lastEntryStats = calculateLastEntryStats(records);
   const allStats = calculateAllStats(records);
 
-  // ✅ Efficiency color calculator
+  // ✅ Efficiency color calculator - Theme colors استعمال کریں
   const getEfficiencyColor = (efficiency) => {
     const eff = parseFloat(efficiency) || 0;
-    if (eff >= 80) return '#10b981';
-    if (eff >= 70) return '#f59e0b';
-    return '#ef4444';
+    if (eff >= 80) return '#10b981'; // Success color
+    if (eff >= 70) return '#f59e0b'; // Warning color
+    return '#ef4444'; // Error color
   };
 
   const getEfficiencyTextColor = (efficiency) => {
@@ -1029,9 +1016,25 @@ const PVCcoatingPage = () => {
 
   if (loading && records.length === 0) {
     return (
-      <div style={styles.loadingContainer}>
-        <div className="mini-spinner" style={{ width: '40px', height: '40px' }}></div>
-        <div style={{ marginTop: '16px', color: 'var(--text-secondary)' }}>
+      <div className={`loading-container ${isDarkMode ? 'dark-mode' : 'light-mode'}`} style={{
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: '100%',
+        height: '100vh',
+        backgroundColor: isDarkMode ? '#121212' : '#FFFFFF',
+      }}>
+        <div className="mini-spinner" style={{ 
+          width: '40px', 
+          height: '40px',
+          border: `3px solid ${isDarkMode ? '#333' : '#EEE'}`,
+          borderTopColor: currentTheme?.colors?.primary || '#3b82f6' 
+        }}></div>
+        <div style={{ 
+          marginTop: '16px', 
+          color: isDarkMode ? '#7986CB' : '#1A237E' // ✅ INDIGO/NAVY COLORS
+        }}>
           Loading PVC Coating Data...
         </div>
       </div>
@@ -1039,10 +1042,25 @@ const PVCcoatingPage = () => {
   }
 
   return (
-    <div className={`pvc-container theme-${theme}`} style={styles.container}>
+    <div className={`pvc-container ${isDarkMode ? 'dark-mode' : 'light-mode'}`} style={{
+      width: '100%',
+      minHeight: '100vh',
+      backgroundColor: isDarkMode ? '#121212' : '#FFFFFF',
+      color: isDarkMode ? '#7986CB' : '#1A237E', // ✅ INDIGO/NAVY COLORS
+      overflowX: 'hidden'
+    }}>
       {/* Database Alert */}
       {!isSupabaseConnected && (
-        <div style={styles.dbAlert}>
+        <div style={{
+          backgroundColor: '#fef3c7',
+          border: '1px solid #fbbf24',
+          padding: '12px 16px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+          fontSize: '14px',
+          color: '#1A237E' // ✅ INDIGO/NAVY COLOR
+        }}>
           <FiAlertCircle style={{ color: '#d97706', fontSize: '18px' }} />
           <div>
             <strong>Supabase Connection Issue</strong>
@@ -1053,96 +1071,270 @@ const PVCcoatingPage = () => {
         </div>
       )}
 
-      {/* ✅ HEADER */}
-      <div className="blue-header" style={styles.header}>
-        <div style={styles.headerTop}>
+      {/* ✅ HEADER - Fixed to be below main header */}
+      <div className="blue-header" style={{
+        background: `linear-gradient(135deg, ${currentTheme?.colors?.primary || '#3b82f6'}, #2563eb)`,
+        color: 'white',
+        position: 'relative', // ✅ Changed from sticky to relative
+        zIndex: 100,
+        width: '100%',
+        marginTop: '0', // ✅ Ensure it starts from top
+        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
+      }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          padding: '12px 16px',
+          gap: '12px'
+        }}>
           <button 
             onClick={() => navigate("/production")}
-            style={styles.backButton}
+            style={{
+              width: '40px',
+              height: '40px',
+              background: 'rgba(255, 255, 255, 0.15)',
+              border: 'none',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'white',
+              cursor: 'pointer',
+              flexShrink: 0
+            }}
           >
             <FiArrowLeft style={{ fontSize: '18px' }} />
           </button>
           
-          <div style={styles.headerIcon}>
-            <FiPackage style={{ fontSize: '20px' }} />
+          <div style={{
+            width: '40px',
+            height: '40px',
+            background: 'rgba(255, 255, 255, 0.15)',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '18px',
+            flexShrink: 0,
+            color: 'white'
+          }}>
+            <FiPackage />
           </div>
           
-          <div style={styles.headerContent}>
-            <div style={styles.headerTitleRow}>
-              <h1 style={styles.headerTitle}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '10px', 
+              marginBottom: '4px' 
+            }}>
+              <h1 style={{
+                fontSize: '18px',
+                fontWeight: '700',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                color: 'white'
+              }}>
                 PVC Coating
               </h1>
-              <div style={styles.connectionBadge}>
+              <div style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                padding: '4px 8px',
+                background: 'rgba(255, 255, 255, 0.15)',
+                borderRadius: '20px',
+                fontSize: '12px',
+                flexShrink: 0,
+                color: 'white'
+              }}>
                 {isSupabaseConnected ? <FiCheckCircle /> : <FiXCircle />}
                 {isSupabaseConnected ? "Connected" : "Offline"}
               </div>
             </div>
-            <div style={styles.headerSubtitle}>
+            <div style={{
+              fontSize: '13px',
+              opacity: 0.9,
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              color: 'white'
+            }}>
               Production Management System
             </div>
           </div>
         </div>
         
-        <div style={styles.headerButtons}>
+        <div style={{
+          display: 'flex',
+          gap: '8px',
+          padding: '8px 16px 12px',
+          background: 'rgba(0, 0, 0, 0.05)'
+        }}>
           <button 
             onClick={() => navigate("/production-sections/pvc-coating/new")}
-            style={styles.headerButton}
+            style={{
+              flex: 1,
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              padding: '10px 12px',
+              background: 'rgba(255, 255, 255, 0.12)',
+              color: 'white',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              borderRadius: '6px',
+              fontSize: '13px',
+              fontWeight: '500',
+              cursor: 'pointer'
+            }}
           >
             <FiPlus style={{ fontSize: '16px' }} /> New
           </button>
           
           <button 
             onClick={() => navigate("/production-sections/pvc-coating/multi-entry")}
-            style={styles.headerButton}
+            style={{
+              flex: 1,
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              padding: '10px 12px',
+              background: 'rgba(255, 255, 255, 0.12)',
+              color: 'white',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              borderRadius: '6px',
+              fontSize: '13px',
+              fontWeight: '500',
+              cursor: 'pointer'
+            }}
           >
             <FiGrid style={{ fontSize: '16px' }} /> Multi
           </button>
           
           <button 
-            onClick={toggleTheme}
-            title={`Theme: ${theme}`}
-            style={styles.themeButton}
+            onClick={toggleMode}
+            title={`Switch to ${isDarkMode ? 'Light' : 'Dark'} Mode`}
+            style={{
+              width: '40px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '10px',
+              background: 'rgba(255, 255, 255, 0.12)',
+              color: 'white',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              borderRadius: '6px',
+              fontSize: '18px',
+              cursor: 'pointer'
+            }}
           >
-            {theme === 'light' && <FiSun style={{ fontSize: '18px' }} />}
-            {theme === 'dark' && <FiMoon style={{ fontSize: '18px' }} />}
-            {theme === 'cream' && <FiZap style={{ fontSize: '18px' }} />}
+            {isDarkMode ? <FiSun style={{ fontSize: '18px' }} /> : <FiMoon style={{ fontSize: '18px' }} />}
           </button>
           
           <button 
             onClick={fetchData}
             disabled={loading}
-            style={styles.refreshButton}
+            style={{
+              width: '40px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '10px',
+              background: 'rgba(255, 255, 255, 0.12)',
+              color: 'white',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              borderRadius: '6px',
+              fontSize: '18px',
+              cursor: 'pointer'
+            }}
           >
-            {loading ? <div className="mini-spinner"></div> : <FiRefreshCw style={{ fontSize: '18px' }} />}
+            {loading ? <div className="mini-spinner" style={{ 
+              width: '20px', 
+              height: '20px',
+              border: `2px solid rgba(255, 255, 255, 0.3)`,
+              borderTopColor: 'white'
+            }}></div> : <FiRefreshCw style={{ fontSize: '18px' }} />}
           </button>
         </div>
       </div>
 
       {/* ✅ 1. پہلے کارڈز (8 کارڈز) */}
-      <div className="stats-grid" style={styles.statsGrid}>
+      <div className="stats-grid" style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '6px',
+        padding: '12px'
+      }}>
         <div className="top-stats-row">
           {/* Total Records */}
-          <div className="stat-card blue-card" style={styles.statCard}>
-            <div className="stat-content" style={styles.statContent}>
-              <div className="stat-icon-left" style={styles.statIconLeft}>
-                <FiDatabase style={{ fontSize: '16px' }} />
+          <div className="stat-card blue-card" style={{
+            backgroundColor: currentTheme?.colors?.primary || '#3b82f6',
+            borderRadius: '8px',
+            padding: '10px',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            flex: '1 0 calc(25% - 6px)',
+            minHeight: '70px'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+              <div style={{
+                width: '34px',
+                height: '34px',
+                background: 'rgba(255, 255, 255, 0.15)',
+                borderRadius: '6px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'white',
+                fontSize: '16px',
+                flexShrink: 0
+              }}>
+                <FiDatabase />
               </div>
-              <div className="stat-text" style={styles.statText}>
-                <div className="stat-title" style={styles.statTitle}>Total Records</div>
-                <div className="stat-value" style={styles.statValue}>{allStats.totalRecords}</div>
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                <div style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.9)', fontWeight: '500', marginBottom: '2px' }}>
+                  Total Records
+                </div>
+                <div style={{ fontSize: '14px', fontWeight: '700', color: 'white', marginBottom: '4px' }}>
+                  {allStats.totalRecords}
+                </div>
               </div>
             </div>
           </div>
           
           {/* Total Production */}
-          <div className="stat-card blue-card" style={styles.statCard}>
-            <div className="stat-content" style={styles.statContent}>
-              <div className="stat-icon-left" style={styles.statIconLeft}>
-                <FiPackage style={{ fontSize: '16px' }} />
+          <div className="stat-card blue-card" style={{
+            backgroundColor: currentTheme?.colors?.primary || '#3b82f6',
+            borderRadius: '8px',
+            padding: '10px',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            flex: '1 0 calc(25% - 6px)',
+            minHeight: '70px'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+              <div style={{
+                width: '34px',
+                height: '34px',
+                background: 'rgba(255, 255, 255, 0.15)',
+                borderRadius: '6px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'white',
+                fontSize: '16px',
+                flexShrink: 0
+              }}>
+                <FiPackage />
               </div>
-              <div className="stat-text" style={styles.statText}>
-                <div className="stat-title" style={styles.statTitle}>Total Production</div>
-                <div className="stat-value" style={styles.statValue}>
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                <div style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.9)', fontWeight: '500', marginBottom: '2px' }}>
+                  Total Production
+                </div>
+                <div style={{ fontSize: '14px', fontWeight: '700', color: 'white', marginBottom: '4px' }}>
                   {formatInteger(allStats.totalProduction)} M
                 </div>
               </div>
@@ -1150,14 +1342,35 @@ const PVCcoatingPage = () => {
           </div>
           
           {/* Total Weight */}
-          <div className="stat-card blue-card" style={styles.statCard}>
-            <div className="stat-content" style={styles.statContent}>
-              <div className="stat-icon-left" style={styles.statIconLeft}>
-                <FiDroplet style={{ fontSize: '16px' }} />
+          <div className="stat-card blue-card" style={{
+            backgroundColor: currentTheme?.colors?.primary || '#3b82f6',
+            borderRadius: '8px',
+            padding: '10px',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            flex: '1 0 calc(25% - 6px)',
+            minHeight: '70px'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+              <div style={{
+                width: '34px',
+                height: '34px',
+                background: 'rgba(255, 255, 255, 0.15)',
+                borderRadius: '6px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'white',
+                fontSize: '16px',
+                flexShrink: 0
+              }}>
+                <FiDroplet />
               </div>
-              <div className="stat-text" style={styles.statText}>
-                <div className="stat-title" style={styles.statTitle}>Total Weight</div>
-                <div className="stat-value" style={styles.statValue}>
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                <div style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.9)', fontWeight: '500', marginBottom: '2px' }}>
+                  Total Weight
+                </div>
+                <div style={{ fontSize: '14px', fontWeight: '700', color: 'white', marginBottom: '4px' }}>
                   {formatWeight(allStats.totalWeight)} KG
                 </div>
               </div>
@@ -1165,21 +1378,43 @@ const PVCcoatingPage = () => {
           </div>
           
           {/* Avg Efficiency */}
-          <div className="stat-card blue-card" style={styles.statCard}>
-            <div className="stat-content" style={styles.statContent}>
-              <div className="stat-icon-left" style={styles.statIconLeft}>
-                <FiTrendingUp style={{ fontSize: '16px' }} />
+          <div className="stat-card blue-card" style={{
+            backgroundColor: currentTheme?.colors?.primary || '#3b82f6',
+            borderRadius: '8px',
+            padding: '10px',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            flex: '1 0 calc(25% - 6px)',
+            minHeight: '70px'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+              <div style={{
+                width: '34px',
+                height: '34px',
+                background: 'rgba(255, 255, 255, 0.15)',
+                borderRadius: '6px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'white',
+                fontSize: '16px',
+                flexShrink: 0
+              }}>
+                <FiTrendingUp />
               </div>
-              <div className="stat-text" style={styles.statText}>
-                <div className="stat-title" style={styles.statTitle}>Avg Efficiency</div>
-                <div className="stat-value-with-arrow" style={styles.statValueWithArrow}>
-                  <span style={{
-                    color: 'white',
-                    fontWeight: '700',
-                    fontSize: '14px'
-                  }}>
-                    {allStats.avgEfficiency.toFixed(1)}%
-                  </span>
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                <div style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.9)', fontWeight: '500', marginBottom: '2px' }}>
+                  Avg Efficiency
+                </div>
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  fontSize: '14px', 
+                  fontWeight: '700', 
+                  color: 'white', 
+                  marginBottom: '4px' 
+                }}>
+                  <span>{allStats.avgEfficiency.toFixed(1)}%</span>
                   {allStats.avgEfficiency >= 70 ? (
                     <FiArrowUp style={{ 
                       color: 'white', 
@@ -1201,15 +1436,56 @@ const PVCcoatingPage = () => {
 
         <div className="bottom-stats-row">
           {/* Last Entry Records */}
-          <div className="stat-card light-card" style={styles.lightStatCard}>
-            <div className="stat-content" style={styles.statContent}>
-              <div className="stat-icon-left" style={styles.lightStatIconLeft}>
-                <FiClock style={{ fontSize: '16px' }} />
+          <div className="stat-card light-card" style={{
+            backgroundColor: isDarkMode ? '#1a1a1a' : '#FFFFFF',
+            borderRadius: '8px',
+            padding: '10px',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+            border: `1px solid ${isDarkMode ? '#333' : '#E0E0E0'}`,
+            flex: '1 0 calc(25% - 6px)',
+            minHeight: '70px'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+              <div style={{
+                width: '34px',
+                height: '34px',
+                background: isDarkMode ? '#333' : '#F5F5F5',
+                borderRadius: '6px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: currentTheme?.colors?.primary || '#3b82f6',
+                fontSize: '16px',
+                flexShrink: 0
+              }}>
+                <FiClock />
               </div>
-              <div className="stat-text" style={styles.statText}>
-                <div className="stat-title-light" style={styles.statTitleLight}>Last Day Records</div>
-                <div className="stat-value-light" style={styles.statValueLight}>{lastEntryStats.lastEntryRecords}</div>
-                <div className="date-badge-light" style={styles.dateBadgeLight}>
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                <div style={{ 
+                  fontSize: '10px', 
+                  color: isDarkMode ? '#7986CB' : '#1A237E', // ✅ INDIGO/NAVY
+                  fontWeight: '500', 
+                  marginBottom: '2px' 
+                }}>
+                  Last Day Records
+                </div>
+                <div style={{ 
+                  fontSize: '14px', 
+                  fontWeight: '700', 
+                  color: isDarkMode ? '#7986CB' : '#1A237E', // ✅ INDIGO/NAVY
+                  marginBottom: '4px' 
+                }}>
+                  {lastEntryStats.lastEntryRecords}
+                </div>
+                <div style={{
+                  fontSize: '8px',
+                  color: isDarkMode ? '#9FA8DA' : '#283593', // ✅ INDIGO/NAVY
+                  background: isDarkMode ? '#333' : '#F5F5F5',
+                  padding: '2px 6px',
+                  borderRadius: '10px',
+                  display: 'inline-block',
+                  width: 'fit-content'
+                }}>
                   {lastEntryStats.lastEntryDate || 'No date'}
                 </div>
               </div>
@@ -1217,17 +1493,56 @@ const PVCcoatingPage = () => {
           </div>
           
           {/* Last Entry Production */}
-          <div className="stat-card light-card" style={styles.lightStatCard}>
-            <div className="stat-content" style={styles.statContent}>
-              <div className="stat-icon-left" style={styles.lightStatIconLeft}>
-                <FiActivity style={{ fontSize: '16px' }} />
+          <div className="stat-card light-card" style={{
+            backgroundColor: isDarkMode ? '#1a1a1a' : '#FFFFFF',
+            borderRadius: '8px',
+            padding: '10px',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+            border: `1px solid ${isDarkMode ? '#333' : '#E0E0E0'}`,
+            flex: '1 0 calc(25% - 6px)',
+            minHeight: '70px'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+              <div style={{
+                width: '34px',
+                height: '34px',
+                background: isDarkMode ? '#333' : '#F5F5F5',
+                borderRadius: '6px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: currentTheme?.colors?.primary || '#3b82f6',
+                fontSize: '16px',
+                flexShrink: 0
+              }}>
+                <FiActivity />
               </div>
-              <div className="stat-text" style={styles.statText}>
-                <div className="stat-title-light" style={styles.statTitleLight}>Last Day Production</div>
-                <div className="stat-value-light" style={styles.statValueLight}>
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                <div style={{ 
+                  fontSize: '10px', 
+                  color: isDarkMode ? '#7986CB' : '#1A237E', // ✅ INDIGO/NAVY
+                  fontWeight: '500', 
+                  marginBottom: '2px' 
+                }}>
+                  Last Day Production
+                </div>
+                <div style={{ 
+                  fontSize: '14px', 
+                  fontWeight: '700', 
+                  color: isDarkMode ? '#7986CB' : '#1A237E', // ✅ INDIGO/NAVY
+                  marginBottom: '4px' 
+                }}>
                   {formatInteger(lastEntryStats.lastEntryProduction)} M
                 </div>
-                <div className="date-badge-light" style={styles.dateBadgeLight}>
+                <div style={{
+                  fontSize: '8px',
+                  color: isDarkMode ? '#9FA8DA' : '#283593', // ✅ INDIGO/NAVY
+                  background: isDarkMode ? '#333' : '#F5F5F5',
+                  padding: '2px 6px',
+                  borderRadius: '10px',
+                  display: 'inline-block',
+                  width: 'fit-content'
+                }}>
                   {lastEntryStats.lastEntryDate || 'No date'}
                 </div>
               </div>
@@ -1235,17 +1550,56 @@ const PVCcoatingPage = () => {
           </div>
           
           {/* Last Entry Weight */}
-          <div className="stat-card light-card" style={styles.lightStatCard}>
-            <div className="stat-content" style={styles.statContent}>
-              <div className="stat-icon-left" style={styles.lightStatIconLeft}>
-                <FiDroplet style={{ fontSize: '16px' }} />
+          <div className="stat-card light-card" style={{
+            backgroundColor: isDarkMode ? '#1a1a1a' : '#FFFFFF',
+            borderRadius: '8px',
+            padding: '10px',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+            border: `1px solid ${isDarkMode ? '#333' : '#E0E0E0'}`,
+            flex: '1 0 calc(25% - 6px)',
+            minHeight: '70px'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+              <div style={{
+                width: '34px',
+                height: '34px',
+                background: isDarkMode ? '#333' : '#F5F5F5',
+                borderRadius: '6px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: currentTheme?.colors?.primary || '#3b82f6',
+                fontSize: '16px',
+                flexShrink: 0
+              }}>
+                <FiDroplet />
               </div>
-              <div className="stat-text" style={styles.statText}>
-                <div className="stat-title-light" style={styles.statTitleLight}>Last Day Weight</div>
-                <div className="stat-value-light" style={styles.statValueLight}>
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                <div style={{ 
+                  fontSize: '10px', 
+                  color: isDarkMode ? '#7986CB' : '#1A237E', // ✅ INDIGO/NAVY
+                  fontWeight: '500', 
+                  marginBottom: '2px' 
+                }}>
+                  Last Day Weight
+                </div>
+                <div style={{ 
+                  fontSize: '14px', 
+                  fontWeight: '700', 
+                  color: isDarkMode ? '#7986CB' : '#1A237E', // ✅ INDIGO/NAVY
+                  marginBottom: '4px' 
+                }}>
                   {formatWeight(lastEntryStats.lastEntryWeight)} KG
                 </div>
-                <div className="date-badge-light" style={styles.dateBadgeLight}>
+                <div style={{
+                  fontSize: '8px',
+                  color: isDarkMode ? '#9FA8DA' : '#283593', // ✅ INDIGO/NAVY
+                  background: isDarkMode ? '#333' : '#F5F5F5',
+                  padding: '2px 6px',
+                  borderRadius: '10px',
+                  display: 'inline-block',
+                  width: 'fit-content'
+                }}>
                   {lastEntryStats.lastEntryDate || 'No date'}
                 </div>
               </div>
@@ -1253,20 +1607,56 @@ const PVCcoatingPage = () => {
           </div>
           
           {/* Last Entry Efficiency */}
-          <div className="stat-card light-card" style={styles.lightStatCard}>
-            <div className="stat-content" style={styles.statContent}>
-              <div className="stat-icon-left" style={styles.lightStatIconLeft}>
-                <FiPercent style={{ fontSize: '16px' }} />
+          <div className="stat-card light-card" style={{
+            backgroundColor: isDarkMode ? '#1a1a1a' : '#FFFFFF',
+            borderRadius: '8px',
+            padding: '10px',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+            border: `1px solid ${isDarkMode ? '#333' : '#E0E0E0'}`,
+            flex: '1 0 calc(25% - 6px)',
+            minHeight: '70px'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+              <div style={{
+                width: '34px',
+                height: '34px',
+                background: isDarkMode ? '#333' : '#F5F5F5',
+                borderRadius: '6px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: currentTheme?.colors?.primary || '#3b82f6',
+                fontSize: '16px',
+                flexShrink: 0
+              }}>
+                <FiPercent />
               </div>
-              <div className="stat-text" style={styles.statText}>
-                <div className="stat-title-light" style={styles.statTitleLight}>Last Day Efficiency</div>
-                <div className="stat-value-light" style={{
-                  ...styles.statValueLight,
-                  color: getEfficiencyTextColor(lastEntryStats.lastEntryEfficiency)
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                <div style={{ 
+                  fontSize: '10px', 
+                  color: isDarkMode ? '#7986CB' : '#1A237E', // ✅ INDIGO/NAVY
+                  fontWeight: '500', 
+                  marginBottom: '2px' 
+                }}>
+                  Last Day Efficiency
+                </div>
+                <div style={{ 
+                  fontSize: '14px', 
+                  fontWeight: '700', 
+                  color: getEfficiencyTextColor(lastEntryStats.lastEntryEfficiency),
+                  marginBottom: '4px' 
                 }}>
                   {lastEntryStats.lastEntryEfficiency.toFixed(1)}%
                 </div>
-                <div className="date-badge-light" style={styles.dateBadgeLight}>
+                <div style={{
+                  fontSize: '8px',
+                  color: isDarkMode ? '#9FA8DA' : '#283593', // ✅ INDIGO/NAVY
+                  background: isDarkMode ? '#333' : '#F5F5F5',
+                  padding: '2px 6px',
+                  borderRadius: '10px',
+                  display: 'inline-block',
+                  width: 'fit-content'
+                }}>
                   {lastEntryStats.lastEntryDate || 'No date'}
                 </div>
               </div>
@@ -1276,36 +1666,70 @@ const PVCcoatingPage = () => {
       </div>
 
       {/* ✅ 2. دوسرا: لاسٹ انٹری ڈیش بورڈ */}
-      <div style={styles.sectionContainer}>
-        <div style={styles.sectionHeader}>
-          <FiActivity style={{ ...styles.sectionIcon, fontSize: '20px' }} />
+      <div style={{ padding: '12px', marginTop: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+          <FiActivity style={{ fontSize: '20px', color: currentTheme?.colors?.primary || '#3b82f6' }} />
           <div>
-            <h2 style={styles.sectionTitle}>Last Entry Dashboard</h2>
-            <p style={styles.sectionSubtitle}>
+            <h2 style={{ 
+              fontSize: '16px', 
+              fontWeight: '600',
+              color: isDarkMode ? '#7986CB' : '#1A237E' // ✅ INDIGO/NAVY
+            }}>
+              Last Entry Dashboard
+            </h2>
+            <p style={{ fontSize: '12px', color: isDarkMode ? '#9FA8DA' : '#283593' }}> {/* ✅ INDIGO/NAVY */}
               {lastEntryStats.lastEntryDate ? `Date: ${lastEntryStats.lastEntryDate}` : 'No entry date'}
             </p>
           </div>
         </div>
 
-        <div className="dashboard-grid" style={styles.dashboardGrid}>
+        <div className="dashboard-grid" style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: '8px'
+        }}>
           {/* Shift-wise Card */}
-          <div style={styles.dashboardCard}>
-            <div style={styles.dashboardCardHeader}>
-              <h3 style={styles.dashboardCardTitle}>
+          <div style={{
+            backgroundColor: isDarkMode ? '#1a1a1a' : '#FFFFFF',
+            borderRadius: '8px',
+            padding: '12px',
+            border: `1px solid ${isDarkMode ? '#333' : '#E0E0E0'}`,
+            boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <h3 style={{ 
+                fontSize: '14px', 
+                fontWeight: '600', 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '6px',
+                color: isDarkMode ? '#7986CB' : '#1A237E' // ✅ INDIGO/NAVY
+              }}>
                 <FiWatch className="dashboard-icon-spaced" /> Shift-wise
               </h3>
-              <span style={styles.cardBadge}>
+              <span style={{
+                fontSize: '10px',
+                backgroundColor: currentTheme?.colors?.primary || '#3b82f6',
+                color: 'white',
+                padding: '2px 6px',
+                borderRadius: '10px'
+              }}>
                 {Object.keys(lastEntryStats.shiftWise).length}
               </span>
             </div>
             
             {Object.entries(lastEntryStats.shiftWise).length > 0 ? (
               Object.entries(lastEntryStats.shiftWise).map(([shift, data]) => (
-                <div key={shift} style={styles.dashboardItem}>
-                  <div style={styles.dashboardItemHeader}>
+                <div key={shift} style={{ marginBottom: '12px', paddingBottom: '12px', borderBottom: `1px solid ${isDarkMode ? '#333' : '#E0E0E0'}` }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                     <div className="icon-label-container">
                       <FiWatch className="item-icon-spaced" />
-                      <span style={styles.dashboardItemLabel}>{shift}</span>
+                      <span style={{ 
+                        fontSize: '12px',
+                        color: isDarkMode ? '#7986CB' : '#1A237E' // ✅ INDIGO/NAVY
+                      }}>
+                        {shift}
+                      </span>
                     </div>
                     <div style={{
                       fontSize: '11px', 
@@ -1315,11 +1739,11 @@ const PVCcoatingPage = () => {
                       {data.efficiency.toFixed(1)}%
                     </div>
                   </div>
-                  <div style={styles.dashboardItemDetails}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: isDarkMode ? '#9FA8DA' : '#283593', marginBottom: '6px' }}>
                     <span>{formatInteger(data.production)}M / {formatInteger(data.target)}M</span>
                     <span>{formatWeight(data.weight)}KG</span>
                   </div>
-                  <div style={styles.progressBar}>
+                  <div style={{ height: '4px', backgroundColor: isDarkMode ? '#333' : '#E0E0E0', borderRadius: '2px', overflow: 'hidden' }}>
                     <div style={{
                       width: `${Math.min(100, data.efficiency)}%`,
                       height: '100%',
@@ -1330,31 +1754,57 @@ const PVCcoatingPage = () => {
                 </div>
               ))
             ) : (
-              <div style={styles.emptyState}>
-                <FiWatch style={styles.emptyIcon} />
-                <p style={styles.emptyText}>No shift records</p>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px 0' }}>
+                <FiWatch style={{ fontSize: '24px', color: isDarkMode ? '#9FA8DA' : '#283593', marginBottom: '8px' }} />
+                <p style={{ fontSize: '12px', color: isDarkMode ? '#9FA8DA' : '#283593' }}>
+                  No shift records
+                </p>
               </div>
             )}
           </div>
 
           {/* Machine-wise Card */}
-          <div style={styles.dashboardCard}>
-            <div style={styles.dashboardCardHeader}>
-              <h3 style={styles.dashboardCardTitle}>
+          <div style={{
+            backgroundColor: isDarkMode ? '#1a1a1a' : '#FFFFFF',
+            borderRadius: '8px',
+            padding: '12px',
+            border: `1px solid ${isDarkMode ? '#333' : '#E0E0E0'}`,
+            boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <h3 style={{ 
+                fontSize: '14px', 
+                fontWeight: '600', 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '6px',
+                color: isDarkMode ? '#7986CB' : '#1A237E' // ✅ INDIGO/NAVY
+              }}>
                 <FiCpu className="dashboard-icon-spaced" /> Machine-wise
               </h3>
-              <span style={styles.cardBadge}>
+              <span style={{
+                fontSize: '10px',
+                backgroundColor: currentTheme?.colors?.primary || '#3b82f6',
+                color: 'white',
+                padding: '2px 6px',
+                borderRadius: '10px'
+              }}>
                 {Object.keys(lastEntryStats.machineWise).length}
               </span>
             </div>
             
             {Object.entries(lastEntryStats.machineWise).length > 0 ? (
               Object.entries(lastEntryStats.machineWise).map(([machine, data]) => (
-                <div key={machine} style={styles.dashboardItem}>
-                  <div style={styles.dashboardItemHeader}>
+                <div key={machine} style={{ marginBottom: '12px', paddingBottom: '12px', borderBottom: `1px solid ${isDarkMode ? '#333' : '#E0E0E0'}` }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                     <div className="icon-label-container">
                       <FiCpu className="item-icon-spaced" />
-                      <span style={styles.dashboardItemLabel}>{machine}</span>
+                      <span style={{ 
+                        fontSize: '12px',
+                        color: isDarkMode ? '#7986CB' : '#1A237E' // ✅ INDIGO/NAVY
+                      }}>
+                        {machine}
+                      </span>
                     </div>
                     <div style={{
                       fontSize: '11px', 
@@ -1364,11 +1814,11 @@ const PVCcoatingPage = () => {
                       {data.efficiency.toFixed(1)}%
                     </div>
                   </div>
-                  <div style={styles.dashboardItemDetails}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: isDarkMode ? '#9FA8DA' : '#283593', marginBottom: '6px' }}>
                     <span>{formatInteger(data.production)}M / {formatInteger(data.target)}M</span>
                     <span>{formatWeight(data.weight)}KG</span>
                   </div>
-                  <div style={styles.progressBar}>
+                  <div style={{ height: '4px', backgroundColor: isDarkMode ? '#333' : '#E0E0E0', borderRadius: '2px', overflow: 'hidden' }}>
                     <div style={{
                       width: `${Math.min(100, data.efficiency)}%`,
                       height: '100%',
@@ -1379,50 +1829,78 @@ const PVCcoatingPage = () => {
                 </div>
               ))
             ) : (
-              <div style={styles.emptyState}>
-                <FiCpu style={styles.emptyIcon} />
-                <p style={styles.emptyText}>No machine records</p>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px 0' }}>
+                <FiCpu style={{ fontSize: '24px', color: isDarkMode ? '#9FA8DA' : '#283593', marginBottom: '8px' }} />
+                <p style={{ fontSize: '12px', color: isDarkMode ? '#9FA8DA' : '#283593' }}>
+                  No machine records
+                </p>
               </div>
             )}
           </div>
 
           {/* Product-wise Card */}
-          <div style={styles.dashboardCard}>
-            <div style={styles.dashboardCardHeader}>
-              <h3 style={styles.dashboardCardTitle}>
+          <div style={{
+            backgroundColor: isDarkMode ? '#1a1a1a' : '#FFFFFF',
+            borderRadius: '8px',
+            padding: '12px',
+            border: `1px solid ${isDarkMode ? '#333' : '#E0E0E0'}`,
+            boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <h3 style={{ 
+                fontSize: '14px', 
+                fontWeight: '600', 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '6px',
+                color: isDarkMode ? '#7986CB' : '#1A237E' // ✅ INDIGO/NAVY
+              }}>
                 <FiBox className="dashboard-icon-spaced" /> Product-wise
               </h3>
-              <span style={styles.cardBadge}>
+              <span style={{
+                fontSize: '10px',
+                backgroundColor: currentTheme?.colors?.primary || '#3b82f6',
+                color: 'white',
+                padding: '2px 6px',
+                borderRadius: '10px'
+              }}>
                 {Object.keys(lastEntryStats.productWise).length}
               </span>
             </div>
             
             {Object.entries(lastEntryStats.productWise).length > 0 ? (
               Object.entries(lastEntryStats.productWise).map(([product, data]) => (
-                <div key={product} style={styles.dashboardItem}>
-                  <div style={styles.dashboardItemHeader}>
+                <div key={product} style={{ marginBottom: '12px', paddingBottom: '12px', borderBottom: `1px solid ${isDarkMode ? '#333' : '#E0E0E0'}` }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                     <div className="icon-label-container">
                       <FiBox className="item-icon-spaced" />
-                      <span style={styles.dashboardItemLabel}>{product.substring(0, 15)}</span>
+                      <span style={{ 
+                        fontSize: '12px',
+                        color: isDarkMode ? '#7986CB' : '#1A237E' // ✅ INDIGO/NAVY
+                      }}>
+                        {product.substring(0, 15)}
+                      </span>
                     </div>
-                    <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                    <div style={{ fontSize: '11px', color: isDarkMode ? '#9FA8DA' : '#283593' }}>
                       {formatInteger(data.production)}M
                     </div>
                   </div>
-                  <div style={styles.progressBar}>
+                  <div style={{ height: '4px', backgroundColor: isDarkMode ? '#333' : '#E0E0E0', borderRadius: '2px', overflow: 'hidden' }}>
                     <div style={{
                       width: `${Math.min(100, (data.production / (lastEntryStats.lastEntryProduction || 1)) * 100)}%`,
                       height: '100%',
-                      background: `linear-gradient(to right, var(--primary-500), #8b5cf6)`,
+                      background: `linear-gradient(to right, ${currentTheme?.colors?.primary || '#3b82f6'}, #8b5cf6)`,
                       borderRadius: '2px'
                     }}></div>
                   </div>
                 </div>
               ))
             ) : (
-              <div style={styles.emptyState}>
-                <FiBox style={styles.emptyIcon} />
-                <p style={styles.emptyText}>No product records</p>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px 0' }}>
+                <FiBox style={{ fontSize: '24px', color: isDarkMode ? '#9FA8DA' : '#283593', marginBottom: '8px' }} />
+                <p style={{ fontSize: '12px', color: isDarkMode ? '#9FA8DA' : '#283593' }}>
+                  No product records
+                </p>
               </div>
             )}
           </div>
@@ -1430,29 +1908,53 @@ const PVCcoatingPage = () => {
       </div>
 
       {/* ✅ 3. تیسرا: فلٹرز */}
-      <div style={styles.filtersSection}>
-        <div style={styles.filtersContainer}>
-          <div style={styles.filterHeading}>
+      <div style={{ padding: '12px', marginTop: '8px' }}>
+        <div style={{
+          backgroundColor: isDarkMode ? '#1a1a1a' : '#FFFFFF',
+          borderRadius: '8px',
+          padding: '12px',
+          border: `1px solid ${isDarkMode ? '#333' : '#E0E0E0'}`,
+          boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', fontSize: '14px', fontWeight: '600', color: isDarkMode ? '#7986CB' : '#1A237E', marginBottom: '12px' }}>
             <FiFilter size={18} />
-            <span style={{marginLeft: '8px'}}>FILTERS</span>
+            <span style={{ marginLeft: '8px' }}>FILTERS</span>
           </div>
           
-          <div className="filters-single-line" style={styles.filtersSingleLine}>
-            <div style={styles.filterGroup}>
+          <div className="filters-single-line" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+            <div style={{ flex: '1 0 calc(14.285% - 8px)', minWidth: '120px' }}>
               <input
                 type="text"
                 placeholder="Search records..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                style={styles.filterInput}
+                style={{
+                  width: '100%',
+                  padding: '8px 10px',
+                  border: `1px solid ${isDarkMode ? '#333' : '#E0E0E0'}`,
+                  borderRadius: '6px',
+                  backgroundColor: isDarkMode ? '#1a1a1a' : '#FFFFFF',
+                  color: isDarkMode ? '#7986CB' : '#1A237E',
+                  fontSize: '13px',
+                  outline: 'none'
+                }}
               />
             </div>
 
-            <div style={styles.filterGroup}>
+            <div style={{ flex: '1 0 calc(14.285% - 8px)', minWidth: '120px' }}>
               <select
                 value={filterProduct}
                 onChange={(e) => setFilterProduct(e.target.value)}
-                style={styles.filterSelect}
+                style={{
+                  width: '100%',
+                  padding: '8px 10px',
+                  border: `1px solid ${isDarkMode ? '#333' : '#E0E0E0'}`,
+                  borderRadius: '6px',
+                  backgroundColor: isDarkMode ? '#1a1a1a' : '#FFFFFF',
+                  color: isDarkMode ? '#7986CB' : '#1A237E',
+                  fontSize: '13px',
+                  outline: 'none'
+                }}
               >
                 <option value="">All Products</option>
                 {products.map((product) => (
@@ -1463,26 +1965,49 @@ const PVCcoatingPage = () => {
               </select>
             </div>
 
-            <div style={styles.filterGroup}>
+            <div style={{ flex: '1 0 calc(14.285% - 8px)', minWidth: '120px' }}>
               <input
                 type="date"
                 value={filterDate}
                 onChange={(e) => setFilterDate(e.target.value)}
                 max={new Date().toISOString().split("T")[0]}
-                style={styles.filterDate}
+                style={{
+                  width: '100%',
+                  padding: '8px 10px',
+                  border: `1px solid ${isDarkMode ? '#333' : '#E0E0E0'}`,
+                  borderRadius: '6px',
+                  backgroundColor: isDarkMode ? '#1a1a1a' : '#FFFFFF',
+                  color: isDarkMode ? '#7986CB' : '#1A237E',
+                  fontSize: '13px',
+                  outline: 'none'
+                }}
               />
             </div>
 
-            <div style={styles.filterGroup}>
+            <div style={{ flex: '1 0 calc(14.285% - 8px)', minWidth: '120px' }}>
               <button
                 onClick={generateReport}
-                style={styles.filterBtnPrimary}
+                style={{
+                  width: '100%',
+                  padding: '8px 10px',
+                  background: currentTheme?.colors?.primary || '#3b82f6',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  fontSize: '13px',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px'
+                }}
               >
                 <FiBarChart2 /> Generate Report
               </button>
             </div>
 
-            <div style={styles.filterGroup}>
+            <div style={{ flex: '1 0 calc(14.285% - 8px)', minWidth: '120px' }}>
               <button
                 onClick={() => {
                   setSearchTerm("");
@@ -1491,7 +2016,21 @@ const PVCcoatingPage = () => {
                   setShowReport(false);
                   setCurrentPage(1);
                 }}
-                style={styles.filterBtnSecondary}
+                style={{
+                  width: '100%',
+                  padding: '8px 10px',
+                  background: isDarkMode ? '#333' : '#F5F5F5',
+                  color: isDarkMode ? '#7986CB' : '#1A237E',
+                  border: `1px solid ${isDarkMode ? '#333' : '#E0E0E0'}`,
+                  borderRadius: '6px',
+                  fontSize: '13px',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px'
+                }}
               >
                 <FiX /> Clear Filters
               </button>
@@ -1502,33 +2041,95 @@ const PVCcoatingPage = () => {
 
       {/* ✅ Show Report Actions Only When Report is Generated */}
       {showReport && reportData.recordCount > 0 && (
-        <div style={styles.reportActionsSection}>
-          <div style={styles.reportActionsHeader}>
-            <h3 style={{margin: 0, fontSize: '14px'}}>
+        <div style={{
+          backgroundColor: isDarkMode ? '#1a1a1a' : '#FFFFFF',
+          border: `1px solid ${isDarkMode ? '#333' : '#E0E0E0'}`,
+          borderRadius: '6px',
+          margin: '12px',
+          padding: '12px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '10px'
+        }}>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '10px'
+          }}>
+            <h3 style={{ margin: 0, fontSize: '14px', color: isDarkMode ? '#7986CB' : '#1A237E' }}>
               Report Generated: {reportData.formattedDate}
             </h3>
-            <span style={{color: 'var(--text-secondary)', fontSize: '12px'}}>
+            <span style={{ color: isDarkMode ? '#9FA8DA' : '#283593', fontSize: '12px' }}>
               Records: {reportData.recordCount} | 
               Production: {formatInteger(reportData.totalProduction)}M | 
               Efficiency: {Math.round(reportData.avgEfficiency)}%
             </span>
           </div>
           
-          <div style={styles.reportActionsButtons}>
-            <div style={styles.exportDropdown}>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            <div style={{ position: 'relative' }}>
               <button 
                 onClick={() => setShowExportOptions(!showExportOptions)}
-                style={styles.exportMainBtn}
+                style={{
+                  padding: '8px 12px',
+                  background: currentTheme?.colors?.primary || '#3b82f6',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  fontSize: '12px',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
               >
                 <FiDownload /> Export Options
               </button>
               
               {showExportOptions && (
-                <div style={styles.exportOptions}>
-                  <button onClick={handleExportReport} style={styles.exportOption}>
+                <div style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  backgroundColor: isDarkMode ? '#1a1a1a' : '#FFFFFF',
+                  border: `1px solid ${isDarkMode ? '#333' : '#E0E0E0'}`,
+                  borderRadius: '6px',
+                  boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                  zIndex: 1000,
+                  minWidth: '200px',
+                  marginTop: '4px'
+                }}>
+                  <button onClick={handleExportReport} style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    background: 'transparent',
+                    color: isDarkMode ? '#7986CB' : '#1A237E',
+                    border: 'none',
+                    textAlign: 'left',
+                    fontSize: '12px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}>
                     <FiDownload /> Export Report Excel
                   </button>
-                  <button onClick={handleExportExcel} style={styles.exportOption}>
+                  <button onClick={handleExportExcel} style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    background: 'transparent',
+                    color: isDarkMode ? '#7986CB' : '#1A237E',
+                    border: 'none',
+                    textAlign: 'left',
+                    fontSize: '12px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}>
                     <FiDownload /> Export Records Excel
                   </button>
                 </div>
@@ -1537,14 +2138,38 @@ const PVCcoatingPage = () => {
             
             <button
               onClick={() => setShowWhatsAppModal(true)}
-              style={styles.whatsappBtnAction}
+              style={{
+                padding: '8px 12px',
+                background: '#25D366',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                fontSize: '12px',
+                fontWeight: '500',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
             >
               <FaWhatsapp /> WhatsApp
             </button>
             
             <button
               onClick={handlePrintReport}
-              style={styles.printBtnAction}
+              style={{
+                padding: '8px 12px',
+                background: '#6b7280',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                fontSize: '12px',
+                fontWeight: '500',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
             >
               <FiPrinter /> Print
             </button>
@@ -1556,18 +2181,31 @@ const PVCcoatingPage = () => {
       {showWhatsAppModal && <WhatsAppModal />}
 
       {/* ✅ 4. چوتھا: ٹیبل */}
-      <div style={styles.sectionContainer}>
-        <div style={styles.tableHeader}>
-          <h2 style={styles.sectionTitle}>Records</h2>
-          <div style={styles.tableInfo}>
+      <div style={{ padding: '12px', marginTop: '8px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+          <h2 style={{ 
+            fontSize: '16px', 
+            fontWeight: '600',
+            color: isDarkMode ? '#7986CB' : '#1A237E' // ✅ INDIGO/NAVY
+          }}>
+            Records
+          </h2>
+          <div style={{ fontSize: '12px', color: isDarkMode ? '#9FA8DA' : '#283593', display: 'flex', gap: '8px' }}>
             <span>Total: {records.length}</span>
             <span>Filtered: {filteredRecords.length}</span>
             <span>Page: {currentPage}/{totalPages}</span>
           </div>
         </div>
 
-        <div className="table-container" style={styles.tableContainer}>
-          <table style={styles.table}>
+        <div className="table-container" style={{
+          width: '100%',
+          overflowX: 'auto',
+          WebkitOverflowScrolling: 'touch',
+          borderRadius: '6px',
+          backgroundColor: isDarkMode ? '#1a1a1a' : '#FFFFFF',
+          border: `1px solid ${isDarkMode ? '#333' : '#E0E0E0'}`
+        }}>
+          <table style={{ width: '100%', minWidth: '1200px', borderCollapse: 'collapse' }}>
             <thead>
               <tr>
                 {[
@@ -1575,7 +2213,17 @@ const PVCcoatingPage = () => {
                   'User', 'Operator', 'Prod Qty', 
                   'Weight', 'Efficiency', 'Remarks', 'Entry Date', 'Actions'
                 ].map((header, index) => (
-                  <th key={index} style={styles.tableHeaderCell}>
+                  <th key={index} style={{
+                    padding: '12px 8px',
+                    textAlign: 'left',
+                    fontWeight: '600',
+                    fontSize: '12px',
+                    color: isDarkMode ? '#9FA8DA' : '#283593',
+                    backgroundColor: isDarkMode ? '#333' : '#F5F5F5',
+                    borderBottom: `2px solid ${isDarkMode ? '#333' : '#E0E0E0'}`,
+                    whiteSpace: 'nowrap',
+                    textTransform: 'uppercase'
+                  }}>
                     {header}
                   </th>
                 ))}
@@ -1587,98 +2235,108 @@ const PVCcoatingPage = () => {
                 const efficiencyColor = getEfficiencyColor(efficiency);
                 
                 return (
-                  <tr key={record.id} style={styles.tableRow}>
-                    <td style={styles.tableCell}>
-                      <div style={styles.idBadge}>
+                  <tr key={record.id} style={{ borderBottom: `1px solid ${isDarkMode ? '#333' : '#E0E0E0'}` }}>
+                    <td style={{ padding: '10px 8px', verticalAlign: 'middle' }}>
+                      <div style={{
+                        backgroundColor: currentTheme?.colors?.primary || '#3b82f6',
+                        color: 'white',
+                        padding: '4px 8px',
+                        borderRadius: '4px',
+                        fontSize: '11px',
+                        fontWeight: '600',
+                        display: 'inline-block',
+                        textAlign: 'center'
+                      }}>
                         #{record.id}
                       </div>
                     </td>
                     
-                    <td style={styles.tableCell}>
+                    <td style={{ padding: '10px 8px', verticalAlign: 'middle' }}>
                       <div className="icon-container">
                         <FiCpu className="table-icon-spaced icon-blue" />
-                        <span>{record.machine_no || "N/A"}</span>
+                        <span style={{ color: isDarkMode ? '#7986CB' : '#1A237E' }}>{record.machine_no || "N/A"}</span>
                       </div>
                     </td>
                     
-                    <td style={styles.tableCell}>
-                      <div style={styles.dateShiftContainer}>
+                    <td style={{ padding: '10px 8px', verticalAlign: 'middle' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                         <div className="icon-container">
                           <FiCalendar className="table-icon-spaced icon-green" />
-                          <span style={styles.boldDateText}>{record.production_date || "N/A"}</span>
+                          <span style={{ fontSize: '11px', fontWeight: '600', color: isDarkMode ? '#7986CB' : '#1A237E' }}>
+                            {record.production_date || "N/A"}
+                          </span>
                         </div>
                         <div className="icon-container">
                           <FiHash className="table-icon-spaced icon-purple" />
-                          <span style={styles.lightShiftText}>{record.shift_name || "N/A"}</span>
+                          <span style={{ fontSize: '11px', fontWeight: '400', color: isDarkMode ? '#9FA8DA' : '#283593' }}>
+                            {record.shift_name || "N/A"}
+                          </span>
                         </div>
                       </div>
                     </td>
                     
-                    <td style={styles.tableCell}>
-                      <div style={styles.itemDetails}>
-                        <div style={styles.itemName}>
+                    <td style={{ padding: '10px 8px', verticalAlign: 'middle' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                        <div style={{ fontWeight: '600', color: isDarkMode ? '#7986CB' : '#1A237E', fontSize: '12px' }}>
                           {record.item_name || "N/A"}
                         </div>
-                        <div style={styles.itemProduct}>
+                        <div style={{ color: isDarkMode ? '#9FA8DA' : '#283593', fontSize: '11px' }}>
                           {record.raw_material_Spiralsize || "N/A"}
                         </div>
                       </div>
                     </td>
                     
-                    <td style={styles.tableCell}>
+                    <td style={{ padding: '10px 8px', verticalAlign: 'middle' }}>
                       <div className="icon-container">
                         <FiUser className="table-icon-spaced icon-blue" />
-                        <span>{record.users_name || "N/A"}</span>
+                        <span style={{ color: isDarkMode ? '#7986CB' : '#1A237E' }}>{record.users_name || "N/A"}</span>
                       </div>
                     </td>
                     
-                    <td style={styles.tableCell}>
+                    <td style={{ padding: '10px 8px', verticalAlign: 'middle' }}>
                       <div className="icon-container">
                         <FiUserCheck className="table-icon-spaced icon-yellow" />
-                        <span>{record.operator_name || "N/A"}</span>
+                        <span style={{ color: isDarkMode ? '#7986CB' : '#1A237E' }}>{record.operator_name || "N/A"}</span>
                       </div>
                     </td>
                     
-                    <td style={styles.tableCell}>
-                      <div style={styles.productionContainer}>
+                    <td style={{ padding: '10px 8px', verticalAlign: 'middle' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
                         <div className="icon-container">
                           <FiBarChart2 className="table-icon-spaced icon-green" />
-                          <div style={styles.productionValue}>
+                          <div style={{ fontWeight: '700', color: currentTheme?.colors?.primary || '#3b82f6', fontSize: '13px', marginLeft: '4px' }}>
                             {formatInteger(record.production_quantity)} {record.unit || "M"}
                           </div>
                         </div>
-                        <div style={styles.targetBadge}>
+                        <div style={{ fontSize: '10px', color: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', padding: '2px 6px', borderRadius: '3px', display: 'flex', alignItems: 'center', marginTop: '2px' }}>
                           Target: {formatInteger(record.target_qty)} M
                         </div>
                       </div>
                     </td>
                     
-                    <td style={styles.tableCell}>
-                      <div style={styles.weightContainer}>
+                    <td style={{ padding: '10px 8px', verticalAlign: 'middle' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
                         <div className="icon-container">
                           <FiDroplet className="table-icon-spaced icon-blue" />
-                          <div style={styles.weightValue}>
+                          <div style={{ fontWeight: '600', color: isDarkMode ? '#7986CB' : '#1A237E', fontSize: '12px', marginLeft: '4px' }}>
                             {formatWeight(record.weight)} KG
                           </div>
                         </div>
-                        <div style={styles.perMeterBadge}>
+                        <div style={{ fontSize: '10px', color: isDarkMode ? '#9FA8DA' : '#283593', backgroundColor: isDarkMode ? '#333' : '#F5F5F5', padding: '1px 4px', borderRadius: '3px', display: 'inline-block' }}>
                           {record.per_meter_wt || "N/A"} per meter
                         </div>
                       </div>
                     </td>
                     
-                    <td style={styles.tableCell}>
-                      <div style={styles.efficiencyContainer}>
+                    <td style={{ padding: '10px 8px', verticalAlign: 'middle' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-start' }}>
                         <div className="icon-container">
-                          <FiPercent className="table-icon-spaced" style={{color: efficiencyColor}} />
-                          <div style={{
-                            ...styles.efficiencyValue,
-                            color: efficiencyColor
-                          }}>
+                          <FiPercent className="table-icon-spaced" style={{ color: efficiencyColor }} />
+                          <div style={{ fontWeight: '700', fontSize: '12px', textAlign: 'center', marginLeft: '4px', color: efficiencyColor }}>
                             {efficiency.toFixed(1)}%
                           </div>
                         </div>
-                        <div style={styles.efficiencyBar}>
+                        <div style={{ width: '60px', height: '4px', backgroundColor: isDarkMode ? '#333' : '#E0E0E0', borderRadius: '2px', overflow: 'hidden' }}>
                           <div style={{
                             width: `${Math.min(100, efficiency)}%`,
                             height: '100%',
@@ -1689,65 +2347,107 @@ const PVCcoatingPage = () => {
                       </div>
                     </td>
                     
-                    <td style={styles.tableCell}>
+                    <td style={{ padding: '10px 8px', verticalAlign: 'middle' }}>
                       <div className="icon-container">
                         <FiMessageSquare className="table-icon-spaced icon-gray" />
-                        <div style={styles.remarks}>
+                        <div style={{
+                          maxWidth: '100px',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          fontSize: '11px',
+                          color: isDarkMode ? '#9FA8DA' : '#64748b',
+                          padding: '2px 4px',
+                          backgroundColor: isDarkMode ? '#333' : '#F5F5F5',
+                          borderRadius: '3px',
+                          marginLeft: '4px'
+                        }}>
                           {record.remarks?.substring(0, 15) || "N/A"}
                           {record.remarks?.length > 15 ? "..." : ""}
                         </div>
                       </div>
                     </td>
                     
-                    <td style={styles.tableCell}>
+                    <td style={{ padding: '10px 8px', verticalAlign: 'middle' }}>
                       <div className="icon-container">
                         <FiLogIn className="table-icon-spaced icon-purple" />
-                        <div style={styles.entryDate}>
+                        <div style={{
+                          fontSize: '11px',
+                          color: isDarkMode ? '#9FA8DA' : '#283593',
+                          padding: '2px 4px',
+                          backgroundColor: isDarkMode ? '#333' : '#F5F5F5',
+                          borderRadius: '3px',
+                          marginLeft: '4px'
+                        }}>
                           {record.entry_date || "N/A"}
                         </div>
                       </div>
                     </td>
                     
-                    <td style={styles.tableCell}>
-                      <div style={styles.actionButtons}>
+                    <td style={{ padding: '10px 8px', verticalAlign: 'middle' }}>
+                      <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
                         <button 
                           title="View"
                           onClick={() => navigate(`/production-sections/pvc-coating/view/${record.id}`)}
                           className="action-button view"
                           style={{
-                            ...styles.viewButton,
-                            border: `2px solid #10b981`,
+                            width: '44px',
+                            height: '44px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            border: '2px solid #10b981',
                             backgroundColor: '#10b981',
-                            color: 'white'
+                            color: 'white',
+                            borderRadius: '8px',
+                            fontSize: '20px',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease'
                           }}
                         >
-                          <FiEye style={{fontSize: '20px'}} />
+                          <FiEye />
                         </button>
                         <button 
                           title="Edit"
                           onClick={() => navigate(`/production-sections/pvc-coating/edit/${record.id}`)}
                           className="action-button edit"
                           style={{
-                            ...styles.editButton,
-                            border: `2px solid #f59e0b`,
+                            width: '44px',
+                            height: '44px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            border: '2px solid #f59e0b',
                             backgroundColor: '#f59e0b',
-                            color: 'white'
+                            color: 'white',
+                            borderRadius: '8px',
+                            fontSize: '20px',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease'
                           }}
                         >
-                          <FiEdit style={{fontSize: '20px'}} />
+                          <FiEdit />
                         </button>
                         <button 
                           title="Delete"
                           onClick={() => handleDeleteRecord(record.id)}
                           className="action-button delete"
                           style={{
-                            ...styles.deleteButton,
-                            border: `2px solid #ef4444`,
+                            width: '44px',
+                            height: '44px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            border: '2px solid #ef4444',
                             backgroundColor: '#ef4444',
-                            color: 'white'
+                            color: 'white',
+                            borderRadius: '8px',
+                            fontSize: '20px',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease'
                           }}
                         >
-                          <FiTrash2 style={{fontSize: '20px'}} />
+                          <FiTrash2 />
                         </button>
                       </div>
                     </td>
@@ -1760,24 +2460,32 @@ const PVCcoatingPage = () => {
 
         {/* PAGINATION */}
         {totalPages > 1 && (
-          <div style={styles.pagination}>
-            <div style={styles.paginationInfo}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', padding: '16px 0', alignItems: 'center', marginTop: '16px' }}>
+            <div style={{ textAlign: 'center', fontSize: '12px', color: isDarkMode ? '#9FA8DA' : '#283593' }}>
               Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredRecords.length)} of {filteredRecords.length} records
             </div>
-            <div style={styles.paginationControls}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
               <button 
                 onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                 disabled={currentPage === 1}
                 style={{
-                  ...styles.paginationButton,
-                  opacity: currentPage === 1 ? 0.5 : 1,
-                  cursor: currentPage === 1 ? 'not-allowed' : 'pointer'
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  padding: '8px 12px',
+                  border: `1px solid ${isDarkMode ? '#333' : '#E0E0E0'}`,
+                  backgroundColor: isDarkMode ? '#1a1a1a' : '#FFFFFF',
+                  color: isDarkMode ? '#7986CB' : '#1A237E',
+                  borderRadius: '6px',
+                  fontSize: '12px',
+                  cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                  opacity: currentPage === 1 ? 0.5 : 1
                 }}
               >
                 <FiChevronLeft style={{ fontSize: '16px' }} /> Previous
               </button>
               
-              <div style={styles.pageButtons}>
+              <div style={{ display: 'flex', gap: '4px' }}>
                 {[...Array(Math.min(5, totalPages))].map((_, i) => {
                   let pageNum;
                   if (totalPages <= 5) pageNum = i + 1;
@@ -1790,9 +2498,17 @@ const PVCcoatingPage = () => {
                       key={pageNum}
                       onClick={() => setCurrentPage(pageNum)}
                       style={{
-                        ...styles.pageButton,
-                        backgroundColor: currentPage === pageNum ? 'var(--primary-500)' : 'var(--bg-card)',
-                        color: currentPage === pageNum ? 'var(--icon-white)' : 'var(--text-primary)'
+                        width: '32px',
+                        height: '32px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        border: `1px solid ${isDarkMode ? '#333' : '#E0E0E0'}`,
+                        borderRadius: '4px',
+                        fontSize: '12px',
+                        cursor: 'pointer',
+                        backgroundColor: currentPage === pageNum ? (currentTheme?.colors?.primary || '#3b82f6') : (isDarkMode ? '#1a1a1a' : '#FFFFFF'),
+                        color: currentPage === pageNum ? 'white' : (isDarkMode ? '#7986CB' : '#1A237E')
                       }}
                     >
                       {pageNum}
@@ -1805,9 +2521,17 @@ const PVCcoatingPage = () => {
                 onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                 disabled={currentPage === totalPages}
                 style={{
-                  ...styles.paginationButton,
-                  opacity: currentPage === totalPages ? 0.5 : 1,
-                  cursor: currentPage === totalPages ? 'not-allowed' : 'pointer'
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  padding: '8px 12px',
+                  border: `1px solid ${isDarkMode ? '#333' : '#E0E0E0'}`,
+                  backgroundColor: isDarkMode ? '#1a1a1a' : '#FFFFFF',
+                  color: isDarkMode ? '#7986CB' : '#1A237E',
+                  borderRadius: '6px',
+                  fontSize: '12px',
+                  cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                  opacity: currentPage === totalPages ? 0.5 : 1
                 }}
               >
                 Next <FiChevronRight style={{ fontSize: '16px' }} />
@@ -1818,20 +2542,50 @@ const PVCcoatingPage = () => {
       </div>
 
       {/* FOOTER */}
-      <div style={styles.footer}>
-        <div style={styles.footerText}>
+      <div style={{
+        padding: '16px',
+        textAlign: 'center',
+        backgroundColor: isDarkMode ? '#1a1a1a' : '#F5F5F5',
+        borderTop: `1px solid ${isDarkMode ? '#333' : '#E0E0E0'}`,
+        marginTop: '20px'
+      }}>
+        <div style={{ fontSize: '12px', color: isDarkMode ? '#9FA8DA' : '#283593', marginBottom: '8px' }}>
           PVC Coating Section • Production Management System
         </div>
-        <div style={styles.footerButtons}>
+        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
           <button 
             onClick={() => navigate("/production-sections/pvc-coating/new")}
-            style={styles.footerButtonPrimary}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '10px 16px',
+              backgroundColor: currentTheme?.colors?.primary || '#3b82f6',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              fontSize: '13px',
+              fontWeight: '500',
+              cursor: 'pointer'
+            }}
           >
             <FiPlus style={{ fontSize: '16px' }} /> New Entry
           </button>
           <button 
             onClick={fetchData}
-            style={styles.footerButtonSecondary}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '10px 16px',
+              backgroundColor: isDarkMode ? '#1a1a1a' : '#FFFFFF',
+              color: isDarkMode ? '#7986CB' : '#1A237E',
+              border: `1px solid ${isDarkMode ? '#333' : '#E0E0E0'}`,
+              borderRadius: '6px',
+              fontSize: '13px',
+              fontWeight: '500',
+              cursor: 'pointer'
+            }}
           >
             <FiRefreshCw style={{ fontSize: '16px' }} /> Refresh
           </button>
@@ -1839,906 +2593,6 @@ const PVCcoatingPage = () => {
       </div>
     </div>
   );
-};
-
-// ✅ Styles Object (CSS-in-JS)
-const styles = {
-  container: {
-    width: '100vw',
-    minHeight: '100vh',
-    backgroundColor: 'var(--bg-primary)',
-    color: 'var(--text-primary)',
-    overflowX: 'hidden'
-  },
-  
-  loadingContainer: {
-    width: '100vw',
-    height: '100vh',
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'var(--bg-primary)',
-    color: 'var(--text-primary)'
-  },
-  
-  dbAlert: {
-    backgroundColor: '#fef3c7',
-    border: '1px solid #fbbf24',
-    padding: '12px 16px',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-    fontSize: '14px'
-  },
-  
-  // ✅ Header Styles
-  header: {
-    background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
-    color: 'white',
-    position: 'sticky',
-    top: 0,
-    zIndex: 1000,
-    width: '100%',
-    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-  },
-  
-  headerTop: {
-    display: 'flex',
-    alignItems: 'center',
-    padding: '12px 16px',
-    gap: '12px'
-  },
-  
-  backButton: {
-    width: '40px',
-    height: '40px',
-    background: 'rgba(255, 255, 255, 0.15)',
-    border: 'none',
-    borderRadius: '50%',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    color: 'white',
-    cursor: 'pointer',
-    flexShrink: 0
-  },
-  
-  headerIcon: {
-    width: '40px',
-    height: '40px',
-    background: 'rgba(255, 255, 255, 0.15)',
-    borderRadius: '50%',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '18px',
-    flexShrink: 0,
-    color: 'white'
-  },
-  
-  headerContent: {
-    flex: 1,
-    minWidth: 0
-  },
-  
-  headerTitleRow: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-    marginBottom: '4px'
-  },
-  
-  headerTitle: {
-    fontSize: '18px',
-    fontWeight: '700',
-    whiteSpace: 'nowrap',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    color: 'white'
-  },
-  
-  connectionBadge: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '4px',
-    padding: '4px 8px',
-    background: 'rgba(255, 255, 255, 0.15)',
-    borderRadius: '20px',
-    fontSize: '12px',
-    flexShrink: 0,
-    color: 'white'
-  },
-  
-  headerSubtitle: {
-    fontSize: '13px',
-    opacity: 0.9,
-    whiteSpace: 'nowrap',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    color: 'white'
-  },
-  
-  headerButtons: {
-    display: 'flex',
-    gap: '8px',
-    padding: '8px 16px 12px',
-    background: 'rgba(0, 0, 0, 0.05)'
-  },
-  
-  headerButton: {
-    flex: 1,
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '6px',
-    padding: '10px 12px',
-    background: 'rgba(255, 255, 255, 0.12)',
-    color: 'white',
-    border: '1px solid rgba(255, 255, 255, 0.2)',
-    borderRadius: '6px',
-    fontSize: '13px',
-    fontWeight: '500',
-    cursor: 'pointer'
-  },
-  
-  themeButton: {
-    width: '40px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '10px',
-    background: 'rgba(255, 255, 255, 0.12)',
-    color: 'white',
-    border: '1px solid rgba(255, 255, 255, 0.2)',
-    borderRadius: '6px',
-    fontSize: '18px',
-    cursor: 'pointer'
-  },
-  
-  refreshButton: {
-    width: '40px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '10px',
-    background: 'rgba(255, 255, 255, 0.12)',
-    color: 'white',
-    border: '1px solid rgba(255, 255, 255, 0.2)',
-    borderRadius: '6px',
-    fontSize: '18px',
-    cursor: 'pointer'
-  },
-  
-  // ✅ 1. پہلے کارڈز
-  statsGrid: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '6px',
-    padding: '12px'
-  },
-  
-  statCard: {
-    backgroundColor: '#3b82f6',
-    borderRadius: '8px',
-    padding: '10px',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-    border: '1px solid rgba(255, 255, 255, 0.1)',
-    flex: '1 0 calc(25% - 6px)',
-    minHeight: '70px'
-  },
-  
-  lightStatCard: {
-    backgroundColor: 'var(--bg-card)',
-    borderRadius: '8px',
-    padding: '10px',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
-    border: '1px solid var(--border-color)',
-    flex: '1 0 calc(25% - 6px)',
-    minHeight: '70px'
-  },
-  
-  statContent: {
-    display: 'flex',
-    alignItems: 'flex-start',
-    gap: '8px'
-  },
-  
-  statIconLeft: {
-    width: '34px',
-    height: '34px',
-    background: 'rgba(255, 255, 255, 0.15)',
-    borderRadius: '6px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    color: 'white',
-    fontSize: '16px',
-    flexShrink: 0
-  },
-  
-  lightStatIconLeft: {
-    width: '34px',
-    height: '34px',
-    background: 'var(--bg-surface)',
-    borderRadius: '6px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    color: 'var(--primary-500)',
-    fontSize: '16px',
-    flexShrink: 0
-  },
-  
-  statText: {
-    flex: 1,
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '2px'
-  },
-  
-  statTitle: {
-    fontSize: '10px',
-    color: 'rgba(255, 255, 255, 0.9)',
-    fontWeight: '500',
-    marginBottom: '2px'
-  },
-  
-  statValue: {
-    fontSize: '14px',
-    fontWeight: '700',
-    color: 'white',
-    marginBottom: '4px'
-  },
-  
-  statValueWithArrow: {
-    display: 'flex',
-    alignItems: 'center',
-    fontSize: '14px',
-    fontWeight: '700',
-    color: 'white',
-    marginBottom: '4px'
-  },
-  
-  statTitleLight: {
-    fontSize: '10px',
-    color: 'var(--text-primary)',
-    fontWeight: '500',
-    marginBottom: '2px'
-  },
-  
-  statValueLight: {
-    fontSize: '14px',
-    fontWeight: '700',
-    color: 'var(--text-primary)',
-    marginBottom: '4px'
-  },
-  
-  dateBadgeLight: {
-    fontSize: '8px',
-    color: 'var(--text-muted)',
-    background: 'var(--bg-surface)',
-    padding: '2px 6px',
-    borderRadius: '10px',
-    display: 'inline-block',
-    width: 'fit-content'
-  },
-  
-  // ✅ 2. لاسٹ انٹری ڈیش بورڈ
-  sectionContainer: {
-    padding: '12px',
-    marginTop: '8px'
-  },
-  
-  sectionHeader: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-    marginBottom: '12px'
-  },
-  
-  sectionIcon: {
-    fontSize: '20px',
-    color: 'var(--icon-color)'
-  },
-  
-  sectionTitle: {
-    fontSize: '16px',
-    fontWeight: '600'
-  },
-  
-  sectionSubtitle: {
-    fontSize: '12px',
-    color: 'var(--text-secondary)'
-  },
-  
-  dashboardGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(3, 1fr)',
-    gap: '8px'
-  },
-  
-  dashboardCard: {
-    backgroundColor: 'var(--bg-card)',
-    borderRadius: '8px',
-    padding: '12px',
-    border: '1px solid var(--border-color)',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-  },
-  
-  dashboardCardHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '12px'
-  },
-  
-  dashboardCardTitle: {
-    fontSize: '14px',
-    fontWeight: '600',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
-    color: 'var(--text-primary)'
-  },
-  
-  cardBadge: {
-    fontSize: '10px',
-    backgroundColor: 'var(--primary-500)',
-    color: 'var(--icon-white)',
-    padding: '2px 6px',
-    borderRadius: '10px'
-  },
-  
-  dashboardItem: {
-    marginBottom: '12px',
-    paddingBottom: '12px',
-    borderBottom: '1px solid var(--border-color)'
-  },
-  
-  dashboardItemHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '6px'
-  },
-  
-  dashboardItemLabel: {
-    fontSize: '12px',
-    color: 'var(--text-primary)'
-  },
-  
-  dashboardItemDetails: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    fontSize: '10px',
-    color: 'var(--text-secondary)',
-    marginBottom: '6px'
-  },
-  
-  progressBar: {
-    height: '4px',
-    backgroundColor: 'var(--border-color)',
-    borderRadius: '2px',
-    overflow: 'hidden'
-  },
-  
-  emptyState: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '20px 0'
-  },
-  
-  emptyIcon: {
-    fontSize: '24px',
-    color: 'var(--text-secondary)',
-    marginBottom: '8px'
-  },
-  
-  emptyText: {
-    fontSize: '12px',
-    color: 'var(--text-secondary)'
-  },
-  
-  // ✅ 3. فلٹرز
-  filtersSection: {
-    padding: '12px',
-    marginTop: '8px'
-  },
-  
-  filtersContainer: {
-    backgroundColor: 'var(--bg-card)',
-    borderRadius: '8px',
-    padding: '12px',
-    border: '1px solid var(--border-color)',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-  },
-  
-  filterHeading: {
-    display: 'flex',
-    alignItems: 'center',
-    fontSize: '14px',
-    fontWeight: '600',
-    color: 'var(--text-primary)',
-    marginBottom: '12px'
-  },
-  
-  filtersSingleLine: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: '8px',
-    alignItems: 'center'
-  },
-  
-  filterGroup: {
-    flex: '1 0 calc(14.285% - 8px)',
-    minWidth: '120px'
-  },
-  
-  filterInput: {
-    width: '100%',
-    padding: '8px 10px',
-    border: '1px solid var(--border-color)',
-    borderRadius: '6px',
-    backgroundColor: 'var(--bg-card)',
-    color: 'var(--text-primary)',
-    fontSize: '13px',
-    outline: 'none'
-  },
-  
-  filterSelect: {
-    width: '100%',
-    padding: '8px 10px',
-    border: '1px solid var(--border-color)',
-    borderRadius: '6px',
-    backgroundColor: 'var(--bg-card)',
-    color: 'var(--text-primary)',
-    fontSize: '13px',
-    outline: 'none'
-  },
-  
-  filterDate: {
-    width: '100%',
-    padding: '8px 10px',
-    border: '1px solid var(--border-color)',
-    borderRadius: '6px',
-    backgroundColor: 'var(--bg-card)',
-    color: 'var(--text-primary)',
-    fontSize: '13px',
-    outline: 'none'
-  },
-  
-  filterBtnPrimary: {
-    width: '100%',
-    padding: '8px 10px',
-    background: '#3b82f6',
-    color: 'white',
-    border: 'none',
-    borderRadius: '6px',
-    fontSize: '13px',
-    fontWeight: '500',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '6px'
-  },
-  
-  filterBtnSecondary: {
-    width: '100%',
-    padding: '8px 10px',
-    background: 'var(--bg-secondary)',
-    color: 'var(--text-primary)',
-    border: '1px solid var(--border-color)',
-    borderRadius: '6px',
-    fontSize: '13px',
-    fontWeight: '500',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '6px'
-  },
-  
-  whatsappBtn: {
-    width: '100%',
-    padding: '8px 10px',
-    background: '#25D366',
-    color: 'white',
-    border: 'none',
-    borderRadius: '6px',
-    fontSize: '13px',
-    fontWeight: '500',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '6px'
-  },
-  
-  printBtn: {
-    width: '100%',
-    padding: '8px 10px',
-    background: '#6b7280',
-    color: 'white',
-    border: 'none',
-    borderRadius: '6px',
-    fontSize: '13px',
-    fontWeight: '500',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '6px'
-  },
-  
-  excelBtn: {
-    padding: '8px 12px',
-    background: '#10b981',
-    color: 'white',
-    border: 'none',
-    borderRadius: '6px',
-    fontSize: '12px',
-    fontWeight: '500',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
-    marginRight: '8px'
-  },
-  
-  reportActions: {
-    padding: '8px 12px',
-    background: 'var(--bg-surface)',
-    border: '1px solid var(--border-color)',
-    borderRadius: '6px',
-    margin: '0 12px 12px',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px'
-  },
-  
-  // ✅ 4. ٹیبل
-  tableHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '12px'
-  },
-  
-  tableInfo: {
-    fontSize: '12px',
-    color: 'var(--text-secondary)',
-    display: 'flex',
-    gap: '8px'
-  },
-  
-  tableContainer: {
-    width: '100%',
-    overflowX: 'auto',
-    WebkitOverflowScrolling: 'touch',
-    borderRadius: '6px',
-    backgroundColor: 'var(--bg-card)',
-    border: '1px solid var(--border-color)'
-  },
-  
-  table: {
-    width: '100%',
-    minWidth: '1200px',
-    borderCollapse: 'collapse'
-  },
-  
-  tableHeaderCell: {
-    padding: '12px 8px',
-    textAlign: 'left',
-    fontWeight: '600',
-    fontSize: '12px',
-    color: 'var(--text-secondary)',
-    backgroundColor: 'var(--bg-surface)',
-    borderBottom: '2px solid var(--border-color)',
-    whiteSpace: 'nowrap',
-    textTransform: 'uppercase'
-  },
-  
-  tableRow: {
-    borderBottom: '1px solid var(--border-color)'
-  },
-  
-  tableCell: {
-    padding: '10px 8px',
-    verticalAlign: 'middle'
-  },
-  
-  boldDateText: {
-    fontSize: '11px',
-    fontWeight: '600',
-    color: 'var(--text-primary)'
-  },
-  
-  lightShiftText: {
-    fontSize: '11px',
-    fontWeight: '400',
-    color: 'var(--text-secondary)'
-  },
-  
-  idBadge: {
-    backgroundColor: 'var(--primary-500)',
-    color: 'var(--icon-white)',
-    padding: '4px 8px',
-    borderRadius: '4px',
-    fontSize: '11px',
-    fontWeight: '600',
-    display: 'inline-block',
-    textAlign: 'center'
-  },
-  
-  dateShiftContainer: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '6px'
-  },
-  
-  itemDetails: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '2px'
-  },
-  
-  itemName: {
-    fontWeight: '600',
-    color: 'var(--text-primary)',
-    fontSize: '12px'
-  },
-  
-  itemProduct: {
-    color: 'var(--text-secondary)',
-    fontSize: '11px'
-  },
-  
-  productionContainer: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '3px'
-  },
-  
-  productionValue: {
-    fontWeight: '700',
-    color: 'var(--primary-500)',
-    fontSize: '13px',
-    marginLeft: '4px'
-  },
-  
-  targetBadge: {
-    fontSize: '10px',
-    color: '#ef4444',
-    backgroundColor: 'rgba(239, 68, 68, 0.1)',
-    padding: '2px 6px',
-    borderRadius: '3px',
-    display: 'flex',
-    alignItems: 'center',
-    marginTop: '2px'
-  },
-  
-  weightContainer: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '3px'
-  },
-  
-  weightValue: {
-    fontWeight: '600',
-    color: 'var(--text-primary)',
-    fontSize: '12px',
-    marginLeft: '4px'
-  },
-  
-  perMeterBadge: {
-    fontSize: '10px',
-    color: 'var(--text-secondary)',
-    backgroundColor: 'var(--bg-surface)',
-    padding: '1px 4px',
-    borderRadius: '3px',
-    display: 'inline-block'
-  },
-  
-  efficiencyContainer: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '4px',
-    alignItems: 'flex-start'
-  },
-  
-  efficiencyValue: {
-    fontWeight: '700',
-    fontSize: '12px',
-    textAlign: 'center',
-    marginLeft: '4px'
-  },
-  
-  efficiencyBar: {
-    width: '60px',
-    height: '4px',
-    backgroundColor: 'var(--border-color)',
-    borderRadius: '2px',
-    overflow: 'hidden'
-  },
-  
-  remarks: {
-    maxWidth: '100px',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-    fontSize: '11px',
-    color: 'var(--text-muted)',
-    padding: '2px 4px',
-    backgroundColor: 'var(--bg-surface)',
-    borderRadius: '3px',
-    marginLeft: '4px'
-  },
-  
-  entryDate: {
-    fontSize: '11px',
-    color: 'var(--text-secondary)',
-    padding: '2px 4px',
-    backgroundColor: 'var(--bg-surface)',
-    borderRadius: '3px',
-    marginLeft: '4px'
-  },
-  
-  actionButtons: {
-    display: 'flex',
-    gap: '8px',
-    justifyContent: 'center'
-  },
-  
-  viewButton: {
-    width: '44px',
-    height: '44px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    border: '2px solid #10b981',
-    backgroundColor: '#10b981',
-    color: 'white',
-    borderRadius: '8px',
-    fontSize: '20px',
-    cursor: 'pointer',
-    transition: 'all 0.2s ease'
-  },
-  
-  editButton: {
-    width: '44px',
-    height: '44px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    border: '2px solid #f59e0b',
-    backgroundColor: '#f59e0b',
-    color: 'white',
-    borderRadius: '8px',
-    fontSize: '20px',
-    cursor: 'pointer',
-    transition: 'all 0.2s ease'
-  },
-  
-  deleteButton: {
-    width: '44px',
-    height: '44px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    border: '2px solid #ef4444',
-    backgroundColor: '#ef4444',
-    color: 'white',
-    borderRadius: '8px',
-    fontSize: '20px',
-    cursor: 'pointer',
-    transition: 'all 0.2s ease'
-  },
-  
-  // Pagination Styles
-  pagination: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '12px',
-    padding: '16px 0',
-    alignItems: 'center',
-    marginTop: '16px'
-  },
-  
-  paginationInfo: {
-    textAlign: 'center',
-    fontSize: '12px',
-    color: 'var(--text-secondary)'
-  },
-  
-  paginationControls: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '8px'
-  },
-  
-  paginationButton: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '4px',
-    padding: '8px 12px',
-    border: '1px solid var(--border-color)',
-    backgroundColor: 'var(--bg-card)',
-    color: 'var(--text-primary)',
-    borderRadius: '6px',
-    fontSize: '12px',
-    cursor: 'pointer'
-  },
-  
-  pageButtons: {
-    display: 'flex',
-    gap: '4px'
-  },
-  
-  pageButton: {
-    width: '32px',
-    height: '32px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    border: '1px solid var(--border-color)',
-    borderRadius: '4px',
-    fontSize: '12px',
-    cursor: 'pointer'
-  },
-  
-  // Footer Styles
-  footer: {
-    padding: '16px',
-    textAlign: 'center',
-    backgroundColor: 'var(--bg-secondary)',
-    borderTop: '1px solid var(--border-color)',
-    marginTop: '20px'
-  },
-  
-  footerText: {
-    fontSize: '12px',
-    color: 'var(--text-secondary)',
-    marginBottom: '8px'
-  },
-  
-  footerButtons: {
-    display: 'flex',
-    gap: '8px',
-    justifyContent: 'center'
-  },
-  
-  footerButtonPrimary: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '6px',
-    padding: '10px 16px',
-    backgroundColor: 'var(--primary-500)',
-    color: 'var(--icon-white)',
-    border: 'none',
-    borderRadius: '6px',
-    fontSize: '13px',
-    fontWeight: '500',
-    cursor: 'pointer'
-  },
-  
-  footerButtonSecondary: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '6px',
-    padding: '10px 16px',
-    backgroundColor: 'var(--bg-card)',
-    color: 'var(--text-primary)',
-    border: '1px solid var(--border-color)',
-    borderRadius: '6px',
-    fontSize: '13px',
-    fontWeight: '500',
-    cursor: 'pointer'
-  }
 };
 
 export default PVCcoatingPage;

@@ -11,7 +11,7 @@ src/components/departments/Production/DashboardStyles/cards.css
   border-radius: 12px;
   padding: 20px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e9ecef;
+  border: 1px solid hsl(114, 95%, 36%);
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;

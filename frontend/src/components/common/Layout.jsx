@@ -17,7 +17,7 @@ const Layout = ({
   showHeader = true,
   showSidebar = true,
 }) => {
-  const { theme } = useTheme();
+  const { theme, isDarkMode, mode } = useTheme();
   const [isMobile, setIsMobile] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -34,33 +34,71 @@ const Layout = ({
       ? SIDEBAR_EXPANDED
       : SIDEBAR_COLLAPSED;
 
+  // Theme-based styles
+  const layoutStyles = {
+    container: {
+      display: "flex",
+      height: "100vh",
+      width: "100vw",
+      overflow: "hidden",
+      background: theme?.colors?.background || (isDarkMode ? "#121212" : "#f5f5f5"),
+      color: theme?.colors?.text || (isDarkMode ? "#ffffff" : "#333333")
+    },
+    sidebar: {
+      width: isMobile ? (sidebarOpen ? SIDEBAR_EXPANDED : 0) : sidebarWidth,
+      flexShrink: 0,
+      height: "100%",
+      transition: "width 0.3s ease",
+      background: theme?.colors?.sidebar?.background || (isDarkMode ? "#1e1e1e" : "#ffffff"),
+      borderRight: `1px solid ${theme?.colors?.border || (isDarkMode ? "#333" : "#eee")}`,
+      zIndex: 1000,
+      overflowX: "hidden"
+    },
+    header: {
+      height: "60px",
+      width: "100%",
+      flexShrink: 0,
+      zIndex: 900,
+      background: theme?.colors?.header?.background || (isDarkMode ? "#1a1a1a" : "#ffffff"),
+      borderBottom: `1px solid ${theme?.colors?.border || (isDarkMode ? "#333" : "#eee")}`,
+      position: "relative", /* ✅ Changed from absolute to relative */
+      top: 0, /* ✅ Always 0 */
+    },
+    subHeader: {
+      height: "50px",
+      width: "100%",
+      flexShrink: 0,
+      background: theme?.colors?.subHeader?.background || (isDarkMode ? "#2a2a2a" : "#f9f9f9"),
+      color: theme?.colors?.subHeader?.text || (isDarkMode ? "#cccccc" : "#666666"),
+      display: "flex",
+      alignItems: "center",
+      padding: "0 20px",
+      boxSizing: "border-box",
+      borderBottom: `1px solid ${theme?.colors?.border || (isDarkMode ? "#333" : "#eee")}`
+    },
+    content: {
+      flexGrow: 1,
+      overflowY: "auto",
+      overflowX: "auto",
+      padding: "20px", /* ✅ Keep this as is */
+      boxSizing: "border-box",
+      width: "100%",
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "flex-start",
+      background: theme?.colors?.content?.background || "transparent"
+    }
+  };
+
   return (
-    <div
-      className="layout-container"
-      style={{
-        display: "flex",
-        height: "100vh",
-        width: "100vw",
-        overflow: "hidden",
-        // background: theme.colors.background
-      }}
-    >
+    <div className={`layout-container ${mode}-mode`} style={layoutStyles.container}>
 
       {/* Sidebar */}
       {showSidebar && (
         <aside
           onMouseEnter={() => !isMobile && setSidebarOpen(true)}
           onMouseLeave={() => !isMobile && setSidebarOpen(false)}
-          style={{
-            width: isMobile ? (sidebarOpen ? SIDEBAR_EXPANDED : 0) : sidebarWidth,
-            flexShrink: 0,
-            height: "100%",
-            transition: "width 0.3s ease",
-            background: "#fff",
-            zIndex: 1000,
-            // borderRight: "1px solid #eee", // بارڈر ہٹا دیا
-            overflowX: "hidden"
-          }}
+          style={layoutStyles.sidebar}
         >
           <Navigation isOpen={sidebarOpen || isMobile} />
         </aside>
@@ -82,51 +120,20 @@ const Layout = ({
       >
         {/* Header */}
         {showHeader && (
-          <header
-            style={{
-              height: "60px",
-              width: "100%",
-              flexShrink: 0,
-              zIndex: 900,
-              background: "#fff",
-              position: isMobile ? "absolute" : "relative",
-              top: isMobile ? MOBILE_TOP_GAP : 0,
-            }}
-          >
+          <header style={layoutStyles.header}>
             <Header title={title} subtitle={subtitle} />
           </header>
         )}
 
         {/* Sub Header */}
-        <div
-          style={{
-            height: "50px",
-            width: "100%",
-            flexShrink: 0,
-            background: "#f9f9f9",
-            display: "flex",
-            alignItems: "center",
-            padding: "0 0px",
-            boxSizing: "border-box",
-          }}
-        >
+        <div style={layoutStyles.subHeader}>
           {subtitle}
         </div>
 
         {/* Scrollable Content */}
         <main
           className="content-area"
-          style={{
-            flexGrow: 1,
-            overflowY: "auto",
-            overflowX: "auto",
-            padding: "0px", // سائیڈوں کا گیپ ختم کیا
-            boxSizing: "border-box",
-            width: "100%",
-            display: "flex",
-            justifyContent: "center", // افقی سینٹر
-            alignItems: "flex-start" // اوپر سے شروع کریں
-          }}
+          style={layoutStyles.content}
         >
           <div style={{
             width: "100%",
@@ -143,7 +150,12 @@ const Layout = ({
       {isMobile && sidebarOpen && (
         <div
           onClick={() => setSidebarOpen(false)}
-          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 999 }}
+          style={{ 
+            position: "fixed", 
+            inset: 0, 
+            background: "rgba(0,0,0,0.5)", 
+            zIndex: 999 
+          }}
         />
       )}
     </div>

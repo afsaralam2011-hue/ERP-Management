@@ -1,6 +1,7 @@
+// src/pages/ProductionSections/SpiralSection/SpiralPage.jsx
 // ============================================================
-// Spiral Section - COMPLETE FIXED VERSION
-// All buttons in ONE line, NO borders
+// Spiral Section - 100% LAYOUT COMPATIBLE VERSION
+// Complete file - Just copy and paste
 // ============================================================
 
 import React, { useState, useEffect, useCallback } from "react";
@@ -47,11 +48,14 @@ import {
   FiSettings,
 } from "react-icons/fi";
 import { FaWhatsapp } from "react-icons/fa";
+import { useTheme } from "../../../contexts/ThemeContext";
 import { supabase } from "../../../supabaseClient";
 import "./SpiralPage.css";
 
 const SpiralPage = () => {
   const navigate = useNavigate();
+  const { mode, isDarkMode } = useTheme();
+  
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -107,6 +111,38 @@ const SpiralPage = () => {
   const [loggedInUser, setLoggedInUser] = useState("");
 
   const isSupabaseConnected = supabase && process.env.REACT_APP_SUPABASE_URL;
+
+  // CSS Variables کے ذریعے colors لینے کا function
+  const getColor = (varName) => {
+    return getComputedStyle(document.documentElement).getPropertyValue(varName).trim() || '#000000';
+  };
+
+  // Theme-based colors
+  const themeColors = {
+    background: getColor('--color-background'),
+    textPrimary: getColor('--color-text-primary'),
+    textSecondary: getColor('--color-text-secondary'),
+    surface: getColor('--color-surface'),
+    border: getColor('--color-border'),
+    primary: getColor('--color-primary'),
+    primaryLight: getColor('--color-primary-light'),
+    primaryDark: getColor('--color-primary-dark'),
+    secondary: getColor('--color-secondary'),
+    success: getColor('--color-success'),
+    warning: getColor('--color-warning'),
+    error: getColor('--color-error'),
+    info: getColor('--color-info'),
+    shadow: getColor('--color-shadow'),
+    hover: getColor('--color-hover'),
+    divider: getColor('--color-divider'),
+    paper: getColor('--color-paper'),
+    disabled: getColor('--color-disabled'),
+  };
+
+  // Header background gradient colors (theme-based)
+  const headerGradient = isDarkMode 
+    ? 'linear-gradient(135deg, #1A237E 0%, #283593 100%)' // Indigo gradient for dark mode
+    : 'linear-gradient(135deg, #1A237E 0%, #283593 100%)'; // Indigo gradient for light mode
 
   useEffect(() => {
     const getUserName = () => {
@@ -820,35 +856,127 @@ const SpiralPage = () => {
   };
 
   const WhatsAppModal = () => (
-    <div className="modal-overlay" onClick={() => setShowWhatsAppModal(false)}>
-      <div className="modal-container" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <h2>
+    <div 
+      className="modal-overlay" 
+      onClick={() => setShowWhatsAppModal(false)}
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'rgba(0, 0, 0, 0.5)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 2000
+      }}
+    >
+      <div 
+        className="modal-container" 
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          background: themeColors.paper || themeColors.background,
+          borderRadius: '8px',
+          width: '90%',
+          maxWidth: '500px',
+          maxHeight: '90vh',
+          overflow: 'auto',
+          boxShadow: `0 10px 40px ${themeColors.shadow}`
+        }}
+      >
+        <div 
+          className="modal-header"
+          style={{
+            padding: '20px',
+            borderBottom: `1px solid ${themeColors.border}`,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            background: headerGradient,
+            color: 'white',
+            borderTopLeftRadius: '8px',
+            borderTopRightRadius: '8px'
+          }}
+        >
+          <h2 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
             <FaWhatsapp className="whatsapp-icon" /> Send Report via WhatsApp
           </h2>
           <button
             onClick={() => setShowWhatsAppModal(false)}
             className="modal-close-btn"
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: 'white',
+              fontSize: '24px',
+              cursor: 'pointer',
+              padding: '0',
+              width: '30px',
+              height: '30px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
           >
             &times;
           </button>
         </div>
 
-        <div className="modal-body">
-          <div className="whatsapp-modal-content">
-            <FaWhatsapp size={48} className="whatsapp-icon-large" />
-            <h3>Send to WhatsApp Desktop</h3>
-            <p className="whatsapp-modal-text">
-              Select one of the options below. Report will automatically open in
-              WhatsApp Desktop.
+        <div 
+          className="modal-body"
+          style={{
+            padding: '20px',
+            color: themeColors.textPrimary
+          }}
+        >
+          <div 
+            className="whatsapp-modal-content"
+            style={{
+              textAlign: 'center',
+              marginBottom: '20px'
+            }}
+          >
+            <FaWhatsapp size={48} color="#25D366" />
+            <h3 style={{ margin: '10px 0 5px 0' }}>Send to WhatsApp Desktop</h3>
+            <p style={{ margin: 0, fontSize: '14px', color: themeColors.textSecondary }}>
+              Select one of the options below. Report will automatically open in WhatsApp Desktop.
             </p>
           </div>
 
-          <div className="whatsapp-options">
-            <div className="options-row">
+          <div 
+            className="whatsapp-options"
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '10px'
+            }}
+          >
+            <div 
+              className="options-row"
+              style={{
+                display: 'flex',
+                gap: '10px'
+              }}
+            >
               <button
                 onClick={sendReportViaWhatsApp}
                 className="whatsapp-option-btn whatsapp-desktop-btn"
+                style={{
+                  flex: 1,
+                  padding: '12px 20px',
+                  background: '#25D366',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '10px',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}
               >
                 <FaWhatsapp /> WhatsApp Desktop
               </button>
@@ -857,13 +985,26 @@ const SpiralPage = () => {
                 onClick={() => {
                   const reportMessage = prepareWhatsAppReport("report");
                   navigator.clipboard.writeText(reportMessage).then(() => {
-                    alert(
-                      "Report copied to clipboard. Please paste in WhatsApp."
-                    );
+                    alert("Report copied to clipboard. Please paste in WhatsApp.");
                     setShowWhatsAppModal(false);
                   });
                 }}
                 className="whatsapp-option-btn copy-message-btn"
+                style={{
+                  flex: 1,
+                  padding: '12px 20px',
+                  background: themeColors.primary,
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '10px',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}
               >
                 <FiDownload /> Copy Message
               </button>
@@ -871,17 +1012,51 @@ const SpiralPage = () => {
               <button
                 onClick={() => setShowWhatsAppModal(false)}
                 className="whatsapp-option-btn close-btn"
+                style={{
+                  flex: 1,
+                  padding: '12px 20px',
+                  background: themeColors.error,
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '10px',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}
               >
                 <FiX /> Close
               </button>
             </div>
           </div>
 
-          <div className="preview-section">
-            <h4>
+          <div 
+            className="preview-section"
+            style={{
+              marginTop: '20px',
+              paddingTop: '20px',
+              borderTop: `1px solid ${themeColors.border}`
+            }}
+          >
+            <h4 style={{ margin: '0 0 10px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
               <FiEye /> Message Preview
             </h4>
-            <div className="message-preview">
+            <div 
+              className="message-preview"
+              style={{
+                background: themeColors.surface,
+                padding: '15px',
+                borderRadius: '6px',
+                fontSize: '12px',
+                maxHeight: '200px',
+                overflow: 'auto',
+                color: themeColors.textPrimary,
+                border: `1px solid ${themeColors.border}`
+              }}
+            >
               {prepareWhatsAppReport("report")}
             </div>
           </div>
@@ -1007,14 +1182,14 @@ const SpiralPage = () => {
           body { 
             font-family: Arial, sans-serif; 
             margin: 40px; 
-            color: #005461;
+            color: #1A237E;
             background: white;
           }
           .header { 
             text-align: center; 
             margin-bottom: 30px; 
             padding: 20px;
-            background: #018790;
+            background: #1A237E;
             color: #FFFFFF;
           }
           .header h1 { 
@@ -1029,24 +1204,24 @@ const SpiralPage = () => {
             margin: 20px 0; 
           }
           .table th, .table td { 
-            border: 1px solid #00B7B5; 
+            border: 1px solid #283593; 
             padding: 12px; 
             text-align: left; 
           }
           .table th { 
-            background-color: #018790; 
+            background-color: #1A237E; 
             color: #FFFFFF;
           }
           .summary { 
             background-color: #F4F4F4; 
             padding: 20px; 
             margin: 20px 0; 
-            border: 1px solid #00B7B5;
+            border: 1px solid #283593;
           }
           .shift-section { 
             margin: 20px 0; 
             padding: 15px; 
-            border-left: 4px solid #005461;
+            border-left: 4px solid #1A237E;
             background: #F4F4F4;
           }
           .shift-header { 
@@ -1059,7 +1234,7 @@ const SpiralPage = () => {
             margin-top: 4px; 
             text-align: center; 
             font-size: 1px; 
-            color: #005461;
+            color: #1A237E;
           }
           @media print {
             body { margin: 20px; }
@@ -1076,7 +1251,7 @@ const SpiralPage = () => {
         
         <div class="shift-section">
           <div class="shift-header">
-            <h3 style="margin: 0; color: #005461;">☀️ Day Shift Summary</h3>
+            <h3 style="margin: 0; color: #1A237E;">☀️ Day Shift Summary</h3>
           </div>
           <p><strong>Production:</strong> ${Math.round(
             reportData.dayShiftData.production
@@ -1092,7 +1267,7 @@ const SpiralPage = () => {
         
         <div class="shift-section">
           <div class="shift-header">
-            <h3 style="margin: 0; color: #005461;">🌙 Night Shift Summary</h3>
+            <h3 style="margin: 0; color: #1A237E;">🌙 Night Shift Summary</h3>
           </div>
           <p><strong>Production:</strong> ${Math.round(
             reportData.nightShiftData.production
@@ -1240,10 +1415,10 @@ const SpiralPage = () => {
         </div>
         
         <div class="no-print" style="margin-top: 20px;">
-          <button onclick="window.print()" style="padding: 10px 20px; background: #018790; color: #FFFFFF; border: none; cursor: pointer;">
+          <button onclick="window.print()" style="padding: 10px 20px; background: #1A237E; color: #FFFFFF; border: none; cursor: pointer;">
             Print Report
           </button>
-          <button onclick="window.close()" style="padding: 10px 20px; background: #005461; color: #FFFFFF; border: none; cursor: pointer; margin-left: 10px;">
+          <button onclick="window.close()" style="padding: 10px 20px; background: #283593; color: #FFFFFF; border: none; cursor: pointer; margin-left: 10px;">
             Close
           </button>
         </div>
@@ -1468,56 +1643,181 @@ const SpiralPage = () => {
 
   if (loading && records.length === 0) {
     return (
-      <div className="loading-container">
-        <div className="loading-spinner" />
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '100vh',
+        background: themeColors.background,
+        color: themeColors.textPrimary,
+        padding: '20px'
+      }}>
+        <div style={{
+          width: '40px',
+          height: '40px',
+          border: `3px solid ${themeColors.border}`,
+          borderTop: `3px solid ${themeColors.primary}`,
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite',
+          marginBottom: '20px'
+        }} />
         <h3>Loading Spiral Section Data...</h3>
-        <p className="loading-subtext">Fetching records from database</p>
+        <p style={{ color: themeColors.textSecondary }}>Fetching records from database</p>
+        <style>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
       </div>
     );
   }
 
   return (
     <>
-      <div className="spiral-container">
+      {/* Layout Compatible Page Structure */}
+      <div className="spiral-page-container" style={{
+        width: '100%',
+        height: '100%',
+        background: themeColors.background,
+        color: themeColors.textPrimary,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden'
+      }}>
+        
+        {/* Mobile Menu Button (Only for mobile) */}
         <button
           className="mobile-menu-btn"
           onClick={() => setShowMobileMenu(!showMobileMenu)}
+          style={{
+            position: 'fixed',
+            top: '10px',
+            left: '10px',
+            zIndex: 1001,
+            background: headerGradient,
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            padding: '8px',
+            cursor: 'pointer',
+            display: window.innerWidth < 768 ? 'block' : 'none'
+          }}
         >
           <FiMenu size={24} />
         </button>
 
+        {/* Database Connection Alert */}
         {!isSupabaseConnected && (
-          <div className="database-alert">
+          <div style={{
+            background: themeColors.errorLight || '#f8d7da',
+            color: themeColors.errorDark || '#721c24',
+            padding: '12px',
+            margin: '0 0 10px 0',
+            borderRadius: '4px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            border: `1px solid ${themeColors.error}`
+          }}>
             <FiAlertCircle size={20} />
             <div>
               <strong>Supabase Connection Issue</strong>
-              <div className="alert-subtext">
-                Check your .env file for REACT_APP_SUPABASE_URL and
-                REACT_APP_SUPABASE_ANON_KEY
+              <div style={{ fontSize: '12px', marginTop: '2px' }}>
+                Check your .env file for REACT_APP_SUPABASE_URL and REACT_APP_SUPABASE_ANON_KEY
               </div>
             </div>
           </div>
         )}
 
+        {/* Mobile Menu Overlay */}
         {showMobileMenu && (
-          <div className="mobile-menu-overlay">
-            <div className="mobile-menu">
-              <div className="mobile-menu-header">
-                <h3>Spiral Section</h3>
+          <div 
+            className="mobile-menu-overlay"
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'rgba(0, 0, 0, 0.5)',
+              zIndex: 2000
+            }}
+            onClick={() => setShowMobileMenu(false)}
+          >
+            <div 
+              className="mobile-menu"
+              style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                bottom: 0,
+                width: '250px',
+                background: themeColors.paper || themeColors.background,
+                color: themeColors.textPrimary,
+                boxShadow: `0 0 20px ${themeColors.shadow}`,
+                overflow: 'auto'
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div 
+                className="mobile-menu-header"
+                style={{
+                  padding: '15px',
+                  borderBottom: `1px solid ${themeColors.border}`,
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  background: headerGradient,
+                  color: 'white'
+                }}
+              >
+                <h3 style={{ margin: 0 }}>Spiral Section</h3>
                 <button
                   onClick={() => setShowMobileMenu(false)}
                   className="mobile-menu-close"
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: 'white',
+                    fontSize: '24px',
+                    cursor: 'pointer',
+                    padding: '0',
+                    width: '30px',
+                    height: '30px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
                 >
                   &times;
                 </button>
               </div>
-              <div className="mobile-menu-content">
+              <div 
+                className="mobile-menu-content"
+                style={{ padding: '10px' }}
+              >
                 <button
                   onClick={() => {
                     navigate("/dashboard");
                     setShowMobileMenu(false);
                   }}
                   className="mobile-menu-btn-item"
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    marginBottom: '5px',
+                    background: themeColors.surface,
+                    color: themeColors.textPrimary,
+                    border: `1px solid ${themeColors.border}`,
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    textAlign: 'left'
+                  }}
                 >
                   <FiHome size={18} /> Dashboard
                 </button>
@@ -1527,6 +1827,20 @@ const SpiralPage = () => {
                     setShowMobileMenu(false);
                   }}
                   className="mobile-menu-btn-item"
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    marginBottom: '5px',
+                    background: themeColors.surface,
+                    color: themeColors.textPrimary,
+                    border: `1px solid ${themeColors.border}`,
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    textAlign: 'left'
+                  }}
                 >
                   <FiArrowLeft size={18} /> Back to Production
                 </button>
@@ -1536,6 +1850,20 @@ const SpiralPage = () => {
                     setShowMobileMenu(false);
                   }}
                   className="mobile-menu-btn-item"
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    marginBottom: '5px',
+                    background: headerGradient,
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    textAlign: 'left'
+                  }}
                 >
                   <FiPlus size={18} /> New Entry
                 </button>
@@ -1545,6 +1873,20 @@ const SpiralPage = () => {
                     setShowMobileMenu(false);
                   }}
                   className="mobile-menu-btn-item"
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    marginBottom: '5px',
+                    background: themeColors.surface,
+                    color: themeColors.textPrimary,
+                    border: `1px solid ${themeColors.border}`,
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    textAlign: 'left'
+                  }}
                 >
                   {showDashboard ? (
                     <FiEyeOff size={18} />
@@ -1559,6 +1901,20 @@ const SpiralPage = () => {
                     setShowMobileMenu(false);
                   }}
                   className="mobile-menu-btn-item"
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    marginBottom: '5px',
+                    background: themeColors.surface,
+                    color: themeColors.textPrimary,
+                    border: `1px solid ${themeColors.border}`,
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    textAlign: 'left'
+                  }}
                 >
                   {showStatsCards ? (
                     <FiEyeOff size={18} />
@@ -1573,6 +1929,20 @@ const SpiralPage = () => {
                     setShowMobileMenu(false);
                   }}
                   className="mobile-menu-btn-item"
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    marginBottom: '5px',
+                    background: themeColors.surface,
+                    color: themeColors.textPrimary,
+                    border: `1px solid ${themeColors.border}`,
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    textAlign: 'left'
+                  }}
                 >
                   <FiDownload size={18} /> Export CSV
                 </button>
@@ -1582,6 +1952,20 @@ const SpiralPage = () => {
                     setShowMobileMenu(false);
                   }}
                   className="mobile-menu-btn-item"
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    marginBottom: '5px',
+                    background: themeColors.surface,
+                    color: themeColors.textPrimary,
+                    border: `1px solid ${themeColors.border}`,
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    textAlign: 'left'
+                  }}
                 >
                   <FiRefreshCw size={18} /> Refresh
                 </button>
@@ -1590,998 +1974,2092 @@ const SpiralPage = () => {
           </div>
         )}
 
-        {/* ===== HEADER SECTION - ALL BUTTONS IN ONE LINE ===== */}
-        <div className="header-section">
-          <div className="header-main">
-            <div className="header-left">
-              <div className="title-section">
-                <div className="title-icon">
-                  <FiColumns size={20} />
+        {/* Page Content */}
+        <div className="spiral-content" style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          padding: '0',
+          width: '100%',
+          display: 'flex',
+          flexDirection: 'column'
+        }}>
+          
+          {/* Buttons Row */}
+          <div className="buttons-row" style={{
+            display: 'flex',
+            gap: '8px',
+            padding: '12px',
+            background: themeColors.surface,
+            borderBottom: `1px solid ${themeColors.border}`,
+            flexWrap: 'wrap'
+          }}>
+            <button
+              onClick={() => navigate("/production-sections/spiral/new")}
+              className="page-btn primary-btn"
+              title="New Entry"
+              style={{
+                padding: '8px 12px',
+                background: themeColors.success || '#4CAF50',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                fontSize: '13px',
+                fontWeight: '500'
+              }}
+            >
+              <FiPlus size={16} />
+              <span>New Entry</span>
+            </button>
+            <button
+              onClick={() => navigate("/production-sections/spiral/smart")}
+              className="page-btn smart-entry-btn"
+              title="Smart Entry"
+              style={{
+                padding: '8px 12px',
+                background: themeColors.info || '#2196F3',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                fontSize: '13px',
+                fontWeight: '500'
+              }}
+            >
+              <FiSmartphone size={16} />
+              <span>Smart Entry</span>
+            </button>
+            <button
+              onClick={() => navigate("/production-sections/spiral/settings")}
+              className="page-btn settings-btn"
+              title="Settings"
+              style={{
+                padding: '8px 12px',
+                background: themeColors.warning || '#FF9800',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                fontSize: '13px',
+                fontWeight: '500'
+              }}
+            >
+              <FiSettings size={16} />
+              <span>Settings</span>
+            </button>
+            <button
+              onClick={fetchData}
+              disabled={loading}
+              className="page-btn refresh-btn"
+              title="Refresh Data"
+              style={{
+                padding: '8px 12px',
+                background: themeColors.primary,
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                fontSize: '13px',
+                fontWeight: '500',
+                opacity: loading ? 0.6 : 1
+              }}
+            >
+              {loading ? (
+                <div 
+                  className="mini-spinner"
+                  style={{
+                    width: '16px',
+                    height: '16px',
+                    border: `2px solid rgba(255, 255, 255, 0.3)`,
+                    borderTop: `2px solid white`,
+                    borderRadius: '50%',
+                    animation: 'spin 1s linear infinite'
+                  }}
+                />
+              ) : (
+                <FiRefreshCw size={16} />
+              )}
+              <span>Refresh</span>
+            </button>
+            <button
+              onClick={handleExport}
+              disabled={records.length === 0}
+              className="page-btn export-btn"
+              title="Export Data"
+              style={{
+                padding: '8px 12px',
+                background: themeColors.secondary,
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                fontSize: '13px',
+                fontWeight: '500',
+                opacity: records.length === 0 ? 0.6 : 1
+              }}
+            >
+              <FiDownload size={16} />
+              <span>Export</span>
+            </button>
+            <button
+              onClick={() => navigate("/dashboard")}
+              className="page-btn nav-btn"
+              title="Dashboard"
+              style={{
+                padding: '8px 12px',
+                background: themeColors.info || '#2196F3',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                fontSize: '13px',
+                fontWeight: '500'
+              }}
+            >
+              <FiHome size={16} />
+              <span>Dashboard</span>
+            </button>
+            <button
+              onClick={() => navigate("/production")}
+              className="page-btn nav-btn"
+              title="Production Sections"
+              style={{
+                padding: '8px 12px',
+                background: '#283593',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                fontSize: '13px',
+                fontWeight: '500'
+              }}
+            >
+              <FiArrowLeft size={16} />
+              <span>Production</span>
+            </button>
+            <button
+              onClick={() => setShowDashboard(!showDashboard)}
+              className="page-btn dashboard-btn"
+              title="Toggle Dashboard"
+              style={{
+                padding: '8px 12px',
+                background: themeColors.primary,
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                fontSize: '13px',
+                fontWeight: '500'
+              }}
+            >
+              {showDashboard ? (
+                <FiEyeOff size={16} />
+              ) : (
+                <FiBarChart2 size={16} />
+              )}
+              <span>Dashboard</span>
+            </button>
+            <button
+              onClick={() => setShowStatsCards(!showStatsCards)}
+              className="page-btn stats-btn"
+              title="Toggle Stats"
+              style={{
+                padding: '8px 12px',
+                background: themeColors.primary,
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                fontSize: '13px',
+                fontWeight: '500'
+              }}
+            >
+              {showStatsCards ? (
+                <FiEyeOff size={16} />
+              ) : (
+                <FiLayers size={16} />
+              )}
+              <span>Stats</span>
+            </button>
+            <button
+              onClick={() => navigate("/production-sections/spiral/batch")}
+              className="page-btn batch-btn"
+              title="Batch Entry"
+              style={{
+                padding: '8px 12px',
+                background: themeColors.success || '#4CAF50',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                fontSize: '13px',
+                fontWeight: '500'
+              }}
+            >
+              <FiCheckSquare size={16} />
+              <span>Batch</span>
+            </button>
+          </div>
+
+          {/* Stats Cards Section */}
+          {showStatsCards && (
+            <div 
+              className="stats-section"
+              style={{
+                background: themeColors.background,
+                color: themeColors.textPrimary,
+                padding: '15px',
+                borderBottom: `1px solid ${themeColors.border}`
+              }}
+            >
+              <div 
+                className="section-header"
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '15px'
+                }}
+              >
+                <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <FiActivity size={20} />
+                  Production Statistics
+                </h3>
+                <div 
+                  className="stats-summary"
+                  style={{
+                    display: 'flex',
+                    gap: '15px',
+                    fontSize: '12px',
+                    color: themeColors.textSecondary
+                  }}
+                >
+                  <span className="summary-item">
+                    Total: {stats.totalRecords} records
+                  </span>
+                  <span className="summary-item">Managed by: {loggedInUser}</span>
                 </div>
-                <div className="title-content">
-                  <h1 className="page-title">
-                    <span className="title-text">Spiral Section</span>
-                    <div className={`connection-badge ${isSupabaseConnected ? "connected" : "offline"}`}>
-                      {isSupabaseConnected ? (
-                        <>
-                          <FiCheckCircle size={10} /> Connected
-                        </>
-                      ) : (
-                        <>
-                          <FiXCircle size={10} /> Offline
-                        </>
-                      )}
+              </div>
+              <div 
+                className="stats-grid"
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+                  gap: '10px'
+                }}
+              >
+                {statCards.map((card) => (
+                  <div 
+                    key={card.id} 
+                    className="stat-card"
+                    style={{
+                      background: themeColors.surface,
+                      padding: '15px',
+                      borderRadius: '6px',
+                      border: `1px solid ${themeColors.border}`
+                    }}
+                  >
+                    <div 
+                      className="stat-header"
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        marginBottom: '10px'
+                      }}
+                    >
+                      <card.icon size={20} className="stat-icon" style={{ color: themeColors.primary }} />
+                      <div className="stat-title" style={{ fontSize: '14px', fontWeight: '500' }}>{card.title}</div>
                     </div>
-                  </h1>
-                  <p className="page-subtitle">
-                    <FiDatabase size={14} />
-                    <span className="subtitle-text">Data from: spiralsection table</span>
-                  </p>
+                    <div className="stat-value" style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '5px' }}>{card.value}</div>
+                    <div className="stat-footer" style={{ fontSize: '12px', color: themeColors.textSecondary }}>{card.description}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Dashboard Section */}
+          {showDashboard && (
+            <div 
+              className="dashboard-section"
+              style={{
+                background: themeColors.background,
+                color: themeColors.textPrimary,
+                padding: '15px',
+                borderBottom: `1px solid ${themeColors.border}`
+              }}
+            >
+              <div 
+                className="section-header"
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '15px'
+                }}
+              >
+                <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <FiCpu size={20} />
+                  Today's Production Dashboard
+                </h3>
+                <div 
+                  className="section-info"
+                  style={{
+                    display: 'flex',
+                    gap: '15px',
+                    fontSize: '12px',
+                    color: themeColors.textPrimary 
+                  }}
+                >
+                  <span className="info-item">Managed by: {loggedInUser}</span>
+                  <span className="info-item">Records: {stats.todayRecords}</span>
+                </div>
+              </div>
+
+              <div 
+                className="dashboard-grid"
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+                  gap: '15px'
+                }}
+              >
+                <div 
+                  className="dashboard-card"
+                  style={{
+                    background: themeColors.surface,
+                    padding: '15px',
+                    borderRadius: '6px',
+                    border: `1px solid ${themeColors.border}`
+                  }}
+                >
+                  <div 
+                    className="card-header"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      marginBottom: '15px'
+                    }}
+                  >
+                    <FiPackage size={20} style={{ color: themeColors.primary }} />
+                    <h4 style={{ margin: 0 }}>Item-wise Production</h4>
+                  </div>
+                  <div className="card-content">
+                    {Object.entries(stats.itemWiseToday).length > 0 ? (
+                      <div className="items-list">
+                        {Object.entries(stats.itemWiseToday).map(
+                          ([item, data]) => (
+                            <div 
+                              key={item} 
+                              className="item-row"
+                              style={{
+                                padding: '10px',
+                                marginBottom: '8px',
+                                background: themeColors.background,
+                                borderRadius: '4px',
+                                border: `1px solid ${themeColors.border}`
+                              }}
+                            >
+                              <div className="item-name" style={{ fontWeight: '500', marginBottom: '5px' }}>{item}</div>
+                              <div 
+                                className="item-stats"
+                                style={{
+                                  display: 'flex',
+                                  justifyContent: 'space-between',
+                                  fontSize: '12px'
+                                }}
+                              >
+                                <span className="stat-value" style={{ color: themeColors.primary }}>
+                                  {Math.round(data.production)} M
+                                </span>
+                                <span className="stat-value" style={{ color: themeColors.success }}>
+                                  {Math.round(data.weight)} KG
+                                </span>
+                                <span className="stat-value" style={{ color: themeColors.warning }}>
+                                  {Math.round(
+                                    data.count > 0
+                                      ? data.efficiency / data.count
+                                      : 0
+                                  )}
+                                  %
+                                </span>
+                              </div>
+                            </div>
+                          )
+                        )}
+                      </div>
+                    ) : (
+                      <div 
+                        className="empty-state"
+                        style={{
+                          textAlign: 'center',
+                          padding: '30px',
+                          color: themeColors.textSecondary
+                        }}
+                      >
+                        <FiPackage size={24} style={{ marginBottom: '10px', opacity: 0.5 }} />
+                        <p style={{ margin: 0 }}>No item production today</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div 
+                  className="dashboard-card"
+                  style={{
+                    background: themeColors.surface,
+                    padding: '15px',
+                    borderRadius: '6px',
+                    border: `1px solid ${themeColors.border}`
+                  }}
+                >
+                  <div 
+                    className="card-header"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      marginBottom: '15px'
+                    }}
+                  >
+                    <FiTool size={20} style={{ color: themeColors.primary }} />
+                    <h4 style={{ margin: 0 }}>Machine-wise Production</h4>
+                  </div>
+                  <div className="card-content">
+                    {Object.entries(stats.machineWiseToday).length > 0 ? (
+                      <div className="machines-list">
+                        {Object.entries(stats.machineWiseToday).map(
+                          ([machine, data]) => (
+                            <div 
+                              key={machine} 
+                              className="machine-row"
+                              style={{
+                                padding: '10px',
+                                marginBottom: '8px',
+                                background: themeColors.background,
+                                borderRadius: '4px',
+                                border: `1px solid ${themeColors.border}`
+                              }}
+                            >
+                              <div className="machine-name" style={{ fontWeight: '500', marginBottom: '5px' }}>
+                                Machine {machine}
+                              </div>
+                              <div 
+                                className="machine-stats"
+                                style={{
+                                  display: 'flex',
+                                  justifyContent: 'space-between',
+                                  fontSize: '12px'
+                                }}
+                              >
+                                <span className="stat-value" style={{ color: themeColors.primary }}>
+                                  {Math.round(data.production)} M
+                                </span>
+                                <span className="stat-value" style={{ color: themeColors.success }}>
+                                  {Math.round(data.weight)} KG
+                                </span>
+                                <span className="stat-value" style={{ color: themeColors.warning }}>
+                                  {Math.round(
+                                    data.count > 0
+                                      ? data.efficiency / data.count
+                                      : 0
+                                  )}
+                                  %
+                                </span>
+                              </div>
+                            </div>
+                          )
+                        )}
+                      </div>
+                    ) : (
+                      <div 
+                        className="empty-state"
+                        style={{
+                          textAlign: 'center',
+                          padding: '30px',
+                          color: themeColors.textSecondary
+                        }}
+                      >
+                        <FiTool size={24} style={{ marginBottom: '10px', opacity: 0.5 }} />
+                        <p style={{ margin: 0 }}>No machine production today</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div 
+                  className="dashboard-card"
+                  style={{
+                    background: themeColors.surface,
+                    padding: '15px',
+                    borderRadius: '6px',
+                    border: `1px solid ${themeColors.border}`
+                  }}
+                >
+                  <div 
+                    className="card-header"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      marginBottom: '15px'
+                    }}
+                  >
+                    <FiBox size={20} style={{ color: themeColors.primary }} />
+                    <h4 style={{ margin: 0 }}>Finished Products</h4>
+                  </div>
+                  <div className="card-content">
+                    {Object.entries(stats.finishedProductWiseToday).length > 0 ? (
+                      <div className="products-list">
+                        {Object.entries(stats.finishedProductWiseToday).map(
+                          ([product, data]) => (
+                            <div 
+                              key={product} 
+                              className="product-row"
+                              style={{
+                                padding: '10px',
+                                marginBottom: '8px',
+                                background: themeColors.background,
+                                borderRadius: '4px',
+                                border: `1px solid ${themeColors.border}`
+                              }}
+                            >
+                              <div className="product-name" style={{ fontWeight: '500', marginBottom: '5px' }}>{product}</div>
+                              <div 
+                                className="product-stats"
+                                style={{
+                                  display: 'flex',
+                                  justifyContent: 'space-between',
+                                  fontSize: '12px'
+                                }}
+                              >
+                                <span className="stat-value" style={{ color: themeColors.primary }}>
+                                  {Math.round(data.production)} M
+                                </span>
+                                <span className="stat-value" style={{ color: themeColors.success }}>
+                                  {Math.round(data.weight)} KG
+                                </span>
+                                <span className="stat-value" style={{ color: themeColors.warning }}>
+                                  {Math.round(
+                                    data.count > 0
+                                      ? data.efficiency / data.count
+                                      : 0
+                                  )}
+                                  %
+                                </span>
+                              </div>
+                            </div>
+                          )
+                        )}
+                      </div>
+                    ) : (
+                      <div 
+                        className="empty-state"
+                        style={{
+                          textAlign: 'center',
+                          padding: '30px',
+                          color: themeColors.textSecondary
+                        }}
+                      >
+                        <FiBox size={24} style={{ marginBottom: '10px', opacity: 0.5 }} />
+                        <p style={{ margin: 0 }}>No finished product today</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Filters Section */}
+          <div 
+            className="filters-section"
+            style={{
+              background: themeColors.background,
+              padding: '15px',
+              borderBottom: `1px solid ${themeColors.border}`
+            }}
+          >
+            <div 
+              className="filters-container"
+              style={{
+                background: themeColors.surface,
+                padding: '12px',
+                borderRadius: '6px'
+              }}
+            >
+              <div 
+                className="filter-heading"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  marginBottom: '12px',
+                  color: themeColors.primary,
+                  fontWeight: '600',
+                  fontSize: '14px'
+                }}
+              >
+                <FiFilter size={18} />
+                <span>FILTERS</span>
+              </div>
+              
+              <div 
+                className="filters-single-line"
+                style={{
+                  display: 'flex',
+                  gap: '8px',
+                  flexWrap: 'wrap'
+                }}
+              >
+                <div className="filter-group" style={{ flex: 1, minWidth: '150px' }}>
+                  <input
+                    type="text"
+                    placeholder="Search records..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="filter-input"
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      border: `1px solid ${themeColors.border}`,
+                      borderRadius: '4px',
+                      background: themeColors.background,
+                      color: themeColors.textPrimary,
+                      fontSize: '14px'
+                    }}
+                  />
+                </div>
+
+                <div className="filter-group" style={{ flex: 1, minWidth: '150px' }}>
+                  <select
+                    value={filterType}
+                    onChange={(e) => setFilterType(e.target.value)}
+                    className="filter-select"
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      border: `1px solid ${themeColors.border}`,
+                      borderRadius: '4px',
+                      background: themeColors.background,
+                      color: themeColors.textPrimary,
+                      fontSize: '14px'
+                    }}
+                  >
+                    <option value="">All Wire Sizes</option>
+                    {wireSizes.map((size) => (
+                      <option key={size} value={size}>
+                        {size}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="filter-group" style={{ flex: 1, minWidth: '150px' }}>
+                  <input
+                    type="date"
+                    value={filterDate}
+                    onChange={(e) => setFilterDate(e.target.value)}
+                    max={new Date().toISOString().split("T")[0]}
+                    className="filter-date"
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      border: `1px solid ${themeColors.border}`,
+                      borderRadius: '4px',
+                      background: themeColors.background,
+                      color: themeColors.textPrimary,
+                      fontSize: '14px'
+                    }}
+                  />
+                </div>
+
+                <div className="filter-group" style={{ flex: '0 0 auto' }}>
+                  <button
+                    onClick={() =>
+                      filterDate
+                        ? setShowReport(true)
+                        : alert("Please select a date first")
+                    }
+                    className="filter-btn primary-btn"
+                    style={{
+                      padding: '10px 15px',
+                      background: themeColors.primary,
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px'
+                    }}
+                  >
+                    <FiBarChart2 /> Generate Report
+                  </button>
+                </div>
+
+                <div className="filter-group" style={{ flex: '0 0 auto' }}>
+                  <button
+                    onClick={() => {
+                      setSearchTerm("");
+                      setFilterType("");
+                      setFilterDate("");
+                      setShowReport(false);
+                      setCurrentPage(1);
+                    }}
+                    className="filter-btn secondary-btn"
+                    style={{
+                      padding: '10px 15px',
+                      background: themeColors.secondary,
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px'
+                    }}
+                  >
+                    <FiX /> Clear Filters
+                  </button>
+                </div>
+
+                <div className="filter-group" style={{ flex: '0 0 auto' }}>
+                  <button
+                    onClick={() => setShowWhatsAppModal(true)}
+                    className="filter-btn whatsapp-btn"
+                    style={{
+                      padding: '10px 15px',
+                      background: '#25D366',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px'
+                    }}
+                  >
+                    <FaWhatsapp /> WhatsApp
+                  </button>
+                </div>
+
+                <div className="filter-group" style={{ flex: '0 0 auto' }}>
+                  <button
+                    onClick={handlePrintReport}
+                    className="filter-btn print-btn"
+                    style={{
+                      padding: '10px 15px',
+                      background: '#495057',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px'
+                    }}
+                  >
+                    <FiPrinter /> Print
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Report Section */}
+          {showReport && reportData && (
+            <div 
+              className="report-section"
+              style={{
+                background: themeColors.background,
+                color: themeColors.textPrimary,
+                padding: '15px',
+                borderBottom: `1px solid ${themeColors.border}`
+              }}
+            >
+              <div 
+                className="report-header"
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '20px',
+                  paddingBottom: '15px',
+                  borderBottom: `1px solid ${themeColors.border}`
+                }}
+              >
+                <div 
+                  className="report-title"
+                  style={{ flex: 1 }}
+                >
+                  <h2 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <FiBarChart2 size={24} />
+                    Spiral Section Production Report
+                  </h2>
+                  <div 
+                    className="report-info"
+                    style={{
+                      marginTop: '5px',
+                      fontSize: '14px',
+                      color: themeColors.textSecondary
+                    }}
+                  >
+                    <div className="report-date">{reportData.formattedDate}</div>
+                    <div className="report-author">
+                      Generated by: <strong>{loggedInUser}</strong>
+                    </div>
+                  </div>
+                </div>
+
+                <div 
+                  className="report-actions"
+                  style={{
+                    display: 'flex',
+                    gap: '10px'
+                  }}
+                >
+                  <button
+                    onClick={() => setShowWhatsAppModal(true)}
+                    className="action-btn whatsapp-btn"
+                    style={{
+                      padding: '8px 15px',
+                      background: '#25D366',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      fontSize: '14px'
+                    }}
+                  >
+                    <FaWhatsapp size={18} /> WhatsApp
+                  </button>
+                  <button 
+                    onClick={handlePrintReport} 
+                    className="action-btn"
+                    style={{
+                      padding: '8px 15px',
+                      background: themeColors.primary,
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      fontSize: '14px'
+                    }}
+                  >
+                    <FiPrinter /> Print
+                  </button>
+                  <button 
+                    onClick={handleExportReport} 
+                    className="action-btn"
+                    style={{
+                      padding: '8px 15px',
+                      background: themeColors.secondary,
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      fontSize: '14px'
+                    }}
+                  >
+                    <FiDownload /> Export
+                  </button>
+                  <button
+                    onClick={() => setShowReport(false)}
+                    className="action-btn close-btn"
+                    style={{
+                      padding: '8px 15px',
+                      background: themeColors.error,
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      fontSize: '14px'
+                    }}
+                  >
+                    <FiX /> Close
+                  </button>
+                </div>
+              </div>
+
+              <div 
+                className="summary-section"
+                style={{ marginBottom: '20px' }}
+              >
+                <h3 style={{ marginBottom: '15px' }}>Shift-wise Production Summary</h3>
+                <div 
+                  className="shift-cards-container"
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+                    gap: '15px'
+                  }}
+                >
+                  <div 
+                    className="shift-card day-shift-card"
+                    style={{
+                      background: themeColors.surface,
+                      padding: '15px',
+                      borderRadius: '8px',
+                      border: `1px solid ${themeColors.border}`
+                    }}
+                  >
+                    <div 
+                      className="shift-card-header"
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginBottom: '15px'
+                      }}
+                    >
+                      <div 
+                        className="shift-title"
+                        style={{ display: 'flex', alignItems: 'center', gap: '10px' }}
+                      >
+                        <span className="shift-icon" style={{ fontSize: '24px' }}>☀️</span>
+                        <h4 style={{ margin: 0 }}>Day Shift</h4>
+                      </div>
+                      <div 
+                        className="shift-badge"
+                        style={{
+                          background: themeColors.primary,
+                          color: 'white',
+                          padding: '4px 8px',
+                          borderRadius: '12px',
+                          fontSize: '12px',
+                          fontWeight: '500'
+                        }}
+                      >
+                        {reportData.dayShiftCount} Records
+                      </div>
+                    </div>
+                    <div 
+                      className="shift-stats"
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(3, 1fr)',
+                        gap: '10px'
+                      }}
+                    >
+                      <div className="stat-item">
+                        <div className="stat-label" style={{ fontSize: '12px', color: themeColors.textSecondary }}>Production</div>
+                        <div className="stat-value" style={{ fontSize: '18px', fontWeight: 'bold' }}>
+                          {Math.round(reportData.dayShiftData.production)} M
+                        </div>
+                      </div>
+                      <div className="stat-item">
+                        <div className="stat-label" style={{ fontSize: '12px', color: themeColors.textSecondary }}>Weight</div>
+                        <div className="stat-value" style={{ fontSize: '18px', fontWeight: 'bold' }}>
+                          {Math.round(reportData.dayShiftData.weight)} KG
+                        </div>
+                      </div>
+                      <div className="stat-item">
+                        <div className="stat-label" style={{ fontSize: '12px', color: themeColors.textSecondary }}>Avg Efficiency</div>
+                        <div className="stat-value" style={{ fontSize: '18px', fontWeight: 'bold' }}>
+                          {Math.round(reportData.dayShiftData.avgEfficiency)}%
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div 
+                    className="shift-card night-shift-card"
+                    style={{
+                      background: themeColors.surface,
+                      padding: '15px',
+                      borderRadius: '8px',
+                      border: `1px solid ${themeColors.border}`
+                    }}
+                  >
+                    <div 
+                      className="shift-card-header"
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginBottom: '15px'
+                      }}
+                    >
+                      <div 
+                        className="shift-title"
+                        style={{ display: 'flex', alignItems: 'center', gap: '10px' }}
+                      >
+                        <span className="shift-icon" style={{ fontSize: '24px' }}>🌙</span>
+                        <h4 style={{ margin: 0 }}>Night Shift</h4>
+                      </div>
+                      <div 
+                        className="shift-badge"
+                        style={{
+                          background: themeColors.primary,
+                          color: 'white',
+                          padding: '4px 8px',
+                          borderRadius: '12px',
+                          fontSize: '12px',
+                          fontWeight: '500'
+                        }}
+                      >
+                        {reportData.nightShiftCount} Records
+                      </div>
+                    </div>
+                    <div 
+                      className="shift-stats"
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(3, 1fr)',
+                        gap: '10px'
+                      }}
+                    >
+                      <div className="stat-item">
+                        <div className="stat-label" style={{ fontSize: '12px', color: themeColors.textSecondary }}>Production</div>
+                        <div className="stat-value" style={{ fontSize: '18px', fontWeight: 'bold' }}>
+                          {Math.round(reportData.nightShiftData.production)} M
+                        </div>
+                      </div>
+                      <div className="stat-item">
+                        <div className="stat-label" style={{ fontSize: '12px', color: themeColors.textSecondary }}>Weight</div>
+                        <div className="stat-value" style={{ fontSize: '18px', fontWeight: 'bold' }}>
+                          {Math.round(reportData.nightShiftData.weight)} KG
+                        </div>
+                      </div>
+                      <div className="stat-item">
+                        <div className="stat-label" style={{ fontSize: '12px', color: themeColors.textSecondary }}>Avg Efficiency</div>
+                        <div className="stat-value" style={{ fontSize: '18px', fontWeight: 'bold' }}>
+                          {Math.round(reportData.nightShiftData.avgEfficiency)}%
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {Object.keys(reportData.itemWise).length > 0 && (
+                <div 
+                  className="summary-section"
+                  style={{ marginBottom: '20px' }}
+                >
+                  <div 
+                    className="section-header"
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginBottom: '15px'
+                    }}
+                  >
+                    <h3 style={{ margin: 0 }}>Item-wise Summary</h3>
+                    <div 
+                      className="section-count"
+                      style={{
+                        fontSize: '14px',
+                        color: themeColors.textSecondary
+                      }}
+                    >
+                      {Object.keys(reportData.itemWise).length} Items
+                    </div>
+                  </div>
+                  <div 
+                    className="items-cards-container"
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
+                      gap: '15px'
+                    }}
+                  >
+                    {Object.entries(reportData.itemWise).map(([item, data]) => (
+                      <div 
+                        key={item} 
+                        className="item-card"
+                        style={{
+                          background: themeColors.surface,
+                          padding: '15px',
+                          borderRadius: '8px',
+                          border: `1px solid ${themeColors.border}`
+                        }}
+                      >
+                        <div 
+                          className="item-card-header"
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '10px',
+                            marginBottom: '15px'
+                          }}
+                        >
+                          <FiPackage size={18} style={{ color: themeColors.primary }} />
+                          <div 
+                            className="item-name"
+                            style={{
+                              fontWeight: '500',
+                              fontSize: '14px'
+                            }}
+                          >
+                            {item}
+                          </div>
+                        </div>
+                        <div 
+                          className="item-card-stats"
+                          style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(3, 1fr)',
+                            gap: '10px'
+                          }}
+                        >
+                          <div className="item-stat">
+                            <div 
+                              className="item-stat-value"
+                              style={{
+                                fontSize: '16px',
+                                fontWeight: 'bold',
+                                marginBottom: '2px'
+                              }}
+                            >
+                              {Math.round(data.production)} M
+                            </div>
+                            <div 
+                              className="item-stat-label"
+                              style={{
+                                fontSize: '11px',
+                                color: themeColors.textSecondary
+                              }}
+                            >
+                              Production
+                            </div>
+                          </div>
+                          <div className="item-stat">
+                            <div 
+                              className="item-stat-value"
+                              style={{
+                                fontSize: '16px',
+                                fontWeight: 'bold',
+                                marginBottom: '2px'
+                              }}
+                            >
+                              {Math.round(data.weight)} KG
+                            </div>
+                            <div 
+                              className="item-stat-label"
+                              style={{
+                                fontSize: '11px',
+                                color: themeColors.textSecondary
+                              }}
+                            >
+                              Weight
+                            </div>
+                          </div>
+                          <div className="item-stat">
+                            <div 
+                              className="item-stat-value"
+                              style={{
+                                fontSize: '16px',
+                                fontWeight: 'bold',
+                                marginBottom: '2px'
+                              }}
+                            >
+                              {Math.round(
+                                data.count > 0 ? data.efficiency / data.count : 0
+                              )}
+                              %
+                            </div>
+                            <div 
+                              className="item-stat-label"
+                              style={{
+                                fontSize: '11px',
+                                color: themeColors.textSecondary
+                              }}
+                            >
+                              Efficiency
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div 
+                className="summary-section"
+                style={{ marginBottom: '20px' }}
+              >
+                <h3 style={{ marginBottom: '15px' }}>Machine-wise Summary - Day Shift</h3>
+                <div 
+                  className="machines-grid"
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
+                    gap: '10px'
+                  }}
+                >
+                  {Array.from({ length: 14 }, (_, i) => {
+                    const machineNum = i + 1;
+                    const machineKey = `SP # ${machineNum}`;
+                    const data = reportData.dayShiftData.machines[machineKey] || {
+                      production: 0,
+                      efficiency: 0,
+                      operator: "Operator Absent",
+                      count: 0,
+                    };
+                    const efficiency =
+                      data.count > 0
+                        ? Math.round(data.efficiency / data.count)
+                        : 0;
+
+                    return (
+                      <div 
+                        key={machineNum} 
+                        className="machine-card"
+                        style={{
+                          background: themeColors.surface,
+                          padding: '12px',
+                          borderRadius: '6px',
+                          border: `1px solid ${themeColors.border}`
+                        }}
+                      >
+                        <div 
+                          className="machine-card-header"
+                          style={{
+                            marginBottom: '10px'
+                          }}
+                        >
+                          <div 
+                            className="machine-name"
+                            style={{
+                              fontWeight: '500',
+                              fontSize: '14px',
+                              marginBottom: '5px'
+                            }}
+                          >
+                            SP # {machineNum}
+                          </div>
+                          <div 
+                            className="machine-operator"
+                            style={{
+                              fontSize: '11px',
+                              color: themeColors.textSecondary,
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '4px'
+                            }}
+                          >
+                            <FiUser size={12} />
+                            {data.operator || "Operator Absent"}
+                          </div>
+                        </div>
+                        <div 
+                          className="machine-card-stats"
+                          style={{
+                            display: 'grid',
+                            gridTemplateColumns: '1fr 1fr',
+                            gap: '8px'
+                          }}
+                        >
+                          <div className="machine-stat">
+                            <div 
+                              className="machine-stat-value"
+                              style={{
+                                fontSize: '14px',
+                                fontWeight: 'bold',
+                                marginBottom: '2px'
+                              }}
+                            >
+                              {Math.round(data.production)} M
+                            </div>
+                            <div 
+                              className="machine-stat-label"
+                              style={{
+                                fontSize: '10px',
+                                color: themeColors.textSecondary
+                              }}
+                            >
+                              Production
+                            </div>
+                          </div>
+                          <div className="machine-stat">
+                            <div 
+                              className="machine-stat-value"
+                              style={{
+                                fontSize: '14px',
+                                fontWeight: 'bold',
+                                marginBottom: '2px'
+                              }}
+                            >
+                              {efficiency}%
+                            </div>
+                            <div 
+                              className="machine-stat-label"
+                              style={{
+                                fontSize: '10px',
+                                color: themeColors.textSecondary
+                              }}
+                            >
+                              Efficiency
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div 
+                className="summary-section"
+                style={{ marginBottom: '20px' }}
+              >
+                <h3 style={{ marginBottom: '15px' }}>Machine-wise Summary - Night Shift</h3>
+                <div 
+                  className="machines-grid"
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
+                    gap: '10px'
+                  }}
+                >
+                  {Array.from({ length: 14 }, (_, i) => {
+                    const machineNum = i + 1;
+                    const machineKey = `SP # ${machineNum}`;
+                    const data = reportData.nightShiftData.machines[machineKey] || {
+                      production: 0,
+                      efficiency: 0,
+                      operator: "Operator Absent",
+                      count: 0,
+                    };
+                    const efficiency =
+                      data.count > 0
+                        ? Math.round(data.efficiency / data.count)
+                        : 0;
+
+                    return (
+                      <div 
+                        key={machineNum} 
+                        className="machine-card"
+                        style={{
+                          background: themeColors.surface,
+                          padding: '12px',
+                          borderRadius: '6px',
+                          border: `1px solid ${themeColors.border}`
+                        }}
+                      >
+                        <div 
+                          className="machine-card-header"
+                          style={{
+                            marginBottom: '10px'
+                          }}
+                        >
+                          <div 
+                            className="machine-name"
+                            style={{
+                              fontWeight: '500',
+                              fontSize: '14px',
+                              marginBottom: '5px'
+                            }}
+                          >
+                            SP # {machineNum}
+                          </div>
+                          <div 
+                            className="machine-operator"
+                            style={{
+                              fontSize: '11px',
+                              color: themeColors.textSecondary,
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '4px'
+                            }}
+                          >
+                            <FiUser size={12} />
+                            {data.operator || "Operator Absent"}
+                          </div>
+                        </div>
+                        <div 
+                          className="machine-card-stats"
+                          style={{
+                            display: 'grid',
+                            gridTemplateColumns: '1fr 1fr',
+                            gap: '8px'
+                          }}
+                        >
+                          <div className="machine-stat">
+                            <div 
+                              className="machine-stat-value"
+                              style={{
+                                fontSize: '14px',
+                                fontWeight: 'bold',
+                                marginBottom: '2px'
+                              }}
+                            >
+                              {Math.round(data.production)} M
+                            </div>
+                            <div 
+                              className="machine-stat-label"
+                              style={{
+                                fontSize: '10px',
+                                color: themeColors.textSecondary
+                              }}
+                            >
+                              Production
+                            </div>
+                          </div>
+                          <div className="machine-stat">
+                            <div 
+                              className="machine-stat-value"
+                              style={{
+                                fontSize: '14px',
+                                fontWeight: 'bold',
+                                marginBottom: '2px'
+                              }}
+                            >
+                              {efficiency}%
+                            </div>
+                            <div 
+                              className="machine-stat-label"
+                              style={{
+                                fontSize: '10px',
+                                color: themeColors.textSecondary
+                              }}
+                            >
+                              Efficiency
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div 
+                className="report-summary"
+                style={{
+                  background: themeColors.surface,
+                  padding: '15px',
+                  borderRadius: '8px',
+                  border: `1px solid ${themeColors.border}`
+                }}
+              >
+                <h3 style={{ marginBottom: '15px' }}>Report Summary</h3>
+                <div 
+                  className="summary-grid"
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                    gap: '15px'
+                  }}
+                >
+                  <div 
+                    className="summary-card"
+                    style={{
+                      padding: '12px',
+                      background: themeColors.background,
+                      borderRadius: '6px',
+                      border: `1px solid ${themeColors.border}`
+                    }}
+                  >
+                    <div 
+                      className="summary-card-label"
+                      style={{
+                        fontSize: '12px',
+                        color: themeColors.textSecondary,
+                        marginBottom: '8px'
+                      }}
+                    >
+                      Total Production
+                    </div>
+                    <div 
+                      className="summary-card-value"
+                      style={{
+                        fontSize: '20px',
+                        fontWeight: 'bold',
+                        marginBottom: '5px'
+                      }}
+                    >
+                      {Math.round(reportData.totalProduction)} M
+                    </div>
+                    <div 
+                      className="summary-card-note"
+                      style={{
+                        fontSize: '11px',
+                        color: themeColors.textSecondary
+                      }}
+                    >
+                      Target: {Math.round(reportData.totalProduction * 1.2)} M
+                    </div>
+                  </div>
+
+                  <div 
+                    className="summary-card"
+                    style={{
+                      padding: '12px',
+                      background: themeColors.background,
+                      borderRadius: '6px',
+                      border: `1px solid ${themeColors.border}`
+                    }}
+                  >
+                    <div 
+                      className="summary-card-label"
+                      style={{
+                        fontSize: '12px',
+                        color: themeColors.textSecondary,
+                        marginBottom: '8px'
+                      }}
+                    >
+                      Total Weight
+                    </div>
+                    <div 
+                      className="summary-card-value"
+                      style={{
+                        fontSize: '20px',
+                        fontWeight: 'bold',
+                        marginBottom: '5px'
+                      }}
+                    >
+                      {Math.round(reportData.totalWeight)} KG
+                    </div>
+                    <div 
+                      className="summary-card-note"
+                      style={{
+                        fontSize: '11px',
+                        color: themeColors.textSecondary
+                      }}
+                    >
+                      Total weight produced
+                    </div>
+                  </div>
+
+                  <div 
+                    className="summary-card"
+                    style={{
+                      padding: '12px',
+                      background: themeColors.background,
+                      borderRadius: '6px',
+                      border: `1px solid ${themeColors.border}`
+                    }}
+                  >
+                    <div 
+                      className="summary-card-label"
+                      style={{
+                        fontSize: '12px',
+                        color: themeColors.textSecondary,
+                        marginBottom: '8px'
+                      }}
+                    >
+                      Average Efficiency
+                    </div>
+                    <div 
+                      className="summary-card-value"
+                      style={{
+                        fontSize: '20px',
+                        fontWeight: 'bold',
+                        marginBottom: '5px'
+                      }}
+                    >
+                      {Math.round(reportData.avgEfficiency)}%
+                    </div>
+                    <div 
+                      className="summary-card-note"
+                      style={{
+                        fontSize: '11px',
+                        color: themeColors.textSecondary
+                      }}
+                    >
+                      Target: 85%
+                    </div>
+                  </div>
+
+                  <div 
+                    className="summary-card"
+                    style={{
+                      padding: '12px',
+                      background: themeColors.background,
+                      borderRadius: '6px',
+                      border: `1px solid ${themeColors.border}`
+                    }}
+                  >
+                    <div 
+                      className="summary-card-label"
+                      style={{
+                        fontSize: '12px',
+                        color: themeColors.textSecondary,
+                        marginBottom: '8px'
+                      }}
+                    >
+                      Total Records
+                    </div>
+                    <div 
+                      className="summary-card-value"
+                      style={{
+                        fontSize: '20px',
+                        fontWeight: 'bold',
+                        marginBottom: '5px'
+                      }}
+                    >
+                      {reportData.recordCount}
+                    </div>
+                    <div 
+                      className="summary-card-note"
+                      style={{
+                        fontSize: '11px',
+                        color: themeColors.textSecondary
+                      }}
+                    >
+                      Day: {reportData.dayShiftCount} | Night: {reportData.nightShiftCount}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div 
+                className="report-footer"
+                style={{
+                  marginTop: '20px',
+                  paddingTop: '15px',
+                  borderTop: `1px solid ${themeColors.border}`,
+                  fontSize: '12px',
+                  color: themeColors.textSecondary,
+                  textAlign: 'center'
+                }}
+              >
+                <p style={{ margin: 0 }}>
+                  Report generated on {new Date().toLocaleString()} by <strong>{loggedInUser}</strong> • Data source: spiralsection table • Pakistan Wire Industries ERP System
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Records Section */}
+          <div 
+            className="records-section"
+            style={{
+              background: themeColors.background,
+              color: themeColors.textPrimary,
+              padding: '15px',
+              flex: 1,
+              overflow: 'hidden',
+              display: 'flex',
+              flexDirection: 'column'
+            }}
+          >
+            <div 
+              className="section-header"
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '15px'
+              }}
+            >
+              <h3 style={{ margin: 0 }}>Spiral Production Records</h3>
+              <div 
+                className="section-info"
+                style={{
+                  display: 'flex',
+                  gap: '15px',
+                  fontSize: '12px',
+                  color: themeColors.textPrimary 
+                }}
+              >
+                <span className="info-item">Total: {records.length} records</span>
+                <span className="info-item">
+                  Showing: {filteredRecords.length} filtered
+                </span>
+                <span className="info-item">
+                  Page: {currentPage}/{totalPages}
+                </span>
+                <span className="info-item">Managed by: {loggedInUser}</span>
+                <div 
+                  className="database-status"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '5px'
+                  }}
+                >
+                  <div
+                    className={`status-dot ${
+                      isSupabaseConnected ? "connected" : "offline"
+                    }`}
+                    style={{
+                      width: '8px',
+                      height: '8px',
+                      borderRadius: '50%',
+                      background: isSupabaseConnected ? '#4CAF50' : '#F44336'
+                    }}
+                  />
+                  {isSupabaseConnected ? "Connected" : "Offline"}
                 </div>
               </div>
             </div>
 
-            <div className="header-right">
-              <div className="all-buttons-one-line">
+            {loading ? (
+              <div 
+                className="loading-state"
+                style={{
+                  textAlign: 'center',
+                  padding: '40px',
+                  color: themeColors.textSecondary,
+                  flex: 1,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  alignItems: 'center'
+                }}
+              >
+                <div 
+                  className="loading-spinner"
+                  style={{
+                    width: '40px',
+                    height: '40px',
+                    border: `3px solid ${themeColors.border}`,
+                    borderTop: `3px solid ${themeColors.primary}`,
+                    borderRadius: '50%',
+                    animation: 'spin 1s linear infinite',
+                    margin: '0 auto 20px'
+                  }}
+                />
+                <p>Loading records from spiralsection table...</p>
+              </div>
+            ) : filteredRecords.length === 0 ? (
+              <div 
+                className="empty-state"
+                style={{
+                  textAlign: 'center',
+                  padding: '40px',
+                  color: themeColors.textSecondary,
+                  flex: 1,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  alignItems: 'center'
+                }}
+              >
+                <FiColumns size={48} style={{ marginBottom: '20px', opacity: 0.5 }} />
+                <h4 style={{ marginBottom: '10px', color: themeColors.textPrimary }}>No records found</h4>
+                <p style={{ marginBottom: '20px' }}>
+                  {searchTerm || filterDate || filterType
+                    ? "No records match your search criteria. Try adjusting your filters."
+                    : "No spiral production records available. Create your first record to get started."}
+                </p>
                 <button
                   onClick={() => navigate("/production-sections/spiral/new")}
-                  className="header-btn primary-btn"
-                  title="New Entry"
-                >
-                  <FiPlus size={18} />
-                  <span className="btn-label">New Entry</span>
-                </button>
-                <button
-                  onClick={() => navigate("/production-sections/spiral/smart")}
-                  className="header-btn smart-entry-btn"
-                  title="Smart Entry"
-                >
-                  <FiSmartphone size={18} />
-                  <span className="btn-label">Smart Entry</span>
-                </button>
-                <button
-                  onClick={() => navigate("/production-sections/spiral/settings")}
-                  className="header-btn settings-btn"
-                  title="Settings"
-                >
-                  <FiSettings size={18} />
-                  <span className="btn-label">Settings</span>
-                </button>
-                <button
-                  onClick={fetchData}
-                  disabled={loading}
-                  className="header-btn refresh-btn"
-                  title="Refresh Data"
-                >
-                  {loading ? (
-                    <div className="mini-spinner" />
-                  ) : (
-                    <FiRefreshCw size={18} />
-                  )}
-                  <span className="btn-label">Refresh</span>
-                </button>
-                <button
-                  onClick={handleExport}
-                  disabled={records.length === 0}
-                  className="header-btn export-btn"
-                  title="Export Data"
-                >
-                  <FiDownload size={18} />
-                  <span className="btn-label">Export</span>
-                </button>
-                <button
-                  onClick={() => navigate("/dashboard")}
-                  className="header-btn nav-btn"
-                  title="Dashboard"
-                >
-                  <FiHome size={18} />
-                  <span className="btn-label">Dashboard</span>
-                </button>
-                <button
-                  onClick={() => navigate("/production")}
-                  className="header-btn nav-btn"
-                  title="Production Sections"
-                >
-                  <FiArrowLeft size={18} />
-                  <span className="btn-label">Production</span>
-                </button>
-                <button
-                  onClick={() => setShowDashboard(!showDashboard)}
-                  className="header-btn dashboard-btn"
-                  title="Toggle Dashboard"
-                >
-                  {showDashboard ? (
-                    <FiEyeOff size={18} />
-                  ) : (
-                    <FiBarChart2 size={18} />
-                  )}
-                  <span className="btn-label">Dashboard</span>
-                </button>
-                <button
-                  onClick={() => setShowStatsCards(!showStatsCards)}
-                  className="header-btn stats-btn"
-                  title="Toggle Stats"
-                >
-                  {showStatsCards ? (
-                    <FiEyeOff size={18} />
-                  ) : (
-                    <FiLayers size={18} />
-                  )}
-                  <span className="btn-label">Stats</span>
-                </button>
-                <button
-                  onClick={() => navigate("/production-sections/spiral/batch")}
-                  className="header-btn batch-btn"
-                  title="Batch Entry"
-                >
-                  <FiCheckSquare size={18} />
-                  <span className="btn-label">Batch</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {showStatsCards && (
-          <div className="stats-section">
-            <div className="section-header">
-              <h3>
-                <FiActivity size={20} />
-                Production Statistics
-              </h3>
-              <div className="stats-summary">
-                <span className="summary-item">
-                  Total: {stats.totalRecords} records
-                </span>
-                <span className="summary-item">Managed by: {loggedInUser}</span>
-              </div>
-            </div>
-            <div className="stats-grid">
-              {statCards.map((card) => (
-                <div key={card.id} className="stat-card">
-                  <div className="stat-header">
-                    <card.icon size={20} className="stat-icon" />
-                    <div className="stat-title">{card.title}</div>
-                  </div>
-                  <div className="stat-value">{card.value}</div>
-                  <div className="stat-footer">{card.description}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {showDashboard && (
-          <div className="dashboard-section">
-            <div className="section-header">
-              <h3>
-                <FiCpu size={20} />
-                Today's Production Dashboard
-              </h3>
-              <div className="section-info">
-                <span className="info-item">Managed by: {loggedInUser}</span>
-                <span className="info-item">Records: {stats.todayRecords}</span>
-              </div>
-            </div>
-
-            <div className="dashboard-grid">
-              <div className="dashboard-card">
-                <div className="card-header">
-                  <FiPackage size={20} />
-                  <h4>Item-wise Production</h4>
-                </div>
-                <div className="card-content">
-                  {Object.entries(stats.itemWiseToday).length > 0 ? (
-                    <div className="items-list">
-                      {Object.entries(stats.itemWiseToday).map(
-                        ([item, data]) => (
-                          <div key={item} className="item-row">
-                            <div className="item-name">{item}</div>
-                            <div className="item-stats">
-                              <span className="stat-value">
-                                {Math.round(data.production)} M
-                              </span>
-                              <span className="stat-value">
-                                {Math.round(data.weight)} KG
-                              </span>
-                              <span className="stat-value">
-                                {Math.round(
-                                  data.count > 0
-                                    ? data.efficiency / data.count
-                                    : 0
-                                )}
-                                %
-                              </span>
-                            </div>
-                          </div>
-                        )
-                      )}
-                    </div>
-                  ) : (
-                    <div className="empty-state">
-                      <FiPackage size={24} />
-                      <p>No item production today</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="dashboard-card">
-                <div className="card-header">
-                  <FiTool size={20} />
-                  <h4>Machine-wise Production</h4>
-                </div>
-                <div className="card-content">
-                  {Object.entries(stats.machineWiseToday).length > 0 ? (
-                    <div className="machines-list">
-                      {Object.entries(stats.machineWiseToday).map(
-                        ([machine, data]) => (
-                          <div key={machine} className="machine-row">
-                            <div className="machine-name">
-                              Machine {machine}
-                            </div>
-                            <div className="machine-stats">
-                              <span className="stat-value">
-                                {Math.round(data.production)} M
-                              </span>
-                              <span className="stat-value">
-                                {Math.round(data.weight)} KG
-                              </span>
-                              <span className="stat-value">
-                                {Math.round(
-                                  data.count > 0
-                                    ? data.efficiency / data.count
-                                    : 0
-                                )}
-                                %
-                              </span>
-                            </div>
-                          </div>
-                        )
-                      )}
-                    </div>
-                  ) : (
-                    <div className="empty-state">
-                      <FiTool size={24} />
-                      <p>No machine production today</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="dashboard-card">
-                <div className="card-header">
-                  <FiBox size={20} />
-                  <h4>Finished Products</h4>
-                </div>
-                <div className="card-content">
-                  {Object.entries(stats.finishedProductWiseToday).length > 0 ? (
-                    <div className="products-list">
-                      {Object.entries(stats.finishedProductWiseToday).map(
-                        ([product, data]) => (
-                          <div key={product} className="product-row">
-                            <div className="product-name">{product}</div>
-                            <div className="product-stats">
-                              <span className="stat-value">
-                                {Math.round(data.production)} M
-                              </span>
-                              <span className="stat-value">
-                                {Math.round(data.weight)} KG
-                              </span>
-                              <span className="stat-value">
-                                {Math.round(
-                                  data.count > 0
-                                    ? data.efficiency / data.count
-                                    : 0
-                                )}
-                                %
-                              </span>
-                            </div>
-                          </div>
-                        )
-                      )}
-                    </div>
-                  ) : (
-                    <div className="empty-state">
-                      <FiBox size={24} />
-                      <p>No finished product today</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        <div className="filters-section">
-          <div className="filters-container">
-            <div className="filter-heading">
-              <FiFilter size={18} />
-              <span>FILTERS</span>
-            </div>
-            
-            {/* ALL FILTERS IN ONE LINE - DESKTOP, MOBILE: VERTICAL */}
-            <div className="filters-single-line">
-              <div className="filter-group">
-                <input
-                  type="text"
-                  placeholder="Search records..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="filter-input"
-                />
-              </div>
-
-              <div className="filter-group">
-                <select
-                  value={filterType}
-                  onChange={(e) => setFilterType(e.target.value)}
-                  className="filter-select"
-                >
-                  <option value="">All Wire Sizes</option>
-                  {wireSizes.map((size) => (
-                    <option key={size} value={size}>
-                      {size}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="filter-group">
-                <input
-                  type="date"
-                  value={filterDate}
-                  onChange={(e) => setFilterDate(e.target.value)}
-                  max={new Date().toISOString().split("T")[0]}
-                  className="filter-date"
-                />
-              </div>
-
-              <div className="filter-group">
-                <button
-                  onClick={() =>
-                    filterDate
-                      ? setShowReport(true)
-                      : alert("Please select a date first")
-                  }
-                  className="filter-btn primary-btn"
-                >
-                  <FiBarChart2 /> Generate Report
-                </button>
-              </div>
-
-              <div className="filter-group">
-                <button
-                  onClick={() => {
-                    setSearchTerm("");
-                    setFilterType("");
-                    setFilterDate("");
-                    setShowReport(false);
-                    setCurrentPage(1);
+                  className="primary-btn"
+                  style={{
+                    padding: '12px 24px',
+                    background: headerGradient,
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    fontSize: '14px'
                   }}
-                  className="filter-btn secondary-btn"
                 >
-                  <FiX /> Clear Filters
+                  <FiPlus /> Create First Record
                 </button>
               </div>
-
-              <div className="filter-group">
-                <button
-                  onClick={() => setShowWhatsAppModal(true)}
-                  className="filter-btn whatsapp-btn"
+            ) : (
+              <>
+                <div 
+                  className="table-container"
+                  style={{ 
+                    overflowX: 'auto',
+                    flex: 1,
+                    border: `1px solid ${themeColors.border}`,
+                    borderRadius: '6px'
+                  }}
                 >
-                  <FaWhatsapp /> WhatsApp
-                </button>
-              </div>
+                  <table 
+                    className="records-table"
+                    style={{
+                      width: '100%',
+                      borderCollapse: 'collapse',
+                      minWidth: '1000px'
+                    }}
+                  >
+                    <thead>
+                      <tr style={{ background: headerGradient, color: 'white' }}>
+                        <th style={{ padding: '10px 8px', fontSize: '12px', textAlign: 'left' }}>
+                          <div>ID</div>
+                          <div style={{ fontSize: '10px', opacity: 0.8 }}>& Code</div>
+                        </th>
+                        <th style={{ padding: '10px 8px', fontSize: '12px', textAlign: 'left' }}>
+                          <div>Item</div>
+                          <div style={{ fontSize: '10px', opacity: 0.8 }}>Details</div>
+                        </th>
+                        <th style={{ padding: '10px 8px', fontSize: '12px', textAlign: 'left' }}>
+                          <div>Material</div>
+                          <div style={{ fontSize: '10px', opacity: 0.8 }}>& Wire</div>
+                        </th>
+                        <th style={{ padding: '10px 8px', fontSize: '12px', textAlign: 'left' }}>
+                          <div>Product</div>
+                          <div style={{ fontSize: '10px', opacity: 0.8 }}>Details</div>
+                        </th>
+                        <th style={{ padding: '10px 8px', fontSize: '12px', textAlign: 'left' }}>
+                          <div>Machine</div>
+                          <div style={{ fontSize: '10px', opacity: 0.8 }}>(ID)</div>
+                        </th>
+                        <th style={{ padding: '10px 8px', fontSize: '12px', textAlign: 'left' }}>
+                          <div>Production</div>
+                          <div style={{ fontSize: '10px', opacity: 0.8 }}>(Target)</div>
+                        </th>
+                        <th style={{ padding: '10px 8px', fontSize: '12px', textAlign: 'left' }}>
+                          <div>Weight</div>
+                          <div style={{ fontSize: '10px', opacity: 0.8 }}>(Per M)</div>
+                        </th>
+                        <th style={{ padding: '10px 8px', fontSize: '12px', textAlign: 'left' }}>
+                          <div>Efficiency</div>
+                          <div style={{ fontSize: '10px', opacity: 0.8 }}>(Target)</div>
+                        </th>
+                        <th style={{ padding: '10px 8px', fontSize: '12px', textAlign: 'left' }}>Operator</th>
+                        <th style={{ padding: '10px 8px', fontSize: '12px', textAlign: 'left' }}>User</th>
+                        <th style={{ padding: '10px 8px', fontSize: '12px', textAlign: 'left' }}>
+                          <div>Shift</div>
+                          <div style={{ fontSize: '10px', opacity: 0.8 }}>(Code)</div>
+                        </th>
+                        <th style={{ padding: '10px 8px', fontSize: '12px', textAlign: 'left' }}>
+                          <div>Date</div>
+                          <div style={{ fontSize: '10px', opacity: 0.8 }}>& Time</div>
+                        </th>
+                        <th style={{ padding: '10px 8px', fontSize: '12px', textAlign: 'left' }}>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {currentRecords.map((record, index) => (
+                        <tr
+                          key={record.id}
+                          style={{
+                            background: index % 2 === 0 ? themeColors.background : themeColors.surface,
+                            borderBottom: `1px solid ${themeColors.border}`
+                          }}
+                        >
+                          <td style={{ padding: '10px 8px', fontSize: '12px' }}>
+                            <div>
+                              <div style={{ fontWeight: 'bold' }}>#{record.id}</div>
+                              {record.item_code && (
+                                <div style={{ fontSize: '10px', color: themeColors.textSecondary, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                  <FiCode size={10} /> {record.item_code}
+                                </div>
+                              )}
+                            </div>
+                          </td>
 
-              <div className="filter-group">
-                <button
-                  onClick={handlePrintReport}
-                  className="filter-btn print-btn"
-                >
-                  <FiPrinter /> Print
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {showReport && reportData && (
-          <div className="report-section">
-            <div className="report-header">
-              <div className="report-title">
-                <h2>
-                  <FiBarChart2 size={24} />
-                  Spiral Section Production Report
-                </h2>
-                <div className="report-info">
-                  <div className="report-date">{reportData.formattedDate}</div>
-                  <div className="report-author">
-                    Generated by: <strong>{loggedInUser}</strong>
-                  </div>
-                </div>
-              </div>
-
-              <div className="report-actions">
-                <button
-                  onClick={() => setShowWhatsAppModal(true)}
-                  className="action-btn whatsapp-btn"
-                >
-                  <FaWhatsapp size={18} /> WhatsApp
-                </button>
-                <button onClick={handlePrintReport} className="action-btn">
-                  <FiPrinter /> Print
-                </button>
-                <button onClick={handleExportReport} className="action-btn">
-                  <FiDownload /> Export
-                </button>
-                <button
-                  onClick={() => setShowReport(false)}
-                  className="action-btn close-btn"
-                >
-                  <FiX /> Close
-                </button>
-              </div>
-            </div>
-
-            <div className="summary-section">
-              <h3>Shift-wise Production Summary</h3>
-              <div className="shift-cards-container">
-                <div className="shift-card day-shift-card">
-                  <div className="shift-card-header">
-                    <div className="shift-title">
-                      <span className="shift-icon">☀️</span>
-                      <h4>Day Shift</h4>
-                    </div>
-                    <div className="shift-badge">
-                      {reportData.dayShiftCount} Records
-                    </div>
-                  </div>
-                  <div className="shift-stats">
-                    <div className="stat-item">
-                      <div className="stat-label">Production</div>
-                      <div className="stat-value">
-                        {Math.round(reportData.dayShiftData.production)} M
-                      </div>
-                    </div>
-                    <div className="stat-item">
-                      <div className="stat-label">Weight</div>
-                      <div className="stat-value">
-                        {Math.round(reportData.dayShiftData.weight)} KG
-                      </div>
-                    </div>
-                    <div className="stat-item">
-                      <div className="stat-label">Avg Efficiency</div>
-                      <div className="stat-value">
-                        {Math.round(reportData.dayShiftData.avgEfficiency)}%
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="shift-card night-shift-card">
-                  <div className="shift-card-header">
-                    <div className="shift-title">
-                      <span className="shift-icon">🌙</span>
-                      <h4>Night Shift</h4>
-                    </div>
-                    <div className="shift-badge">
-                      {reportData.nightShiftCount} Records
-                    </div>
-                  </div>
-                  <div className="shift-stats">
-                    <div className="stat-item">
-                      <div className="stat-label">Production</div>
-                      <div className="stat-value">
-                        {Math.round(reportData.nightShiftData.production)} M
-                      </div>
-                    </div>
-                    <div className="stat-item">
-                      <div className="stat-label">Weight</div>
-                      <div className="stat-value">
-                        {Math.round(reportData.nightShiftData.weight)} KG
-                      </div>
-                    </div>
-                    <div className="stat-item">
-                      <div className="stat-label">Avg Efficiency</div>
-                      <div className="stat-value">
-                        {Math.round(reportData.nightShiftData.avgEfficiency)}%
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {Object.keys(reportData.itemWise).length > 0 && (
-              <div className="summary-section">
-                <div className="section-header">
-                  <h3>Item-wise Summary</h3>
-                  <div className="section-count">
-                    {Object.keys(reportData.itemWise).length} Items
-                  </div>
-                </div>
-                <div className="items-cards-container">
-                  {Object.entries(reportData.itemWise).map(([item, data]) => (
-                    <div key={item} className="item-card">
-                      <div className="item-card-header">
-                        <FiPackage size={18} />
-                        <div className="item-name">{item}</div>
-                      </div>
-                      <div className="item-card-stats">
-                        <div className="item-stat">
-                          <div className="item-stat-value">
-                            {Math.round(data.production)} M
-                          </div>
-                          <div className="item-stat-label">Production</div>
-                        </div>
-                        <div className="item-stat">
-                          <div className="item-stat-value">
-                            {Math.round(data.weight)} KG
-                          </div>
-                          <div className="item-stat-label">Weight</div>
-                        </div>
-                        <div className="item-stat">
-                          <div className="item-stat-value">
-                            {Math.round(
-                              data.count > 0 ? data.efficiency / data.count : 0
-                            )}
-                            %
-                          </div>
-                          <div className="item-stat-label">Efficiency</div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div className="summary-section">
-              <h3>Machine-wise Summary - Day Shift</h3>
-              <div className="machines-grid">
-                {Array.from({ length: 14 }, (_, i) => {
-                  const machineNum = i + 1;
-                  const machineKey = `SP # ${machineNum}`;
-                  const data = reportData.dayShiftData.machines[machineKey] || {
-                    production: 0,
-                    efficiency: 0,
-                    operator: "Operator Absent",
-                    count: 0,
-                  };
-                  const efficiency =
-                    data.count > 0
-                      ? Math.round(data.efficiency / data.count)
-                      : 0;
-
-                  return (
-                    <div key={machineNum} className="machine-card">
-                      <div className="machine-card-header">
-                        <div className="machine-name">SP # {machineNum}</div>
-                        <div className="machine-operator">
-                          <FiUser size={12} />{" "}
-                          {data.operator || "Operator Absent"}
-                        </div>
-                      </div>
-                      <div className="machine-card-stats">
-                        <div className="machine-stat">
-                          <div className="machine-stat-value">
-                            {Math.round(data.production)} M
-                          </div>
-                          <div className="machine-stat-label">Production</div>
-                        </div>
-                        <div className="machine-stat">
-                          <div className="machine-stat-value">
-                            {efficiency}%
-                          </div>
-                          <div className="machine-stat-label">Efficiency</div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="summary-section">
-              <h3>Machine-wise Summary - Night Shift</h3>
-              <div className="machines-grid">
-                {Array.from({ length: 14 }, (_, i) => {
-                  const machineNum = i + 1;
-                  const machineKey = `SP # ${machineNum}`;
-                  const data = reportData.nightShiftData.machines[
-                    machineKey
-                  ] || {
-                    production: 0,
-                    efficiency: 0,
-                    operator: "Operator Absent",
-                    count: 0,
-                  };
-                  const efficiency =
-                    data.count > 0
-                      ? Math.round(data.efficiency / data.count)
-                      : 0;
-
-                  return (
-                    <div key={machineNum} className="machine-card">
-                      <div className="machine-card-header">
-                        <div className="machine-name">SP # {machineNum}</div>
-                        <div className="machine-operator">
-                          <FiUser size={12} />{" "}
-                          {data.operator || "Operator Absent"}
-                        </div>
-                      </div>
-                      <div className="machine-card-stats">
-                        <div className="machine-stat">
-                          <div className="machine-stat-value">
-                            {Math.round(data.production)} M
-                          </div>
-                          <div className="machine-stat-label">Production</div>
-                        </div>
-                        <div className="machine-stat">
-                          <div className="machine-stat-value">
-                            {efficiency}%
-                          </div>
-                          <div className="machine-stat-label">Efficiency</div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="report-summary">
-              <h3>Report Summary</h3>
-              <div className="summary-grid">
-                <div className="summary-card">
-                  <div className="summary-card-label">Total Production</div>
-                  <div className="summary-card-value">
-                    {Math.round(reportData.totalProduction)} M
-                  </div>
-                  <div className="summary-card-note">
-                    Target: {Math.round(reportData.totalProduction * 1.2)} M
-                  </div>
-                </div>
-
-                <div className="summary-card">
-                  <div className="summary-card-label">Total Weight</div>
-                  <div className="summary-card-value">
-                    {Math.round(reportData.totalWeight)} KG
-                  </div>
-                  <div className="summary-card-note">Total weight produced</div>
-                </div>
-
-                <div className="summary-card">
-                  <div className="summary-card-label">Average Efficiency</div>
-                  <div className="summary-card-value">
-                    {Math.round(reportData.avgEfficiency)}%
-                  </div>
-                  <div className="summary-card-note">Target: 85%</div>
-                </div>
-
-                <div className="summary-card">
-                  <div className="summary-card-label">Total Records</div>
-                  <div className="summary-card-value">
-                    {reportData.recordCount}
-                  </div>
-                  <div className="summary-card-note">
-                    Day: {reportData.dayShiftCount} | Night:{" "}
-                    {reportData.nightShiftCount}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="report-footer">
-              <p>
-                Report generated on {new Date().toLocaleString()} by{" "}
-                <strong>{loggedInUser}</strong> • Data source: spiralsection table •
-                Pakistan Wire Industries ERP System
-              </p>
-            </div>
-          </div>
-        )}
-
-        <div className="records-section">
-          <div className="section-header">
-            <h3>Spiral Production Records</h3>
-            <div className="section-info">
-              <span className="info-item">Total: {records.length} records</span>
-              <span className="info-item">
-                Showing: {filteredRecords.length} filtered
-              </span>
-              <span className="info-item">
-                Page: {currentPage}/{totalPages}
-              </span>
-              <span className="info-item">Managed by: {loggedInUser}</span>
-              <div className="database-status">
-                <div
-                  className={`status-dot ${
-                    isSupabaseConnected ? "connected" : "offline"
-                  }`}
-                />
-                {isSupabaseConnected ? "Connected" : "Offline"}
-              </div>
-            </div>
-          </div>
-
-          {loading ? (
-            <div className="loading-state">
-              <div className="loading-spinner" />
-              <p>Loading records from spiralsection table...</p>
-            </div>
-          ) : filteredRecords.length === 0 ? (
-            <div className="empty-state">
-              <FiColumns size={48} />
-              <h4>No records found</h4>
-              <p>
-                {searchTerm || filterDate || filterType
-                  ? "No records match your search criteria. Try adjusting your filters."
-                  : "No spiral production records available. Create your first record to get started."}
-              </p>
-              <button
-                onClick={() => navigate("/production-sections/spiral/new")}
-                className="primary-btn"
-              >
-                <FiPlus /> Create First Record
-              </button>
-            </div>
-          ) : (
-            <>
-              <div className="table-container">
-                <table className="records-table">
-                  <thead>
-                    <tr>
-                      <th>
-                        <div>ID</div>
-                        <div className="sub-header">& Code</div>
-                      </th>
-                      <th>
-                        <div>Item</div>
-                        <div className="sub-header">Details</div>
-                      </th>
-                      <th>
-                        <div>Material</div>
-                        <div className="sub-header">& Wire</div>
-                      </th>
-                      <th>
-                        <div>Product</div>
-                        <div className="sub-header">Details</div>
-                      </th>
-                      <th>
-                        <div>Machine</div>
-                        <div className="sub-header">(ID)</div>
-                      </th>
-                      <th>
-                        <div>Production</div>
-                        <div className="sub-header">(Target)</div>
-                      </th>
-                      <th>
-                        <div>Weight</div>
-                        <div className="sub-header">(Per M)</div>
-                      </th>
-                      <th>
-                        <div>Efficiency</div>
-                        <div className="sub-header">(Target)</div>
-                      </th>
-                      <th>Operator</th>
-                      <th>User</th>
-                      <th>
-                        <div>Shift</div>
-                        <div className="sub-header">(Code)</div>
-                      </th>
-                      <th>
-                        <div>Date</div>
-                        <div className="sub-header">& Time</div>
-                      </th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {currentRecords.map((record, index) => (
-                      <tr
-                        key={record.id}
-                        className={index % 2 === 0 ? "even-row" : "odd-row"}
-                      >
-                        <td className="id-cell">
-                          <div className="cell-content">
-                            <div className="id-number">#{record.id}</div>
-                            {record.item_code && (
-                              <div className="item-code-display">
-                                <FiCode size={10} /> {record.item_code}
+                          <td style={{ padding: '10px 8px', fontSize: '12px' }}>
+                            <div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                                <FiPackage size={14} style={{ color: themeColors.primary }} />
+                                <span style={{ fontWeight: '500' }}>
+                                  {record.item_name || "N/A"}
+                                </span>
                               </div>
-                            )}
-                          </div>
-                        </td>
+                              <div style={{ fontSize: '10px', color: themeColors.textSecondary }}>
+                                <span>Size:</span>
+                                <span style={{ marginLeft: '4px' }}>{record.raw_material_flatsize || "N/A"}</span>
+                              </div>
+                            </div>
+                          </td>
 
-                        <td className="item-details-cell">
-                          <div className="cell-content">
-                            <div className="item-name-primary">
-                              <FiPackage size={14} />
-                              <span className="item-name-text">
-                                {record.item_name || "N/A"}
-                              </span>
+                          <td style={{ padding: '10px 8px', fontSize: '12px' }}>
+                            <div>
+                              <div style={{ fontWeight: '500' }}>{record.material_type || "N/A"}</div>
+                              <div style={{ fontSize: '10px', color: themeColors.textSecondary, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <FiZap size={12} /> {record.wire_size || "N/A"}
+                              </div>
                             </div>
-                            <div className="item-size-row">
-                              <span className="item-size-label">Size:</span>
-                              <span className="item-size-value">
-                                {record.raw_material_flatsize || "N/A"}
-                              </span>
-                            </div>
-                          </div>
-                        </td>
+                          </td>
 
-                        <td className="material-cell">
-                          <div className="cell-content">
-                            <div className="material-type">
-                              {record.material_type || "N/A"}
+                          <td style={{ padding: '10px 8px', fontSize: '12px' }}>
+                            <div>
+                              <div style={{ fontWeight: '500' }}>{record.finishedproductname || "N/A"}</div>
                             </div>
-                            <div className="wire-size-info">
-                              <FiZap size={12} />
-                              <span className="wire-size-text">
-                                {record.wire_size || "N/A"}
-                              </span>
-                            </div>
-                          </div>
-                        </td>
+                          </td>
 
-                        <td className="product-cell">
-                          <div className="cell-content">
-                            <div className="product-name">
-                              {record.finishedproductname || "N/A"}
+                          <td style={{ padding: '10px 8px', fontSize: '12px' }}>
+                            <div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                                <FiTool size={14} style={{ color: themeColors.primary }} />
+                                <span style={{ fontWeight: '500' }}>{record.machine_no || "N/A"}</span>
+                              </div>
+                              <div style={{ fontSize: '10px', color: themeColors.textSecondary }}>
+                                <span>ID:</span>
+                                <span style={{ marginLeft: '4px' }}>{record.machine_id || "N/A"}</span>
+                              </div>
                             </div>
-                          </div>
-                        </td>
+                          </td>
 
-                        <td className="machine-cell">
-                          <div className="cell-content">
-                            <div className="machine-number">
-                              <FiTool size={14} />
-                              <span className="machine-no-text">
-                                {record.machine_no || "N/A"}
-                              </span>
-                            </div>
-                            <div className="machine-id-info">
-                              <span className="machine-id-label">ID:</span>
-                              <span className="machine-id-value">
-                                {record.machine_id || "N/A"}
-                              </span>
-                            </div>
-                          </div>
-                        </td>
-
-                        <td className="production-cell">
-                          <div className="cell-content">
-                            <div className="production-quantity">
-                              <span className="production-value">
-                                {Math.round(
-                                  parseFloat(record.production_quantity || 0)
-                                )}
-                              </span>
-                              <span className="unit">M</span>
-                            </div>
-                            <div className="production-target-info">
-                              <FiTarget size={12} />
-                              <span className="target-label">Target:</span>
-                              <span className="target-value">
-                                {Math.round(
+                          <td style={{ padding: '10px 8px', fontSize: '12px' }}>
+                            <div>
+                              <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>
+                                <span>{Math.round(parseFloat(record.production_quantity || 0))}</span>
+                                <span style={{ fontSize: '10px', marginLeft: '2px', color: themeColors.textSecondary }}>M</span>
+                              </div>
+                              <div style={{ fontSize: '10px', color: themeColors.textSecondary, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <FiTarget size={12} />
+                                <span>Target:</span>
+                                <span>{Math.round(
                                   parseFloat(
                                     record.target_quantity ||
-                                      record.production_quantity * 1.2
+                                    record.production_quantity * 1.2
                                   )
-                                )}{" "}
-                                M
-                              </span>
+                                )} M</span>
+                              </div>
                             </div>
-                          </div>
-                        </td>
+                          </td>
 
-                        <td className="weight-cell">
-                          <div className="cell-content">
-                            <div className="weight-quantity">
-                              <span className="weight-value">
-                                {Math.round(parseFloat(record.weight || 0))}
-                              </span>
-                              <span className="unit">KG</span>
+                          <td style={{ padding: '10px 8px', fontSize: '12px' }}>
+                            <div>
+                              <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>
+                                <span>{Math.round(parseFloat(record.weight || 0))}</span>
+                                <span style={{ fontSize: '10px', marginLeft: '2px', color: themeColors.textSecondary }}>KG</span>
+                              </div>
+                              <div style={{ fontSize: '10px', color: themeColors.textSecondary }}>
+                                <span>Per M:</span>
+                                <span style={{ marginLeft: '4px' }}>{Math.round(parseFloat(record.per_meter_wt || 0))} KG</span>
+                              </div>
                             </div>
-                            <div className="weight-per-meter-info">
-                              <span className="per-meter-label">Per M:</span>
-                              <span className="per-meter-value">
-                                {Math.round(
-                                  parseFloat(record.per_meter_wt || 0)
-                                )}{" "}
-                                KG
-                              </span>
-                            </div>
-                          </div>
-                        </td>
+                          </td>
 
-                        <td className="efficiency-cell">
-                          <div className="cell-content">
-                            <div
-                              className={`efficiency-indicator ${
-                                parseFloat(record.efficiency || 0) >= 85
-                                  ? "high-efficiency"
-                                  : parseFloat(record.efficiency || 0) >= 70
-                                  ? "medium-efficiency"
-                                  : "low-efficiency"
-                              }`}
-                            >
-                              {Math.round(parseFloat(record.efficiency || 0))}%
+                          <td style={{ padding: '10px 8px', fontSize: '12px' }}>
+                            <div>
+                              <div 
+                                style={{
+                                  padding: '4px 8px',
+                                  borderRadius: '12px',
+                                  fontWeight: 'bold',
+                                  fontSize: '11px',
+                                  display: 'inline-block',
+                                  marginBottom: '4px',
+                                  background: parseFloat(record.efficiency || 0) >= 85 
+                                    ? 'rgba(76, 175, 80, 0.2)' 
+                                    : parseFloat(record.efficiency || 0) >= 70
+                                    ? 'rgba(255, 152, 0, 0.2)'
+                                    : 'rgba(244, 67, 54, 0.2)',
+                                  color: parseFloat(record.efficiency || 0) >= 85 
+                                    ? '#4CAF50' 
+                                    : parseFloat(record.efficiency || 0) >= 70
+                                    ? '#FF9800'
+                                    : '#F44336',
+                                  border: `1px solid ${parseFloat(record.efficiency || 0) >= 85 
+                                    ? '#4CAF50' 
+                                    : parseFloat(record.efficiency || 0) >= 70
+                                    ? '#FF9800'
+                                    : '#F44336'}`
+                                }}
+                              >
+                                {Math.round(parseFloat(record.efficiency || 0))}%
+                              </div>
+                              <div style={{ fontSize: '10px', color: themeColors.textSecondary }}>
+                                <span>Target:</span>
+                                <span style={{ marginLeft: '4px' }}>85%</span>
+                              </div>
                             </div>
-                            <div className="efficiency-target-info">
-                              <span className="efficiency-target-label">
-                                Target:
-                              </span>
-                              <span className="efficiency-target-value">
-                                85%
-                              </span>
-                            </div>
-                          </div>
-                        </td>
+                          </td>
 
-                        <td className="operator-cell">
-                          <div className="cell-content">
-                            <div className="operator-info">
-                              <FiUser size={14} />
-                              <span className="operator-name-text">
-                                {record.operator_name || "N/A"}
-                              </span>
+                          <td style={{ padding: '10px 8px', fontSize: '12px' }}>
+                            <div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <FiUser size={14} style={{ color: themeColors.primary }} />
+                                <span>{record.operator_name || "N/A"}</span>
+                              </div>
                             </div>
-                          </div>
-                        </td>
+                          </td>
 
-                        <td className="user-cell">
-                          <div className="cell-content">
-                            <div className="user-name">
-                              {record.users_name || "N/A"}
+                          <td style={{ padding: '10px 8px', fontSize: '12px' }}>
+                            <div>
+                              <div style={{ fontWeight: '500' }}>{record.users_name || "N/A"}</div>
                             </div>
-                          </div>
-                        </td>
+                          </td>
 
-                        <td className="shift-cell">
-                          <div className="cell-content">
-                            <div className="shift-name-info">
-                              <span className="shift-name-text">
-                                {record.shift_name || "N/A"}
-                              </span>
+                          <td style={{ padding: '10px 8px', fontSize: '12px' }}>
+                            <div>
+                              <div style={{ fontWeight: '500', marginBottom: '4px' }}>{record.shift_name || "N/A"}</div>
+                              <div style={{ fontSize: '10px', color: themeColors.textSecondary }}>
+                                <span>Code:</span>
+                                <span style={{ marginLeft: '4px' }}>{record.shift_code || "N/A"}</span>
+                              </div>
                             </div>
-                            <div className="shift-code-info">
-                              <span className="shift-code-label">Code:</span>
-                              <span className="shift-code-value">
-                                {record.shift_code || "N/A"}
-                              </span>
-                            </div>
-                          </div>
-                        </td>
+                          </td>
 
-                        <td className="datetime-cell">
-                          <div className="cell-content">
-                            <div className="date-info">
-                              {new Date(record.created_at).toLocaleDateString(
-                                "en-GB"
-                              )}
-                            </div>
-                            <div className="time-info">
-                              {new Date(record.created_at).toLocaleTimeString(
-                                [],
-                                {
+                          <td style={{ padding: '10px 8px', fontSize: '12px' }}>
+                            <div>
+                              <div style={{ marginBottom: '4px' }}>
+                                {new Date(record.created_at).toLocaleDateString("en-GB")}
+                              </div>
+                              <div style={{ fontSize: '10px', color: themeColors.textSecondary }}>
+                                {new Date(record.created_at).toLocaleTimeString([], {
                                   hour: "2-digit",
                                   minute: "2-digit",
-                                }
-                              )}
+                                })}
+                              </div>
                             </div>
-                          </div>
-                        </td>
+                          </td>
 
-                        <td className="actions-cell">
-                          <div className="cell-content">
-                            <div className="action-buttons-group">
+                          <td style={{ padding: '10px 8px', fontSize: '12px' }}>
+                            <div style={{ display: 'flex', gap: '6px' }}>
                               <button
                                 onClick={() => handleView(record.id)}
                                 className="action-btn view-btn"
                                 title="View Record"
+                                style={{
+                                  padding: '6px',
+                                  background: themeColors.info || '#2196F3',
+                                  color: 'white',
+                                  border: 'none',
+                                  borderRadius: '4px',
+                                  cursor: 'pointer',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center'
+                                }}
                               >
                                 <FiEye size={16} />
                               </button>
@@ -2589,6 +4067,17 @@ const SpiralPage = () => {
                                 onClick={() => handleEdit(record.id)}
                                 className="action-btn edit-btn"
                                 title="Edit Record"
+                                style={{
+                                  padding: '6px',
+                                  background: themeColors.warning || '#FF9800',
+                                  color: 'white',
+                                  border: 'none',
+                                  borderRadius: '4px',
+                                  cursor: 'pointer',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center'
+                                }}
                               >
                                 <FiEdit size={16} />
                               </button>
@@ -2596,152 +4085,231 @@ const SpiralPage = () => {
                                 onClick={() => handleDelete(record.id)}
                                 className="action-btn delete-btn"
                                 title="Delete Record"
+                                style={{
+                                  padding: '6px',
+                                  background: themeColors.error || '#F44336',
+                                  color: 'white',
+                                  border: 'none',
+                                  borderRadius: '4px',
+                                  cursor: 'pointer',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center'
+                                }}
                               >
                                 <FiTrash2 size={16} />
                               </button>
                             </div>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {totalPages > 1 && (
-                <div className="pagination">
-                  <div className="pagination-info">
-                    Showing {indexOfFirstItem + 1} to{" "}
-                    {Math.min(indexOfLastItem, filteredRecords.length)} of{" "}
-                    {filteredRecords.length} records
-                  </div>
-                  <div className="pagination-controls">
-                    <button
-                      onClick={handlePrevPage}
-                      disabled={currentPage === 1}
-                      className="pagination-btn"
-                    >
-                      <FiChevronLeft /> Previous
-                    </button>
-
-                    <div className="page-numbers">
-                      {Array.from(
-                        { length: Math.min(5, totalPages) },
-                        (_, i) => {
-                          let pageNum;
-                          if (totalPages <= 5) {
-                            pageNum = i + 1;
-                          } else if (currentPage <= 3) {
-                            pageNum = i + 1;
-                          } else if (currentPage >= totalPages - 2) {
-                            pageNum = totalPages - 4 + i;
-                          } else {
-                            pageNum = currentPage - 2 + i;
-                          }
-
-                          return (
-                            <button
-                              key={pageNum}
-                              onClick={() => setCurrentPage(pageNum)}
-                              className={`page-btn ${
-                                currentPage === pageNum ? "active" : ""
-                              }`}
-                            >
-                              {pageNum}
-                            </button>
-                          );
-                        }
-                      )}
-                    </div>
-
-                    <button
-                      onClick={handleNextPage}
-                      disabled={currentPage === totalPages}
-                      className="pagination-btn"
-                    >
-                      Next <FiChevronRight />
-                    </button>
-                  </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
-              )}
-            </>
-          )}
+
+                {totalPages > 1 && (
+                  <div 
+                    className="pagination"
+                    style={{
+                      marginTop: '20px',
+                      paddingTop: '15px',
+                      borderTop: `1px solid ${themeColors.border}`,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '10px'
+                    }}
+                  >
+                    <div 
+                      className="pagination-info"
+                      style={{
+                        fontSize: '12px',
+                        color: themeColors.textSecondary
+                      }}
+                    >
+                      Showing {indexOfFirstItem + 1} to{" "}
+                      {Math.min(indexOfLastItem, filteredRecords.length)} of{" "}
+                      {filteredRecords.length} records
+                    </div>
+                    <div 
+                      className="pagination-controls"
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px'
+                      }}
+                    >
+                      <button
+                        onClick={handlePrevPage}
+                        disabled={currentPage === 1}
+                        className="pagination-btn"
+                        style={{
+                          padding: '8px 15px',
+                          background: currentPage === 1 ? themeColors.disabled : themeColors.primary,
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                          opacity: currentPage === 1 ? 0.6 : 1,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          fontSize: '14px'
+                        }}
+                      >
+                        <FiChevronLeft /> Previous
+                      </button>
+
+                      <div 
+                        className="page-numbers"
+                        style={{
+                          display: 'flex',
+                          gap: '5px'
+                        }}
+                      >
+                        {Array.from(
+                          { length: Math.min(5, totalPages) },
+                          (_, i) => {
+                            let pageNum;
+                            if (totalPages <= 5) {
+                              pageNum = i + 1;
+                            } else if (currentPage <= 3) {
+                              pageNum = i + 1;
+                            } else if (currentPage >= totalPages - 2) {
+                              pageNum = totalPages - 4 + i;
+                            } else {
+                              pageNum = currentPage - 2 + i;
+                            }
+
+                            return (
+                              <button
+                                key={pageNum}
+                                onClick={() => setCurrentPage(pageNum)}
+                                className={`page-btn ${
+                                  currentPage === pageNum ? "active" : ""
+                                }`}
+                                style={{
+                                  padding: '8px 12px',
+                                  background: currentPage === pageNum ? themeColors.primary : themeColors.surface,
+                                  color: currentPage === pageNum ? 'white' : themeColors.textPrimary,
+                                  border: `1px solid ${currentPage === pageNum ? themeColors.primary : themeColors.border}`,
+                                  borderRadius: '4px',
+                                  cursor: 'pointer',
+                                  fontSize: '14px'
+                                }}
+                              >
+                                {pageNum}
+                              </button>
+                            );
+                          }
+                        )}
+                      </div>
+
+                      <button
+                        onClick={handleNextPage}
+                        disabled={currentPage === totalPages}
+                        className="pagination-btn"
+                        style={{
+                          padding: '8px 15px',
+                          background: currentPage === totalPages ? themeColors.disabled : themeColors.primary,
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                          opacity: currentPage === totalPages ? 0.6 : 1,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          fontSize: '14px'
+                        }}
+                      >
+                        Next <FiChevronRight />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
         </div>
 
-        <div className="footer">
-          <div className="footer-content">
-            <div className="footer-left">
-              <div className="footer-title">
-                Pakistan Wire Industries ERP System © 2006
-              </div>
-              <div className="footer-info">
-                <span className="info-item">
-                  <FiDatabase size={12} /> spiralsection table
-                </span>
-                <span className="info-item">
-                  <FiUser size={12} /> {loggedInUser}
-                </span>
-                <span className="info-item">
-                  <FiClock size={12} /> {new Date().toLocaleTimeString()}
-                </span>
-              </div>
-            </div>
-
-            <div className="footer-right">
-              <div className="footer-stats">
-                <div className="footer-stat">
-                  <span className="stat-value">{stats.totalRecords}</span>
-                  <span className="stat-label">Records</span>
-                </div>
-                <div className="footer-stat">
-                  <span className="stat-value">
-                    {Math.round(stats.totalProduction)}
-                  </span>
-                  <span className="stat-label">M</span>
-                </div>
-                <div className="footer-stat">
-                  <span className="stat-value">
-                    {Math.round(stats.totalWeight)}
-                  </span>
-                  <span className="stat-label">KG</span>
-                </div>
-                <div className="footer-stat">
-                  <span className="stat-value">
-                    {Math.round(stats.avgEfficiency)}%
-                  </span>
-                  <span className="stat-label">Eff.</span>
-                </div>
-              </div>
-            </div>
+        {/* Bottom Info Bar */}
+        <div 
+          className="bottom-info-bar"
+          style={{
+            background: themeColors.surface,
+            padding: '10px 15px',
+            borderTop: `1px solid ${themeColors.border}`,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            fontSize: '12px',
+            color: themeColors.textSecondary
+          }}
+        >
+          <div className="info-left" style={{ display: 'flex', gap: '15px' }}>
+            <span>Records: {stats.totalRecords}</span>
+            <span>User: {loggedInUser}</span>
+            <span>Time: {new Date().toLocaleTimeString()}</span>
           </div>
-
-          <div className="footer-actions">
-            <button
-              onClick={() => navigate("/dashboard")}
-              className="footer-btn"
-            >
-              <FiHome size={14} /> Dashboard
-            </button>
-            <button
-              onClick={() => navigate("/production")}
-              className="footer-btn"
-            >
-              <FiGrid size={14} /> All Sections
-            </button>
-            <button
-              onClick={() => navigate("/production-sections/spiral/new")}
-              className="footer-btn primary-btn"
-            >
-              <FiPlus size={14} /> New Record
-            </button>
-            <button onClick={fetchData} className="footer-btn">
-              <FiRefreshCw size={14} /> Refresh
-            </button>
+          <div className="info-right" style={{ display: 'flex', gap: '15px' }}>
+            <span>Production: {Math.round(stats.totalProduction)} M</span>
+            <span>Weight: {Math.round(stats.totalWeight)} KG</span>
+            <span>Efficiency: {Math.round(stats.avgEfficiency)}%</span>
           </div>
         </div>
       </div>
 
       {showWhatsAppModal && <WhatsAppModal />}
+
+      <style>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        
+        .spiral-content {
+          -webkit-overflow-scrolling: touch;
+        }
+        
+        .table-container::-webkit-scrollbar {
+          height: 6px;
+          width: 6px;
+        }
+        
+        .table-container::-webkit-scrollbar-track {
+          background: ${themeColors.background};
+        }
+        
+        .table-container::-webkit-scrollbar-thumb {
+          background: ${themeColors.border};
+          border-radius: 3px;
+        }
+        
+        @media (max-width: 768px) {
+          .buttons-row {
+            flex-direction: column;
+          }
+          
+          .page-btn {
+            width: 100%;
+            justify-content: center;
+          }
+          
+          .filters-single-line {
+            flex-direction: column;
+          }
+          
+          .filter-group {
+            width: 100%;
+          }
+          
+          .section-info {
+            flex-direction: column;
+            gap: 5px;
+          }
+        }
+      `}</style>
     </>
   );
 };

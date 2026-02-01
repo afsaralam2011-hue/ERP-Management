@@ -1,6 +1,8 @@
-/* src/styles/global.css */
+/* src/styles/global.css - COMPLETE FILE */
 
-/* CSS Variables - Default Theme */
+/* ===============================
+   CSS Variables - Light Theme (Default)
+   =============================== */
 :root {
   /* Primary Colors */
   --color-primary: #1976D2;
@@ -17,10 +19,10 @@
   --color-surface: #F5F5F5;
   --color-paper: #FFFFFF;
   
-  /* Text Colors */
-  --color-text-primary: #212121;
-  --color-text-secondary: #757575;
-  --color-text-disabled: #BDBDBD;
+  /* Text Colors - BLACK سے INDIGO/NAVY میں تبدیل */
+  --color-text-primary: #1A237E;    /* Deep Indigo/Navy Blue */
+  --color-text-secondary: #283593;  /* Medium Indigo/Navy Blue */
+  --color-text-disabled: #5C6BC0;   /* Light Indigo */
   
   /* Border Colors */
   --color-border: #E0E0E0;
@@ -43,17 +45,17 @@
   --color-info-light: #BBDEFB;
   --color-info-dark: #1976D2;
   
-  /* Additional Colors */
-  --color-shadow: rgba(0, 0, 0, 0.1);
+  /* Additional Colors - BLACK سے INDIGO میں تبدیل */
+  --color-shadow: rgba(26, 35, 126, 0.1);  /* Indigo shadow */
   --color-overlay: rgba(0, 0, 0, 0.5);
-  --color-hover: rgba(0, 0, 0, 0.04);
+  --color-hover: rgba(26, 35, 126, 0.04);  /* Indigo hover */
   --color-selected: rgba(25, 118, 210, 0.08);
   --color-disabled: #F5F5F5;
   
   /* Input Colors */
   --color-input-background: #FFFFFF;
   --color-input-border: #BDBDBD;
-  --color-input-placeholder: #9E9E9E;
+  --color-input-placeholder: #5C6BC0;  /* Light Indigo */
   
   /* Button Colors */
   --color-button-primary: #1976D2;
@@ -119,7 +121,76 @@
   --z-tooltip: 1070;
 }
 
-/* Reset and Base Styles */
+/* ===============================
+   Dark Theme CSS Variables
+   =============================== */
+[data-theme="dark"], 
+[data-theme*="dark"], 
+body.dark-mode,
+.dark-mode {
+  /* Primary Colors (Dark Theme) */
+  --color-primary: #90CAF9;
+  --color-primary-light: #E3F2FD;
+  --color-primary-dark: #42A5F5;
+  
+  /* Secondary Colors (Dark Theme) */
+  --color-secondary: #F48FB1;
+  --color-secondary-light: #FCE4EC;
+  --color-secondary-dark: #EC407A;
+  
+  /* Background Colors (Dark Theme) */
+  --color-background: #0a0a0a;
+  --color-surface: #1a1a1a;
+  --color-paper: #242424;
+  
+  /* Text Colors (Dark Theme) - INDIGO/NAVY میں تبدیل */
+  --color-text-primary: #ffffff;      /* Light Indigo */
+  --color-text-secondary: lch(86.75% 45.46 201.26);    /* Lighter Indigo */
+  --color-text-disabled: #6D6D6D;
+  
+  /* Border Colors (Dark Theme) */
+  --color-border: #333333;
+  --color-divider: #444444;
+  
+  /* Status Colors (Dark Theme) */
+  --color-success: #66BB6A;
+  --color-success-light: #A5D6A7;
+  --color-success-dark: #388E3C;
+  
+  --color-warning: #FFB74D;
+  --color-warning-light: #FFCC80;
+  --color-warning-dark: #F57C00;
+  
+  --color-error: #EF5350;
+  --color-error-light: #E57373;
+  --color-error-dark: #D32F2F;
+  
+  --color-info: #42A5F5;
+  --color-info-light: #64B5F6;
+  --color-info-dark: #1976D2;
+  
+  /* Additional Colors (Dark Theme) - BLACK سے INDIGO میں تبدیل */
+  --color-shadow: rgba(121, 134, 203, 0.3);  /* Indigo shadow */
+  --color-overlay: rgba(0, 0, 0, 0.7);
+  --color-hover: rgba(121, 134, 203, 0.1);   /* Indigo hover */
+  --color-selected: rgba(144, 202, 249, 0.16);
+  --color-disabled: #2D2D2D;
+  
+  /* Input Colors (Dark Theme) */
+  --color-input-background: #242424;
+  --color-input-border: #444444;
+  --color-input-placeholder: #9FA8DA;  /* Lighter Indigo */
+  
+  /* Button Colors (Dark Theme) */
+  --color-button-primary: #1976D2;
+  --color-button-secondary: #C2185B;
+  --color-button-disabled: #424242;
+  --color-button-text: #FFFFFF;
+}
+
+/* ===============================
+   Reset and Base Styles
+   =============================== */
 * {
   margin: 0;
   padding: 0;
@@ -138,18 +209,72 @@ body {
   line-height: var(--line-height-normal);
   color: var(--color-text-primary);
   background-color: var(--color-background);
-  transition: background-color var(--transition-base), color var(--transition-base);
-}
-
-/* Smooth theme transitions */
-body,
-body * {
   transition: background-color var(--transition-base), 
               color var(--transition-base),
               border-color var(--transition-base);
 }
 
-/* Scrollbar Styling */
+/* Smooth theme transitions for all elements */
+body,
+body * {
+  transition: background-color var(--transition-base), 
+              color var(--transition-base),
+              border-color var(--transition-base),
+              box-shadow var(--transition-base);
+}
+
+/* ===============================
+   IMPORTANT: FORCE TEXT COLORS IN DARK THEME
+   =============================== */
+.dark-mode,
+[data-theme="dark"],
+[data-theme*="dark"] {
+  color: var(--color-text-primary) !important;
+}
+
+.dark-mode h1,
+.dark-mode h2,
+.dark-mode h3,
+.dark-mode h4,
+.dark-mode h5,
+.dark-mode h6,
+[data-theme="dark"] h1,
+[data-theme="dark"] h2,
+[data-theme="dark"] h3,
+[data-theme="dark"] h4,
+[data-theme="dark"] h5,
+[data-theme="dark"] h6 {
+  color: var(--color-text-primary) !important;
+}
+
+.dark-mode p,
+.dark-mode span,
+.dark-mode div,
+.dark-mode li,
+.dark-mode td,
+.dark-mode th,
+[data-theme="dark"] p,
+[data-theme="dark"] span,
+[data-theme="dark"] div,
+[data-theme="dark"] li,
+[data-theme="dark"] td,
+[data-theme="dark"] th {
+  color: var(--color-text-primary) !important;
+}
+
+.dark-mode a,
+[data-theme="dark"] a {
+  color: var(--color-primary) !important;
+}
+
+.dark-mode button,
+[data-theme="dark"] button {
+  color: var(--color-button-text) !important;
+}
+
+/* ===============================
+   Scrollbar Styling
+   =============================== */
 ::-webkit-scrollbar {
   width: 12px;
   height: 12px;
@@ -168,13 +293,17 @@ body * {
   background: var(--color-text-secondary);
 }
 
-/* Selection */
+/* ===============================
+   Selection
+   =============================== */
 ::selection {
   background-color: var(--color-primary-light);
   color: var(--color-text-primary);
 }
 
-/* Links */
+/* ===============================
+   Links
+   =============================== */
 a {
   color: var(--color-primary);
   text-decoration: none;
@@ -185,7 +314,9 @@ a:hover {
   color: var(--color-primary-dark);
 }
 
-/* Headings */
+/* ===============================
+   Headings
+   =============================== */
 h1, h2, h3, h4, h5, h6 {
   font-weight: var(--font-weight-semibold);
   line-height: var(--line-height-tight);
@@ -200,13 +331,17 @@ h4 { font-size: var(--font-size-xl); }
 h5 { font-size: var(--font-size-lg); }
 h6 { font-size: var(--font-size-base); }
 
-/* Paragraphs */
+/* ===============================
+   Paragraphs
+   =============================== */
 p {
   margin-bottom: var(--spacing-md);
   color: var(--color-text-secondary);
 }
 
-/* Buttons */
+/* ===============================
+   Buttons
+   =============================== */
 button {
   font-family: var(--font-family);
   font-size: var(--font-size-base);
@@ -214,6 +349,7 @@ button {
   border: none;
   outline: none;
   transition: all var(--transition-fast);
+  color: var(--color-button-text);
 }
 
 button:disabled {
@@ -221,7 +357,9 @@ button:disabled {
   opacity: 0.6;
 }
 
-/* Inputs */
+/* ===============================
+   Inputs
+   =============================== */
 input,
 textarea,
 select {
@@ -255,16 +393,21 @@ select:disabled {
   cursor: not-allowed;
 }
 
-/* Cards and Surfaces */
+/* ===============================
+   Cards and Surfaces
+   =============================== */
 .card,
 .surface {
   background-color: var(--color-surface);
   border-radius: var(--radius-lg);
   padding: var(--spacing-lg);
   box-shadow: var(--shadow-sm);
+  color: var(--color-text-primary);
 }
 
-/* Utility Classes */
+/* ===============================
+   Utility Classes
+   =============================== */
 .text-primary { color: var(--color-text-primary); }
 .text-secondary { color: var(--color-text-secondary); }
 .text-disabled { color: var(--color-text-disabled); }
@@ -285,20 +428,123 @@ select:disabled {
 .rounded-lg { border-radius: var(--radius-lg); }
 .rounded-full { border-radius: var(--radius-full); }
 
-/* GLOBAL ANIMATION */
-@keyframes floatUp {
-  0% {
-    transform: translateY(100vh) rotate(0deg);
-    opacity: 0;
+/* ===============================
+   Layout Components
+   =============================== */
+.app-wrapper {
+  min-height: 100vh;
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+}
+
+/* ===============================
+   Theme Toggle Button
+   =============================== */
+.theme-toggle-button {
+  background: var(--color-primary) !important;
+  color: var(--color-button-text) !important;
+  border: none !important;
+  padding: var(--spacing-sm) var(--spacing-md) !important;
+  border-radius: var(--radius-full) !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: var(--spacing-sm) !important;
+  font-size: var(--font-size-sm) !important;
+  font-weight: var(--font-weight-medium) !important;
+  transition: all var(--transition-fast) !important;
+}
+
+.theme-toggle-button:hover {
+  background: var(--color-primary-dark) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* ===============================
+   Tables in Dark Mode
+   =============================== */
+.dark-mode table,
+[data-theme="dark"] table {
+  color: var(--color-text-primary);
+  border-color: var(--color-border);
+}
+
+.dark-mode table th,
+[data-theme="dark"] table th {
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+}
+
+.dark-mode table td,
+[data-theme="dark"] table td {
+  background-color: var(--color-paper);
+  color: var(--color-text-primary);
+  border-color: var(--color-border);
+}
+
+/* ===============================
+   Print Styles
+   =============================== */
+@media print {
+  body {
+    color: #000 !important;
+    background-color: #fff !important;
   }
-  10% {
-    opacity: 0.3;
+  
+  .no-print {
+    display: none !important;
   }
-  90% {
-    opacity: 0.3;
+}
+
+/* ===============================
+   High Contrast Mode Support
+   =============================== */
+@media (prefers-contrast: high) {
+  :root {
+    --color-text-primary: #1A237E;  /* Deep Indigo/Navy Blue */
+    --color-text-secondary: #283593; /* Medium Indigo/Navy Blue */
   }
-  100% {
-    transform: translateY(-100px) rotate(360deg);
-    opacity: 0;
+  
+  [data-theme="dark"] {
+    --color-text-primary: #7986CB;   /* Light Indigo */
+    --color-text-secondary: #9FA8DA; /* Lighter Indigo */
+  }
+}
+
+/* ===============================
+   Reduced Motion Support
+   =============================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ===============================
+   Responsive Design
+   =============================== */
+@media (max-width: 768px) {
+  :root {
+    --spacing-lg: 20px;
+    --spacing-xl: 24px;
+    --font-size-4xl: 2rem;
+    --font-size-3xl: 1.75rem;
+    --font-size-2xl: 1.5rem;
+  }
+  
+  .theme-toggle-button {
+    padding: 6px 12px !important;
+    font-size: 12px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    --spacing-md: 12px;
+    --spacing-lg: 16px;
   }
 }

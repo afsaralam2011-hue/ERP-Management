@@ -15,15 +15,27 @@ import {
   FiMenu, FiChevronRight as FiChevronRightIcon
 } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
+import { useTheme } from '../../contexts/ThemeContext';
 import './Production.css';
 
 // Mock data for demonstration
 const Production = () => {
   const navigate = useNavigate();
+  const { theme, mode, isDarkMode } = useTheme();
   const [activeSection, setActiveSection] = useState('spiral');
   const [timeRange, setTimeRange] = useState('today');
   const [reportType, setReportType] = useState('summary');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
+
+  // Theme-based colors
+  const themeColors = {
+    background: isDarkMode ? theme?.colors?.background || '#0a0a0a' : theme?.colors?.background || '#FFFFFF',
+    surface: isDarkMode ? theme?.colors?.surface || '#1a1a1a' : theme?.colors?.surface || '#F5F5F5',
+    textPrimary: isDarkMode ? theme?.colors?.textPrimary || '#7986CB' : theme?.colors?.textPrimary || '#1A237E',
+    textSecondary: isDarkMode ? theme?.colors?.textSecondary || '#9FA8DA' : theme?.colors?.textSecondary || '#283593',
+    border: isDarkMode ? theme?.colors?.border || '#333333' : theme?.colors?.border || '#E0E0E0',
+    primary: theme?.colors?.primary || '#1976D2',
+  };
 
   // Production Sections
   const sections = [
@@ -103,7 +115,7 @@ const Production = () => {
   ];
 
   // Mock data for active section
-  const [activeSectionData, setActiveSectionData] = useState({
+  const [activeSectionData] = useState({
     summary: {
       totalProduction: 12500,
       totalWeight: 8500,
@@ -196,7 +208,7 @@ const Production = () => {
           .summary-value { font-size: 24px; font-weight: bold; color: #333; }
           .summary-label { font-size: 14px; color: #666; margin-top: 5px; }
           .table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-          .table th, .table td { border: 1px solid #ddd; padding: 1px; text-align: left; }
+          .table th, .table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
           .table th { background-color: #f8f9fa; }
           .footer { margin-top: 40px; text-align: center; color: #666; font-size: 12px; }
           @media print { body { margin: 20px; } .no-print { display: none; } }
@@ -327,64 +339,94 @@ const Production = () => {
         return (
           <div className="report-summary">
             <div className="summary-grid">
-              <div className="summary-card" style={{ borderColor: activeSectionObj.color }}>
+              <div className="summary-card" style={{ 
+                borderColor: activeSectionObj.color,
+                backgroundColor: isDarkMode ? `${themeColors.surface}` : '#ffffff'
+              }}>
                 <div className="summary-icon" style={{ background: `${activeSectionObj.color}20` }}>
                   <FiPackage style={{ color: activeSectionObj.color }} />
                 </div>
-                <div className="summary-value">
+                <div className="summary-value" style={{ color: themeColors.textPrimary }}>
                   {activeSectionData.summary.totalProduction.toLocaleString()} M
                 </div>
-                <div className="summary-label">Total Production</div>
+                <div className="summary-label" style={{ color: themeColors.textSecondary }}>
+                  Total Production
+                </div>
               </div>
               
-              <div className="summary-card" style={{ borderColor: activeSectionObj.color }}>
+              <div className="summary-card" style={{ 
+                borderColor: activeSectionObj.color,
+                backgroundColor: isDarkMode ? `${themeColors.surface}` : '#ffffff'
+              }}>
                 <div className="summary-icon" style={{ background: `${activeSectionObj.color}20` }}>
                   <FiTarget style={{ color: activeSectionObj.color }} />
                 </div>
-                <div className="summary-value">
+                <div className="summary-value" style={{ color: themeColors.textPrimary }}>
                   {activeSectionData.summary.totalWeight.toLocaleString()} KG
                 </div>
-                <div className="summary-label">Total Weight</div>
+                <div className="summary-label" style={{ color: themeColors.textSecondary }}>
+                  Total Weight
+                </div>
               </div>
               
-              <div className="summary-card" style={{ borderColor: activeSectionObj.color }}>
+              <div className="summary-card" style={{ 
+                borderColor: activeSectionObj.color,
+                backgroundColor: isDarkMode ? `${themeColors.surface}` : '#ffffff'
+              }}>
                 <div className="summary-icon" style={{ background: `${activeSectionObj.color}20` }}>
                   <FiActivity style={{ color: activeSectionObj.color }} />
                 </div>
-                <div className="summary-value">
+                <div className="summary-value" style={{ color: themeColors.textPrimary }}>
                   {activeSectionData.summary.avgEfficiency}%
                 </div>
-                <div className="summary-label">Average Efficiency</div>
+                <div className="summary-label" style={{ color: themeColors.textSecondary }}>
+                  Average Efficiency
+                </div>
               </div>
               
-              <div className="summary-card" style={{ borderColor: activeSectionObj.color }}>
+              <div className="summary-card" style={{ 
+                borderColor: activeSectionObj.color,
+                backgroundColor: isDarkMode ? `${themeColors.surface}` : '#ffffff'
+              }}>
                 <div className="summary-icon" style={{ background: `${activeSectionObj.color}20` }}>
                   <FiDatabase style={{ color: activeSectionObj.color }} />
                 </div>
-                <div className="summary-value">
+                <div className="summary-value" style={{ color: themeColors.textPrimary }}>
                   {activeSectionData.summary.totalRecords}
                 </div>
-                <div className="summary-label">Total Records</div>
+                <div className="summary-label" style={{ color: themeColors.textSecondary }}>
+                  Total Records
+                </div>
               </div>
               
-              <div className="summary-card" style={{ borderColor: activeSectionObj.color }}>
+              <div className="summary-card" style={{ 
+                borderColor: activeSectionObj.color,
+                backgroundColor: isDarkMode ? `${themeColors.surface}` : '#ffffff'
+              }}>
                 <div className="summary-icon" style={{ background: `${activeSectionObj.color}20` }}>
                   <FiTrendingUpIcon style={{ color: activeSectionObj.color }} />
                 </div>
-                <div className="summary-value">
+                <div className="summary-value" style={{ color: themeColors.textPrimary }}>
                   {activeSectionData.summary.todayProduction.toLocaleString()} M
                 </div>
-                <div className="summary-label">Today's Production</div>
+                <div className="summary-label" style={{ color: themeColors.textSecondary }}>
+                  Today's Production
+                </div>
               </div>
               
-              <div className="summary-card" style={{ borderColor: activeSectionObj.color }}>
+              <div className="summary-card" style={{ 
+                borderColor: activeSectionObj.color,
+                backgroundColor: isDarkMode ? `${themeColors.surface}` : '#ffffff'
+              }}>
                 <div className="summary-icon" style={{ background: `${activeSectionObj.color}20` }}>
                   <FiZap style={{ color: activeSectionObj.color }} />
                 </div>
-                <div className="summary-value">
+                <div className="summary-value" style={{ color: themeColors.textPrimary }}>
                   {activeSectionData.summary.todayEfficiency}%
                 </div>
-                <div className="summary-label">Today's Efficiency</div>
+                <div className="summary-label" style={{ color: themeColors.textSecondary }}>
+                  Today's Efficiency
+                </div>
               </div>
             </div>
           </div>
@@ -393,28 +435,45 @@ const Production = () => {
       case 'item-wise':
         return (
           <div className="item-wise-report">
-            <h3>Item-wise Production Analysis</h3>
+            <h3 style={{ color: themeColors.textPrimary }}>Item-wise Production Analysis</h3>
             <div className="item-list">
               {activeSectionData.itemWise.map((item, index) => (
-                <div key={index} className="item-card">
+                <div key={index} className="item-card" style={{ 
+                  backgroundColor: isDarkMode ? `${themeColors.surface}` : '#ffffff',
+                  borderColor: themeColors.border
+                }}>
                   <div className="item-header">
                     <div className="item-icon" style={{ background: activeSectionObj.color }}>
                       <FiPackage size={14} />
                     </div>
-                    <div className="item-name">{item.item}</div>
+                    <div className="item-name" style={{ color: themeColors.textPrimary }}>
+                      {item.item}
+                    </div>
                   </div>
                   <div className="item-stats">
                     <div className="item-stat">
-                      <span className="stat-value">{item.production.toLocaleString()} M</span>
-                      <span className="stat-label">Production</span>
+                      <span className="stat-value" style={{ color: themeColors.textPrimary }}>
+                        {item.production.toLocaleString()} M
+                      </span>
+                      <span className="stat-label" style={{ color: themeColors.textSecondary }}>
+                        Production
+                      </span>
                     </div>
                     <div className="item-stat">
-                      <span className="stat-value">{item.weight.toLocaleString()} KG</span>
-                      <span className="stat-label">Weight</span>
+                      <span className="stat-value" style={{ color: themeColors.textPrimary }}>
+                        {item.weight.toLocaleString()} KG
+                      </span>
+                      <span className="stat-label" style={{ color: themeColors.textSecondary }}>
+                        Weight
+                      </span>
                     </div>
                     <div className="item-stat">
-                      <span className="stat-value">{item.efficiency}%</span>
-                      <span className="stat-label">Efficiency</span>
+                      <span className="stat-value" style={{ color: themeColors.textPrimary }}>
+                        {item.efficiency}%
+                      </span>
+                      <span className="stat-label" style={{ color: themeColors.textSecondary }}>
+                        Efficiency
+                      </span>
                     </div>
                   </div>
                   <div className="item-progress">
@@ -435,28 +494,45 @@ const Production = () => {
       case 'machine-wise':
         return (
           <div className="machine-wise-report">
-            <h3>Machine-wise Performance</h3>
+            <h3 style={{ color: themeColors.textPrimary }}>Machine-wise Performance</h3>
             <div className="machine-grid">
               {activeSectionData.machineWise.map((machine, index) => (
-                <div key={index} className="machine-card">
+                <div key={index} className="machine-card" style={{ 
+                  backgroundColor: isDarkMode ? `${themeColors.surface}` : '#ffffff',
+                  borderColor: themeColors.border
+                }}>
                   <div className="machine-header">
                     <div className="machine-icon" style={{ background: activeSectionObj.color }}>
                       <FiTool size={14} />
                     </div>
-                    <div className="machine-name">{machine.machine}</div>
+                    <div className="machine-name" style={{ color: themeColors.textPrimary }}>
+                      {machine.machine}
+                    </div>
                   </div>
                   <div className="machine-stats">
                     <div className="machine-stat">
-                      <div className="stat-value">{machine.production.toLocaleString()} M</div>
-                      <div className="stat-label">Production</div>
+                      <div className="stat-value" style={{ color: themeColors.textPrimary }}>
+                        {machine.production.toLocaleString()} M
+                      </div>
+                      <div className="stat-label" style={{ color: themeColors.textSecondary }}>
+                        Production
+                      </div>
                     </div>
                     <div className="machine-stat">
-                      <div className="stat-value efficiency-high">{machine.efficiency}%</div>
-                      <div className="stat-label">Efficiency</div>
+                      <div className="stat-value efficiency-high" style={{ color: '#10b981' }}>
+                        {machine.efficiency}%
+                      </div>
+                      <div className="stat-label" style={{ color: themeColors.textSecondary }}>
+                        Efficiency
+                      </div>
                     </div>
                     <div className="machine-stat">
-                      <div className="stat-value downtime">{machine.downtime}</div>
-                      <div className="stat-label">Downtime</div>
+                      <div className="stat-value downtime" style={{ color: themeColors.textPrimary }}>
+                        {machine.downtime}
+                      </div>
+                      <div className="stat-label" style={{ color: themeColors.textSecondary }}>
+                        Downtime
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -468,30 +544,38 @@ const Production = () => {
       case 'daily':
         return (
           <div className="daily-report">
-            <h3>Daily Production Trends</h3>
+            <h3 style={{ color: themeColors.textPrimary }}>Daily Production Trends</h3>
             <div className="daily-table">
-              <table>
+              <table style={{ borderColor: themeColors.border }}>
                 <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Production (M)</th>
-                    <th>Weight (KG)</th>
-                    <th>Efficiency (%)</th>
-                    <th>Trend</th>
+                  <tr style={{ backgroundColor: isDarkMode ? `${themeColors.surface}` : '#f8f9fa' }}>
+                    <th style={{ color: themeColors.textPrimary, borderColor: themeColors.border }}>Date</th>
+                    <th style={{ color: themeColors.textPrimary, borderColor: themeColors.border }}>Production (M)</th>
+                    <th style={{ color: themeColors.textPrimary, borderColor: themeColors.border }}>Weight (KG)</th>
+                    <th style={{ color: themeColors.textPrimary, borderColor: themeColors.border }}>Efficiency (%)</th>
+                    <th style={{ color: themeColors.textPrimary, borderColor: themeColors.border }}>Trend</th>
                   </tr>
                 </thead>
                 <tbody>
                   {activeSectionData.daily.map((day, index) => (
-                    <tr key={index}>
-                      <td>{day.date}</td>
-                      <td>{day.production.toLocaleString()}</td>
-                      <td>{day.weight.toLocaleString()}</td>
-                      <td>
-                        <span className="efficiency-badge" style={{ background: day.efficiency > 85 ? '#10b98120' : '#ef444420', color: day.efficiency > 85 ? '#10b981' : '#ef4444' }}>
+                    <tr key={index} style={{ 
+                      backgroundColor: index % 2 === 0 ? 
+                        (isDarkMode ? 'rgba(255,255,255,0.02)' : '#ffffff') : 
+                        (isDarkMode ? 'rgba(255,255,255,0.05)' : '#f8f9fa'),
+                      borderColor: themeColors.border
+                    }}>
+                      <td style={{ color: themeColors.textPrimary, borderColor: themeColors.border }}>{day.date}</td>
+                      <td style={{ color: themeColors.textPrimary, borderColor: themeColors.border }}>{day.production.toLocaleString()}</td>
+                      <td style={{ color: themeColors.textPrimary, borderColor: themeColors.border }}>{day.weight.toLocaleString()}</td>
+                      <td style={{ borderColor: themeColors.border }}>
+                        <span className="efficiency-badge" style={{ 
+                          background: day.efficiency > 85 ? '#10b98120' : '#ef444420', 
+                          color: day.efficiency > 85 ? '#10b981' : '#ef4444' 
+                        }}>
                           {day.efficiency}%
                         </span>
                       </td>
-                      <td>
+                      <td style={{ borderColor: themeColors.border }}>
                         {index > 0 && (
                           <span className={`trend ${day.production > activeSectionData.daily[index - 1].production ? 'up' : 'down'}`}>
                             {day.production > activeSectionData.daily[index - 1].production ? '↗' : '↘'}
@@ -509,17 +593,21 @@ const Production = () => {
       default:
         return (
           <div className="default-report">
-            <h3>Production Overview</h3>
-            <p>Select a report type to view detailed analysis.</p>
+            <h3 style={{ color: themeColors.textPrimary }}>Production Overview</h3>
+            <p style={{ color: themeColors.textSecondary }}>Select a report type to view detailed analysis.</p>
           </div>
         );
     }
   };
 
   return (
-    <div className="production-dashboard-container">
+    <div className="production-dashboard-container" style={{ backgroundColor: themeColors.background }}>
       {/* Database Status Banner */}
-      <div className="database-status-banner">
+      <div className="database-status-banner" style={{ 
+        backgroundColor: isDarkMode ? `${themeColors.surface}` : '#f1f5f9',
+        borderBottom: `1px solid ${themeColors.border}`,
+        color: themeColors.textSecondary
+      }}>
         <FiDatabase size={16} />
         <span>Production Database Connected • Last Updated: {new Date().toLocaleTimeString()}</span>
       </div>
@@ -531,20 +619,29 @@ const Production = () => {
           className={`sidebar ${sidebarCollapsed ? 'collapsed' : ''}`}
           onMouseEnter={() => !sidebarCollapsed && setSidebarCollapsed(false)}
           onMouseLeave={() => sidebarCollapsed && setSidebarCollapsed(true)}
+          style={{ 
+            backgroundColor: isDarkMode ? `${themeColors.surface}` : '#ffffff',
+            borderRight: `1px solid ${themeColors.border}`
+          }}
         >
-          <div className="sidebar-header">
+          <div className="sidebar-header" style={{ 
+            borderBottom: `1px solid ${themeColors.border}`
+          }}>
             <div className="sidebar-icon" style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)' }}>
               <FiGrid size={20} />
             </div>
             {!sidebarCollapsed && (
               <>
-                <div className="sidebar-title">Production Sections</div>
+                <div className="sidebar-title" style={{ color: themeColors.textPrimary }}>
+                  Production Sections
+                </div>
                 <button 
                   className="collapse-btn"
                   onClick={(e) => {
                     e.stopPropagation();
                     setSidebarCollapsed(!sidebarCollapsed);
                   }}
+                  style={{ color: themeColors.textSecondary }}
                 >
                   <FiChevronLeft size={16} />
                 </button>
@@ -562,7 +659,11 @@ const Production = () => {
                   background: `${section.color}20`,
                   borderColor: section.color,
                   color: section.color
-                } : {}}
+                } : {
+                  color: themeColors.textPrimary,
+                  borderColor: themeColors.border,
+                  backgroundColor: isDarkMode ? `${themeColors.surface}` : '#ffffff'
+                }}
                 data-tooltip={section.name}
               >
                 <div className="section-btn-icon" style={{ color: section.color }}>
@@ -570,8 +671,12 @@ const Production = () => {
                 </div>
                 {!sidebarCollapsed && (
                   <div className="section-btn-text">
-                    <div className="section-btn-name">{section.name}</div>
-                    <div className="section-btn-desc">{section.description}</div>
+                    <div className="section-btn-name" style={{ color: activeSection === section.id ? section.color : themeColors.textPrimary }}>
+                      {section.name}
+                    </div>
+                    <div className="section-btn-desc" style={{ color: themeColors.textSecondary }}>
+                      {section.description}
+                    </div>
                   </div>
                 )}
                 {activeSection === section.id && !sidebarCollapsed && (
@@ -585,12 +690,14 @@ const Production = () => {
           </div>
           
           {!sidebarCollapsed && (
-            <div className="sidebar-footer">
+            <div className="sidebar-footer" style={{ 
+              borderTop: `1px solid ${themeColors.border}`
+            }}>
               <div className="user-info">
                 <div className="user-avatar">A</div>
                 <div className="user-details">
-                  <div className="user-name">Afsar</div>
-                  <div className="user-role">Production Manager</div>
+                  <div className="user-name" style={{ color: themeColors.textPrimary }}>Afsar</div>
+                  <div className="user-role" style={{ color: themeColors.textSecondary }}>Production Manager</div>
                 </div>
               </div>
             </div>
@@ -600,21 +707,34 @@ const Production = () => {
         {/* Main Content */}
         <div className={`main-content ${sidebarCollapsed ? 'expanded' : ''}`}>
           {/* Header */}
-          <div className="content-header">
+          <div className="content-header" style={{ 
+            backgroundColor: isDarkMode ? `${themeColors.surface}` : '#ffffff',
+            borderBottom: `1px solid ${themeColors.border}`
+          }}>
             <div>
               <div className="breadcrumb">
-                <button onClick={() => navigate('/dashboard')} className="breadcrumb-btn">
+                <button onClick={() => navigate('/dashboard')} className="breadcrumb-btn" style={{ 
+                  color: themeColors.primary,
+                  borderColor: themeColors.border,
+                  backgroundColor: isDarkMode ? `${themeColors.surface}` : '#ffffff'
+                }}>
                   <FiHome size={16} /> Dashboard
                 </button>
-                <span className="breadcrumb-separator">/</span>
-                <span className="breadcrumb-current">Production Dashboard</span>
+                <span className="breadcrumb-separator" style={{ color: themeColors.textSecondary }}>
+                  /
+                </span>
+                <span className="breadcrumb-current" style={{ color: themeColors.textPrimary }}>
+                  Production Dashboard
+                </span>
               </div>
-              <h1 className="page-title">
+              <h1 className="page-title" style={{ color: themeColors.textPrimary }}>
                 <div className="title-icon" style={{ background: activeSectionObj.color }}>
                   <activeSectionObj.icon size={24} />
                 </div>
                 {activeSectionObj.name}
-                <span className="title-sub">Production Analytics & Reports</span>
+                <span className="title-sub" style={{ color: themeColors.textSecondary }}>
+                  Production Analytics & Reports
+                </span>
               </h1>
             </div>
             
@@ -622,15 +742,24 @@ const Production = () => {
               <button onClick={handleGoToDetail} className="detail-btn" style={{ background: activeSectionObj.color }}>
                 <FiEye size={16} /> Go to Detail Page
               </button>
-              <button onClick={handleExportReport} className="export-btn">
+              <button onClick={handleExportReport} className="export-btn" style={{ 
+                backgroundColor: isDarkMode ? `${themeColors.surface}` : '#f8f9fa',
+                color: themeColors.textPrimary,
+                border: `1px solid ${themeColors.border}`
+              }}>
                 <FiDownload size={16} /> Export Report
               </button>
-              <button onClick={handlePrintReport} className="print-btn">
+              <button onClick={handlePrintReport} className="print-btn" style={{ 
+                backgroundColor: isDarkMode ? `${themeColors.surface}` : '#f8f9fa',
+                color: themeColors.textPrimary,
+                border: `1px solid ${themeColors.border}`
+              }}>
                 <FiPrinter size={16} /> Print
               </button>
               <button 
                 className="sidebar-toggle-btn"
                 onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                style={{ color: themeColors.textPrimary }}
               >
                 <FiMenu size={20} />
               </button>
@@ -638,8 +767,11 @@ const Production = () => {
           </div>
 
           {/* Time Range Selector */}
-          <div className="time-range-selector">
-            <div className="selector-header">
+          <div className="time-range-selector" style={{ 
+            backgroundColor: isDarkMode ? `${themeColors.surface}` : '#ffffff',
+            border: `1px solid ${themeColors.border}`
+          }}>
+            <div className="selector-header" style={{ color: themeColors.textPrimary }}>
               <FiCalendar size={16} />
               <span>Select Time Range</span>
             </div>
@@ -652,7 +784,11 @@ const Production = () => {
                   style={timeRange === range.id ? { 
                     background: activeSectionObj.color,
                     borderColor: activeSectionObj.color
-                  } : {}}
+                  } : {
+                    backgroundColor: isDarkMode ? `${themeColors.surface}` : '#f8f9fa',
+                    color: themeColors.textPrimary,
+                    border: `1px solid ${themeColors.border}`
+                  }}
                 >
                   <range.icon size={14} />
                   {range.name}
@@ -662,8 +798,11 @@ const Production = () => {
           </div>
 
           {/* Report Type Selector */}
-          <div className="report-type-selector">
-            <div className="selector-header">
+          <div className="report-type-selector" style={{ 
+            backgroundColor: isDarkMode ? `${themeColors.surface}` : '#ffffff',
+            border: `1px solid ${themeColors.border}`
+          }}>
+            <div className="selector-header" style={{ color: themeColors.textPrimary }}>
               <FiBarChart2 size={16} />
               <span>Report Type</span>
             </div>
@@ -676,7 +815,11 @@ const Production = () => {
                   style={reportType === type.id ? { 
                     background: activeSectionObj.color,
                     borderColor: activeSectionObj.color
-                  } : {}}
+                  } : {
+                    backgroundColor: isDarkMode ? `${themeColors.surface}` : '#f8f9fa',
+                    color: themeColors.textPrimary,
+                    border: `1px solid ${themeColors.border}`
+                  }}
                 >
                   <type.icon size={14} />
                   {type.name}
@@ -686,20 +829,25 @@ const Production = () => {
           </div>
 
           {/* Report Content */}
-          <div className="report-content">
+          <div className="report-content" style={{ 
+            backgroundColor: isDarkMode ? `${themeColors.surface}` : '#ffffff',
+            border: `1px solid ${themeColors.border}`
+          }}>
             <div className="report-header">
-              <h2>
+              <h2 style={{ color: themeColors.textPrimary }}>
                 {activeSectionObj.name} {reportType.charAt(0).toUpperCase() + reportType.slice(1)} Report
-                <span className="report-subtitle">• {timeRange} • Generated by: Afsar</span>
+                <span className="report-subtitle" style={{ color: themeColors.textSecondary }}>
+                  • {timeRange} • Generated by: Afsar
+                </span>
               </h2>
               <div className="report-meta">
-                <span className="meta-item">
+                <span className="meta-item" style={{ color: themeColors.textSecondary }}>
                   <FiCalendar size={12} /> {new Date().toLocaleDateString()}
                 </span>
-                <span className="meta-item">
+                <span className="meta-item" style={{ color: themeColors.textSecondary }}>
                   <FiClock size={12} /> {new Date().toLocaleTimeString()}
                 </span>
-                <span className="meta-item">
+                <span className="meta-item" style={{ color: themeColors.textSecondary }}>
                   <FiDatabase size={12} /> Total Records: {activeSectionData.summary.totalRecords}
                 </span>
               </div>
@@ -712,43 +860,71 @@ const Production = () => {
 
           {/* Quick Stats */}
           <div className="quick-stats">
-            <div className="stat-card quick">
+            <div className="stat-card quick" style={{ 
+              backgroundColor: isDarkMode ? `${themeColors.surface}` : '#ffffff',
+              border: `1px solid ${themeColors.border}`
+            }}>
               <div className="stat-icon" style={{ background: activeSectionObj.color }}>
                 <FiTrendingUp size={20} />
               </div>
               <div>
-                <div className="stat-value">{activeSectionData.summary.todayProduction.toLocaleString()} M</div>
-                <div className="stat-label">Today's Production</div>
+                <div className="stat-value" style={{ color: themeColors.textPrimary }}>
+                  {activeSectionData.summary.todayProduction.toLocaleString()} M
+                </div>
+                <div className="stat-label" style={{ color: themeColors.textSecondary }}>
+                  Today's Production
+                </div>
               </div>
             </div>
             
-            <div className="stat-card quick">
+            <div className="stat-card quick" style={{ 
+              backgroundColor: isDarkMode ? `${themeColors.surface}` : '#ffffff',
+              border: `1px solid ${themeColors.border}`
+            }}>
               <div className="stat-icon" style={{ background: activeSectionObj.color }}>
                 <FiZap size={20} />
               </div>
               <div>
-                <div className="stat-value">{activeSectionData.summary.todayEfficiency}%</div>
-                <div className="stat-label">Today's Efficiency</div>
+                <div className="stat-value" style={{ color: themeColors.textPrimary }}>
+                  {activeSectionData.summary.todayEfficiency}%
+                </div>
+                <div className="stat-label" style={{ color: themeColors.textSecondary }}>
+                  Today's Efficiency
+                </div>
               </div>
             </div>
             
-            <div className="stat-card quick">
+            <div className="stat-card quick" style={{ 
+              backgroundColor: isDarkMode ? `${themeColors.surface}` : '#ffffff',
+              border: `1px solid ${themeColors.border}`
+            }}>
               <div className="stat-icon" style={{ background: activeSectionObj.color }}>
                 <FiTarget size={20} />
               </div>
               <div>
-                <div className="stat-value">{activeSectionData.summary.todayWeight.toLocaleString()} KG</div>
-                <div className="stat-label">Today's Weight</div>
+                <div className="stat-value" style={{ color: themeColors.textPrimary }}>
+                  {activeSectionData.summary.todayWeight.toLocaleString()} KG
+                </div>
+                <div className="stat-label" style={{ color: themeColors.textSecondary }}>
+                  Today's Weight
+                </div>
               </div>
             </div>
             
-            <div className="stat-card quick">
+            <div className="stat-card quick" style={{ 
+              backgroundColor: isDarkMode ? `${themeColors.surface}` : '#ffffff',
+              border: `1px solid ${themeColors.border}`
+            }}>
               <div className="stat-icon" style={{ background: activeSectionObj.color }}>
                 <FiActivity size={20} />
               </div>
               <div>
-                <div className="stat-value">{activeSectionData.summary.avgEfficiency}%</div>
-                <div className="stat-label">Avg Efficiency</div>
+                <div className="stat-value" style={{ color: themeColors.textPrimary }}>
+                  {activeSectionData.summary.avgEfficiency}%
+                </div>
+                <div className="stat-label" style={{ color: themeColors.textSecondary }}>
+                  Avg Efficiency
+                </div>
               </div>
             </div>
           </div>
@@ -756,24 +932,33 @@ const Production = () => {
       </div>
 
       {/* Footer */}
-      <div className="dashboard-footer">
+      <div className="dashboard-footer" style={{ 
+        backgroundColor: isDarkMode ? `${themeColors.surface}` : '#f8f9fa',
+        borderTop: `1px solid ${themeColors.border}`
+      }}>
         <div className="footer-content">
           <div className="footer-left">
-            <div className="footer-title">Production Analytics Dashboard</div>
-            <div className="footer-subtitle">
+            <div className="footer-title" style={{ color: themeColors.textPrimary }}>
+              Production Analytics Dashboard
+            </div>
+            <div className="footer-subtitle" style={{ color: themeColors.textSecondary }}>
               Active Section: {activeSectionObj.name} • Report Type: {reportType} • 
               Time Range: {timeRange} • Managed by: Afsar
             </div>
           </div>
           <div className="footer-right">
-            <button onClick={() => window.location.reload()} className="refresh-btn">
+            <button onClick={() => window.location.reload()} className="refresh-btn" style={{ 
+              backgroundColor: isDarkMode ? `${themeColors.surface}` : '#ffffff',
+              color: themeColors.textPrimary,
+              border: `1px solid ${themeColors.border}`
+            }}>
               <FiRefreshCw size={14} /> Refresh Data
             </button>
             <div className="footer-info">
-              <span className="info-item">
+              <span className="info-item" style={{ color: themeColors.textSecondary }}>
                 <FiDatabase size={12} /> Database Connected
               </span>
-              <span className="info-item">
+              <span className="info-item" style={{ color: themeColors.textSecondary }}>
                 <FiClock size={12} /> {new Date().toLocaleTimeString()}
               </span>
             </div>

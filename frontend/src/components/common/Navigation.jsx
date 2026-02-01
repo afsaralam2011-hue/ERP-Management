@@ -1,69 +1,68 @@
-// src/components/common/Navigation.jsx
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+// frontend/src/components/common/Navigation.jsx
+import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
-  FiHome,
-  FiUsers,
-  FiDollarSign,
-  FiPackage,
-  FiShoppingCart,
-  FiCpu,
-  FiTruck,
-  FiSettings,
-  FiLogOut,
-  FiGrid,
-  FiFolder,
-  FiLayers,
-  FiBox,
-  FiActivity,
-  FiClipboard,
-  FiTool,
-  FiDatabase,
-  FiArchive,
-  FiCheckSquare,
-  FiScissors,
-  FiX,
-  FiChevronDown,
-  FiMenu,
-  FiRefreshCw,
-  FiClock,
-  FiTrendingUp,
-  FiTrendingDown
-} from 'react-icons/fi';
-  import { ThemeContext, useTheme } from '../../contexts/ThemeContext';
-  import './Navigation.css';
+  FiHome, FiUsers, FiDollarSign, FiPackage, FiShoppingCart,
+  FiCpu, FiTruck, FiSettings, FiLogOut, FiGrid, FiFolder,
+  FiLayers, FiBox, FiActivity, FiClipboard, FiTool, FiDatabase,
+  FiArchive, FiCheckSquare, FiScissors, FiX, FiChevronDown,
+  FiMenu, FiRefreshCw, FiEdit, FiFileText, FiBarChart2,
+  FiShoppingBag, FiCalendar, FiTrendingUp, FiMessageSquare,
+  FiBell, FiUser, FiCreditCard, FiGlobe, FiMapPin, FiTarget,
+  FiStar, FiAward, FiTrendingUp as FiTrendUp
+} from "react-icons/fi";
+import { useTheme } from '../../contexts/ThemeContext';
+import "./Navigation.css";
 
 const Navigation = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const currentPath = location.pathname;
   const sidebarRef = useRef(null);
-  const { theme, primaryColor } = useTheme();
+  const { theme, primaryColor, mode, isDarkMode } = useTheme();
 
   // Dynamic user data function
   const getUserData = () => {
-    // Try multiple storage locations for user data
-    const userName = localStorage.getItem('userName') ||
-      sessionStorage.getItem('userName') ||
-      localStorage.getItem('display_name') ||
-      sessionStorage.getItem('display_name') ||
-      localStorage.getItem('userDisplayName') ||
-      sessionStorage.getItem('userDisplayName') ||
-      "Admin User";
+    let userData = null;
+    let userEmail = "admin@pwi.com";
+    let userName = "Admin User";
 
-    const userEmail = localStorage.getItem('userEmail') ||
-      sessionStorage.getItem('userEmail') ||
-      localStorage.getItem('email') ||
-      sessionStorage.getItem('email') ||
-      localStorage.getItem('userEmailAddress') ||
-      sessionStorage.getItem('userEmailAddress') ||
-      "admin@pwi.com";
+    const localUser = localStorage.getItem("user");
+    const sessionUser = sessionStorage.getItem("user");
 
-    const username = localStorage.getItem('username') ||
-      sessionStorage.getItem('username') ||
-      localStorage.getItem('userUsername') ||
-      sessionStorage.getItem('userUsername') ||
-      userName.toLowerCase().replace(/\s+/g, '.');
+    if (localUser) {
+      try {
+        userData = JSON.parse(localUser);
+      } catch (error) {
+        console.error("Error parsing localStorage user:", error);
+      }
+    } else if (sessionUser) {
+      try {
+        userData = JSON.parse(sessionUser);
+      } catch (error) {
+        console.error("Error parsing sessionStorage user:", error);
+      }
+    }
+
+    if (userData) {
+      if (userData.user_metadata?.full_name) {
+        userName = userData.user_metadata.full_name;
+      } else if (userData.user_metadata?.name) {
+        userName = userData.user_metadata.name;
+      } else if (userData.email) {
+        const emailParts = userData.email.split("@")[0];
+        userName = emailParts
+          .split(".")
+          .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+          .join(" ");
+      }
+
+      if (userData.email) {
+        userEmail = userData.email;
+      }
+    }
+
+    const username = userName.toLowerCase().replace(/\s+/g, ".");
 
     const getInitials = (name) => {
       if (!name || name.trim() === "") return "AU";
@@ -77,7 +76,9 @@ const Navigation = () => {
       email: userEmail,
       username: username,
       initials: getInitials(userName),
-      role: 'Administrator'
+      role: userData?.role || "Administrator",
+      department: userData?.department || "Management",
+      originalData: userData,
     };
   };
 
@@ -86,185 +87,159 @@ const Navigation = () => {
   const [mobileLogoMissing, setMobileLogoMissing] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [isHovering, setIsHovering] = useState(false);
   const hoverTimerRef = useRef(null);
   const leaveTimerRef = useRef(null);
 
-  // Update user data when storage changes
-  useEffect(() => {
-    const handleStorageChange = () => {
-      setUserData(getUserData());
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-
-    // Check periodically for same-tab changes
-    const interval = setInterval(() => {
-      const newUserData = getUserData();
-      if (JSON.stringify(newUserData) !== JSON.stringify(userData)) {
-        setUserData(newUserData);
-      }
-    }, 1000);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      clearInterval(interval);
-    };
-  }, [userData]);
-
-  // Theme colors based on current theme
+  // Enhanced Theme colors with vibrant colors
   const themeColors = useMemo(() => {
     const baseColors = {
-      primary: primaryColor,
-      secondary: '#8B5CF6',
-      accent: '#059669',
-      highlight: '#F0ABFC',
-      error: '#EF4444',
-      success: '#10B981',
-      warning: '#F59E0B',
-      info: '#3B82F6'
+      primary: primaryColor || "#3B82F6",
+      secondary: "#8B5CF6",
+      accent: "#10B981",
+      highlight: "#F0ABFC",
+      error: "#EF4444",
+      success: "#10B981",
+      warning: "#F59E0B",
+      info: "#3B82F6",
+      purple: "#A855F7",
+      pink: "#EC4899",
+      orange: "#F97316",
+      cyan: "#06B6D4",
+      lime: "#84CC16",
     };
 
-    // Theme-specific colors
-    if (theme === 'dark') {
+    if (mode === "dark") {
       return {
         ...baseColors,
-        bgPrimary: '#111827',
-        bgSecondary: '#1F2937',
-        bgCard: '#1F2937',
-        textPrimary: '#F9FAFB',
-        textSecondary: '#D1D5DB',
-        textMuted: '#9CA3AF',
-        border: '#374151',
-        hoverBg: '#374151',
-        activeBg: '#4B5563',
-        sidebarBg: '#111827',
-        headerBg: '#1F2937',
-        badgeBackground: '#DC2626',
-        badgeText: '#FFFFFF'
+        bgPrimary: "#0F172A",
+        bgSecondary: "#1E293B",
+        bgCard: "#1E293B",
+        textPrimary: "#F8FAFC",
+        textSecondary: "#CBD5E1",
+        textMuted: "#94A3B8",
+        border: "#334155",
+        hoverBg: "rgba(255, 255, 255, 0.1)",
+        activeBg: "rgba(59, 130, 246, 0.25)",
+        sidebarBg: "#0F172A",
+        headerBg: "#1E293B",
+        badgeBackground: "#DC2626",
+        badgeText: "#FFFFFF",
+        gradientPrimary: "linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%)",
+        gradientSecondary: "linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)",
+        shadow: "0 10px 25px rgba(0, 0, 0, 0.5)",
+        shadowLight: "0 4px 12px rgba(0, 0, 0, 0.3)",
+        highlightGlow: "0 0 20px rgba(59, 130, 246, 0.3)",
       };
-    } else if (theme === 'blue') {
+    } else if (mode === "blue") {
       return {
         ...baseColors,
-        bgPrimary: '#EFF6FF',
-        bgSecondary: '#DBEAFE',
-        bgCard: '#FFFFFF',
-        textPrimary: '#1E40AF',
-        textSecondary: '#3B82F6',
-        textMuted: '#60A5FA',
-        border: '#BFDBFE',
-        hoverBg: '#DBEAFE',
-        activeBg: '#BFDBFE',
-        sidebarBg: '#EFF6FF',
-        headerBg: '#FFFFFF',
-        badgeBackground: '#DC2626',
-        badgeText: '#FFFFFF'
+        bgPrimary: "#EFF6FF",
+        bgSecondary: "#DBEAFE",
+        bgCard: "#FFFFFF",
+        textPrimary: "#1E40AF",
+        textSecondary: "#3B82F6",
+        textMuted: "#60A5FA",
+        border: "#BFDBFE",
+        hoverBg: "rgba(59, 130, 246, 0.15)",
+        activeBg: "rgba(59, 130, 246, 0.2)",
+        sidebarBg: "#EFF6FF",
+        headerBg: "#FFFFFF",
+        badgeBackground: "#DC2626",
+        badgeText: "#FFFFFF",
+        gradientPrimary: "linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%)",
+        gradientSecondary: "linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)",
+        shadow: "0 10px 25px rgba(59, 130, 246, 0.2)",
+        shadowLight: "0 4px 12px rgba(59, 130, 246, 0.15)",
+        highlightGlow: "0 0 20px rgba(59, 130, 246, 0.2)",
       };
-    } else if (theme === 'green') {
+    } else if (mode === "green") {
       return {
         ...baseColors,
-        bgPrimary: '#F0FDF4',
-        bgSecondary: '#DCFCE7',
-        bgCard: '#FFFFFF',
-        textPrimary: '#065F46',
-        textSecondary: '#059669',
-        textMuted: '#34D399',
-        border: '#BBF7D0',
-        hoverBg: '#DCFCE7',
-        activeBg: '#BBF7D0',
-        sidebarBg: '#F0FDF4',
-        headerBg: '#FFFFFF',
-        badgeBackground: '#DC2626',
-        badgeText: '#FFFFFF'
+        bgPrimary: "#F0FDF4",
+        bgSecondary: "#DCFCE7",
+        bgCard: "#FFFFFF",
+        textPrimary: "#065F46",
+        textSecondary: "#059669",
+        textMuted: "#34D399",
+        border: "#BBF7D0",
+        hoverBg: "rgba(16, 185, 129, 0.15)",
+        activeBg: "rgba(16, 185, 129, 0.2)",
+        sidebarBg: "#F0FDF4",
+        headerBg: "#FFFFFF",
+        badgeBackground: "#DC2626",
+        badgeText: "#FFFFFF",
+        gradientPrimary: "linear-gradient(135deg, #10B981 0%, #047857 100%)",
+        gradientSecondary: "linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)",
+        shadow: "0 10px 25px rgba(16, 185, 129, 0.2)",
+        shadowLight: "0 4px 12px rgba(16, 185, 129, 0.15)",
+        highlightGlow: "0 0 20px rgba(16, 185, 129, 0.2)",
       };
-    } else { // light theme
+    } else {
       return {
         ...baseColors,
-        bgPrimary: '#FFFFFF',
-        bgSecondary: '#F8FAFC',
-        bgCard: '#FFFFFF',
-        textPrimary: '#1F2937',
-        textSecondary: '#4B5563',
-        textMuted: '#6B7280',
-        border: '#E5E7EB',
-        hoverBg: '#F3F4F6',
-        activeBg: '#E5E7EB',
-        sidebarBg: '#F9FAFB',
-        headerBg: '#FFFFFF',
-        badgeBackground: '#DC2626',
-        badgeText: '#FFFFFF'
+        bgPrimary: "#FFFFFF",
+        bgSecondary: "#F8FAFC",
+        bgCard: "#FFFFFF",
+        textPrimary: "#1F2937",
+        textSecondary: "#4B5563",
+        textMuted: "#6B7280",
+        border: "#E5E7EB",
+        hoverBg: "#F3F4F6",
+        activeBg: "rgba(59, 130, 246, 0.1)",
+        sidebarBg: "#F9FAFB",
+        headerBg: "#FFFFFF",
+        badgeBackground: "#DC2626",
+        badgeText: "#FFFFFF",
+        gradientPrimary: "linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%)",
+        gradientSecondary: "linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)",
+        shadow: "0 10px 25px rgba(0, 0, 0, 0.1)",
+        shadowLight: "0 4px 12px rgba(0, 0, 0, 0.08)",
+        highlightGlow: "0 0 20px rgba(59, 130, 246, 0.15)",
       };
     }
-  }, [theme, primaryColor]);
+  }, [mode, primaryColor]);
 
-  // Function to get text color based on theme
-  const getTextColor = (type = 'primary') => {
-    switch (type) {
-      case 'primary': return themeColors.textPrimary;
-      case 'secondary': return themeColors.textSecondary;
-      case 'muted': return themeColors.textMuted;
-      case 'badge': return themeColors.badgeText;
-      default: return themeColors.textPrimary;
-    }
-  };
-
-  // Function to get contrast color for badges
-  const getContrastColor = (hexColor) => {
-    if (!hexColor || typeof hexColor !== 'string') return '#FFFFFF';
-    const hex = hexColor.replace('#', '');
-    if (hex.length !== 6) return '#FFFFFF';
+  const getContrastColor = useCallback((hexColor) => {
+    if (!hexColor || typeof hexColor !== "string") return "#FFFFFF";
+    const hex = hexColor.replace("#", "");
+    if (hex.length !== 6) return "#FFFFFF";
     const r = parseInt(hex.substring(0, 2), 16);
     const g = parseInt(hex.substring(2, 4), 16);
     const b = parseInt(hex.substring(4, 6), 16);
     const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-    return luminance > 0.5 ? '#000000' : '#FFFFFF';
-  };
-
-  // Daily updates count state
-  const [dailyUpdates, setDailyUpdates] = useState({
-    production: 0,
-    finance: 0,
-    sales: 0,
-    logistics: 0,
-    hr: 0,
-    it: 0
-  });
-
-  useEffect(() => {
-    const savedUpdates = localStorage.getItem('daily_updates');
-    if (savedUpdates) {
-      try {
-        setDailyUpdates(JSON.parse(savedUpdates));
-      } catch (error) {
-        console.error('Error parsing daily updates:', error);
-      }
-    }
+    return luminance > 0.5 ? "#000000" : "#FFFFFF";
   }, []);
 
-  // Expanded sections state
-  const [expandedSections, setExpandedSections] = useState({
-    dashboard: currentPath === '/dashboard',
-    production: currentPath.includes('/production') || currentPath.includes('/production-sections'),
-    rawMaterial: currentPath.includes('/raw-material'),
-    flattening: currentPath.includes('/flattening'),
-    spiral: currentPath.includes('/spiral'),
-    pvc: currentPath.includes('/pvc'),
-    cutting: currentPath.includes('/cutting'),
-    finishedGoods: currentPath.includes('/finished-goods'),
-    hr: currentPath.includes('/hr'),
-    finance: currentPath.includes('/finance'),
-    sales: currentPath.includes('/sales'),
-    it: currentPath.includes('/it'),
-    logistics: currentPath.includes('/logistics')
+  const [dailyUpdates] = useState({
+    production: 12,
+    finance: 5,
+    sales: 8,
+    logistics: 3,
+    hr: 7,
+    it: 2,
   });
 
-  useEffect(() => {
-    return () => {
-      if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
-      if (leaveTimerRef.current) clearTimeout(leaveTimerRef.current);
+  const [expandedSections, setExpandedSections] = useState(() => {
+    const sections = {
+      dashboard: currentPath === "/dashboard",
+      production: currentPath.includes("/production") || currentPath.includes("/production-sections"),
+      rawMaterial: currentPath.includes("/raw-material"),
+      flattening: currentPath.includes("/flattening"),
+      spiral: currentPath.includes("/spiral"),
+      pvc: currentPath.includes("/pvc"),
+      cutting: currentPath.includes("/cutting"),
+      finishedGoods: currentPath.includes("/finished-goods"),
+      hr: currentPath.includes("/hr"),
+      finance: currentPath.includes("/finance"),
+      sales: currentPath.includes("/sales"),
+      it: currentPath.includes("/it"),
+      logistics: currentPath.includes("/logistics"),
     };
-  }, []);
+    
+    return sections;
+  });
 
+  // Responsive handling
   useEffect(() => {
     const handleResize = () => {
       const mobile = window.innerWidth < 1024;
@@ -273,537 +248,513 @@ const Navigation = () => {
         setSidebarOpen(false);
       } else {
         setSidebarOpen(true);
-        setIsHovering(false);
       }
     };
 
-    window.addEventListener('resize', handleResize);
     handleResize();
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // Update expanded sections
   useEffect(() => {
     const newExpandedSections = { ...expandedSections };
-    Object.keys(newExpandedSections).forEach(key => {
-      if (currentPath.includes(key.replace('-', '')) ||
-        (key === 'production' && (currentPath.includes('/production') || currentPath.includes('/production-sections')))) {
-        newExpandedSections[key] = true;
+    
+    Object.keys(newExpandedSections).forEach((key) => {
+      if (key === "production") {
+        if (currentPath.includes("/production") || currentPath.includes("/production-sections")) {
+          newExpandedSections[key] = true;
+        }
+      } else if (key === "dashboard") {
+        newExpandedSections[key] = currentPath === "/dashboard";
+      } else {
+        newExpandedSections[key] = currentPath.includes(key.replace("finishedGoods", "finished-goods"));
       }
     });
+    
     setExpandedSections(newExpandedSections);
   }, [currentPath]);
 
+  // Close sidebar when clicking outside on mobile
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (isMobile && sidebarOpen && sidebarRef.current && !sidebarRef.current.contains(event.target)) {
+      if (
+        isMobile &&
+        sidebarOpen &&
+        sidebarRef.current &&
+        !sidebarRef.current.contains(event.target) &&
+        !event.target.closest('.mobile-menu-button')
+      ) {
         closeMobileMenu();
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('touchstart', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('touchstart', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
     };
   }, [isMobile, sidebarOpen]);
 
-  const handleLogout = () => {
-    localStorage.clear();
-    sessionStorage.clear();
-    navigate('/login');
-  };
+  // Hover Effect - Mouse enter/leave handlers
+  useEffect(() => {
+    if (isMobile) return;
 
-  const toggleSection = (section, e) => {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-    setExpandedSections(prev => ({
-      ...prev,
-      [section]: !prev[section]
-    }));
-  };
-
-  const toggleSectionKey = useCallback((section, e) => {
-    if (!e) return;
-    const key = e.key;
-    if (key === 'Enter' || key === ' ') {
-      e.preventDefault();
-      toggleSection(section, e);
-    }
-  }, []);
-
-  const handleSidebarMouseEnter = () => {
-    if (!isMobile && !sidebarOpen) {
+    const handleMouseEnter = () => {
       if (leaveTimerRef.current) {
         clearTimeout(leaveTimerRef.current);
         leaveTimerRef.current = null;
       }
+      
       hoverTimerRef.current = setTimeout(() => {
-        setIsHovering(true);
-        setSidebarOpen(true);
-      }, 100);
-    }
-  };
+        if (!sidebarOpen) {
+          setSidebarOpen(true);
+        }
+      }, 150);
+    };
 
-  const handleSidebarMouseLeave = () => {
-    if (!isMobile && sidebarOpen) {
+    const handleMouseLeave = () => {
       if (hoverTimerRef.current) {
         clearTimeout(hoverTimerRef.current);
         hoverTimerRef.current = null;
       }
+      
       leaveTimerRef.current = setTimeout(() => {
-        setIsHovering(false);
-        setSidebarOpen(false);
-      }, 200);
+        if (sidebarOpen) {
+          setSidebarOpen(false);
+        }
+      }, 300);
+    };
+
+    const sidebarElement = sidebarRef.current;
+    if (sidebarElement) {
+      sidebarElement.addEventListener('mouseenter', handleMouseEnter);
+      sidebarElement.addEventListener('mouseleave', handleMouseLeave);
     }
+
+    return () => {
+      if (sidebarElement) {
+        sidebarElement.removeEventListener('mouseenter', handleMouseEnter);
+        sidebarElement.removeEventListener('mouseleave', handleMouseLeave);
+      }
+      if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
+      if (leaveTimerRef.current) clearTimeout(leaveTimerRef.current);
+    };
+  }, [isMobile, sidebarOpen]);
+
+  // User data sync
+  useEffect(() => {
+    const loadAndUpdateUserData = () => {
+      const newUserData = getUserData();
+      setUserData(newUserData);
+    };
+
+    loadAndUpdateUserData();
+    window.addEventListener("authChange", loadAndUpdateUserData);
+    return () => window.removeEventListener("authChange", loadAndUpdateUserData);
+  }, []);
+
+  // Cleanup timers
+  useEffect(() => {
+    return () => {
+      if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
+      if (leaveTimerRef.current) clearTimeout(leaveTimerRef.current);
+    };
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.clear();
+    sessionStorage.clear();
+    window.dispatchEvent(new Event("authChange"));
+    navigate("/login");
   };
 
+  const toggleSection = useCallback((section, e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    setExpandedSections((prev) => ({
+      ...prev,
+      [section]: !prev[section],
+    }));
+  }, []);
+
   const toggleMobileMenu = () => {
-    setSidebarOpen(true);
+    setSidebarOpen(prev => !prev);
   };
 
   const closeMobileMenu = () => {
     setSidebarOpen(false);
   };
 
-  const resetDepartmentUpdates = (department, e) => {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-    setDailyUpdates(prev => {
-      const newUpdates = { ...prev, [department]: 0 };
-      localStorage.setItem('daily_updates', JSON.stringify(newUpdates));
-      return newUpdates;
-    });
-  };
+  // User Avatar Component
+  const UserAvatar = useCallback(
+    ({ size = "default" }) => {
+      const avatarSize = size === "mobile" ? 36 : 40;
 
-  const UserAvatar = useCallback(({ size = 'default', showTooltip = true }) => {
-    const avatarSize = size === 'mobile' ? 36 : 40;
-
-    return (
-      <div
-        className="user-avatar"
-        role="img"
-        aria-label={userData.name}
-        style={{
-          width: `${avatarSize}px`,
-          height: `${avatarSize}px`,
-          background: `linear-gradient(135deg, ${themeColors.primary} 0%, ${themeColors.secondary} 100%)`,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          borderRadius: '50%',
-          color: getContrastColor(themeColors.primary),
-          fontWeight: 'bold',
-          fontSize: size === 'mobile' ? '14px' : '16px',
-          position: 'relative',
-          border: `2px solid ${themeColors.accent}`,
-          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)'
-        }}
-      >
-        {userData.initials}
-
-        {!sidebarOpen && showTooltip && !isMobile && (
-          <div
-            className="user-profile-tooltip"
-            role="group"
-            aria-hidden={!sidebarOpen}
-            style={{
-              position: 'absolute',
-              left: '50px',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              background: themeColors.bgCard,
-              border: `1px solid ${themeColors.border}`,
-              borderRadius: '8px',
-              padding: '12px',
-              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
-              zIndex: 1001,
-              minWidth: '200px',
-              opacity: 0,
-              visibility: 'hidden',
-              transition: 'all 0.2s ease',
-              pointerEvents: 'none'
-            }}
-          >
-            <div className="tooltip-user-info">
-              <div className="tooltip-user-name" style={{
-                fontSize: '14px',
-                fontWeight: 600,
-                color: themeColors.textPrimary
-              }}>
-                {userData.name}
-              </div>
-              <div className="tooltip-user-email" style={{
-                fontSize: '12px',
-                color: themeColors.textSecondary
-              }}>
-                {userData.email}
-              </div>
-              <div className="tooltip-user-username" style={{
-                fontSize: '11px',
-                color: themeColors.accent,
-                marginTop: '2px'
-              }}>
-                @{userData.username}
-              </div>
-              <div className="tooltip-user-role" style={{
-                fontSize: '10px',
-                padding: '2px 8px',
-                borderRadius: '10px',
-                display: 'inline-block',
-                width: 'fit-content',
-                marginTop: '4px',
-                background: themeColors.primary,
-                color: getContrastColor(themeColors.primary),
-                fontWeight: 600
-              }}>
-                {userData.role}
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  }, [userData, sidebarOpen, themeColors, isMobile, getContrastColor]);
-
-  const navigationItems = useMemo(() => ({
-    dashboard: {
-      path: '/dashboard',
-      label: 'Dashboard',
-      icon: <FiHome />,
-      exact: true,
-      color: themeColors.primary,
-      badge: null
+      return (
+        <div
+          className="user-avatar"
+          role="img"
+          aria-label={userData.name}
+          style={{
+            width: `${avatarSize}px`,
+            height: `${avatarSize}px`,
+            background: themeColors.gradientPrimary,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            borderRadius: "50%",
+            color: getContrastColor(themeColors.primary),
+            fontWeight: "bold",
+            fontSize: size === "mobile" ? "14px" : "16px",
+            border: `3px solid ${themeColors.accent}`,
+            boxShadow: themeColors.shadowLight,
+            flexShrink: 0,
+            transition: "all 0.3s ease",
+          }}
+        >
+          {userData.initials}
+        </div>
+      );
     },
+    [userData, themeColors, getContrastColor],
+  );
 
-    production: {
-      path: '/dashboard/production',
-      label: 'Production Dashboard',
-      icon: <FiPackage />,
-      color: themeColors.accent,
-      badge: dailyUpdates.production > 0 ? dailyUpdates.production.toString() : null,
-      isExpanded: expandedSections.production,
-      subSections: [
-        { path: '/dashboard/production', label: 'Production Department', icon: <FiGrid /> },
-        { path: '/production-sections', label: 'All Sections', icon: <FiFolder /> },
-        { path: '/production-reports/daily', label: 'Daily Production Report', icon: <FiActivity /> },
+  // Navigation items with vibrant colors and icons
+  const navigationItems = useMemo(
+    () => ({
+      dashboard: {
+        path: "/dashboard",
+        label: "Dashboard",
+        icon: <FiHome />,
+        exact: true,
+        color: themeColors.primary,
+        iconColor: themeColors.primary,
+        badge: null,
+      },
+      production: {
+        path: "/production/new",
+        label: "Production",
+        icon: <FiPackage />,
+        color: themeColors.accent,
+        iconColor: themeColors.accent,
+        badge: dailyUpdates.production > 0 ? dailyUpdates.production.toString() : null,
+        subSections: [
+          { 
+            path: "/production/new", 
+            label: "New Production", 
+            icon: <FiGrid />,
+            iconColor: themeColors.accent
+          },
+          { 
+            path: "/production", 
+            label: "Production Dashboard", 
+            icon: <FiBarChart2 />,
+            iconColor: themeColors.primary
+          },
+          { 
+            path: "/production-sections", 
+            label: "All Sections", 
+            icon: <FiFolder />,
+            iconColor: themeColors.secondary
+          },
+          { 
+            path: "/production-reports/daily", 
+            label: "Daily Reports", 
+            icon: <FiActivity />,
+            iconColor: themeColors.success
+          },
+          {
+            type: "department", 
+            key: "rawMaterial", 
+            label: "Raw Material", 
+            icon: <FiDatabase />, 
+            color: themeColors.secondary,
+            iconColor: themeColors.secondary,
+            subItems: [
+              { 
+                path: "/production-sections/raw-material", 
+                label: "Raw Material Section", 
+                icon: <FiDatabase />,
+                iconColor: themeColors.secondary
+              },
+              { 
+                path: "/production-sections/raw-material/new", 
+                label: "New Entry", 
+                icon: <FiClipboard />,
+                iconColor: themeColors.accent
+              },
+              { 
+                path: "/flattening-ledger", 
+                label: "Inventory Ledger", 
+                icon: <FiTool />,
+                iconColor: themeColors.warning
+              },
+            ],
+          },
+          {
+            type: "department", 
+            key: "flattening", 
+            label: "Flattening", 
+            icon: <FiBox />, 
+            color: themeColors.accent,
+            iconColor: themeColors.accent,
+            subItems: [
+              { 
+                path: "/production-sections/flattening", 
+                label: "Flattening Section", 
+                icon: <FiLayers />,
+                iconColor: themeColors.accent
+              },
+              { 
+                path: "/production-sections/flattening/smart-entry", 
+                label: "Smart Entry", 
+                icon: <FiEdit />,
+                iconColor: themeColors.primary
+              },
+              { 
+                path: "/production-sections/flattening/multi-entry", 
+                label: "Multi Entry", 
+                icon: <FiEdit />,
+                iconColor: themeColors.info
+              },
+            ],
+          },
+        ],
+      },
+      hr: {
+        path: "/hr",
+        label: "HR Department",
+        icon: <FiUsers />,
+        color: themeColors.purple,
+        iconColor: themeColors.purple,
+        badge: dailyUpdates.hr > 0 ? dailyUpdates.hr.toString() : null,
+        subSections: [
+          { 
+            path: "/hr/employees", 
+            label: "Employees", 
+            icon: <FiUser />,
+            iconColor: themeColors.purple
+          },
+          { 
+            path: "/hr/attendance", 
+            label: "Attendance", 
+            icon: <FiClipboard />,
+            iconColor: themeColors.accent
+          },
+        ],
+      },
+      finance: {
+        path: "/finance",
+        label: "Finance",
+        icon: <FiDollarSign />,
+        color: themeColors.success,
+        iconColor: themeColors.success,
+        badge: dailyUpdates.finance > 0 ? dailyUpdates.finance.toString() : null,
+        subSections: [
+          { 
+            path: "/finance/accounts", 
+            label: "Accounts", 
+            icon: <FiCreditCard />,
+            iconColor: themeColors.success
+          },
+          { 
+            path: "/finance/invoices", 
+            label: "Invoices", 
+            icon: <FiFileText />,
+            iconColor: themeColors.info
+          },
+        ],
+      },
+      sales: {
+        path: "/sales",
+        label: "Sales",
+        icon: <FiShoppingCart />,
+        color: themeColors.orange,
+        iconColor: themeColors.orange,
+        badge: dailyUpdates.sales > 0 ? dailyUpdates.sales.toString() : null,
+        subSections: [
+          { 
+            path: "/sales/orders", 
+            label: "Orders", 
+            icon: <FiShoppingBag />,
+            iconColor: themeColors.orange
+          },
+          { 
+            path: "/sales/customers", 
+            label: "Customers", 
+            icon: <FiUsers />,
+            iconColor: themeColors.purple
+          },
+        ],
+      },
+      it: {
+        path: "/it",
+        label: "IT Department",
+        icon: <FiCpu />,
+        color: themeColors.cyan,
+        iconColor: themeColors.cyan,
+        badge: dailyUpdates.it > 0 ? dailyUpdates.it.toString() : null,
+        subSections: [
+          { 
+            path: "/it/support", 
+            label: "IT Support", 
+            icon: <FiTool />,
+            iconColor: themeColors.warning
+          },
+          { 
+            path: "/it/assets", 
+            label: "Assets", 
+            icon: <FiDatabase />,
+            iconColor: themeColors.secondary
+          },
+        ],
+      },
+      logistics: {
+        path: "/logistics",
+        label: "Logistics",
+        icon: <FiTruck />,
+        color: themeColors.lime,
+        iconColor: themeColors.lime,
+        badge: dailyUpdates.logistics > 0 ? dailyUpdates.logistics.toString() : null,
+        subSections: [
+          { 
+            path: "/logistics/inventory", 
+            label: "Inventory", 
+            icon: <FiDatabase />,
+            iconColor: themeColors.secondary
+          },
+          { 
+            path: "/logistics/shipping", 
+            label: "Shipping", 
+            icon: <FiTruck />,
+            iconColor: themeColors.lime
+          },
+        ],
+      },
+    }),
+    [themeColors, dailyUpdates],
+  );
 
-        {
-          type: 'department',
-          key: 'rawMaterial',
-          label: 'Raw Material Department',
-          icon: <FiDatabase />,
-          color: themeColors.secondary,
-          subItems: [
-            { path: '/production-sections/raw-material', label: 'Raw Material Section', icon: <FiDatabase /> },
-            { path: '/production-sections/raw-material/new', label: 'Raw Material Entry', icon: <FiClipboard /> },
-            { path: '/flattening-ledger', label: 'Raw Material Inventory Ledger', icon: <FiDatabase /> },
-            { path: '/production-sections/raw-material/material-received', label: 'Material Received', icon: <FiTool /> },
-            { path: '/production-sections/raw-material/material-issue', label: 'Material Issue', icon: <FiTool /> },
-            { path: '/production-sections/raw-material/new-log', label: 'New Material Log', icon: <FiClipboard /> }
-          ]
-        },
-
-        {
-          type: 'department',
-          key: 'flattening',
-          label: 'Flattening Department',
-          icon: <FiBox />,
-          color: themeColors.accent,
-          subItems: [
-            { path: '/production-sections/flattening', label: 'Flattening Section', icon: <FiLayers /> },
-            { path: '/production-sections/flattening/smart-entry', label: 'Flattening Production Entry', icon: <FiClipboard /> },
-            { path: '/flattening-inventory', label: 'Flattening Inventory Reports', icon: <FiArchive /> },
-            { path: '/flattening-ledger', label: 'Flattening Inventory Ledger', icon: <FiDatabase /> },
-            { path: '/production-reports/daily', label: 'Flattening Daily Report', icon: <FiActivity /> },
-            { path: '/production-sections/flattening/new', label: 'New Flattening Record', icon: <FiClipboard /> }
-          ]
-        },
-
-        {
-          type: 'department',
-          key: 'spiral',
-          label: 'Spiral Department',
-          icon: <FiLayers />,
-          color: themeColors.accent,
-          subItems: [
-            { path: '/production-sections/spiral', label: 'Spiral Section', icon: <FiLayers /> },
-            { path: '/production-sections/spiral/smart-entry', label: 'Spiral Production Entry', icon: <FiClipboard /> },
-            { path: '/production-reports/daily', label: 'Spiral Inventory Reports', icon: <FiArchive /> },
-            { path: '/production-sections/spiral/smart-entry', label: 'Spiral Smart Entry', icon: <FiActivity /> },
-            { path: '/production-sections/spiral/new', label: 'New Spiral Record', icon: <FiClipboard /> }
-          ]
-        },
-
-        {
-          type: 'department',
-          key: 'pvc',
-          label: 'PVC Coating Department',
-          icon: <FiPackage />,
-          color: themeColors.secondary,
-          subItems: [
-            { path: '/production-sections/pvc-coating', label: 'PVC Coating Section', icon: <FiPackage /> },
-            { path: '/production-sections/pvc-coating/smart-form', label: 'PVC Smart Entry', icon: <FiActivity /> },
-            { path: '/production-sections/pvc-coating/smart-form', label: 'PVC Production Entry', icon: <FiClipboard /> },
-            { path: '/production-reports/daily', label: 'PVC Inventory Reports', icon: <FiArchive /> },
-            { path: '/production-sections/pvc-coating/new', label: 'New PVC Record', icon: <FiClipboard /> }
-          ]
-        },
-
-        {
-          type: 'department',
-          key: 'cutting',
-          label: 'Cutting Packing Section',
-          icon: <FiScissors />,
-          color: themeColors.accent,
-          subItems: [
-            { path: '/dashboard/production', label: 'Cutting Packing Section', icon: <FiScissors /> },
-            { path: '/dashboard/production', label: 'Cutting Packing Entry', icon: <FiClipboard /> },
-            { path: '/production-reports/daily', label: 'Packing Inventory Reports', icon: <FiArchive /> }
-          ]
-        },
-
-        {
-          type: 'department',
-          key: 'finishedGoods',
-          label: 'Finished Goods Section',
-          icon: <FiCheckSquare />,
-          color: themeColors.primary,
-          subItems: [
-            { path: '/dashboard/production', label: 'Finished Goods Section', icon: <FiCheckSquare /> },
-            { path: '/production-reports/daily', label: 'Finished Goods Inventory Reports', icon: <FiArchive /> }
-          ]
-        }
-      ]
-    },
-
-    hr: {
-      path: '/hr',
-      label: 'HR Department',
-      icon: <FiUsers />,
-      color: themeColors.secondary,
-      badge: dailyUpdates.hr > 0 ? dailyUpdates.hr.toString() : null,
-      subSections: [
-        { path: '/hr/employees', label: 'Employees', icon: <FiUsers /> },
-        { path: '/hr/attendance', label: 'Attendance', icon: <FiClipboard /> },
-        { path: '/hr/payroll', label: 'Payroll', icon: <FiDollarSign /> },
-        { path: '/hr/leaves', label: 'Leaves', icon: <FiActivity /> }
-      ]
-    },
-
-    finance: {
-      path: '/finance',
-      label: 'Finance Department',
-      icon: <FiDollarSign />,
-      color: themeColors.accent,
-      badge: dailyUpdates.finance > 0 ? dailyUpdates.finance.toString() : null,
-      subSections: [
-        { path: '/finance/accounts', label: 'Accounts', icon: <FiDollarSign /> },
-        { path: '/finance/invoices', label: 'Invoices', icon: <FiClipboard /> },
-        { path: '/finance/expenses', label: 'Expenses', icon: <FiActivity /> },
-        { path: '/finance/reports', label: 'Reports', icon: <FiDatabase /> }
-      ]
-    },
-
-    sales: {
-      path: '/sales',
-      label: 'Sales Department',
-      icon: <FiShoppingCart />,
-      color: themeColors.highlight,
-      badge: dailyUpdates.sales > 0 ? dailyUpdates.sales.toString() : null,
-      subSections: [
-        { path: '/sales/orders', label: 'Orders', icon: <FiShoppingCart /> },
-        { path: '/sales/customers', label: 'Customers', icon: <FiUsers /> },
-        { path: '/sales/invoices', label: 'Invoices', icon: <FiClipboard /> },
-        { path: '/sales/reports', label: 'Reports', icon: <FiDatabase /> }
-      ]
-    },
-
-    it: {
-      path: '/it',
-      label: 'IT Department',
-      icon: <FiCpu />,
-      color: themeColors.secondary,
-      badge: dailyUpdates.it > 0 ? dailyUpdates.it.toString() : null,
-      subSections: [
-        { path: '/it/support', label: 'IT Support', icon: <FiTool /> },
-        { path: '/it/assets', label: 'Assets', icon: <FiDatabase /> },
-        { path: '/it/network', label: 'Network', icon: <FiActivity /> },
-        { path: '/it/security', label: 'Security', icon: <FiClipboard /> }
-      ]
-    },
-
-    logistics: {
-      path: '/logistics',
-      label: 'Logistics Department',
-      icon: <FiTruck />,
-      color: themeColors.primary,
-      badge: dailyUpdates.logistics > 0 ? dailyUpdates.logistics.toString() : null,
-      subSections: [
-        { path: '/logistics/inventory', label: 'Inventory', icon: <FiDatabase /> },
-        { path: '/logistics/shipping', label: 'Shipping', icon: <FiTruck /> },
-        { path: '/logistics/suppliers', label: 'Suppliers', icon: <FiUsers /> },
-        { path: '/logistics/tracking', label: 'Tracking', icon: <FiActivity /> }
-      ]
-    }
-  }), [themeColors, expandedSections, dailyUpdates]);
-
-  const renderNestedItems = (items, departmentColor = themeColors.primary) => {
+  const renderNestedItems = useCallback((items, departmentColor = themeColors.primary, iconColor = themeColors.primary) => {
     if (!sidebarOpen) return null;
 
     return items.map((item, index) => {
-      if (item.type === 'department') {
+      if (item.type === "department") {
         const isDeptExpanded = expandedSections[item.key];
-        const hasSubItems = item.subItems && item.subItems.length > 0;
+        const isActive = item.subItems?.some(subItem => 
+          currentPath === subItem.path || currentPath.startsWith(subItem.path)
+        );
 
         return (
-          <div key={index} style={{ margin: '2px 0' }}>
+          <div key={`${item.key}-${index}`}>
             <div
-              className={`department-header ${isDeptExpanded ? 'expanded' : ''}`}
+              className="department-header"
               role="button"
               tabIndex={0}
-              aria-expanded={!!isDeptExpanded}
               onClick={(e) => toggleSection(item.key, e)}
-              onKeyDown={(e) => toggleSectionKey(item.key, e)}
               style={{
-                color: isDeptExpanded ? themeColors.textPrimary : themeColors.textSecondary,
-                backgroundColor: isDeptExpanded ? themeColors.hoverBg : 'transparent',
-                borderLeft: `2px solid ${isDeptExpanded ? item.color : 'transparent'}`,
-                margin: '3px 12px',
-                padding: '12px 20px',
-                borderRadius: '8px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                fontSize: '13px',
-                fontWeight: 600,
-                cursor: 'pointer',
-                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                border: 'none',
-                outline: 'none'
+                color: isActive || isDeptExpanded ? item.color : themeColors.textSecondary,
+                backgroundColor: isActive ? `${item.color}20` : isDeptExpanded ? `${item.color}15` : "transparent",
+                borderLeft: `3px solid ${isActive ? item.color : isDeptExpanded ? `${item.color}80` : "transparent"}`,
+                margin: "6px 12px",
+                padding: "14px 18px",
+                borderRadius: "10px",
+                display: "flex",
+                alignItems: "center",
+                gap: "14px",
+                fontSize: "14px",
+                fontWeight: isActive ? 700 : 600,
+                cursor: "pointer",
+                transition: "all 0.3s ease",
+                boxShadow: isActive ? themeColors.highlightGlow : "none",
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = themeColors.hoverBg;
-                e.currentTarget.style.color = themeColors.textPrimary;
-                e.currentTarget.style.borderLeft = `2px solid ${item.color}`;
+                e.currentTarget.style.backgroundColor = `${item.color}20`;
+                e.currentTarget.style.color = item.color;
+                e.currentTarget.style.borderLeft = `3px solid ${item.color}`;
+                e.currentTarget.style.transform = "translateX(5px)";
+                e.currentTarget.style.boxShadow = themeColors.shadowLight;
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = isDeptExpanded ? themeColors.hoverBg : 'transparent';
-                e.currentTarget.style.color = isDeptExpanded ? themeColors.textPrimary : themeColors.textSecondary;
-                e.currentTarget.style.borderLeft = `2px solid ${isDeptExpanded ? item.color : 'transparent'}`;
+                e.currentTarget.style.backgroundColor = isActive ? `${item.color}20` : isDeptExpanded ? `${item.color}15` : "transparent";
+                e.currentTarget.style.color = isActive || isDeptExpanded ? item.color : themeColors.textSecondary;
+                e.currentTarget.style.borderLeft = `3px solid ${isActive ? item.color : isDeptExpanded ? `${item.color}80` : "transparent"}`;
+                e.currentTarget.style.transform = "translateX(0)";
+                e.currentTarget.style.boxShadow = isActive ? themeColors.highlightGlow : "none";
               }}
             >
-              <span className="department-icon" style={{
-                color: isDeptExpanded ? item.color : themeColors.textSecondary,
-                fontSize: '16px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: '20px',
-                flexShrink: 0,
-                transition: 'all 0.2s ease'
+              <span style={{ 
+                color: isActive ? item.color : isDeptExpanded ? item.iconColor : themeColors.textMuted,
+                fontSize: "18px",
+                transition: "all 0.3s ease"
               }}>
                 {item.icon}
               </span>
-
-              <div className="department-label" style={{
-                flex: 1,
-                overflow: 'hidden',
-                fontSize: '13px',
-                fontWeight: 600,
-                whiteSpace: 'nowrap',
-                textOverflow: 'ellipsis',
-                transition: 'all 0.2s ease'
-              }}>
-                {item.label}
-              </div>
-
-              {hasSubItems && (
-                <span className={`nav-chevron ${isDeptExpanded ? 'chevron-expanded' : ''}`} style={{
-                  color: themeColors.accent,
-                  fontSize: '14px',
-                  transition: 'transform 0.2s ease',
-                  flexShrink: 0,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <FiChevronDown />
-                </span>
-              )}
+              <span style={{ flex: 1 }}>{item.label}</span>
+              <FiChevronDown style={{ 
+                color: item.color,
+                transform: isDeptExpanded ? "rotate(180deg)" : "rotate(0deg)",
+                transition: "transform 0.3s ease"
+              }} />
             </div>
 
             {isDeptExpanded && item.subItems && (
-              <div className="sub-nav-container" style={{
-                marginLeft: '16px',
-                paddingLeft: '8px',
-                borderLeft: `1px solid ${themeColors.border}`,
-                animation: 'slideDown 0.2s ease'
+              <div style={{ 
+                marginLeft: "24px", 
+                paddingLeft: "16px", 
+                borderLeft: `2px dashed ${item.color}40`,
+                animation: "slideDown 0.3s ease"
               }}>
                 {item.subItems.map((subItem, subIndex) => {
                   const isActive = currentPath === subItem.path || currentPath.startsWith(subItem.path);
 
                   return (
                     <NavLink
-                      key={subItem.path || subIndex}
+                      key={`${subItem.path}-${subIndex}`}
                       to={subItem.path}
-                      className={`sub-nav-link ${isActive ? 'active' : ''}`}
-                      onClick={() => isMobile && closeMobileMenu()}
                       style={{
                         color: isActive ? item.color : themeColors.textSecondary,
-                        borderLeft: `2px solid ${isActive ? item.color : 'transparent'}`,
-                        backgroundColor: isActive ? `${item.color}20` : 'transparent',
-                        margin: '2px 12px',
-                        padding: '10px 20px',
-                        borderRadius: '6px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '12px',
-                        fontSize: '13px',
-                        textDecoration: 'none',
-                        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                        border: 'none',
-                        outline: 'none'
+                        borderLeft: `2px solid ${isActive ? item.color : "transparent"}`,
+                        backgroundColor: isActive ? `${item.color}20` : "transparent",
+                        margin: "5px 12px",
+                        padding: "12px 18px",
+                        borderRadius: "8px",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "14px",
+                        fontSize: "13px",
+                        fontWeight: isActive ? 600 : 500,
+                        textDecoration: "none",
+                        transition: "all 0.3s ease",
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = themeColors.hoverBg;
-                        e.currentTarget.style.color = themeColors.textPrimary;
+                        e.currentTarget.style.backgroundColor = `${item.color}15`;
+                        e.currentTarget.style.color = item.color;
                         e.currentTarget.style.borderLeft = `2px solid ${item.color}`;
+                        e.currentTarget.style.transform = "translateX(5px)";
+                        e.currentTarget.style.boxShadow = themeColors.shadowLight;
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = isActive ? `${item.color}20` : 'transparent';
+                        e.currentTarget.style.backgroundColor = isActive ? `${item.color}20` : "transparent";
                         e.currentTarget.style.color = isActive ? item.color : themeColors.textSecondary;
-                        e.currentTarget.style.borderLeft = `2px solid ${isActive ? item.color : 'transparent'}`;
+                        e.currentTarget.style.borderLeft = `2px solid ${isActive ? item.color : "transparent"}`;
+                        e.currentTarget.style.transform = "translateX(0)";
+                        e.currentTarget.style.boxShadow = "none";
                       }}
                     >
-                      <span className="sub-nav-icon" style={{
-                        color: isActive ? item.color : themeColors.textMuted,
-                        fontSize: '14px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        width: '18px',
-                        flexShrink: 0,
-                        transition: 'all 0.2s ease'
+                      <span style={{ 
+                        color: isActive ? subItem.iconColor || item.color : themeColors.textMuted,
+                        fontSize: "16px",
+                        transition: "all 0.3s ease"
                       }}>
                         {subItem.icon}
                       </span>
-
-                      <div className="sub-nav-label" style={{
-                        flex: 1,
-                        overflow: 'hidden',
-                        fontSize: '12px',
-                        whiteSpace: 'nowrap',
-                        textOverflow: 'ellipsis',
-                        transition: 'all 0.2s ease'
-                      }}>
-                        {subItem.label}
-                      </div>
+                      <span>{subItem.label}</span>
                     </NavLink>
                   );
                 })}
@@ -817,208 +768,127 @@ const Navigation = () => {
 
       return (
         <NavLink
-          key={item.path || index}
+          key={`${item.path}-${index}`}
           to={item.path}
-          className={`sub-nav-link ${isActive ? 'active' : ''}`}
-          onClick={() => isMobile && closeMobileMenu()}
           style={{
             color: isActive ? departmentColor : themeColors.textSecondary,
-            borderLeft: `2px solid ${isActive ? departmentColor : 'transparent'}`,
-            backgroundColor: isActive ? `${departmentColor}20` : 'transparent',
-            margin: '2px 12px',
-            padding: '10px 20px',
-            borderRadius: '6px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            fontSize: '13px',
-            textDecoration: 'none',
-            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-            border: 'none',
-            outline: 'none'
+            borderLeft: `2px solid ${isActive ? departmentColor : "transparent"}`,
+            backgroundColor: isActive ? `${departmentColor}20` : "transparent",
+            margin: "5px 12px",
+            padding: "12px 18px",
+            borderRadius: "8px",
+            display: "flex",
+            alignItems: "center",
+            gap: "14px",
+            fontSize: "13px",
+            fontWeight: isActive ? 600 : 500,
+            textDecoration: "none",
+            transition: "all 0.3s ease",
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = themeColors.hoverBg;
-            e.currentTarget.style.color = themeColors.textPrimary;
+            e.currentTarget.style.backgroundColor = `${departmentColor}15`;
+            e.currentTarget.style.color = departmentColor;
             e.currentTarget.style.borderLeft = `2px solid ${departmentColor}`;
+            e.currentTarget.style.transform = "translateX(5px)";
+            e.currentTarget.style.boxShadow = themeColors.shadowLight;
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = isActive ? `${departmentColor}20` : 'transparent';
+            e.currentTarget.style.backgroundColor = isActive ? `${departmentColor}20` : "transparent";
             e.currentTarget.style.color = isActive ? departmentColor : themeColors.textSecondary;
-            e.currentTarget.style.borderLeft = `2px solid ${isActive ? departmentColor : 'transparent'}`;
+            e.currentTarget.style.borderLeft = `2px solid ${isActive ? departmentColor : "transparent"}`;
+            e.currentTarget.style.transform = "translateX(0)";
+            e.currentTarget.style.boxShadow = "none";
           }}
         >
-          <span className="sub-nav-icon" style={{
-            color: isActive ? departmentColor : themeColors.textMuted,
-            fontSize: '14px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: '18px',
-            flexShrink: 0,
-            transition: 'all 0.2s ease'
+          <span style={{ 
+            color: isActive ? iconColor : themeColors.textMuted,
+            fontSize: "16px",
+            transition: "all 0.3s ease"
           }}>
             {item.icon}
           </span>
-
-          <div className="sub-nav-label" style={{
-            flex: 1,
-            overflow: 'hidden',
-            fontSize: '12px',
-            whiteSpace: 'nowrap',
-            textOverflow: 'ellipsis',
-            transition: 'all 0.2s ease'
-          }}>
-            {item.label}
-          </div>
+          <span>{item.label}</span>
         </NavLink>
       );
     });
-  };
+  }, [sidebarOpen, expandedSections, currentPath, themeColors, toggleSection]);
 
   const MobileHeader = () => {
     if (!isMobile) return null;
 
     return (
-      <div className="mobile-header" style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        height: '60px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '0 16px',
-        zIndex: 1100,
-        background: themeColors.headerBg,
-        borderBottom: `1px solid ${themeColors.border}`,
-        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
-      }}>
-        <div className="mobile-header-left" style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px'
-        }}>
+      <div
+        className="mobile-header"
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          height: "60px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "0 16px",
+          zIndex: 1100,
+          background: themeColors.headerBg,
+          borderBottom: `1px solid ${themeColors.border}`,
+          boxShadow: themeColors.shadowLight,
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           <button
             onClick={toggleMobileMenu}
-            className="mobile-menu-button"
             style={{
-              width: '40px',
-              height: '40px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              fontSize: '24px',
-              background: 'none',
-              border: 'none',
+              width: "40px",
+              height: "40px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              fontSize: "24px",
+              background: "none",
+              border: "none",
               color: themeColors.textPrimary,
-              borderRadius: '8px',
-              transition: 'all 0.2s ease'
+              borderRadius: "8px",
+              transition: "all 0.3s ease",
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.backgroundColor = themeColors.hoverBg;
-              e.currentTarget.style.color = themeColors.textPrimary;
-              e.currentTarget.style.transform = 'scale(1.05)';
+              e.currentTarget.style.color = themeColors.primary;
+              e.currentTarget.style.transform = "scale(1.1)";
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent';
+              e.currentTarget.style.backgroundColor = "transparent";
               e.currentTarget.style.color = themeColors.textPrimary;
-              e.currentTarget.style.transform = 'scale(1)';
+              e.currentTarget.style.transform = "scale(1)";
             }}
           >
             <FiMenu />
           </button>
-
-          <div className="mobile-logo-container" style={{
-            width: '40px',
-            height: '40px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            borderRadius: '8px',
-            overflow: 'hidden',
-            background: themeColors.bgCard,
-            border: `2px solid ${themeColors.accent}`,
-            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
-          }}>
-            {!mobileLogoMissing ? (
-              <img
-                src="/assets/images/logoA.png"
-                alt="PWI Logo"
-                className="mobile-logo"
-                onError={() => setMobileLogoMissing(true)}
-                style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-              />
-            ) : (
-              <div className="mobile-logo-text" style={{
-                fontWeight: 700,
-                fontSize: '18px',
-                color: themeColors.primary
-              }}>
-                PWI
-              </div>
-            )}
-          </div>
-
-          <div className="mobile-company-name" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-            <div className="company-main-name" style={{
-              fontSize: '14px',
-              fontWeight: 700,
-              color: themeColors.textPrimary,
-              lineHeight: 1.2
-            }}>
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <div style={{ fontSize: "14px", fontWeight: 700, color: themeColors.textPrimary }}>
               PAKISTAN WIRE
             </div>
-            <div className="company-sub-name" style={{
-              fontSize: '10px',
-              fontWeight: 500,
-              color: themeColors.accent,
-              lineHeight: 1.2
-            }}>
+            <div style={{ fontSize: "10px", fontWeight: 500, color: themeColors.accent }}>
               INDUSTRIES LTD
             </div>
           </div>
         </div>
-
-        <div className="mobile-header-right" style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px'
-        }}>
-          <div className="mobile-user-info" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-            <div className="mobile-user-name" style={{
-              fontSize: '14px',
-              fontWeight: 600,
-              color: themeColors.textPrimary,
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              maxWidth: '120px'
-            }}>
-              {userData.name.split(' ')[0]}
-            </div>
-            <div className="mobile-user-username" style={{
-              fontSize: '11px',
-              color: themeColors.textSecondary,
-              opacity: 0.8
-            }}>
-              @{userData.username}
-            </div>
-          </div>
-
-          <UserAvatar size="mobile" showTooltip={false} />
-        </div>
+        <UserAvatar size="mobile" />
       </div>
     );
   };
 
   const getSidebarWidth = () => {
     if (isMobile) {
-      return sidebarOpen ? '280px' : '0px';
+      return sidebarOpen ? "280px" : "0px";
     }
-    return sidebarOpen ? '280px' : '70px';
+    return sidebarOpen ? "280px" : "70px";
+  };
+
+  const isActivePath = (path, exact = false) => {
+    if (exact) return currentPath === path;
+    return currentPath.startsWith(path);
   };
 
   return (
@@ -1030,179 +900,162 @@ const Navigation = () => {
           className="sidebar-overlay"
           onClick={closeMobileMenu}
           style={{
-            position: 'fixed',
+            position: "fixed",
             top: 0,
             left: 0,
             right: 0,
             bottom: 0,
-            background: 'rgba(0, 0, 0, 0.5)',
+            background: "rgba(0, 0, 0, 0.5)",
             zIndex: 999,
-            animation: 'fadeIn 0.2s ease',
-            backdropFilter: 'blur(2px)'
+            backdropFilter: "blur(2px)",
           }}
         />
       )}
 
+      {/* Hover trigger area for desktop */}
       {!isMobile && !sidebarOpen && (
         <div
           className="sidebar-hover-trigger"
-          onMouseEnter={handleSidebarMouseEnter}
           style={{
-            position: 'fixed',
+            position: "fixed",
             left: 0,
             top: 0,
-            width: '20px',
-            height: '100vh',
-            zIndex: 999,
-            background: 'transparent'
+            width: "20px",
+            height: "100vh",
+            zIndex: 998,
+            background: "transparent",
           }}
         />
       )}
 
       <div
         ref={sidebarRef}
-        className={`sidebar-container ${!sidebarOpen ? 'collapsed' : ''}`}
-        onMouseEnter={handleSidebarMouseEnter}
-        onMouseLeave={handleSidebarMouseLeave}
+        className="sidebar-container"
         style={{
           width: getSidebarWidth(),
-          height: isMobile ? '100vh' : '100vh',
-          top: isMobile ? '0' : '0',
-          position: isMobile ? 'fixed' : 'fixed',
+          height: isMobile ? "100vh" : "100vh",
+          top: isMobile ? "0" : "0",
+          position: isMobile ? "fixed" : "fixed",
           zIndex: isMobile ? (sidebarOpen ? 1000 : -1) : 1000,
           opacity: isMobile ? (sidebarOpen ? 1 : 0) : 1,
-          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
           background: themeColors.sidebarBg,
           borderRight: `1px solid ${themeColors.border}`,
-          display: 'flex',
-          flexDirection: 'column',
-          boxShadow: '2px 0 12px rgba(0, 0, 0, 0.1)',
-          overflowY: 'auto',
-          overflowX: 'hidden'
+          display: "flex",
+          flexDirection: "column",
+          boxShadow: themeColors.shadow,
+          overflowY: "auto",
+          overflowX: "hidden",
         }}
       >
-        <div className="logo-section" style={{
-          padding: '24px 20px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: sidebarOpen ? 'flex-start' : 'center',
-          gap: '15px',
-          minHeight: '96px',
-          background: `linear-gradient(135deg, ${themeColors.primary} 0%, ${themeColors.secondary} 100%)`,
-          borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-          position: 'relative',
-          textAlign: 'center',
-          flexShrink: 0,
-          flexDirection: sidebarOpen ? 'row' : 'column'
-        }}>
+        {/* Logo Section */}
+        <div
+          style={{
+            padding: "24px 20px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: sidebarOpen ? "flex-start" : "center",
+            gap: "15px",
+            minHeight: "96px",
+            background: themeColors.gradientPrimary,
+            borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
+            position: "relative",
+            flexDirection: sidebarOpen ? "row" : "column",
+            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+          }}
+        >
           {isMobile && sidebarOpen && (
             <button
               onClick={closeMobileMenu}
-              className="close-button"
               style={{
-                position: 'absolute',
-                right: '16px',
-                top: '16px',
-                width: '32px',
-                height: '32px',
-                background: 'rgba(255, 255, 255, 0.2)',
-                border: 'none',
-                borderRadius: '6px',
-                color: 'white',
-                fontSize: '18px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                zIndex: 1001,
-                transition: 'all 0.2s ease'
+                position: "absolute",
+                right: "16px",
+                top: "16px",
+                width: "32px",
+                height: "32px",
+                background: "rgba(255, 255, 255, 0.2)",
+                border: "none",
+                borderRadius: "6px",
+                color: "white",
+                fontSize: "18px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                transition: "all 0.3s ease",
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)';
-                e.currentTarget.style.transform = 'scale(1.05)';
+                e.currentTarget.style.background = "rgba(255, 255, 255, 0.3)";
+                e.currentTarget.style.transform = "scale(1.1)";
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
-                e.currentTarget.style.transform = 'scale(1)';
+                e.currentTarget.style.background = "rgba(255, 255, 255, 0.2)";
+                e.currentTarget.style.transform = "scale(1)";
               }}
             >
               <FiX />
             </button>
           )}
 
-          <div className="logo-container" style={{
-            width: sidebarOpen ? '48px' : '40px',
-            height: sidebarOpen ? '48px' : '40px',
-            background: 'rgba(255, 255, 255, 0.9)',
-            borderRadius: '10px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            overflow: 'hidden',
-            padding: '4px',
-            border: `2px solid ${themeColors.accent}`,
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-            margin: sidebarOpen ? '0' : '0 auto'
-          }}>
+          <div
+            style={{
+              width: sidebarOpen ? "48px" : "40px",
+              height: sidebarOpen ? "48px" : "40px",
+              background: "rgba(255, 255, 255, 0.9)",
+              borderRadius: "12px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              overflow: "hidden",
+              padding: "4px",
+              border: `3px solid ${themeColors.accent}`,
+              boxShadow: themeColors.shadowLight,
+              transition: "all 0.3s ease",
+            }}
+            onMouseEnter={(e) => {
+              if (sidebarOpen) {
+                e.currentTarget.style.transform = "scale(1.05)";
+                e.currentTarget.style.boxShadow = "0 6px 20px rgba(0, 0, 0, 0.2)";
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (sidebarOpen) {
+                e.currentTarget.style.transform = "scale(1)";
+                e.currentTarget.style.boxShadow = themeColors.shadowLight;
+              }
+            }}
+          >
             {!logoMissing ? (
               <img
                 src="/assets/images/logoA.png"
                 alt="PWI Logo"
-                className="logo-image"
                 onError={() => setLogoMissing(true)}
-                style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                style={{ width: "100%", height: "100%", objectFit: "contain" }}
               />
             ) : (
-              <div className="logo-text" style={{
-                fontWeight: 700,
-                fontSize: '16px',
-                color: themeColors.primary,
-                borderRadius: '6px'
-              }}>
+              <div style={{ fontWeight: 700, fontSize: "16px", color: themeColors.primary }}>
                 PWI
               </div>
             )}
           </div>
 
           {sidebarOpen && (
-            <div className="company-info" style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'flex-start',
-              gap: '2px',
-              overflow: 'hidden'
-            }}>
-              <h1 className="company-title" style={{
-                margin: 0,
-                fontSize: '16px',
-                fontWeight: 700,
-                color: 'white',
-                lineHeight: 1.2,
-                whiteSpace: 'nowrap'
-              }}>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "2px" }}>
+              <h1 style={{ margin: 0, fontSize: "16px", fontWeight: 700, color: "white" }}>
                 PAKISTAN WIRE
               </h1>
-              <p className="company-subtitle" style={{
-                margin: 0,
-                fontSize: '11px',
-                color: 'rgba(255, 255, 255, 0.9)',
-                fontWeight: 500,
-                textTransform: 'uppercase',
-                whiteSpace: 'nowrap'
-              }}>
+              <p style={{ margin: 0, fontSize: "11px", color: "rgba(255, 255, 255, 0.9)" }}>
                 INDUSTRIES LTD
               </p>
-
-              <div className="company-badge" style={{
-                background: 'rgba(255, 255, 255, 0.2)',
-                color: 'white',
-                padding: '3px 10px',
-                borderRadius: '12px',
-                fontSize: '9px',
+              <div style={{
+                background: "rgba(255, 255, 255, 0.2)",
+                color: "white",
+                padding: "3px 10px",
+                borderRadius: "12px",
+                fontSize: "9px",
                 fontWeight: 700,
-                marginTop: '6px',
-                whiteSpace: 'nowrap',
-                border: 'none'
+                marginTop: "6px",
+                backdropFilter: "blur(4px)",
               }}>
                 SPI & CCD DIVISION
               </div>
@@ -1210,521 +1063,144 @@ const Navigation = () => {
           )}
         </div>
 
-        <div className="navigation-items" style={{
-          padding: '16px 0',
-          flex: 1,
-          overflowY: 'auto',
-          overflowX: 'hidden',
-          background: themeColors.sidebarBg
+        {/* Navigation Items */}
+        <div style={{ 
+          padding: "20px 0", 
+          flex: 1, 
+          overflowY: "auto",
+          overflowX: "hidden",
         }}>
           {/* Dashboard Link */}
           <NavLink
-            to={navigationItems.dashboard.path}
-            end={navigationItems.dashboard.exact}
-            className={`nav-link ${!sidebarOpen ? 'nav-link-collapsed' : ''} ${currentPath === '/dashboard' ? 'active' : ''}`}
-            onClick={() => isMobile && closeMobileMenu()}
+            to="/dashboard"
+            end
             style={{
-              borderLeft: `3px solid ${currentPath === '/dashboard' ? navigationItems.dashboard.color : 'transparent'}`,
-              margin: '3px 12px',
-              padding: sidebarOpen ? '14px 20px' : '12px 0',
-              display: 'flex',
-              alignItems: 'center',
-              textDecoration: 'none',
-              transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-              position: 'relative',
-              justifyContent: sidebarOpen ? 'flex-start' : 'center',
-              gap: sidebarOpen ? '14px' : '0',
-              cursor: 'pointer',
-              borderRadius: '8px',
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              border: 'none',
-              outline: 'none',
-              fontWeight: 500,
-              color: currentPath === '/dashboard' ? themeColors.textPrimary : themeColors.textSecondary,
-              background: currentPath === '/dashboard' ? themeColors.hoverBg : 'transparent',
-              width: sidebarOpen ? 'auto' : '46px'
+              borderLeft: `4px solid ${isActivePath("/dashboard", true) ? navigationItems.dashboard.color : "transparent"}`,
+              margin: "10px 12px",
+              padding: sidebarOpen ? "16px 20px" : "12px 0",
+              display: "flex",
+              alignItems: "center",
+              textDecoration: "none",
+              transition: "all 0.3s ease",
+              justifyContent: sidebarOpen ? "flex-start" : "center",
+              gap: sidebarOpen ? "16px" : "0",
+              borderRadius: "10px",
+              color: isActivePath("/dashboard", true) ? themeColors.textPrimary : themeColors.textSecondary,
+              backgroundColor: isActivePath("/dashboard", true) ? `${navigationItems.dashboard.color}20` : "transparent",
+              fontWeight: isActivePath("/dashboard", true) ? 700 : 600,
             }}
             onMouseEnter={(e) => {
               if (sidebarOpen) {
-                e.currentTarget.style.background = themeColors.hoverBg;
-                e.currentTarget.style.color = themeColors.textPrimary;
-                e.currentTarget.style.borderLeft = `3px solid ${navigationItems.dashboard.color}`;
-                e.currentTarget.style.transform = 'translateX(4px)';
-                e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
+                e.currentTarget.style.backgroundColor = `${navigationItems.dashboard.color}15`;
+                e.currentTarget.style.color = navigationItems.dashboard.color;
+                e.currentTarget.style.borderLeft = `4px solid ${navigationItems.dashboard.color}`;
+                e.currentTarget.style.transform = "translateX(5px)";
+                e.currentTarget.style.boxShadow = themeColors.shadowLight;
               }
             }}
             onMouseLeave={(e) => {
               if (sidebarOpen) {
-                e.currentTarget.style.background = currentPath === '/dashboard' ? themeColors.hoverBg : 'transparent';
-                e.currentTarget.style.color = currentPath === '/dashboard' ? themeColors.textPrimary : themeColors.textSecondary;
-                e.currentTarget.style.borderLeft = `3px solid ${currentPath === '/dashboard' ? navigationItems.dashboard.color : 'transparent'}`;
-                e.currentTarget.style.transform = 'translateX(0)';
-                e.currentTarget.style.boxShadow = 'none';
+                e.currentTarget.style.backgroundColor = isActivePath("/dashboard", true) ? `${navigationItems.dashboard.color}20` : "transparent";
+                e.currentTarget.style.color = isActivePath("/dashboard", true) ? themeColors.textPrimary : themeColors.textSecondary;
+                e.currentTarget.style.borderLeft = `4px solid ${isActivePath("/dashboard", true) ? navigationItems.dashboard.color : "transparent"}`;
+                e.currentTarget.style.transform = "translateX(0)";
+                e.currentTarget.style.boxShadow = "none";
               }
             }}
           >
-            <span className="nav-icon" style={{
-              color: currentPath === '/dashboard' ? navigationItems.dashboard.color : themeColors.textSecondary,
-              fontSize: '20px',
-              minWidth: '24px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-              transition: 'all 0.2s ease'
-            }}>
-              {navigationItems.dashboard.icon}
-            </span>
-
-            {sidebarOpen && (
-              <div className="nav-label" style={{
-                flex: 1,
-                overflow: 'hidden',
-                fontSize: '14px',
-                fontWeight: currentPath === '/dashboard' ? 600 : 500,
-                whiteSpace: 'nowrap',
-                textOverflow: 'ellipsis',
-                color: currentPath === '/dashboard' ? themeColors.textPrimary : themeColors.textSecondary,
-                transition: 'all 0.2s ease'
-              }}>
-                {navigationItems.dashboard.label}
-              </div>
-            )}
+            <FiHome style={{ 
+              fontSize: "22px", 
+              color: isActivePath("/dashboard", true) ? navigationItems.dashboard.iconColor : themeColors.textSecondary,
+              transition: "all 0.3s ease"
+            }} />
+            {sidebarOpen && <span style={{ fontSize: "15px" }}>Dashboard</span>}
           </NavLink>
-
-          {/* Production Section */}
-          <div style={{ margin: '8px 0' }}>
-            <div
-              className={`nav-link ${!sidebarOpen ? 'nav-link-collapsed' : ''} ${currentPath.includes('/production') || currentPath.includes('/production-sections') ? 'active' : ''}`}
-              role="button"
-              tabIndex={0}
-              aria-expanded={!!expandedSections.production}
-              onClick={(e) => toggleSection('production', e)}
-              onKeyDown={(e) => toggleSectionKey('production', e)}
-              style={{
-                borderLeft: `3px solid ${currentPath.includes('/production') || currentPath.includes('/production-sections') ?
-                  navigationItems.production.color : 'transparent'}`,
-                margin: '3px 12px',
-                padding: sidebarOpen ? '14px 20px' : '12px 0',
-                display: 'flex',
-                alignItems: 'center',
-                textDecoration: 'none',
-                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                position: 'relative',
-                justifyContent: sidebarOpen ? 'flex-start' : 'center',
-                gap: sidebarOpen ? '14px' : '0',
-                cursor: 'pointer',
-                borderRadius: '8px',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                border: 'none',
-                outline: 'none',
-                fontWeight: 500,
-                color: currentPath.includes('/production') || currentPath.includes('/production-sections') ?
-                  themeColors.textPrimary : themeColors.textSecondary,
-                background: currentPath.includes('/production') || currentPath.includes('/production-sections') ?
-                  themeColors.hoverBg : 'transparent',
-                width: sidebarOpen ? 'auto' : '46px'
-              }}
-              onMouseEnter={(e) => {
-                if (sidebarOpen) {
-                  e.currentTarget.style.background = themeColors.hoverBg;
-                  e.currentTarget.style.color = themeColors.textPrimary;
-                  e.currentTarget.style.borderLeft = `3px solid ${navigationItems.production.color}`;
-                  e.currentTarget.style.transform = 'translateX(4px)';
-                  e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (sidebarOpen) {
-                  e.currentTarget.style.background = currentPath.includes('/production') || currentPath.includes('/production-sections') ?
-                    themeColors.hoverBg : 'transparent';
-                  e.currentTarget.style.color = currentPath.includes('/production') || currentPath.includes('/production-sections') ?
-                    themeColors.textPrimary : themeColors.textSecondary;
-                  e.currentTarget.style.borderLeft = `3px solid ${currentPath.includes('/production') || currentPath.includes('/production-sections') ?
-                    navigationItems.production.color : 'transparent'}`;
-                  e.currentTarget.style.transform = 'translateX(0)';
-                  e.currentTarget.style.boxShadow = 'none';
-                }
-              }}
-            >
-              <span className="nav-icon" style={{
-                color: currentPath.includes('/production') || currentPath.includes('/production-sections') ?
-                  navigationItems.production.color : themeColors.textSecondary,
-                fontSize: '20px',
-                minWidth: '24px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-                transition: 'all 0.2s ease'
-              }}>
-                {navigationItems.production.icon}
-              </span>
-
-              {sidebarOpen && (
-                <>
-                  <div className="nav-label" style={{
-                    flex: 1,
-                    overflow: 'hidden',
-                    fontSize: '14px',
-                    fontWeight: currentPath.includes('/production') || currentPath.includes('/production-sections') ?
-                      600 : 500,
-                    whiteSpace: 'nowrap',
-                    textOverflow: 'ellipsis',
-                    color: currentPath.includes('/production') || currentPath.includes('/production-sections') ?
-                      themeColors.textPrimary : themeColors.textSecondary,
-                    transition: 'all 0.2s ease'
-                  }}>
-                    {navigationItems.production.label}
-                  </div>
-
-                  <div className="nav-right-section" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    {navigationItems.production.badge && (
-                      <div className="badge-with-reset" style={{ display: 'flex', alignItems: 'center', gap: '4px', position: 'relative' }}>
-                        <span
-                          className="nav-badge"
-                          title={`Today's updates: ${dailyUpdates.production}`}
-                          style={{
-                            background: themeColors.badgeBackground,
-                            color: getContrastColor(themeColors.badgeBackground),
-                            fontSize: '10px',
-                            fontWeight: 'bold',
-                            padding: '2px 6px',
-                            borderRadius: '10px',
-                            minWidth: '18px',
-                            textAlign: 'center',
-                            lineHeight: 1,
-                            flexShrink: 0,
-                            cursor: 'help',
-                            position: 'relative',
-                            transition: 'all 0.2s ease'
-                          }}
-                        >
-                          {navigationItems.production.badge}
-                        </span>
-                        <button
-                          className="reset-badge-btn"
-                          onClick={(e) => resetDepartmentUpdates('production', e)}
-                          title="Reset daily count"
-                          style={{
-                            width: '16px',
-                            height: '16px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            background: themeColors.error,
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '50%',
-                            cursor: 'pointer',
-                            fontSize: '8px',
-                            padding: 0,
-                            opacity: 0,
-                            transition: 'all 0.2s ease'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.opacity = '1';
-                            e.currentTarget.style.background = themeColors.error;
-                            e.currentTarget.style.transform = 'scale(1.1)';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.opacity = '0';
-                            e.currentTarget.style.background = themeColors.error;
-                            e.currentTarget.style.transform = 'scale(1)';
-                          }}
-                        >
-                          <FiRefreshCw size={10} />
-                        </button>
-                      </div>
-                    )}
-
-                    <span className={`nav-chevron ${expandedSections.production ? 'chevron-expanded' : ''}`} style={{
-                      color: themeColors.accent,
-                      fontSize: '14px',
-                      transition: 'transform 0.2s ease',
-                      flexShrink: 0,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }}>
-                      <FiChevronDown />
-                    </span>
-                  </div>
-                </>
-              )}
-            </div>
-
-            {expandedSections.production && sidebarOpen && (
-              <div className="sub-nav-container" style={{
-                marginLeft: '16px',
-                paddingLeft: '8px',
-                borderLeft: `1px solid ${themeColors.border}`,
-                animation: 'slideDown 0.2s ease'
-              }}>
-                {renderNestedItems(navigationItems.production.subSections, navigationItems.production.color)}
-              </div>
-            )}
-          </div>
 
           {/* Other Navigation Items */}
           {Object.entries(navigationItems)
-            .filter(([key]) => !['dashboard', 'production'].includes(key))
+            .filter(([key]) => key !== "dashboard")
             .map(([key, item]) => {
-              const isActive = currentPath.includes(item.path) ||
-                (item.subSections && item.subSections.some(sub => sub.path && currentPath.startsWith(sub.path)));
+              const isActive = isActivePath(item.path);
               const isExpanded = expandedSections[key] && sidebarOpen;
               const hasSubSections = item.subSections && item.subSections.length > 0;
 
               return (
-                <div key={key} style={{ margin: '8px 0' }}>
+                <div key={key}>
                   <div
-                    className={`nav-link ${!sidebarOpen ? 'nav-link-collapsed' : ''} ${isActive ? 'active' : ''}`}
                     role="button"
                     tabIndex={0}
-                    aria-expanded={!!expandedSections[key]}
-                    onKeyDown={(e) => {
-                      if (hasSubSections) {
-                        toggleSectionKey(key, e);
-                      } else if (e.key === 'Enter') {
-                        navigate(item.path);
-                        isMobile && closeMobileMenu();
-                      }
-                    }}
                     onClick={(e) => {
                       if (hasSubSections && sidebarOpen) {
                         toggleSection(key, e);
                       } else if (hasSubSections && !sidebarOpen) {
                         setSidebarOpen(true);
-                        setTimeout(() => {
-                          toggleSection(key, e);
-                        }, 100);
+                        setTimeout(() => toggleSection(key, e), 100);
                       } else {
                         navigate(item.path);
-                        isMobile && closeMobileMenu();
                       }
                     }}
                     style={{
-                      borderLeft: `3px solid ${isActive ? item.color : 'transparent'}`,
-                      margin: '3px 12px',
-                      padding: sidebarOpen ? '14px 20px' : '12px 0',
-                      display: 'flex',
-                      alignItems: 'center',
-                      textDecoration: 'none',
-                      transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                      position: 'relative',
-                      justifyContent: sidebarOpen ? 'flex-start' : 'center',
-                      gap: sidebarOpen ? '14px' : '0',
-                      cursor: 'pointer',
-                      borderRadius: '8px',
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      border: 'none',
-                      outline: 'none',
-                      fontWeight: 500,
+                      borderLeft: `4px solid ${isActive ? item.color : "transparent"}`,
+                      margin: "10px 12px",
+                      padding: sidebarOpen ? "16px 20px" : "12px 0",
+                      display: "flex",
+                      alignItems: "center",
+                      transition: "all 0.3s ease",
+                      justifyContent: sidebarOpen ? "flex-start" : "center",
+                      gap: sidebarOpen ? "16px" : "0",
+                      borderRadius: "10px",
+                      cursor: "pointer",
                       color: isActive ? themeColors.textPrimary : themeColors.textSecondary,
-                      background: isActive ? themeColors.hoverBg : 'transparent',
-                      width: sidebarOpen ? 'auto' : '46px'
+                      backgroundColor: isActive ? `${item.color}20` : "transparent",
+                      fontWeight: isActive ? 700 : 600,
                     }}
                     onMouseEnter={(e) => {
                       if (sidebarOpen) {
-                        e.currentTarget.style.background = themeColors.hoverBg;
-                        e.currentTarget.style.color = themeColors.textPrimary;
-                        e.currentTarget.style.borderLeft = `3px solid ${item.color}`;
-                        e.currentTarget.style.transform = 'translateX(4px)';
-                        e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
+                        e.currentTarget.style.backgroundColor = `${item.color}15`;
+                        e.currentTarget.style.color = item.color;
+                        e.currentTarget.style.borderLeft = `4px solid ${item.color}`;
+                        e.currentTarget.style.transform = "translateX(5px)";
+                        e.currentTarget.style.boxShadow = themeColors.shadowLight;
                       }
                     }}
                     onMouseLeave={(e) => {
                       if (sidebarOpen) {
-                        e.currentTarget.style.background = isActive ? themeColors.hoverBg : 'transparent';
+                        e.currentTarget.style.backgroundColor = isActive ? `${item.color}20` : "transparent";
                         e.currentTarget.style.color = isActive ? themeColors.textPrimary : themeColors.textSecondary;
-                        e.currentTarget.style.borderLeft = `3px solid ${isActive ? item.color : 'transparent'}`;
-                        e.currentTarget.style.transform = 'translateX(0)';
-                        e.currentTarget.style.boxShadow = 'none';
+                        e.currentTarget.style.borderLeft = `4px solid ${isActive ? item.color : "transparent"}`;
+                        e.currentTarget.style.transform = "translateX(0)";
+                        e.currentTarget.style.boxShadow = "none";
                       }
                     }}
                   >
-                    <span className="nav-icon" style={{
-                      color: isActive ? item.color : themeColors.textSecondary,
-                      fontSize: '20px',
-                      minWidth: '24px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexShrink: 0,
-                      transition: 'all 0.2s ease'
+                    <span style={{ 
+                      fontSize: "22px", 
+                      color: isActive ? item.iconColor : themeColors.textSecondary,
+                      transition: "all 0.3s ease"
                     }}>
                       {item.icon}
                     </span>
-
                     {sidebarOpen && (
                       <>
-                        <div className="nav-label" style={{
-                          flex: 1,
-                          overflow: 'hidden',
-                          fontSize: '14px',
-                          fontWeight: isActive ? 600 : 500,
-                          whiteSpace: 'nowrap',
-                          textOverflow: 'ellipsis',
-                          color: isActive ? themeColors.textPrimary : themeColors.textSecondary,
-                          transition: 'all 0.2s ease'
-                        }}>
-                          {item.label}
-                        </div>
-
-                        <div className="nav-right-section" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          {item.badge && (
-                            <div className="badge-with-reset" style={{ display: 'flex', alignItems: 'center', gap: '4px', position: 'relative' }}>
-                              <span
-                                className="nav-badge"
-                                title={`Today's updates: ${dailyUpdates[key] || 0}`}
-                                style={{
-                                  background: themeColors.badgeBackground,
-                                  color: getContrastColor(themeColors.badgeBackground),
-                                  fontSize: '10px',
-                                  fontWeight: 'bold',
-                                  padding: '2px 6px',
-                                  borderRadius: '10px',
-                                  minWidth: '18px',
-                                  textAlign: 'center',
-                                  lineHeight: 1,
-                                  flexShrink: 0,
-                                  cursor: 'help',
-                                  position: 'relative',
-                                  transition: 'all 0.2s ease'
-                                }}
-                              >
-                                {item.badge}
-                              </span>
-                              <button
-                                className="reset-badge-btn"
-                                onClick={(e) => resetDepartmentUpdates(key, e)}
-                                title="Reset daily count"
-                                style={{
-                                  width: '16px',
-                                  height: '16px',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  background: themeColors.error,
-                                  color: 'white',
-                                  border: 'none',
-                                  borderRadius: '50%',
-                                  cursor: 'pointer',
-                                  fontSize: '8px',
-                                  padding: 0,
-                                  opacity: 0,
-                                  transition: 'all 0.2s ease'
-                                }}
-                                onMouseEnter={(e) => {
-                                  e.currentTarget.style.opacity = '1';
-                                  e.currentTarget.style.background = themeColors.error;
-                                  e.currentTarget.style.transform = 'scale(1.1)';
-                                }}
-                                onMouseLeave={(e) => {
-                                  e.currentTarget.style.opacity = '0';
-                                  e.currentTarget.style.background = themeColors.error;
-                                  e.currentTarget.style.transform = 'scale(1)';
-                                }}
-                              >
-                                <FiRefreshCw size={10} />
-                              </button>
-                            </div>
-                          )}
-
-                          {hasSubSections && sidebarOpen && (
-                            <span className={`nav-chevron ${isExpanded ? 'chevron-expanded' : ''}`} style={{
-                              color: themeColors.accent,
-                              fontSize: '14px',
-                              transition: 'transform 0.2s ease',
-                              flexShrink: 0,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center'
-                            }}>
-                              <FiChevronDown />
-                            </span>
-                          )}
-                        </div>
+                        <span style={{ flex: 1, fontSize: "15px" }}>{item.label}</span>
+                        {hasSubSections && (
+                          <FiChevronDown style={{ 
+                            color: item.color,
+                            transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)",
+                            transition: "transform 0.3s ease"
+                          }} />
+                        )}
                       </>
                     )}
                   </div>
 
                   {hasSubSections && isExpanded && sidebarOpen && (
-                    <div className="sub-nav-container" style={{
-                      marginLeft: '16px',
-                      paddingLeft: '8px',
-                      borderLeft: `1px solid ${themeColors.border}`,
-                      animation: 'slideDown 0.2s ease'
+                    <div style={{ 
+                      marginLeft: "20px", 
+                      paddingLeft: "12px", 
+                      borderLeft: `2px dashed ${item.color}40`,
                     }}>
-                      {item.subSections.map((subItem) => {
-                        const subIsActive = currentPath === subItem.path || currentPath.startsWith(subItem.path);
-
-                        return (
-                          <NavLink
-                            key={subItem.path}
-                            to={subItem.path}
-                            className={`sub-nav-link ${subIsActive ? 'active' : ''}`}
-                            onClick={() => isMobile && closeMobileMenu()}
-                            style={{
-                              color: subIsActive ? item.color : themeColors.textSecondary,
-                              borderLeft: `2px solid ${subIsActive ? item.color : 'transparent'}`,
-                              backgroundColor: subIsActive ? `${item.color}20` : 'transparent',
-                              margin: '2px 12px',
-                              padding: '10px 20px',
-                              borderRadius: '6px',
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '12px',
-                              fontSize: '13px',
-                              textDecoration: 'none',
-                              transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                              border: 'none',
-                              outline: 'none'
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.backgroundColor = themeColors.hoverBg;
-                              e.currentTarget.style.color = themeColors.textPrimary;
-                              e.currentTarget.style.borderLeft = `2px solid ${item.color}`;
-                              e.currentTarget.style.transform = 'translateX(4px)';
-                              e.currentTarget.style.boxShadow = '0 1px 4px rgba(0, 0, 0, 0.1)';
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.backgroundColor = subIsActive ? `${item.color}20` : 'transparent';
-                              e.currentTarget.style.color = subIsActive ? item.color : themeColors.textSecondary;
-                              e.currentTarget.style.borderLeft = `2px solid ${subIsActive ? item.color : 'transparent'}`;
-                              e.currentTarget.style.transform = 'translateX(0)';
-                              e.currentTarget.style.boxShadow = 'none';
-                            }}
-                          >
-                            <span className="sub-nav-icon" style={{
-                              color: subIsActive ? item.color : themeColors.textMuted,
-                              fontSize: '14px',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              width: '18px',
-                              flexShrink: 0,
-                              transition: 'all 0.2s ease'
-                            }}>
-                              {subItem.icon}
-                            </span>
-
-                            <div className="sub-nav-label" style={{
-                              flex: 1,
-                              overflow: 'hidden',
-                              fontSize: '12px',
-                              whiteSpace: 'nowrap',
-                              textOverflow: 'ellipsis',
-                              transition: 'all 0.2s ease'
-                            }}>
-                              {subItem.label}
-                            </div>
-                          </NavLink>
-                        );
-                      })}
+                      {renderNestedItems(item.subSections, item.color, item.iconColor)}
                     </div>
                   )}
                 </div>
@@ -1733,217 +1209,161 @@ const Navigation = () => {
         </div>
 
         {/* Settings and Logout */}
-        <div className="settings-logout" style={{
-          padding: '16px 12px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '8px',
+        <div style={{ 
+          padding: "20px 12px", 
           borderTop: `1px solid ${themeColors.border}`,
           background: themeColors.sidebarBg,
-          flexShrink: 0
         }}>
           <NavLink
             to="/settings/theme"
-            className={`nav-link ${!sidebarOpen ? 'nav-link-collapsed' : ''} ${currentPath.includes('/settings') ? 'active' : ''}`}
-            onClick={() => isMobile && closeMobileMenu()}
             style={{
-              borderLeft: `3px solid ${currentPath.includes('/settings') ? themeColors.accent : 'transparent'}`,
-              margin: '3px 12px',
-              padding: sidebarOpen ? '14px 20px' : '12px 0',
-              display: 'flex',
-              alignItems: 'center',
-              textDecoration: 'none',
-              transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-              position: 'relative',
-              justifyContent: sidebarOpen ? 'flex-start' : 'center',
-              gap: sidebarOpen ? '14px' : '0',
-              cursor: 'pointer',
-              borderRadius: '8px',
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              border: 'none',
-              outline: 'none',
-              fontWeight: 500,
-              color: currentPath.includes('/settings') ? themeColors.textPrimary : themeColors.textSecondary,
-              background: currentPath.includes('/settings') ? themeColors.hoverBg : 'transparent',
-              width: sidebarOpen ? 'auto' : '46px'
+              borderLeft: `4px solid ${isActivePath("/settings") ? themeColors.accent : "transparent"}`,
+              margin: "8px 12px",
+              padding: sidebarOpen ? "16px 20px" : "12px 0",
+              display: "flex",
+              alignItems: "center",
+              textDecoration: "none",
+              transition: "all 0.3s ease",
+              justifyContent: sidebarOpen ? "flex-start" : "center",
+              gap: sidebarOpen ? "16px" : "0",
+              borderRadius: "10px",
+              color: isActivePath("/settings") ? themeColors.textPrimary : themeColors.textSecondary,
+              backgroundColor: isActivePath("/settings") ? `${themeColors.accent}20` : "transparent",
+              fontWeight: isActivePath("/settings") ? 700 : 600,
             }}
             onMouseEnter={(e) => {
               if (sidebarOpen) {
-                e.currentTarget.style.background = themeColors.hoverBg;
-                e.currentTarget.style.color = themeColors.textPrimary;
-                e.currentTarget.style.borderLeft = `3px solid ${themeColors.accent}`;
-                e.currentTarget.style.transform = 'translateX(4px)';
-                e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
+                e.currentTarget.style.backgroundColor = `${themeColors.accent}15`;
+                e.currentTarget.style.color = themeColors.accent;
+                e.currentTarget.style.borderLeft = `4px solid ${themeColors.accent}`;
+                e.currentTarget.style.transform = "translateX(5px)";
+                e.currentTarget.style.boxShadow = themeColors.shadowLight;
               }
             }}
             onMouseLeave={(e) => {
               if (sidebarOpen) {
-                e.currentTarget.style.background = currentPath.includes('/settings') ? themeColors.hoverBg : 'transparent';
-                e.currentTarget.style.color = currentPath.includes('/settings') ? themeColors.textPrimary : themeColors.textSecondary;
-                e.currentTarget.style.borderLeft = `3px solid ${currentPath.includes('/settings') ? themeColors.accent : 'transparent'}`;
-                e.currentTarget.style.transform = 'translateX(0)';
-                e.currentTarget.style.boxShadow = 'none';
+                e.currentTarget.style.backgroundColor = isActivePath("/settings") ? `${themeColors.accent}20` : "transparent";
+                e.currentTarget.style.color = isActivePath("/settings") ? themeColors.textPrimary : themeColors.textSecondary;
+                e.currentTarget.style.borderLeft = `4px solid ${isActivePath("/settings") ? themeColors.accent : "transparent"}`;
+                e.currentTarget.style.transform = "translateX(0)";
+                e.currentTarget.style.boxShadow = "none";
               }
             }}
           >
-            <FiSettings className="nav-icon" style={{
-              color: currentPath.includes('/settings') ? themeColors.accent : themeColors.textSecondary,
-              fontSize: '20px',
-              minWidth: '24px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-              transition: 'all 0.2s ease'
+            <FiSettings style={{ 
+              fontSize: "22px", 
+              color: isActivePath("/settings") ? themeColors.accent : themeColors.textSecondary,
+              transition: "all 0.3s ease"
             }} />
-            {sidebarOpen && (
-              <span className="nav-label" style={{
-                flex: 1,
-                overflow: 'hidden',
-                fontSize: '14px',
-                fontWeight: currentPath.includes('/settings') ? 600 : 500,
-                whiteSpace: 'nowrap',
-                textOverflow: 'ellipsis',
-                color: currentPath.includes('/settings') ? themeColors.textPrimary : themeColors.textSecondary,
-                transition: 'all 0.2s ease'
-              }}>
-                Settings
-              </span>
-            )}
+            {sidebarOpen && <span style={{ fontSize: "15px" }}>Settings</span>}
           </NavLink>
 
           <button
             onClick={handleLogout}
-            className="logout-button"
             style={{
               color: themeColors.error,
-              backgroundColor: `${themeColors.error}15`,
-              margin: '3px 12px',
-              padding: sidebarOpen ? '14px 20px' : '12px 0',
-              display: 'flex',
-              alignItems: 'center',
-              textDecoration: 'none',
-              transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-              position: 'relative',
-              justifyContent: sidebarOpen ? 'flex-start' : 'center',
-              gap: sidebarOpen ? '14px' : '0',
-              cursor: 'pointer',
-              borderRadius: '8px',
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              border: 'none',
-              outline: 'none',
-              fontWeight: 500,
-              borderLeft: `3px solid transparent`,
-              width: sidebarOpen ? 'auto' : '46px'
+              background: "transparent",
+              margin: "8px 12px",
+              padding: sidebarOpen ? "16px 20px" : "12px 0",
+              display: "flex",
+              alignItems: "center",
+              border: "none",
+              transition: "all 0.3s ease",
+              justifyContent: sidebarOpen ? "flex-start" : "center",
+              gap: sidebarOpen ? "16px" : "0",
+              borderRadius: "10px",
+              cursor: "pointer",
+              width: "100%",
+              fontWeight: 600,
             }}
             onMouseEnter={(e) => {
               if (sidebarOpen) {
-                e.currentTarget.style.background = themeColors.error;
-                e.currentTarget.style.color = 'white';
-                e.currentTarget.style.borderLeft = `3px solid ${themeColors.error}`;
-                e.currentTarget.style.transform = 'translateX(4px)';
-                e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
+                e.currentTarget.style.backgroundColor = `${themeColors.error}15`;
+                e.currentTarget.style.color = themeColors.error;
+                e.currentTarget.style.borderLeft = `4px solid ${themeColors.error}`;
+                e.currentTarget.style.transform = "translateX(5px)";
+                e.currentTarget.style.boxShadow = themeColors.shadowLight;
               }
             }}
             onMouseLeave={(e) => {
               if (sidebarOpen) {
-                e.currentTarget.style.background = `${themeColors.error}15`;
+                e.currentTarget.style.backgroundColor = "transparent";
                 e.currentTarget.style.color = themeColors.error;
-                e.currentTarget.style.borderLeft = `3px solid transparent`;
-                e.currentTarget.style.transform = 'translateX(0)';
-                e.currentTarget.style.boxShadow = 'none';
+                e.currentTarget.style.borderLeft = `4px solid transparent`;
+                e.currentTarget.style.transform = "translateX(0)";
+                e.currentTarget.style.boxShadow = "none";
               }
             }}
           >
-            <FiLogOut className="nav-icon" style={{
+            <FiLogOut style={{ 
+              fontSize: "22px", 
               color: themeColors.error,
-              fontSize: '20px',
-              minWidth: '24px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-              transition: 'all 0.2s ease'
+              transition: "all 0.3s ease"
             }} />
-            {sidebarOpen && (
-              <span className="nav-label" style={{
-                flex: 1,
-                overflow: 'hidden',
-                fontSize: '14px',
-                fontWeight: 500,
-                whiteSpace: 'nowrap',
-                textOverflow: 'ellipsis',
-                color: themeColors.error,
-                transition: 'all 0.2s ease'
-              }}>
-                Logout
-              </span>
-            )}
+            {sidebarOpen && <span style={{ fontSize: "15px" }}>Logout</span>}
           </button>
         </div>
 
         {/* User Profile */}
-        <div className="user-profile" style={{
-          padding: '16px 12px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px',
-          justifyContent: 'flex-start',
-          backgroundColor: themeColors.hoverBg,
-          borderTop: `1px solid ${themeColors.border}`,
-          flexShrink: 0,
-          transition: 'all 0.2s ease'
-        }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = themeColors.activeBg;
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = themeColors.hoverBg;
-          }}
-        >
-          <UserAvatar size={sidebarOpen ? 'default' : 'small'} showTooltip={!sidebarOpen} />
-          {sidebarOpen && (
-            <div className="user-info" style={{
-              flex: 1,
-              minWidth: 0,
-              overflow: 'hidden'
-            }}>
-              <div className="user-name" style={{
-                fontSize: '14px',
-                fontWeight: 600,
-                marginBottom: '2px',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                color: themeColors.textPrimary
+        {sidebarOpen && (
+          <div
+            style={{
+              padding: "20px 16px",
+              display: "flex",
+              alignItems: "center",
+              gap: "14px",
+              backgroundColor: themeColors.hoverBg,
+              borderTop: `1px solid ${themeColors.border}`,
+              transition: "all 0.3s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = themeColors.activeBg;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = themeColors.hoverBg;
+            }}
+          >
+            <UserAvatar />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ 
+                fontSize: "15px", 
+                fontWeight: 700, 
+                color: themeColors.textPrimary,
+                marginBottom: "4px"
               }}>
                 {userData.name}
               </div>
-              <div className="user-email" style={{
-                fontSize: '12px',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                fontWeight: 500,
-                color: themeColors.accent
+              <div style={{ 
+                fontSize: "12px", 
+                color: themeColors.accent,
+                fontWeight: 600,
+                marginBottom: "2px"
               }}>
                 {userData.email}
               </div>
-              <div className="user-username" style={{
-                fontSize: '11px',
+              <div style={{ 
+                fontSize: "11px", 
                 color: themeColors.textSecondary,
-                marginTop: '2px',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis'
+                display: "flex",
+                alignItems: "center",
+                gap: "6px"
               }}>
-                @{userData.username}
+                <span style={{
+                  background: `${themeColors.primary}20`,
+                  color: themeColors.primary,
+                  padding: "2px 8px",
+                  borderRadius: "12px",
+                  fontSize: "10px",
+                  fontWeight: 700
+                }}>
+                  {userData.role}
+                </span>
+                <span>•</span>
+                <span>{userData.department}</span>
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </>
   );

@@ -1,4 +1,4 @@
-/* PVCCoatingPage.css */
+/* PVCcoatingPage.css */
 
 /* Reset and Base Styles */
 * {
@@ -7,39 +7,45 @@
   box-sizing: border-box;
 }
 
-/* Themes */
+/* Themes - Updated with Indigo/Navy Colors */
 .theme-light {
   --bg-primary: #f8fafc;
   --bg-secondary: #f1f5f9;
   --bg-card: #ffffff;
   --bg-surface: #f8fafc;
-  --text-primary: #1e293b;
-  --text-secondary: #64748b;
-  --text-muted: #94a3b8;
+  --text-primary: #1A237E;      /* ✅ INDIGO/NAVY - Changed from #1e293b */
+  --text-secondary: #283593;    /* ✅ INDIGO/NAVY - Changed from #64748b */
+  --text-muted: #5C6BC0;        /* ✅ INDIGO/NAVY - Changed from #94a3b8 */
   --icon-white: #ffffff;
-  --icon-color: #64748b;
-  --border-color: #e2e8f0;
+  --icon-color: #283593;        /* ✅ INDIGO/NAVY */
+  --border-color: #E0E0E0;
   --primary-500: #3b82f6;
   --success: #10b981;
   --warning: #f59e0b;
   --danger: #ef4444;
+  --indigo-dark: #1A237E;       /* ✅ New variable */
+  --indigo-medium: #283593;     /* ✅ New variable */
+  --indigo-light: #5C6BC0;      /* ✅ New variable */
 }
 
 .theme-dark {
-  --bg-primary: #0f172a;
+  --bg-primary: #121212;
   --bg-secondary: #1e293b;
-  --bg-card: #334155;
-  --bg-surface: #475569;
-  --text-primary: #f1f5f9;
-  --text-secondary: #cbd5e1;
-  --text-muted: #94a3b8;
+  --bg-card: #1a1a1a;           /* ✅ Darker card background */
+  --bg-surface: #333333;
+  --text-primary: #7986CB;      /* ✅ INDIGO/NAVY - Changed from #f1f5f9 */
+  --text-secondary: #9FA8DA;    /* ✅ INDIGO/NAVY - Changed from #cbd5e1 */
+  --text-muted: #B39DDB;        /* ✅ INDIGO/NAVY - Changed from #94a3b8 */
   --icon-white: #ffffff;
-  --icon-color: #cbd5e1;
-  --border-color: #475569;
+  --icon-color: #9FA8DA;        /* ✅ INDIGO/NAVY */
+  --border-color: #333333;
   --primary-500: #60a5fa;
   --success: #34d399;
   --warning: #fbbf24;
   --danger: #f87171;
+  --indigo-dark: #7986CB;       /* ✅ New variable */
+  --indigo-medium: #9FA8DA;     /* ✅ New variable */
+  --indigo-light: #B39DDB;      /* ✅ New variable */
 }
 
 .theme-cream {
@@ -47,16 +53,19 @@
   --bg-secondary: #faf5ff;
   --bg-card: #ffffff;
   --bg-surface: #f5f3ff;
-  --text-primary: #3730a3;
-  --text-secondary: #6d28d9;
-  --text-muted: #8b5cf6;
+  --text-primary: #1A237E;      /* ✅ INDIGO/NAVY - Changed from #3730a3 */
+  --text-secondary: #283593;    /* ✅ INDIGO/NAVY - Changed from #6d28d9 */
+  --text-muted: #5C6BC0;        /* ✅ INDIGO/NAVY - Changed from #8b5cf6 */
   --icon-white: #ffffff;
-  --icon-color: #7c3aed;
+  --icon-color: #283593;        /* ✅ INDIGO/NAVY */
   --border-color: #ddd6fe;
   --primary-500: #8b5cf6;
   --success: #10b981;
   --warning: #f59e0b;
   --danger: #ef4444;
+  --indigo-dark: #1A237E;       /* ✅ New variable */
+  --indigo-medium: #283593;     /* ✅ New variable */
+  --indigo-light: #5C6BC0;      /* ✅ New variable */
 }
 
 /* Loading Spinner */
@@ -109,28 +118,37 @@
   background-color: transparent !important;
 }
 
-.action-button.view { border-color: #10b981 !important; color: #10b981 !important; }
-.action-button.edit { border-color: #f59e0b !important; color: #f59e0b !important; }
-.action-button.delete { border-color: #ef4444 !important; color: #ef4444 !important; }
+.action-button.view { 
+  border-color: #10b981 !important; 
+  color: #10b981 !important; 
+}
+.action-button.edit { 
+  border-color: #f59e0b !important; 
+  color: #f59e0b !important; 
+}
+.action-button.delete { 
+  border-color: #ef4444 !important; 
+  color: #ef4444 !important; 
+}
 
-/* آئیکن اسپیسنگ اور سائزنگ - تمام آئیکنز بڑے */
+/* ✅ آئیکن اسپیسنگ اور سائزنگ - تمام آئیکنز بڑے */
 .table-icon-spaced {
   font-size: 18px !important;
   margin-right: 8px !important;
-  color: var(--icon-color);
+  color: var(--icon-color) !important;
   flex-shrink: 0;
 }
 
 .dashboard-icon-spaced {
   font-size: 18px !important;
   margin-right: 8px !important;
-  color: var(--icon-color);
+  color: var(--icon-color) !important;
 }
 
 .item-icon-spaced {
   font-size: 16px !important;
   margin-right: 8px !important;
-  color: var(--icon-color);
+  color: var(--icon-color) !important;
 }
 
 /* Icon spacing containers */
@@ -140,7 +158,7 @@
   gap: 8px;
 }
 
-/* ہر قسم کے آئیکن کے لیے مخصوص کلرز */
+/* ✅ ہر قسم کے آئیکن کے لیے مخصوص کلرز */
 .icon-blue {
   color: #3b82f6 !important;
 }
@@ -165,7 +183,7 @@
   color: #64748b !important;
 }
 
-/* آئیکن کنٹینر */
+/* ✅ آئیکن کنٹینر */
 .icon-container {
   display: flex;
   align-items: center;
@@ -181,7 +199,7 @@
   font-size: 18px !important;
 }
 
-/* Blue Header for theme consistency */
+/* ✅ Blue Header for theme consistency */
 .blue-header {
   background: linear-gradient(135deg, var(--primary-500), #2563eb) !important;
   color: white !important;
@@ -205,15 +223,15 @@
   color: white !important;
 }
 
-/* Light cards styling - BLACK TEXT */
+/* ✅ Light cards styling - INDIGO/NAVY TEXT */
 .light-card {
   background-color: var(--bg-card) !important;
-  color: var(--text-primary) !important; /* BLACK TEXT */
+  color: var(--text-primary) !important; /* ✅ INDIGO/NAVY TEXT */
 }
 
 .light-card .stat-title-light,
 .light-card .stat-value-light {
-  color: var(--text-primary) !important; /* BLACK TEXT */
+  color: var(--text-primary) !important; /* ✅ INDIGO/NAVY TEXT */
 }
 
 /* ✅ UPDATED: Stats Grid for mobile - 8 cards in proper layout */
@@ -235,6 +253,46 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
+}
+
+/* ✅ Loading Container - INDIGO/NAVY TEXT */
+.loading-container {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: center !important;
+  width: 100% !important;
+  height: 100vh !important;
+}
+
+.loading-container.dark-mode {
+  background-color: var(--bg-primary) !important;
+}
+
+.loading-container.light-mode {
+  background-color: var(--bg-primary) !important;
+}
+
+.loading-container div {
+  margin-top: 16px !important;
+  color: var(--text-primary) !important; /* ✅ INDIGO/NAVY TEXT */
+}
+
+/* ✅ PVC Container - INDIGO/NAVY TEXT */
+.pvc-container {
+  width: 100% !important;
+  min-height: 100vh !important;
+  overflow-x: hidden !important;
+}
+
+.pvc-container.dark-mode {
+  background-color: var(--bg-primary) !important;
+  color: var(--text-primary) !important; /* ✅ INDIGO/NAVY TEXT */
+}
+
+.pvc-container.light-mode {
+  background-color: var(--bg-primary) !important;
+  color: var(--text-primary) !important; /* ✅ INDIGO/NAVY TEXT */
 }
 
 /* ✅ Responsive Design - Improved mobile view */
@@ -269,16 +327,19 @@
   .stat-title,
   .stat-title-light {
     font-size: 9px !important;
+    color: var(--text-primary) !important; /* ✅ INDIGO/NAVY TEXT */
   }
   
   .stat-value,
   .stat-value-light {
     font-size: 13px !important;
+    color: var(--text-primary) !important; /* ✅ INDIGO/NAVY TEXT */
   }
   
   .date-badge-light {
     font-size: 7px !important;
     padding: 1px 4px !important;
+    color: var(--text-secondary) !important; /* ✅ INDIGO/NAVY TEXT */
   }
   
   /* Dashboard grid - Single column on mobile */
@@ -290,10 +351,13 @@
   .dashboard-card {
     padding: 10px !important;
     margin-bottom: 8px !important;
+    background-color: var(--bg-card) !important;
+    color: var(--text-primary) !important; /* ✅ INDIGO/NAVY TEXT */
   }
   
   .dashboard-card-title {
     font-size: 13px !important;
+    color: var(--text-primary) !important; /* ✅ INDIGO/NAVY TEXT */
   }
   
   .dashboard-card-title svg {
@@ -307,6 +371,7 @@
   
   .dashboard-item-label {
     font-size: 11px !important;
+    color: var(--text-primary) !important; /* ✅ INDIGO/NAVY TEXT */
   }
   
   .item-icon-spaced {
@@ -331,6 +396,8 @@
   .single-filter-input {
     font-size: 12px !important;
     padding: 6px 8px !important;
+    color: var(--text-primary) !important; /* ✅ INDIGO/NAVY TEXT */
+    background-color: var(--bg-card) !important;
   }
   
   .filter-label svg {
@@ -372,6 +439,7 @@
     margin: 0 -12px;
     width: calc(100% + 24px);
     overflow-x: auto;
+    background-color: var(--bg-card) !important;
   }
   
   .table {
@@ -382,11 +450,14 @@
   .table-header-cell {
     font-size: 10px !important;
     padding: 8px 4px !important;
+    color: var(--text-secondary) !important; /* ✅ INDIGO/NAVY TEXT */
+    background-color: var(--bg-surface) !important;
   }
   
   .table-cell {
     padding: 6px 4px !important;
     font-size: 11px !important;
+    color: var(--text-primary) !important; /* ✅ INDIGO/NAVY TEXT */
   }
   
   /* Bigger icons on mobile */
@@ -423,6 +494,60 @@
     transform: translateX(-50%) !important;
     width: 90% !important;
     max-width: 300px !important;
+    background-color: var(--bg-card) !important;
+    border: 1px solid var(--border-color) !important;
+  }
+  
+  /* WhatsApp Modal */
+  .modal-overlay {
+    background-color: rgba(0, 0, 0, 0.5);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .modal-container {
+    background-color: var(--bg-card);
+    border-radius: 12px;
+    width: 90%;
+    max-width: 400px;
+    max-height: 80vh;
+    overflow-y: auto;
+    color: var(--text-primary);
+  }
+  
+  .modal-header {
+    padding: 16px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .modal-header h2 {
+    font-size: 16px;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .modal-close-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--text-primary);
+  }
+  
+  .modal-body {
+    padding: 16px;
   }
 }
 
@@ -494,6 +619,7 @@
   .remarks {
     max-width: 60px !important;
     font-size: 9px !important;
+    color: var(--text-muted) !important; /* ✅ INDIGO/NAVY TEXT */
   }
 }
 
@@ -509,4 +635,167 @@
   .action-buttons {
     display: none !important;
   }
+  
+  /* Ensure print has good contrast */
+  body {
+    color: #000000 !important;
+    background-color: #ffffff !important;
+  }
+  
+  .table th,
+  .table td {
+    border-color: #000000 !important;
+  }
+}
+
+/* ✅ Additional Styles for Better Theme Support */
+.pvc-container * {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Ensure all text elements use theme colors */
+.pvc-container h1,
+.pvc-container h2,
+.pvc-container h3,
+.pvc-container h4,
+.pvc-container h5,
+.pvc-container h6,
+.pvc-container p,
+.pvc-container span,
+.pvc-container div,
+.pvc-container td,
+.pvc-container th {
+  color: inherit; /* Inherit from parent which has theme color */
+}
+
+/* Input and Select elements */
+.pvc-container input,
+.pvc-container select,
+.pvc-container textarea {
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.pvc-container input:focus,
+.pvc-container select:focus,
+.pvc-container textarea:focus {
+  border-color: var(--primary-500);
+  outline: none;
+}
+
+/* Buttons */
+.pvc-container button {
+  transition: all 0.2s ease;
+}
+
+.pvc-container button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Scrollbar styling */
+.pvc-container::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.pvc-container::-webkit-scrollbar-track {
+  background: var(--bg-surface);
+}
+
+.pvc-container::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+.pvc-container::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* ✅ WhatsApp Modal Styles */
+.whatsapp-modal-content {
+  text-align: center;
+  padding: 20px 0;
+}
+
+.whatsapp-icon-large {
+  color: #25D366;
+  margin-bottom: 12px;
+}
+
+.whatsapp-modal-text {
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.whatsapp-options {
+  margin: 20px 0;
+}
+
+.options-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+.whatsapp-option-btn {
+  padding: 12px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.whatsapp-desktop-btn {
+  background-color: #25D366;
+  color: white;
+}
+
+.copy-message-btn {
+  background-color: var(--primary-500);
+  color: white;
+}
+
+.close-btn {
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.whatsapp-option-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.preview-section {
+  margin-top: 20px;
+}
+
+.preview-section h4 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  color: var(--text-primary);
+}
+
+.message-preview {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 16px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+  max-height: 200px;
+  overflow-y: auto;
+  line-height: 1.4;
 }

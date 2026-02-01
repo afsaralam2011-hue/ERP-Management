@@ -1,16 +1,21 @@
 // src/components/Settings/ThemeSettings.jsx
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 import ColorPicker from './ColorPicker';
+import ThemeSettingsBenchmarks from './ThemeSettingsBenchmarks';
 import './ThemeSettings.css';
 
 const ThemeSettings = () => {
+  // تھیم کونٹیکسٹ سے فنکشنز اور اسٹیٹ حاصل کریں
   const {
     currentTheme,
     mode,
     themes,
+    allThemes,
     customThemes,
+    isLoading,
+    error,
     setTheme,
     setMode,
     createCustomTheme,
@@ -18,615 +23,842 @@ const ThemeSettings = () => {
     exportTheme,
     importTheme,
     resetTheme,
+    toggleMode,
+    isDarkMode,
+    isLightMode,
+    themeStats
   } = useTheme();
 
+  // لوکل اسٹیٹ
   const [showCustomThemeModal, setShowCustomThemeModal] = useState(false);
+  const [showBenchmarks, setShowBenchmarks] = useState(false);
   const [customThemeName, setCustomThemeName] = useState('');
+  
+  // CUSTOM COLORS کو INDIGO/NAVY میں تبدیل کریں
   const [customColors, setCustomColors] = useState({
     primary: '#1976D2',
     secondary: '#DC004E',
     background: '#FFFFFF',
     surface: '#F5F5F5',
-    textPrimary: '#212121',
-    textSecondary: '#757575',
+    textPrimary: '#1A237E',        // BLACK سے INDIGO/NAVY
+    textSecondary: '#283593',      // BLACK سے INDIGO/NAVY
+    border: '#E0E0E0',
+    success: '#4CAF50',
+    warning: '#FF9800',
+    error: '#F44336',
+    info: '#2196F3'
   });
-  const [showBenchmarks, setShowBenchmarks] = useState(false); // نئی state
+  
+  const [importingFile, setImportingFile] = useState(null);
+  const [activeTab, setActiveTab] = useState('predefined'); // 'predefined', 'custom', 'actions'
+  const [themeSearch, setThemeSearch] = useState('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
+  const [notification, setNotification] = useState({ type: '', message: '' });
+  const [performanceMetrics, setPerformanceMetrics] = useState({
+    themeSwitchTime: 0,
+    modeSwitchTime: 0,
+    renderTime: 0
+  });
 
-  // Handle mode change (Light/Dark/Device)
-  const handleModeChange = (newMode) => {
-    if (newMode === 'device') {
-      // Detect system preference
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      setMode(prefersDark ? 'dark' : 'light');
-    } else {
-      setMode(newMode);
+  // === ہیلپر فنکشنز ===
+
+  /**
+   * نوٹیفکیشن دکھائیں
+   */
+  const showNotification = useCallback((type, message, duration = 3000) => {
+    setNotification({ type, message });
+    setTimeout(() => setNotification({ type: '', message: '' }), duration);
+  }, []);
+
+  /**
+   * تھیم منتخب کریں اور پرفارمنس میٹرک ریکارڈ کریں
+   */
+  const handleThemeSelect = useCallback((themeId) => {
+    const startTime = performance.now();
+    
+    try {
+      const theme = setTheme(themeId);
+      if (theme) {
+        const endTime = performance.now();
+        const switchTime = endTime - startTime;
+        
+        setPerformanceMetrics(prev => ({
+          ...prev,
+          themeSwitchTime: switchTime
+        }));
+        
+        showNotification('success', `Theme "${theme.name}" applied successfully`);
+        
+        // پرفارمنس ٹریکنگ (صرف ڈویلپمنٹ میں)
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`Theme switch completed in ${switchTime.toFixed(2)}ms`);
+        }
+      }
+    } catch (err) {
+      showNotification('error', `Failed to apply theme: ${err.message}`);
     }
-  };
+  }, [setTheme, showNotification]);
 
-  // Handle theme selection
-  const handleThemeSelect = (themeId) => {
-    setTheme(themeId);
-  };
+  /**
+   * تھیم موڈ تبدیل کریں
+   */
+  const handleModeChange = useCallback((newMode) => {
+    const startTime = performance.now();
+    
+    try {
+      setMode(newMode);
+      
+      const endTime = performance.now();
+      const switchTime = endTime - startTime;
+      
+      setPerformanceMetrics(prev => ({
+        ...prev,
+        modeSwitchTime: switchTime
+      }));
+      
+      showNotification('success', `Switched to ${newMode} mode`);
+      
+    } catch (err) {
+      showNotification('error', `Failed to switch mode: ${err.message}`);
+    }
+  }, [setMode, showNotification]);
 
-  // Create custom theme
-  const handleCreateCustomTheme = () => {
+  /**
+   * کسٹم تھیم بنائیں
+   */
+  const handleCreateCustomTheme = useCallback(() => {
     if (!customThemeName.trim()) {
-      alert('Please enter a theme name');
+      showNotification('error', 'Please enter a theme name');
       return;
     }
 
-    const newTheme = createCustomTheme(customThemeName, customColors, mode);
-    if (newTheme) {
-      setTheme(newTheme.id);
-      setShowCustomThemeModal(false);
-      setCustomThemeName('');
+    try {
+      const newTheme = createCustomTheme(customThemeName, customColors, mode);
+      if (newTheme) {
+        // نئی تھیم منتخب کریں
+        setTheme(newTheme.id);
+        
+        // موڈل بند کریں اور ری سیٹ کریں
+        setShowCustomThemeModal(false);
+        setCustomThemeName('');
+        
+        // CUSTOM COLORS کو INDIGO/NAVY میں ری سیٹ کریں
+        setCustomColors({
+          primary: '#1976D2',
+          secondary: '#DC004E',
+          background: '#FFFFFF',
+          surface: '#F5F5F5',
+          textPrimary: '#1A237E',        // INDIGO/NAVY
+          textSecondary: '#283593',      // INDIGO/NAVY
+          border: '#E0E0E0',
+          success: '#4CAF50',
+          warning: '#FF9800',
+          error: '#F44336',
+          info: '#2196F3'
+        });
+        
+        showNotification('success', `Custom theme "${newTheme.name}" created successfully`);
+        
+        // کسٹم تھیمز ٹیب پر سوئچ کریں
+        setActiveTab('custom');
+      }
+    } catch (err) {
+      showNotification('error', `Failed to create theme: ${err.message}`);
     }
-  };
+  }, [customThemeName, customColors, mode, createCustomTheme, setTheme, showNotification]);
 
-  // Delete custom theme
-  const handleDeleteCustomTheme = (themeId) => {
-    if (window.confirm('Are you sure you want to delete this custom theme?')) {
-      deleteCustomTheme(themeId);
+  /**
+   * کسٹم تھیم ڈیلیٹ کریں
+   */
+  const handleDeleteCustomTheme = useCallback((themeId, themeName) => {
+    if (!showDeleteConfirm || showDeleteConfirm !== themeId) {
+      // کنفرمیشن سٹیج
+      setShowDeleteConfirm(themeId);
+      showNotification('warning', `Click again to delete "${themeName}"`, 2000);
+      return;
     }
-  };
 
-  // Export theme
-  const handleExportTheme = () => {
-    exportTheme(currentTheme);
-  };
+    try {
+      const success = deleteCustomTheme(themeId);
+      if (success) {
+        showNotification('success', `Theme "${themeName}" deleted successfully`);
+        setShowDeleteConfirm(null);
+      }
+    } catch (err) {
+      showNotification('error', `Failed to delete theme: ${err.message}`);
+      setShowDeleteConfirm(null);
+    }
+  }, [deleteCustomTheme, showNotification, showDeleteConfirm]);
 
-  // Import theme
-  const handleImportTheme = (e) => {
+  /**
+   * تھیم ایکسپورٹ کریں
+   */
+  const handleExportTheme = useCallback((theme = currentTheme) => {
+    try {
+      const success = exportTheme(theme.id);
+      if (success) {
+        showNotification('success', `Theme "${theme.name}" exported successfully`);
+      }
+    } catch (err) {
+      showNotification('error', `Failed to export theme: ${err.message}`);
+    }
+  }, [exportTheme, currentTheme, showNotification]);
+
+  /**
+   * تھیم امپورٹ کریں
+   */
+  const handleImportTheme = useCallback((e) => {
     const file = e.target.files[0];
-    if (file) {
-      importTheme(file).then((importedTheme) => {
-        if (importedTheme) {
-          alert(`Theme "${importedTheme.name}" imported successfully!`);
-        }
+    if (!file) return;
+
+    setImportingFile(file.name);
+
+    importTheme(file)
+      .then((importedTheme) => {
+        showNotification('success', `Theme "${importedTheme.name}" imported successfully`);
+        setTheme(importedTheme.id);
+        setActiveTab('custom');
+        setImportingFile(null);
+        
+        // ان پٹ ری سیٹ کریں تاکہ ایک ہی فائل دوبارہ لوڈ کی جا سکے
+        e.target.value = '';
+      })
+      .catch((err) => {
+        showNotification('error', `Import failed: ${err.message}`);
+        setImportingFile(null);
+        e.target.value = '';
       });
+  }, [importTheme, setTheme, showNotification]);
+
+  /**
+   * تھیم ری سیٹ کریں
+   */
+  const handleResetTheme = useCallback(() => {
+    if (window.confirm('Are you sure you want to reset to default theme?')) {
+      try {
+        resetTheme();
+        showNotification('success', 'Theme reset to default successfully');
+        setActiveTab('predefined');
+      } catch (err) {
+        showNotification('error', `Failed to reset theme: ${err.message}`);
+      }
     }
-  };
+  }, [resetTheme, showNotification]);
 
-  // Predefined themes (non-custom)
-  const predefinedThemes = themes.filter(t => !t.isCustom);
-
-  // Performance Benchmarks Component (یہ وہی component ہے جو ThemeSettingsBenchmarks.jsx میں تھا)
-  const ThemeSettingsBenchmarks = () => {
-    const [selectedCategory, setSelectedCategory] = useState('all');
-
-    const benchmarks = [
-      {
-        category: 'Rendering Performance',
-        metrics: [
-          {
-            name: 'Initial Page Load',
-            target: '< 1.5s',
-            good: '< 1s',
-            acceptable: '1-2s',
-            poor: '> 2s',
-            description: 'Time from navigation to interactive UI',
-            priority: 'Critical'
-          },
-          {
-            name: 'Theme Switch Time',
-            target: '< 200ms',
-            good: '< 150ms',
-            acceptable: '150-300ms',
-            poor: '> 300ms',
-            description: 'Time to apply new theme across all components',
-            priority: 'High'
-          },
-          {
-            name: 'Modal Open/Close',
-            target: '< 100ms',
-            good: '< 80ms',
-            acceptable: '80-150ms',
-            poor: '> 150ms',
-            description: 'Animation smoothness for custom theme modal',
-            priority: 'Medium'
-          },
-          {
-            name: 'Color Picker Response',
-            target: '< 50ms',
-            good: '< 30ms',
-            acceptable: '30-100ms',
-            poor: '> 100ms',
-            description: 'Delay between color selection and UI update',
-            priority: 'High'
-          }
-        ]
-      },
-      {
-        category: 'Component Performance',
-        metrics: [
-          {
-            name: 'Theme Grid Render (10 items)',
-            target: '< 100ms',
-            good: '< 80ms',
-            acceptable: '80-150ms',
-            poor: '> 150ms',
-            description: 'Time to render predefined theme grid',
-            priority: 'Medium'
-          },
-          {
-            name: 'Custom Theme Creation',
-            target: '< 300ms',
-            good: '< 200ms',
-            acceptable: '200-500ms',
-            poor: '> 500ms',
-            description: 'End-to-end time to create and apply custom theme',
-            priority: 'Medium'
-          },
-          {
-            name: 'Theme Export',
-            target: '< 500ms',
-            good: '< 300ms',
-            acceptable: '300-800ms',
-            poor: '> 800ms',
-            description: 'Time to generate and download theme JSON',
-            priority: 'Low'
-          }
-        ]
-      },
-      {
-        category: 'Memory & Resources',
-        metrics: [
-          {
-            name: 'Memory Usage (Idle)',
-            target: '< 15MB',
-            good: '< 10MB',
-            acceptable: '10-20MB',
-            poor: '> 20MB',
-            description: 'Component memory footprint when idle',
-            priority: 'Medium'
-          },
-          {
-            name: 'Memory Usage (Active)',
-            target: '< 30MB',
-            good: '< 25MB',
-            acceptable: '25-40MB',
-            poor: '> 40MB',
-            description: 'Memory during theme switching/creation',
-            priority: 'Medium'
-          },
-          {
-            name: 'CSS Variables Applied',
-            target: '< 10ms',
-            good: '< 5ms',
-            acceptable: '5-20ms',
-            poor: '> 20ms',
-            description: 'Time to update CSS custom properties',
-            priority: 'High'
-          }
-        ]
-      },
-      {
-        category: 'User Interaction',
-        metrics: [
-          {
-            name: 'Click Response Time',
-            target: '< 100ms',
-            good: '< 50ms',
-            acceptable: '50-150ms',
-            poor: '> 150ms',
-            description: 'Delay from click to visual feedback',
-            priority: 'Critical'
-          },
-          {
-            name: 'Hover Effect Latency',
-            target: '< 50ms',
-            good: '< 30ms',
-            acceptable: '30-80ms',
-            poor: '> 80ms',
-            description: 'Time for hover states to appear',
-            priority: 'Medium'
-          },
-          {
-            name: 'Input Field Response',
-            target: '< 16ms',
-            good: '< 10ms',
-            acceptable: '10-30ms',
-            poor: '> 30ms',
-            description: 'Typing latency in theme name input',
-            priority: 'High'
-          }
-        ]
-      },
-      {
-        category: 'Accessibility',
-        metrics: [
-          {
-            name: 'Keyboard Navigation',
-            target: '100%',
-            good: '100%',
-            acceptable: '90-99%',
-            poor: '< 90%',
-            description: 'All interactive elements accessible via keyboard',
-            priority: 'Critical'
-          },
-          {
-            name: 'Focus Indicator Visibility',
-            target: '3:1 contrast',
-            good: '4.5:1+',
-            acceptable: '3:1-4.5:1',
-            poor: '< 3:1',
-            description: 'Focus outline contrast ratio',
-            priority: 'Critical'
-          },
-          {
-            name: 'Color Contrast (Text)',
-            target: '4.5:1',
-            good: '7:1+',
-            acceptable: '4.5:1-7:1',
-            poor: '< 4.5:1',
-            description: 'Text readability across themes',
-            priority: 'Critical'
-          }
-        ]
-      },
-      {
-        category: 'Mobile Performance',
-        metrics: [
-          {
-            name: 'Touch Response Time',
-            target: '< 100ms',
-            good: '< 70ms',
-            acceptable: '70-150ms',
-            poor: '> 150ms',
-            description: 'Delay from touch to action',
-            priority: 'High'
-          },
-          {
-            name: 'Scroll Performance (FPS)',
-            target: '60 FPS',
-            good: '60 FPS',
-            acceptable: '45-60 FPS',
-            poor: '< 45 FPS',
-            description: 'Smoothness when scrolling theme grid',
-            priority: 'High'
-          },
-          {
-            name: 'Modal Rendering (Mobile)',
-            target: '< 150ms',
-            good: '< 100ms',
-            acceptable: '100-200ms',
-            poor: '> 200ms',
-            description: 'Modal appearance on smaller screens',
-            priority: 'Medium'
-          }
-        ]
+  /**
+   * تھیم کو ڈیوپلیکیٹ کریں
+   */
+  const handleDuplicateTheme = useCallback((theme) => {
+    try {
+      const duplicatedTheme = createCustomTheme(
+        `${theme.name} (Copy)`,
+        theme.colors,
+        theme.mode
+      );
+      
+      if (duplicatedTheme) {
+        showNotification('success', `Theme "${theme.name}" duplicated`);
       }
-    ];
+    } catch (err) {
+      showNotification('error', `Failed to duplicate theme: ${err.message}`);
+    }
+  }, [createCustomTheme, showNotification]);
 
-    const categories = ['all', ...new Set(benchmarks.map(b => b.category))];
+  /**
+   * رنگ تبدیل کریں
+   */
+  const handleColorChange = useCallback((colorType, color) => {
+    setCustomColors(prev => ({
+      ...prev,
+      [colorType]: color
+    }));
+  }, []);
+
+  // === فلٹرڈ تھیمز ===
+
+  // پری ڈیفائنڈ تھیمز
+  const predefinedThemes = useMemo(() => {
+    const filtered = allThemes.filter(t => !t.isCustom && t.category !== 'custom');
     
-    const filteredBenchmarks = selectedCategory === 'all' 
-      ? benchmarks 
-      : benchmarks.filter(b => b.category === selectedCategory);
+    if (themeSearch.trim()) {
+      const searchTerm = themeSearch.toLowerCase();
+      return filtered.filter(t => 
+        t.name.toLowerCase().includes(searchTerm) ||
+        t.description?.toLowerCase().includes(searchTerm)
+      );
+    }
+    
+    return filtered;
+  }, [allThemes, themeSearch]);
 
-    const getPriorityColor = (priority) => {
-      switch(priority) {
-        case 'Critical': return 'critical-priority';
-        case 'High': return 'high-priority';
-        case 'Medium': return 'medium-priority';
-        case 'Low': return 'low-priority';
-        default: return 'low-priority';
-      }
+  // فلٹرڈ کسٹم تھیمز
+  const filteredCustomThemes = useMemo(() => {
+    if (themeSearch.trim()) {
+      const searchTerm = themeSearch.toLowerCase();
+      return customThemes.filter(t => 
+        t.name.toLowerCase().includes(searchTerm) ||
+        t.description?.toLowerCase().includes(searchTerm)
+      );
+    }
+    return customThemes;
+  }, [customThemes, themeSearch]);
+
+  // === ایفیکٹس ===
+
+  // نوٹیفکیشن آٹو کلین اپ
+  useEffect(() => {
+    if (notification.message) {
+      const timer = setTimeout(() => {
+        setNotification({ type: '', message: '' });
+      }, 5000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [notification]);
+
+  // رینڈر ٹائم ٹریکنگ
+  useEffect(() => {
+    const startTime = performance.now();
+    
+    return () => {
+      const endTime = performance.now();
+      const renderTime = endTime - startTime;
+      
+      setPerformanceMetrics(prev => ({
+        ...prev,
+        renderTime
+      }));
     };
+  }, [activeTab, showBenchmarks, showCustomThemeModal]);
 
+  // === رینڈرنگ ===
+
+  // لوڈنگ اسٹیٹ
+  if (isLoading) {
     return (
-      <div className="benchmarks-container">
-        {/* Header */}
-        <div className="benchmarks-header">
-          <div className="header-content">
-            <span className="header-icon">⚡</span>
-            <h1 className="header-title">
-              Theme Settings Performance Benchmarks
-            </h1>
-          </div>
-          <p className="header-subtitle">
-            Comprehensive performance targets for optimal user experience
-          </p>
-          
-          {/* Summary Stats */}
-          <div className="summary-grid">
-            <div className="summary-card good-range">
-              <div className="summary-card-header">
-                <span className="summary-icon">✓</span>
-                <span className="summary-title">Good Range</span>
-              </div>
-              <p className="summary-description">Optimal performance targets</p>
-            </div>
-            <div className="summary-card acceptable-range">
-              <div className="summary-card-header">
-                <span className="summary-icon">⚠</span>
-                <span className="summary-title">Acceptable</span>
-              </div>
-              <p className="summary-description">Needs monitoring</p>
-            </div>
-            <div className="summary-card poor-range">
-              <div className="summary-card-header">
-                <span className="summary-icon">✕</span>
-                <span className="summary-title">Poor</span>
-              </div>
-              <p className="summary-description">Requires optimization</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Category Filter */}
-        <div className="category-filter">
-          <div className="filter-buttons">
-            {categories.map(cat => (
-              <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                className={`filter-button ${selectedCategory === cat ? 'active' : ''}`}
-              >
-                {cat === 'all' ? 'All Categories' : cat}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Benchmark Sections */}
-        {filteredBenchmarks.map((section, idx) => (
-          <div key={idx} className="benchmark-section">
-            <div className="section-header">
-              <span className="section-icon">📊</span>
-              <h2 className="section-title">{section.category}</h2>
-            </div>
-
-            <div className="metrics-grid">
-              {section.metrics.map((metric, metricIdx) => (
-                <div 
-                  key={metricIdx}
-                  className="metric-card"
-                >
-                  <div className="metric-header">
-                    <div className="metric-info">
-                      <div className="metric-title-row">
-                        <span className="metric-icon">⏱️</span>
-                        <h3 className="metric-name">
-                          {metric.name}
-                        </h3>
-                        <span className={`metric-priority ${getPriorityColor(metric.priority)}`}>
-                          {metric.priority}
-                        </span>
-                      </div>
-                      <p className="metric-description">{metric.description}</p>
-                    </div>
-                    <div className="metric-target">
-                      <div className="target-value">{metric.target}</div>
-                      <div className="target-label">Target</div>
-                    </div>
-                  </div>
-
-                  <div className="performance-grid">
-                    <div className="performance-card good">
-                      <div className="performance-header">
-                        <span className="performance-icon">✓</span>
-                        <span className="performance-label">Good</span>
-                      </div>
-                      <div className="performance-value">{metric.good}</div>
-                    </div>
-                    <div className="performance-card acceptable">
-                      <div className="performance-header">
-                        <span className="performance-icon">⚠</span>
-                        <span className="performance-label">Acceptable</span>
-                      </div>
-                      <div className="performance-value">{metric.acceptable}</div>
-                    </div>
-                    <div className="performance-card poor">
-                      <div className="performance-header">
-                        <span className="performance-icon">✕</span>
-                        <span className="performance-label">Poor</span>
-                      </div>
-                      <div className="performance-value">{metric.poor}</div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-
-        {/* Implementation Notes */}
-        <div className="implementation-notes">
-          <h3 className="notes-title">📊 Measurement Guidelines</h3>
-          <ul className="notes-list">
-            <li className="note-item">
-              <span className="note-bullet">•</span>
-              <span>Use Chrome DevTools Performance tab for render timing measurements</span>
-            </li>
-            <li className="note-item">
-              <span className="note-bullet">•</span>
-              <span>Test on representative devices: Desktop (high-end), Laptop (mid-range), Mobile (low-end)</span>
-            </li>
-            <li className="note-item">
-              <span className="note-bullet">•</span>
-              <span>Measure under typical load conditions (10-20 custom themes, normal network)</span>
-            </li>
-            <li className="note-item">
-              <span className="note-bullet">•</span>
-              <span>Run each test 5+ times and report median values to reduce variance</span>
-            </li>
-            <li className="note-item">
-              <span className="note-bullet">•</span>
-              <span>Use React DevTools Profiler for component-specific performance data</span>
-            </li>
-            <li className="note-item">
-              <span className="note-bullet">•</span>
-              <span>Validate accessibility with automated tools (axe, Lighthouse) + manual keyboard testing</span>
-            </li>
-          </ul>
-        </div>
+      <div className="theme-settings-loading">
+        <div className="loading-spinner"></div>
+        <p>Loading themes...</p>
       </div>
     );
-  };
+  }
+
+  // ایرر اسٹیٹ
+  if (error) {
+    return (
+      <div className="theme-settings-error">
+        <div className="error-icon">⚠️</div>
+        <h3>Theme Error</h3>
+        <p className="error-message">{error.message}</p>
+        <button 
+          className="retry-button"
+          onClick={() => window.location.reload()}
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="theme-settings">
-      {/* Performance Benchmarks Toggle Button */}
-      <div className="benchmarks-toggle-section">
-        <button
-          className="benchmarks-toggle-button"
-          onClick={() => setShowBenchmarks(!showBenchmarks)}
-        >
-          <span className="toggle-icon">⚡</span>
-          {showBenchmarks ? 'Hide Performance Benchmarks' : 'Show Performance Benchmarks'}
-          <span className="toggle-arrow">{showBenchmarks ? '▼' : '▶'}</span>
-        </button>
-        <p className="benchmarks-description">
-          View performance targets for theme switching, rendering, and user interactions
-        </p>
-      </div>
-
-      {showBenchmarks && <ThemeSettingsBenchmarks />}
-
-      {/* Mode Selection */}
-      <div className="theme-mode-section">
-        <h3 className="section-title">Theme Mode</h3>
-        <div className="mode-buttons">
-          <button
-            className={`mode-button ${mode === 'light' ? 'active' : ''}`}
-            onClick={() => handleModeChange('light')}
+      {/* نوٹیفکیشن */}
+      {notification.message && (
+        <div className={`notification notification-${notification.type}`}>
+          <span className="notification-icon">
+            {notification.type === 'success' ? '✓' : 
+             notification.type === 'error' ? '✗' : 
+             notification.type === 'warning' ? '⚠' : 'ℹ'}
+          </span>
+          <span className="notification-message">{notification.message}</span>
+          <button 
+            className="notification-close"
+            onClick={() => setNotification({ type: '', message: '' })}
           >
-            <span className="mode-icon">☀️</span>
-            Light
+            ✕
           </button>
-          <button
-            className={`mode-button ${mode === 'dark' ? 'active' : ''}`}
-            onClick={() => handleModeChange('dark')}
-          >
-            <span className="mode-icon">🌙</span>
-            Dark
-          </button>
-          <button
-            className="mode-button"
-            onClick={() => handleModeChange('device')}
-          >
-            <span className="mode-icon">💻</span>
-            Device
-          </button>
-        </div>
-      </div>
-
-      {/* Predefined Themes */}
-      <div className="theme-selection-section">
-        <h3 className="section-title">Predefined Themes</h3>
-        <div className="theme-grid">
-          {predefinedThemes.map((theme) => (
-            <div
-              key={theme.id}
-              className={`theme-card ${currentTheme?.id === theme.id ? 'active' : ''}`}
-              onClick={() => handleThemeSelect(theme.id)}
-            >
-              <div className="theme-preview">
-                <div className="theme-color-circle" style={{ backgroundColor: theme.colors.primary }} />
-                <div className="theme-color-circle" style={{ backgroundColor: theme.colors.primaryLight }} />
-                <div className="theme-color-circle" style={{ backgroundColor: theme.colors.primaryDark }} />
-                <div className="theme-color-circle" style={{ backgroundColor: theme.colors.secondary }} />
-              </div>
-              <div className="theme-card-name">{theme.name}</div>
-              {currentTheme?.id === theme.id && (
-                <div className="theme-card-check">✓</div>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Custom Themes */}
-      {customThemes.length > 0 && (
-        <div className="custom-themes-section">
-          <h3 className="section-title">Custom Themes</h3>
-          <div className="theme-grid">
-            {customThemes.map((theme) => (
-              <div
-                key={theme.id}
-                className={`theme-card custom ${currentTheme?.id === theme.id ? 'active' : ''}`}
-              >
-                <div className="theme-preview" onClick={() => handleThemeSelect(theme.id)}>
-                  <div className="theme-color-circle" style={{ backgroundColor: theme.colors.primary }} />
-                  <div className="theme-color-circle" style={{ backgroundColor: theme.colors.secondary }} />
-                  <div className="theme-color-circle" style={{ backgroundColor: theme.colors.background }} />
-                  <div className="theme-color-circle" style={{ backgroundColor: theme.colors.surface }} />
-                </div>
-                <div className="theme-card-name">{theme.name}</div>
-                {currentTheme?.id === theme.id && (
-                  <div className="theme-card-check">✓</div>
-                )}
-                <button
-                  className="delete-theme-button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDeleteCustomTheme(theme.id);
-                  }}
-                  title="Delete theme"
-                >
-                  🗑️
-                </button>
-              </div>
-            ))}
-          </div>
         </div>
       )}
 
-      {/* Theme Actions */}
-      <div className="theme-actions-section">
-        <h3 className="section-title">Theme Actions</h3>
-        <div className="action-buttons-grid">
-          <button 
-            className="action-button create"
-            onClick={() => setShowCustomThemeModal(true)}
+      {/* ہیڈر */}
+      <div className="theme-settings-header">
+        <div className="header-content">
+          <h1 className="header-title">
+            <span className="header-icon">🎨</span>
+            Theme Settings
+          </h1>
+          <p className="header-subtitle">
+            Customize the appearance of your application
+          </p>
+        </div>
+        
+        {/* پرفارمنس بینچ مارکس ٹوگل */}
+        <div className="header-actions">
+          <button
+            className={`benchmarks-toggle ${showBenchmarks ? 'active' : ''}`}
+            onClick={() => setShowBenchmarks(!showBenchmarks)}
+            title="Performance Benchmarks"
           >
-            <span className="button-icon">✨</span>
-            <div className="button-content">
-              <div className="button-title">Create Custom Theme</div>
-              <div className="button-subtitle">Design your own colors</div>
-            </div>
-          </button>
-          
-          <button 
-            className="action-button export"
-            onClick={handleExportTheme}
-          >
-            <span className="button-icon">📤</span>
-            <div className="button-content">
-              <div className="button-title">Export Current Theme</div>
-              <div className="button-subtitle">Save as JSON file</div>
-            </div>
-          </button>
-          
-          <label className="action-button import">
-            <span className="button-icon">📥</span>
-            <div className="button-content">
-              <div className="button-title">Import Theme</div>
-              <div className="button-subtitle">Load from JSON file</div>
-            </div>
-            <input
-              type="file"
-              accept=".json"
-              onChange={handleImportTheme}
-              style={{ display: 'none' }}
-            />
-          </label>
-          
-          <button 
-            className="action-button reset"
-            onClick={resetTheme}
-          >
-            <span className="button-icon">🔄</span>
-            <div className="button-content">
-              <div className="button-title">Reset to Default</div>
-              <div className="button-subtitle">Restore original theme</div>
-            </div>
+            <span className="benchmarks-icon">⚡</span>
+            <span className="benchmarks-text">
+              {showBenchmarks ? 'Hide Benchmarks' : 'Show Benchmarks'}
+            </span>
           </button>
         </div>
       </div>
 
-      {/* Custom Theme Modal */}
+      {/* پرفارمنس بینچ مارکس */}
+      {showBenchmarks && (
+        <ThemeSettingsBenchmarks 
+          performanceMetrics={performanceMetrics}
+          themeStats={themeStats}
+          currentTheme={currentTheme}
+          isDarkMode={isDarkMode}
+          isLightMode={isLightMode}
+        />
+      )}
+
+      {/* کرنٹ تھیم پریویو */}
+      <div className="current-theme-preview">
+        <div className="preview-header">
+          <h3>Current Theme</h3>
+          <div className="theme-badge mode-badge">
+            {currentTheme?.mode === 'dark' ? '🌙 Dark' : '☀️ Light'}
+          </div>
+        </div>
+        <div className="preview-content">
+          <div 
+            className="theme-color-display"
+            style={{ backgroundColor: currentTheme?.colors?.primary }}
+          >
+            <div className="color-info">
+              <span className="color-hex">{currentTheme?.colors?.primary}</span>
+              <span className="color-name">Primary</span>
+            </div>
+          </div>
+          <div className="theme-info">
+            <h4 className="theme-name">{currentTheme?.name}</h4>
+            <p className="theme-description">{currentTheme?.description || 'No description'}</p>
+            <div className="theme-meta">
+              <span className="meta-item">
+                <span className="meta-icon">📊</span>
+                {currentTheme?.category || 'predefined'}
+              </span>
+              {currentTheme?.isCustom && (
+                <span className="meta-item">
+                  <span className="meta-icon">🕒</span>
+                  {new Date(currentTheme.createdAt).toLocaleDateString()}
+                </span>
+              )}
+            </div>
+          </div>
+          <button
+            className="export-current-button"
+            onClick={() => handleExportTheme(currentTheme)}
+            title="Export this theme"
+          >
+            <span className="export-icon">📤</span>
+            Export
+          </button>
+        </div>
+      </div>
+
+      {/* ٹیب نیویگیشن */}
+      <div className="theme-tabs">
+        <button
+          className={`theme-tab ${activeTab === 'predefined' ? 'active' : ''}`}
+          onClick={() => setActiveTab('predefined')}
+        >
+          <span className="tab-icon">🎭</span>
+          <span className="tab-text">Predefined</span>
+          <span className="tab-count">{predefinedThemes.length}</span>
+        </button>
+        
+        <button
+          className={`theme-tab ${activeTab === 'custom' ? 'active' : ''}`}
+          onClick={() => setActiveTab('custom')}
+        >
+          <span className="tab-icon">✨</span>
+          <span className="tab-text">Custom</span>
+          <span className="tab-count">{filteredCustomThemes.length}</span>
+        </button>
+        
+        <button
+          className={`theme-tab ${activeTab === 'actions' ? 'active' : ''}`}
+          onClick={() => setActiveTab('actions')}
+        >
+          <span className="tab-icon">⚡</span>
+          <span className="tab-text">Actions</span>
+        </button>
+        
+        <button
+          className={`theme-tab ${activeTab === 'mode' ? 'active' : ''}`}
+          onClick={() => setActiveTab('mode')}
+        >
+          <span className="tab-icon">🌓</span>
+          <span className="tab-text">Mode</span>
+        </button>
+      </div>
+
+      {/* سرچ بار */}
+      <div className="theme-search">
+        <input
+          type="text"
+          placeholder="Search themes by name or description..."
+          value={themeSearch}
+          onChange={(e) => setThemeSearch(e.target.value)}
+          className="search-input"
+        />
+        {themeSearch && (
+          <button 
+            className="search-clear"
+            onClick={() => setThemeSearch('')}
+          >
+            ✕
+          </button>
+        )}
+      </div>
+
+      {/* ٹیب کنٹینٹ */}
+      <div className="tab-content">
+        {/* پری ڈیفائنڈ تھیمز */}
+        {activeTab === 'predefined' && (
+          <div className="themes-grid">
+            {predefinedThemes.length === 0 ? (
+              <div className="no-themes-message">
+                <div className="no-themes-icon">🔍</div>
+                <h4>No themes found</h4>
+                <p>Try a different search term or clear the search</p>
+              </div>
+            ) : (
+              predefinedThemes.map((theme) => (
+                <div
+                  key={theme.id}
+                  className={`theme-card ${currentTheme?.id === theme.id ? 'active' : ''}`}
+                  onClick={() => handleThemeSelect(theme.id)}
+                >
+                  <div className="theme-card-preview">
+                    <div className="preview-colors">
+                      <div 
+                        className="color-dot primary" 
+                        style={{ backgroundColor: theme.colors.primary }}
+                        title={`Primary: ${theme.colors.primary}`}
+                      />
+                      <div 
+                        className="color-dot secondary" 
+                        style={{ backgroundColor: theme.colors.secondary }}
+                        title={`Secondary: ${theme.colors.secondary}`}
+                      />
+                      <div 
+                        className="color-dot background" 
+                        style={{ backgroundColor: theme.colors.background }}
+                        title={`Background: ${theme.colors.background}`}
+                      />
+                    </div>
+                    <div className="theme-mode-indicator">
+                      {theme.mode === 'dark' ? '🌙' : '☀️'}
+                    </div>
+                  </div>
+                  <div className="theme-card-content">
+                    <h4 className="theme-name">{theme.name}</h4>
+                    <p className="theme-description">
+                      {theme.description || 'No description available'}
+                    </p>
+                    <div className="theme-tags">
+                      <span className="theme-tag">{theme.category}</span>
+                      <span className="theme-tag">{theme.mode}</span>
+                    </div>
+                  </div>
+                  {currentTheme?.id === theme.id && (
+                    <div className="theme-active-indicator">
+                      <div className="active-dot"></div>
+                      <span className="active-text">Active</span>
+                    </div>
+                  )}
+                  <button
+                    className="theme-duplicate-button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDuplicateTheme(theme);
+                    }}
+                    title="Duplicate this theme"
+                  >
+                    <span className="duplicate-icon">📋</span>
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
+        {/* کسٹم تھیمز */}
+        {activeTab === 'custom' && (
+          <div className="custom-themes-section">
+            <div className="section-header">
+              <h3>Your Custom Themes</h3>
+              <button
+                className="create-theme-button"
+                onClick={() => setShowCustomThemeModal(true)}
+              >
+                <span className="create-icon">+</span>
+                Create New Theme
+              </button>
+            </div>
+            
+            {filteredCustomThemes.length === 0 ? (
+              <div className="no-custom-themes">
+                <div className="empty-state">
+                  <div className="empty-icon">🎨</div>
+                  <h4>No custom themes yet</h4>
+                  <p>Create your first custom theme to get started</p>
+                  <button
+                    className="create-first-theme"
+                    onClick={() => setShowCustomThemeModal(true)}
+                  >
+                    Create Your First Theme
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="themes-grid">
+                {filteredCustomThemes.map((theme) => (
+                  <div
+                    key={theme.id}
+                    className={`theme-card custom ${currentTheme?.id === theme.id ? 'active' : ''}`}
+                  >
+                    <div 
+                      className="theme-card-preview"
+                      onClick={() => handleThemeSelect(theme.id)}
+                    >
+                      <div className="preview-colors">
+                        <div 
+                          className="color-dot primary" 
+                          style={{ backgroundColor: theme.colors.primary }}
+                        />
+                        <div 
+                          className="color-dot secondary" 
+                          style={{ backgroundColor: theme.colors.secondary }}
+                        />
+                        <div 
+                          className="color-dot background" 
+                          style={{ backgroundColor: theme.colors.background }}
+                        />
+                        <div 
+                          className="color-dot text" 
+                          style={{ backgroundColor: theme.colors.textPrimary }}
+                        />
+                      </div>
+                      <div className="theme-mode-indicator">
+                        {theme.mode === 'dark' ? '🌙' : '☀️'}
+                      </div>
+                    </div>
+                    <div className="theme-card-content">
+                      <div className="theme-header">
+                        <h4 className="theme-name">{theme.name}</h4>
+                        <span className="theme-date">
+                          {new Date(theme.createdAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <p className="theme-description">
+                        {theme.description || 'Custom user theme'}
+                      </p>
+                      <div className="theme-actions">
+                        <button
+                          className="action-button export-button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleExportTheme(theme);
+                          }}
+                          title="Export theme"
+                        >
+                          📤
+                        </button>
+                        <button
+                          className={`action-button delete-button ${
+                            showDeleteConfirm === theme.id ? 'confirm' : ''
+                          }`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteCustomTheme(theme.id, theme.name);
+                          }}
+                          title={showDeleteConfirm === theme.id ? 'Click again to confirm' : 'Delete theme'}
+                        >
+                          {showDeleteConfirm === theme.id ? '✓' : '🗑️'}
+                        </button>
+                      </div>
+                    </div>
+                    {currentTheme?.id === theme.id && (
+                      <div className="theme-active-indicator">
+                        <div className="active-dot"></div>
+                        <span className="active-text">Active</span>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ایکشنز ٹیب */}
+        {activeTab === 'actions' && (
+          <div className="actions-grid">
+            <div 
+              className="action-card create"
+              onClick={() => setShowCustomThemeModal(true)}
+            >
+              <div className="action-icon">🎨</div>
+              <div className="action-content">
+                <h4>Create New Theme</h4>
+                <p>Design your own color scheme</p>
+              </div>
+              <div className="action-arrow">→</div>
+            </div>
+
+            <label className="action-card import">
+              <div className="action-icon">📥</div>
+              <div className="action-content">
+                <h4>Import Theme</h4>
+                <p>{importingFile || 'Upload theme JSON file'}</p>
+              </div>
+              <div className="action-arrow">→</div>
+              <input
+                type="file"
+                accept=".json"
+                onChange={handleImportTheme}
+                style={{ display: 'none' }}
+              />
+            </label>
+
+            <div 
+              className="action-card export-all"
+              onClick={() => {
+                if (customThemes.length > 0) {
+                  const allThemesData = JSON.stringify(customThemes, null, 2);
+                  const blob = new Blob([allThemesData], { type: 'application/json' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = 'all-custom-themes.json';
+                  a.click();
+                  URL.revokeObjectURL(url);
+                  showNotification('success', 'All custom themes exported');
+                } else {
+                  showNotification('info', 'No custom themes to export');
+                }
+              }}
+            >
+              <div className="action-icon">📦</div>
+              <div className="action-content">
+                <h4>Export All Custom Themes</h4>
+                <p>Download all your custom themes</p>
+              </div>
+              <div className="action-arrow">→</div>
+            </div>
+
+            <div 
+              className="action-card reset"
+              onClick={handleResetTheme}
+            >
+              <div className="action-icon">🔄</div>
+              <div className="action-content">
+                <h4>Reset to Default</h4>
+                <p>Restore original theme settings</p>
+              </div>
+              <div className="action-arrow">→</div>
+            </div>
+
+            <div 
+              className="action-card toggle-mode"
+              onClick={toggleMode}
+            >
+              <div className="action-icon">{isDarkMode ? '☀️' : '🌙'}</div>
+              <div className="action-content">
+                <h4>Toggle Dark/Light Mode</h4>
+                <p>Switch between dark and light themes</p>
+              </div>
+              <div className="action-arrow">→</div>
+            </div>
+
+            <div 
+              className="action-card refresh"
+              onClick={() => window.location.reload()}
+            >
+              <div className="action-icon">🔄</div>
+              <div className="action-content">
+                <h4>Refresh Application</h4>
+                <p>Reload the page to apply all changes</p>
+              </div>
+              <div className="action-arrow">→</div>
+            </div>
+          </div>
+        )}
+
+        {/* موڈ ٹیب */}
+        {activeTab === 'mode' && (
+          <div className="mode-section">
+            <div className="mode-cards">
+              <div 
+                className={`mode-card ${isLightMode ? 'active' : ''}`}
+                onClick={() => handleModeChange('light')}
+              >
+                <div className="mode-icon">☀️</div>
+                <div className="mode-content">
+                  <h4>Light Mode</h4>
+                  <p>Bright interface, ideal for daytime use</p>
+                  <ul className="mode-features">
+                    <li>✓ Reduced eye strain in bright environments</li>
+                    <li>✓ Better color accuracy</li>
+                    <li>✓ Traditional reading experience</li>
+                  </ul>
+                </div>
+                {isLightMode && <div className="mode-check">✓ Active</div>}
+              </div>
+
+              <div 
+                className={`mode-card ${isDarkMode ? 'active' : ''}`}
+                onClick={() => handleModeChange('dark')}
+              >
+                <div className="mode-icon">🌙</div>
+                <div className="mode-content">
+                  <h4>Dark Mode</h4>
+                  <p>Dark interface, reduces eye strain at night</p>
+                  <ul className="mode-features">
+                    <li>✓ Reduced blue light emission</li>
+                    <li>✓ Saves battery on OLED screens</li>
+                    <li>✓ Better for low-light environments</li>
+                  </ul>
+                </div>
+                {isDarkMode && <div className="mode-check">✓ Active</div>}
+              </div>
+            </div>
+
+            <div className="mode-auto-section">
+              <h4>Auto Mode Settings</h4>
+              <p>Automatically switch between light and dark modes</p>
+              <div className="auto-options">
+                <label className="auto-option">
+                  <input type="radio" name="auto-mode" defaultChecked />
+                  <span className="option-label">Follow System</span>
+                  <span className="option-description">Use your device's theme setting</span>
+                </label>
+                <label className="auto-option">
+                  <input type="radio" name="auto-mode" />
+                  <span className="option-label">Schedule</span>
+                  <span className="option-description">Switch based on time of day</span>
+                </label>
+                <label className="auto-option">
+                  <input type="radio" name="auto-mode" />
+                  <span className="option-label">Manual</span>
+                  <span className="option-description">Always use selected mode</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* کسٹم تھیم موڈل */}
       {showCustomThemeModal && (
         <div className="modal-overlay" onClick={() => setShowCustomThemeModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -647,54 +879,68 @@ const ThemeSettings = () => {
                   type="text"
                   value={customThemeName}
                   onChange={(e) => setCustomThemeName(e.target.value)}
-                  placeholder="Enter theme name"
+                  placeholder="My Awesome Theme"
                   className="theme-name-input"
                 />
               </div>
 
-              <div className="color-grid">
-                <ColorPicker
-                  label="Primary Color"
-                  color={customColors.primary}
-                  onChange={(color) => setCustomColors({ ...customColors, primary: color })}
-                />
-                <ColorPicker
-                  label="Secondary Color"
-                  color={customColors.secondary}
-                  onChange={(color) => setCustomColors({ ...customColors, secondary: color })}
-                />
-                <ColorPicker
-                  label="Background"
-                  color={customColors.background}
-                  onChange={(color) => setCustomColors({ ...customColors, background: color })}
-                />
-                <ColorPicker
-                  label="Surface"
-                  color={customColors.surface}
-                  onChange={(color) => setCustomColors({ ...customColors, surface: color })}
-                />
-                <ColorPicker
-                  label="Text Primary"
-                  color={customColors.textPrimary}
-                  onChange={(color) => setCustomColors({ ...customColors, textPrimary: color })}
-                />
-                <ColorPicker
-                  label="Text Secondary"
-                  color={customColors.textSecondary}
-                  onChange={(color) => setCustomColors({ ...customColors, textSecondary: color })}
-                />
+              <div className="color-pickers-section">
+                <h4>Color Scheme</h4>
+                <div className="color-pickers-grid">
+                  {Object.entries({
+                    primary: 'Primary Color',
+                    secondary: 'Secondary Color',
+                    background: 'Background',
+                    surface: 'Surface',
+                    textPrimary: 'Text Primary',
+                    textSecondary: 'Text Secondary',
+                    border: 'Border',
+                    success: 'Success',
+                    warning: 'Warning',
+                    error: 'Error',
+                    info: 'Info'
+                  }).map(([key, label]) => (
+                    <ColorPicker
+                      key={key}
+                      label={label}
+                      color={customColors[key]}
+                      onChange={(color) => handleColorChange(key, color)}
+                      className="color-picker-item"
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <div className="theme-mode-selection">
+                <h4>Theme Mode</h4>
+                <div className="mode-options">
+                  <button
+                    className={`mode-option ${mode === 'light' ? 'active' : ''}`}
+                    onClick={() => setMode('light')}
+                  >
+                    <span className="option-icon">☀️</span>
+                    Light Mode
+                  </button>
+                  <button
+                    className={`mode-option ${mode === 'dark' ? 'active' : ''}`}
+                    onClick={() => setMode('dark')}
+                  >
+                    <span className="option-icon">🌙</span>
+                    Dark Mode
+                  </button>
+                </div>
               </div>
             </div>
 
             <div className="modal-footer">
               <button 
-                className="modal-button cancel"
+                className="modal-button secondary"
                 onClick={() => setShowCustomThemeModal(false)}
               >
                 Cancel
               </button>
               <button 
-                className="modal-button create"
+                className="modal-button primary"
                 onClick={handleCreateCustomTheme}
               >
                 Create Theme
