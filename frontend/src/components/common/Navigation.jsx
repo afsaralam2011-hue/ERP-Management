@@ -424,7 +424,7 @@ const Navigation = () => {
     [userData, themeColors, getContrastColor],
   );
 
-  // Navigation items with vibrant colors and icons
+  // Complete Navigation items with all links from the first file
   const navigationItems = useMemo(
     () => ({
       dashboard: {
@@ -436,43 +436,45 @@ const Navigation = () => {
         iconColor: themeColors.primary,
         badge: null,
       },
+      
       production: {
-        path: "/production/new",
-        label: "Production",
+        path: "/dashboard/production",
+        label: "Production Dashboard",
         icon: <FiPackage />,
         color: themeColors.accent,
         iconColor: themeColors.accent,
         badge: dailyUpdates.production > 0 ? dailyUpdates.production.toString() : null,
         subSections: [
+          // Main Production Dashboard
           { 
-            path: "/production/new", 
-            label: "New Production", 
+            path: "/dashboard/production", 
+            label: "Production Department", 
             icon: <FiGrid />,
-            iconColor: themeColors.accent
+            iconColor: themeColors.primary 
           },
-          { 
-            path: "/production", 
-            label: "Production Dashboard", 
-            icon: <FiBarChart2 />,
-            iconColor: themeColors.primary
-          },
+          
+          // All Sections
           { 
             path: "/production-sections", 
             label: "All Sections", 
             icon: <FiFolder />,
-            iconColor: themeColors.secondary
+            iconColor: themeColors.secondary 
           },
+          
+          // All Daily Production Report
           { 
             path: "/production-reports/daily", 
-            label: "Daily Reports", 
+            label: "Daily Production Report", 
             icon: <FiActivity />,
-            iconColor: themeColors.success
+            iconColor: themeColors.success 
           },
-          {
-            type: "department", 
-            key: "rawMaterial", 
-            label: "Raw Material", 
-            icon: <FiDatabase />, 
+          
+          // Raw Material Department
+          { 
+            type: "department",
+            key: "rawMaterial",
+            label: "Raw Material Department", 
+            icon: <FiDatabase />,
             color: themeColors.secondary,
             iconColor: themeColors.secondary,
             subItems: [
@@ -484,48 +486,242 @@ const Navigation = () => {
               },
               { 
                 path: "/production-sections/raw-material/new", 
-                label: "New Entry", 
+                label: "Raw Material Entry", 
                 icon: <FiClipboard />,
                 iconColor: themeColors.accent
               },
-              { 
-                path: "/flattening-ledger", 
-                label: "Inventory Ledger", 
-                icon: <FiTool />,
-                iconColor: themeColors.warning
+              {
+                type: "nested",
+                label: "Raw Material Inventory Reports",
+                icon: <FiArchive />,
+                iconColor: themeColors.warning,
+                subItems: [
+                  { 
+                    path: "/flattening-ledger", 
+                    label: "Raw Material Inventory Ledger", 
+                    icon: <FiDatabase />,
+                    iconColor: themeColors.secondary
+                  }
+                ]
               },
-            ],
+              { 
+                type: "nested",
+                label: "Raw Material Daily Report",
+                icon: <FiActivity />,
+                iconColor: themeColors.success,
+                subItems: [
+                  { 
+                    path: "/production-sections/raw-material/material-received", 
+                    label: "Material Received", 
+                    icon: <FiTool />,
+                    iconColor: themeColors.orange
+                  },
+                  { 
+                    path: "/production-sections/raw-material/material-issue", 
+                    label: "Material Issue", 
+                    icon: <FiTool />,
+                    iconColor: themeColors.orange
+                  }
+                ]
+              },
+              { 
+                path: "/production-sections/raw-material/new-log", 
+                label: "New Material Log", 
+                icon: <FiClipboard />,
+                iconColor: themeColors.accent
+              }
+            ]
           },
-          {
-            type: "department", 
-            key: "flattening", 
-            label: "Flattening", 
-            icon: <FiBox />, 
-            color: themeColors.accent,
-            iconColor: themeColors.accent,
+          
+          // Flattening Department
+          { 
+            type: "department",
+            key: "flattening",
+            label: "Flattening Department", 
+            icon: <FiBox />,
+            color: themeColors.highlight,
+            iconColor: themeColors.highlight,
             subItems: [
               { 
                 path: "/production-sections/flattening", 
                 label: "Flattening Section", 
                 icon: <FiLayers />,
-                iconColor: themeColors.accent
+                iconColor: themeColors.highlight
               },
               { 
                 path: "/production-sections/flattening/smart-entry", 
-                label: "Smart Entry", 
-                icon: <FiEdit />,
+                label: "Flattening Production Entry", 
+                icon: <FiClipboard />,
+                iconColor: themeColors.accent
+              },
+              { 
+                path: "/flattening-inventory", 
+                label: "Flattening Inventory Reports", 
+                icon: <FiArchive />,
+                iconColor: themeColors.warning
+              },
+              { 
+                path: "/flattening-ledger", 
+                label: "Flattening Inventory Ledger", 
+                icon: <FiDatabase />,
+                iconColor: themeColors.secondary
+              },
+              { 
+                path: "/production-reports/daily", 
+                label: "Flattening Daily Report", 
+                icon: <FiActivity />,
+                iconColor: themeColors.success
+              },
+              { 
+                path: "/production-sections/flattening/new", 
+                label: "New Flattening Record", 
+                icon: <FiClipboard />,
+                iconColor: themeColors.accent
+              }
+            ]
+          },
+          
+          // Spiral Department
+          { 
+            type: "department",
+            key: "spiral",
+            label: "Spiral Department", 
+            icon: <FiLayers />,
+            color: themeColors.accent,
+            iconColor: themeColors.accent,
+            subItems: [
+              { 
+                path: "/production-sections/spiral", 
+                label: "Spiral Section", 
+                icon: <FiLayers />,
+                iconColor: themeColors.accent
+              },
+              { 
+                path: "/production-sections/spiral/smart-entry", 
+                label: "Spiral Production Entry", 
+                icon: <FiClipboard />,
+                iconColor: themeColors.accent
+              },
+              { 
+                path: "/production-reports/daily", 
+                label: "Spiral Inventory Reports", 
+                icon: <FiArchive />,
+                iconColor: themeColors.warning
+              },
+              { 
+                path: "/production-sections/spiral/smart-entry", 
+                label: "Spiral Smart Entry", 
+                icon: <FiActivity />,
+                iconColor: themeColors.success
+              },
+              { 
+                path: "/production-sections/spiral/new", 
+                label: "New Spiral Record", 
+                icon: <FiClipboard />,
+                iconColor: themeColors.accent
+              }
+            ]
+          },
+          
+          // PVC Coating Department
+          { 
+            type: "department",
+            key: "pvc",
+            label: "PVC Coating Department", 
+            icon: <FiPackage />,
+            color: themeColors.secondary,
+            iconColor: themeColors.secondary,
+            subItems: [
+              { 
+                path: "/production-sections/pvc-coating", 
+                label: "PVC Coating Section", 
+                icon: <FiPackage />,
+                iconColor: themeColors.secondary
+              },
+              { 
+                path: "/production-sections/pvc-coating/smart-form", 
+                label: "PVC Smart Entry", 
+                icon: <FiActivity />,
+                iconColor: themeColors.success
+              },
+              { 
+                path: "/production-sections/pvc-coating/smart-form", 
+                label: "PVC Production Entry", 
+                icon: <FiClipboard />,
+                iconColor: themeColors.accent
+              },
+              { 
+                path: "/production-reports/daily", 
+                label: "PVC Inventory Reports", 
+                icon: <FiArchive />,
+                iconColor: themeColors.warning
+              },
+              { 
+                path: "/production-sections/pvc-coating/new", 
+                label: "New PVC Record", 
+                icon: <FiClipboard />,
+                iconColor: themeColors.accent
+              }
+            ]
+          },
+          
+          // Cutting Packing Section
+          { 
+            type: "department",
+            key: "cutting",
+            label: "Cutting Packing Section", 
+            icon: <FiScissors />,
+            color: themeColors.highlight,
+            iconColor: themeColors.highlight,
+            subItems: [
+              { 
+                path: "/dashboard/production", 
+                label: "Cutting Packing Section", 
+                icon: <FiScissors />,
+                iconColor: themeColors.highlight
+              },
+              { 
+                path: "/dashboard/production", 
+                label: "Cutting Packing Entry", 
+                icon: <FiClipboard />,
+                iconColor: themeColors.accent
+              },
+              { 
+                path: "/production-reports/daily", 
+                label: "Packing Inventory Reports", 
+                icon: <FiArchive />,
+                iconColor: themeColors.warning
+              }
+            ]
+          },
+          
+          // Finished Goods Section
+          { 
+            type: "department",
+            key: "finishedGoods",
+            label: "Finished Goods Section", 
+            icon: <FiCheckSquare />,
+            color: themeColors.primary,
+            iconColor: themeColors.primary,
+            subItems: [
+              { 
+                path: "/dashboard/production", 
+                label: "Finished Goods Section", 
+                icon: <FiCheckSquare />,
                 iconColor: themeColors.primary
               },
               { 
-                path: "/production-sections/flattening/multi-entry", 
-                label: "Multi Entry", 
-                icon: <FiEdit />,
-                iconColor: themeColors.info
-              },
-            ],
-          },
-        ],
+                path: "/production-reports/daily", 
+                label: "Finished Goods Inventory Reports", 
+                icon: <FiArchive />,
+                iconColor: themeColors.warning
+              }
+            ]
+          }
+        ]
       },
+      
+      // Other Departments
       hr: {
         path: "/hr",
         label: "HR Department",
@@ -537,7 +733,7 @@ const Navigation = () => {
           { 
             path: "/hr/employees", 
             label: "Employees", 
-            icon: <FiUser />,
+            icon: <FiUsers />,
             iconColor: themeColors.purple
           },
           { 
@@ -546,11 +742,24 @@ const Navigation = () => {
             icon: <FiClipboard />,
             iconColor: themeColors.accent
           },
-        ],
+          { 
+            path: "/hr/payroll", 
+            label: "Payroll", 
+            icon: <FiDollarSign />,
+            iconColor: themeColors.success
+          },
+          { 
+            path: "/hr/leaves", 
+            label: "Leaves", 
+            icon: <FiActivity />,
+            iconColor: themeColors.success
+          }
+        ]
       },
+      
       finance: {
         path: "/finance",
-        label: "Finance",
+        label: "Finance Department",
         icon: <FiDollarSign />,
         color: themeColors.success,
         iconColor: themeColors.success,
@@ -559,20 +768,33 @@ const Navigation = () => {
           { 
             path: "/finance/accounts", 
             label: "Accounts", 
-            icon: <FiCreditCard />,
+            icon: <FiDollarSign />,
             iconColor: themeColors.success
           },
           { 
             path: "/finance/invoices", 
             label: "Invoices", 
-            icon: <FiFileText />,
-            iconColor: themeColors.info
+            icon: <FiClipboard />,
+            iconColor: themeColors.accent
           },
-        ],
+          { 
+            path: "/finance/expenses", 
+            label: "Expenses", 
+            icon: <FiActivity />,
+            iconColor: themeColors.success
+          },
+          { 
+            path: "/finance/reports", 
+            label: "Reports", 
+            icon: <FiDatabase />,
+            iconColor: themeColors.secondary
+          }
+        ]
       },
+      
       sales: {
         path: "/sales",
-        label: "Sales",
+        label: "Sales Department",
         icon: <FiShoppingCart />,
         color: themeColors.orange,
         iconColor: themeColors.orange,
@@ -581,7 +803,7 @@ const Navigation = () => {
           { 
             path: "/sales/orders", 
             label: "Orders", 
-            icon: <FiShoppingBag />,
+            icon: <FiShoppingCart />,
             iconColor: themeColors.orange
           },
           { 
@@ -590,8 +812,21 @@ const Navigation = () => {
             icon: <FiUsers />,
             iconColor: themeColors.purple
           },
-        ],
+          { 
+            path: "/sales/invoices", 
+            label: "Invoices", 
+            icon: <FiClipboard />,
+            iconColor: themeColors.accent
+          },
+          { 
+            path: "/sales/reports", 
+            label: "Reports", 
+            icon: <FiDatabase />,
+            iconColor: themeColors.secondary
+          }
+        ]
       },
+      
       it: {
         path: "/it",
         label: "IT Department",
@@ -612,11 +847,24 @@ const Navigation = () => {
             icon: <FiDatabase />,
             iconColor: themeColors.secondary
           },
-        ],
+          { 
+            path: "/it/network", 
+            label: "Network", 
+            icon: <FiActivity />,
+            iconColor: themeColors.success
+          },
+          { 
+            path: "/it/security", 
+            label: "Security", 
+            icon: <FiClipboard />,
+            iconColor: themeColors.accent
+          }
+        ]
       },
+      
       logistics: {
         path: "/logistics",
-        label: "Logistics",
+        label: "Logistics Department",
         icon: <FiTruck />,
         color: themeColors.lime,
         iconColor: themeColors.lime,
@@ -634,8 +882,20 @@ const Navigation = () => {
             icon: <FiTruck />,
             iconColor: themeColors.lime
           },
-        ],
-      },
+          { 
+            path: "/logistics/suppliers", 
+            label: "Suppliers", 
+            icon: <FiUsers />,
+            iconColor: themeColors.purple
+          },
+          { 
+            path: "/logistics/tracking", 
+            label: "Tracking", 
+            icon: <FiActivity />,
+            iconColor: themeColors.success
+          }
+        ]
+      }
     }),
     [themeColors, dailyUpdates],
   );
@@ -710,54 +970,7 @@ const Navigation = () => {
                 borderLeft: `2px dashed ${item.color}40`,
                 animation: "slideDown 0.3s ease"
               }}>
-                {item.subItems.map((subItem, subIndex) => {
-                  const isActive = currentPath === subItem.path || currentPath.startsWith(subItem.path);
-
-                  return (
-                    <NavLink
-                      key={`${subItem.path}-${subIndex}`}
-                      to={subItem.path}
-                      style={{
-                        color: isActive ? item.color : themeColors.textSecondary,
-                        borderLeft: `2px solid ${isActive ? item.color : "transparent"}`,
-                        backgroundColor: isActive ? `${item.color}20` : "transparent",
-                        margin: "5px 12px",
-                        padding: "12px 18px",
-                        borderRadius: "8px",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "14px",
-                        fontSize: "13px",
-                        fontWeight: isActive ? 600 : 500,
-                        textDecoration: "none",
-                        transition: "all 0.3s ease",
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = `${item.color}15`;
-                        e.currentTarget.style.color = item.color;
-                        e.currentTarget.style.borderLeft = `2px solid ${item.color}`;
-                        e.currentTarget.style.transform = "translateX(5px)";
-                        e.currentTarget.style.boxShadow = themeColors.shadowLight;
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = isActive ? `${item.color}20` : "transparent";
-                        e.currentTarget.style.color = isActive ? item.color : themeColors.textSecondary;
-                        e.currentTarget.style.borderLeft = `2px solid ${isActive ? item.color : "transparent"}`;
-                        e.currentTarget.style.transform = "translateX(0)";
-                        e.currentTarget.style.boxShadow = "none";
-                      }}
-                    >
-                      <span style={{ 
-                        color: isActive ? subItem.iconColor || item.color : themeColors.textMuted,
-                        fontSize: "16px",
-                        transition: "all 0.3s ease"
-                      }}>
-                        {subItem.icon}
-                      </span>
-                      <span>{subItem.label}</span>
-                    </NavLink>
-                  );
-                })}
+                {renderDepartmentSubItems(item.subItems, item.color, item.iconColor)}
               </div>
             )}
           </div>
@@ -812,6 +1025,160 @@ const Navigation = () => {
       );
     });
   }, [sidebarOpen, expandedSections, currentPath, themeColors, toggleSection]);
+
+  const renderDepartmentSubItems = useCallback((items, departmentColor = themeColors.primary, iconColor = themeColors.primary) => {
+    if (!sidebarOpen) return null;
+
+    return items.map((item, index) => {
+      if (item.type === "nested") {
+        const nestedKey = item.label.replace(/\s+/g, '');
+        const isNestedExpanded = expandedSections[nestedKey];
+        const hasNestedItems = item.subItems && item.subItems.length > 0;
+
+        return (
+          <div key={`nested-${index}`} style={{ margin: "2px 0" }}>
+            {/* Nested Header */}
+            <div
+              className="nested-header"
+              role="button"
+              tabIndex={0}
+              onClick={(e) => {
+                const key = item.label.replace(/\s+/g, '');
+                setExpandedSections(prev => ({
+                  ...prev,
+                  [key]: !prev[key]
+                }));
+                e.stopPropagation();
+              }}
+              style={{
+                color: isNestedExpanded ? departmentColor : themeColors.textSecondary,
+                backgroundColor: isNestedExpanded ? `${departmentColor}15` : "transparent",
+                borderLeft: `2px solid ${isNestedExpanded ? departmentColor : "transparent"}`,
+                margin: "5px 12px",
+                padding: "12px 18px",
+                borderRadius: "8px",
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+                fontSize: "12px",
+                fontWeight: 600,
+                cursor: "pointer",
+                transition: "all 0.2s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = `${departmentColor}10`;
+                e.currentTarget.style.color = departmentColor;
+                e.currentTarget.style.borderLeft = `2px solid ${departmentColor}`;
+                e.currentTarget.style.transform = "translateX(3px)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = isNestedExpanded ? `${departmentColor}15` : "transparent";
+                e.currentTarget.style.color = isNestedExpanded ? departmentColor : themeColors.textSecondary;
+                e.currentTarget.style.borderLeft = `2px solid ${isNestedExpanded ? departmentColor : "transparent"}`;
+                e.currentTarget.style.transform = "translateX(0)";
+              }}
+            >
+              <span style={{
+                fontSize: "14px",
+                color: isNestedExpanded ? iconColor : themeColors.textMuted,
+                flexShrink: 0
+              }}>
+                {item.icon}
+              </span>
+              
+              <div style={{ flex: 1, overflow: 'hidden' }}>
+                <div style={{
+                  fontSize: "12px",
+                  fontWeight: "500",
+                  color: isNestedExpanded ? departmentColor : themeColors.textSecondary,
+                  whiteSpace: 'nowrap'
+                }}>
+                  {item.label}
+                </div>
+              </div>
+              
+              {hasNestedItems && (
+                <span style={{
+                  color: departmentColor,
+                  fontSize: '10px',
+                  transition: 'transform 0.3s ease',
+                  transform: isNestedExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
+                  flexShrink: 0
+                }}>
+                  <FiChevronDown />
+                </span>
+              )}
+            </div>
+
+            {/* Nested Sub-items */}
+            {isNestedExpanded && item.subItems && (
+              <div style={{
+                marginLeft: '10px',
+                paddingLeft: '10px',
+                animation: 'slideDown 0.3s ease'
+              }}>
+                {renderDepartmentSubItems(item.subItems, departmentColor, iconColor)}
+              </div>
+            )}
+          </div>
+        );
+      }
+
+      // Regular link item
+      const isActive = currentPath === item.path || currentPath.startsWith(item.path);
+
+      return (
+        <NavLink
+          key={item.path || index}
+          to={item.path}
+          style={{
+            color: isActive ? themeColors.white : themeColors.textSecondary,
+            borderLeft: `2px solid ${isActive ? departmentColor : "transparent"}`,
+            backgroundColor: isActive ? departmentColor : "transparent",
+            margin: "4px 12px",
+            padding: "10px 18px",
+            borderRadius: "6px",
+            display: "flex",
+            alignItems: "center",
+            gap: "12px",
+            fontSize: "12px",
+            fontWeight: isActive ? 600 : 500,
+            textDecoration: "none",
+            transition: "all 0.2s ease",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = `${departmentColor}15`;
+            e.currentTarget.style.color = departmentColor;
+            e.currentTarget.style.borderLeft = `2px solid ${departmentColor}`;
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = isActive ? departmentColor : "transparent";
+            e.currentTarget.style.color = isActive ? themeColors.white : themeColors.textSecondary;
+            e.currentTarget.style.borderLeft = `2px solid ${isActive ? departmentColor : "transparent"}`;
+          }}
+        >
+          <span style={{
+            fontSize: "14px",
+            color: isActive ? themeColors.white : iconColor,
+            flexShrink: 0
+          }}>
+            {item.icon}
+          </span>
+          
+          <div style={{ flex: 1, overflow: 'hidden' }}>
+            <div style={{
+              fontSize: "12px",
+              fontWeight: "500",
+              color: isActive ? themeColors.white : themeColors.textSecondary,
+              whiteSpace: 'nowrap'
+            }}>
+              {item.label}
+            </div>
+          </div>
+        </NavLink>
+      );
+    });
+  }, [sidebarOpen, expandedSections, currentPath, themeColors]);
 
   const MobileHeader = () => {
     if (!isMobile) return null;
@@ -1137,6 +1504,7 @@ const Navigation = () => {
                         setTimeout(() => toggleSection(key, e), 100);
                       } else {
                         navigate(item.path);
+                        if (isMobile) closeMobileMenu();
                       }
                     }}
                     style={{
