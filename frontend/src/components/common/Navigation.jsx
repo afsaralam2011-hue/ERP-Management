@@ -438,35 +438,36 @@ const Navigation = () => {
       },
       
       production: {
-        path: "/dashboard/production",
-        label: "Production Dashboard",
+        path: "/production/new",
+        label: "Production",
         icon: <FiPackage />,
         color: themeColors.accent,
         iconColor: themeColors.accent,
         badge: dailyUpdates.production > 0 ? dailyUpdates.production.toString() : null,
         subSections: [
-          // Main Production Dashboard
           { 
-            path: "/dashboard/production", 
-            label: "Production Department", 
+            path: "/production/new", 
+            label: "New Production", 
             icon: <FiGrid />,
-            iconColor: themeColors.primary 
+            iconColor: themeColors.accent
           },
-          
-          // All Sections
+          { 
+            path: "/production", 
+            label: "Production Dashboard", 
+            icon: <FiBarChart2 />,
+            iconColor: themeColors.primary
+          },
           { 
             path: "/production-sections", 
             label: "All Sections", 
             icon: <FiFolder />,
-            iconColor: themeColors.secondary 
+            iconColor: themeColors.secondary
           },
-          
-          // All Daily Production Report
           { 
             path: "/production-reports/daily", 
-            label: "Daily Production Report", 
+            label: "Daily Reports", 
             icon: <FiActivity />,
-            iconColor: themeColors.success 
+            iconColor: themeColors.success
           },
           
           // Raw Material Department
