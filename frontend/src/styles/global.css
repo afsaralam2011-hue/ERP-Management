@@ -1,4 +1,4 @@
-/* src/styles/global.css - COMPLETE FILE */
+/* src/styles/global.css - UPDATED & FIXED FILE */
 
 /* ===============================
    CSS Variables - Light Theme (Default)
@@ -19,10 +19,11 @@
   --color-surface: #F5F5F5;
   --color-paper: #FFFFFF;
   
-  /* Text Colors - BLACK سے INDIGO/NAVY میں تبدیل */
+  /* Text Colors - FIXED: All text colors should be from indigo/navy spectrum */
   --color-text-primary: #1A237E;    /* Deep Indigo/Navy Blue */
   --color-text-secondary: #283593;  /* Medium Indigo/Navy Blue */
   --color-text-disabled: #5C6BC0;   /* Light Indigo */
+  --color-text-muted: #7986CB;      /* Added: Medium-Light Indigo */
   
   /* Border Colors */
   --color-border: #E0E0E0;
@@ -45,23 +46,28 @@
   --color-info-light: #BBDEFB;
   --color-info-dark: #1976D2;
   
-  /* Additional Colors - BLACK سے INDIGO میں تبدیل */
-  --color-shadow: rgba(26, 35, 126, 0.1);  /* Indigo shadow */
+  /* Additional Colors */
+  --color-shadow: rgba(26, 35, 126, 0.1);
   --color-overlay: rgba(0, 0, 0, 0.5);
-  --color-hover: rgba(26, 35, 126, 0.04);  /* Indigo hover */
+  --color-hover: rgba(26, 35, 126, 0.04);
   --color-selected: rgba(25, 118, 210, 0.08);
   --color-disabled: #F5F5F5;
+  --color-focus-ring: rgba(33, 150, 243, 0.4);
   
   /* Input Colors */
   --color-input-background: #FFFFFF;
   --color-input-border: #BDBDBD;
-  --color-input-placeholder: #5C6BC0;  /* Light Indigo */
+  --color-input-placeholder: #5C6BC0;
+  --color-input-text: #1A237E;
   
   /* Button Colors */
   --color-button-primary: #1976D2;
+  --color-button-primary-hover: #1565C0;
   --color-button-secondary: #DC004E;
+  --color-button-secondary-hover: #C2185B;
   --color-button-disabled: #E0E0E0;
   --color-button-text: #FFFFFF;
+  --color-button-text-secondary: #1A237E;
   
   /* Spacing */
   --spacing-xs: 4px;
@@ -69,6 +75,7 @@
   --spacing-md: 16px;
   --spacing-lg: 24px;
   --spacing-xl: 32px;
+  --spacing-2xl: 48px;
   
   /* Border Radius */
   --radius-sm: 4px;
@@ -82,36 +89,57 @@
   --shadow-md: 0 4px 6px -1px var(--color-shadow);
   --shadow-lg: 0 10px 15px -3px var(--color-shadow);
   --shadow-xl: 0 20px 25px -5px var(--color-shadow);
+  --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
   
   /* Transitions */
-  --transition-fast: 150ms ease-in-out;
-  --transition-base: 250ms ease-in-out;
-  --transition-slow: 350ms ease-in-out;
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
   
   /* Typography */
-  --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-  --font-size-xs: 0.75rem;
-  --font-size-sm: 0.875rem;
-  --font-size-base: 1rem;
-  --font-size-lg: 1.125rem;
-  --font-size-xl: 1.25rem;
-  --font-size-2xl: 1.5rem;
-  --font-size-3xl: 1.875rem;
-  --font-size-4xl: 2.25rem;
+  --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+  --font-size-xs: 0.75rem;     /* 12px */
+  --font-size-sm: 0.875rem;    /* 14px */
+  --font-size-base: 1rem;      /* 16px */
+  --font-size-lg: 1.125rem;    /* 18px */
+  --font-size-xl: 1.25rem;     /* 20px */
+  --font-size-2xl: 1.5rem;     /* 24px */
+  --font-size-3xl: 1.875rem;   /* 30px */
+  --font-size-4xl: 2.25rem;    /* 36px */
+  --font-size-5xl: 3rem;       /* 48px */
   
   /* Font Weights */
+  --font-weight-light: 300;
   --font-weight-normal: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
   
   /* Line Heights */
+  --line-height-none: 1;
   --line-height-tight: 1.25;
+  --line-height-snug: 1.375;
   --line-height-normal: 1.5;
   --line-height-relaxed: 1.75;
+  --line-height-loose: 2;
+  
+  /* Letter Spacing */
+  --letter-spacing-tighter: -0.05em;
+  --letter-spacing-tight: -0.025em;
+  --letter-spacing-normal: 0;
+  --letter-spacing-wide: 0.025em;
+  --letter-spacing-wider: 0.05em;
   
   /* Z-Index */
+  --z-negative: -1;
+  --z-0: 0;
+  --z-10: 10;
+  --z-20: 20;
+  --z-30: 30;
+  --z-40: 40;
+  --z-50: 50;
+  --z-auto: auto;
   --z-dropdown: 1000;
   --z-sticky: 1020;
   --z-fixed: 1030;
@@ -119,40 +147,40 @@
   --z-modal: 1050;
   --z-popover: 1060;
   --z-tooltip: 1070;
+  --z-toast: 1080;
 }
 
 /* ===============================
-   Dark Theme CSS Variables
+   Dark Theme CSS Variables - FIXED VERSION
    =============================== */
-[data-theme="dark"], 
-[data-theme*="dark"], 
-body.dark-mode,
-.dark-mode {
-  /* Primary Colors (Dark Theme) */
+[data-theme="dark"],
+body.dark-mode {
+  /* Primary Colors */
   --color-primary: #90CAF9;
   --color-primary-light: #E3F2FD;
   --color-primary-dark: #42A5F5;
   
-  /* Secondary Colors (Dark Theme) */
+  /* Secondary Colors */
   --color-secondary: #F48FB1;
   --color-secondary-light: #FCE4EC;
   --color-secondary-dark: #EC407A;
   
-  /* Background Colors (Dark Theme) */
-  --color-background: #0a0a0a;
-  --color-surface: #1a1a1a;
-  --color-paper: #242424;
+  /* Background Colors - FIXED: Proper dark backgrounds */
+  --color-background: #121212;        /* True dark background */
+  --color-surface: #1E1E1E;          /* Slightly lighter than background */
+  --color-paper: #242424;            /* Surface for cards and components */
   
-  /* Text Colors (Dark Theme) - INDIGO/NAVY میں تبدیل */
-  --color-text-primary: #ffffff;      /* Light Indigo */
-  --color-text-secondary: lch(86.75% 45.46 201.26);    /* Lighter Indigo */
-  --color-text-disabled: #6D6D6D;
+  /* Text Colors - FIXED: All text should be light, NO BLACK */
+  --color-text-primary: #E3F2FD;     /* Light blue/white for primary text */
+  --color-text-secondary: #BBDEFB;   /* Slightly muted light blue */
+  --color-text-disabled: #78909C;    /* Grey-blue for disabled */
+  --color-text-muted: #90A4AE;       /* Blue-grey for muted text */
   
-  /* Border Colors (Dark Theme) */
-  --color-border: #333333;
-  --color-divider: #444444;
+  /* Border Colors */
+  --color-border: #2D2D2D;
+  --color-divider: #37474F;
   
-  /* Status Colors (Dark Theme) */
+  /* Status Colors */
   --color-success: #66BB6A;
   --color-success-light: #A5D6A7;
   --color-success-dark: #388E3C;
@@ -169,29 +197,47 @@ body.dark-mode,
   --color-info-light: #64B5F6;
   --color-info-dark: #1976D2;
   
-  /* Additional Colors (Dark Theme) - BLACK سے INDIGO میں تبدیل */
-  --color-shadow: rgba(121, 134, 203, 0.3);  /* Indigo shadow */
+  /* Additional Colors */
+  --color-shadow: rgba(0, 0, 0, 0.4);
   --color-overlay: rgba(0, 0, 0, 0.7);
-  --color-hover: rgba(121, 134, 203, 0.1);   /* Indigo hover */
+  --color-hover: rgba(255, 255, 255, 0.05);
   --color-selected: rgba(144, 202, 249, 0.16);
-  --color-disabled: #2D2D2D;
+  --color-disabled: #424242;
+  --color-focus-ring: rgba(66, 165, 245, 0.4);
   
-  /* Input Colors (Dark Theme) */
-  --color-input-background: #242424;
-  --color-input-border: #444444;
-  --color-input-placeholder: #9FA8DA;  /* Lighter Indigo */
+  /* Input Colors */
+  --color-input-background: #2D2D2D;
+  --color-input-border: #424242;
+  --color-input-placeholder: #90A4AE;
+  --color-input-text: #E3F2FD;
   
-  /* Button Colors (Dark Theme) */
+  /* Button Colors */
   --color-button-primary: #1976D2;
+  --color-button-primary-hover: #1565C0;
   --color-button-secondary: #C2185B;
+  --color-button-secondary-hover: #AD1457;
   --color-button-disabled: #424242;
   --color-button-text: #FFFFFF;
+  --color-button-text-secondary: #BBDEFB;
+}
+
+/* ===============================
+   High Contrast Dark Theme
+   =============================== */
+@media (prefers-contrast: high) {
+  [data-theme="dark"],
+  body.dark-mode {
+    --color-text-primary: #FFFFFF;
+    --color-text-secondary: #E0E0E0;
+    --color-border: #FFFFFF;
+    --color-divider: #FFFFFF;
+  }
 }
 
 /* ===============================
    Reset and Base Styles
    =============================== */
-* {
+*, *::before, *::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -201,96 +247,254 @@ html {
   font-size: 16px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 body {
   font-family: var(--font-family);
   font-size: var(--font-size-base);
+  font-weight: var(--font-weight-normal);
   line-height: var(--line-height-normal);
   color: var(--color-text-primary);
   background-color: var(--color-background);
-  transition: background-color var(--transition-base), 
-              color var(--transition-base),
-              border-color var(--transition-base);
+  min-height: 100vh;
+  overflow-x: hidden;
 }
 
-/* Smooth theme transitions for all elements */
-body,
+/* Smooth theme transitions */
 body * {
-  transition: background-color var(--transition-base), 
+  transition: background-color var(--transition-base),
               color var(--transition-base),
               border-color var(--transition-base),
-              box-shadow var(--transition-base);
+              box-shadow var(--transition-base),
+              fill var(--transition-base),
+              stroke var(--transition-base);
 }
 
 /* ===============================
-   IMPORTANT: FORCE TEXT COLORS IN DARK THEME
+   FORCE LIGHT TEXT IN DARK MODE - FIXED SELECTORS
    =============================== */
-.dark-mode,
-[data-theme="dark"],
-[data-theme*="dark"] {
+/* Apply to all text elements in dark mode */
+[data-theme="dark"] *:not(button):not(input):not(textarea):not(select):not(svg *):not(path),
+body.dark-mode *:not(button):not(input):not(textarea):not(select):not(svg *):not(path) {
   color: var(--color-text-primary) !important;
 }
 
-.dark-mode h1,
-.dark-mode h2,
-.dark-mode h3,
-.dark-mode h4,
-.dark-mode h5,
-.dark-mode h6,
+/* Specific element targeting for dark mode */
 [data-theme="dark"] h1,
 [data-theme="dark"] h2,
 [data-theme="dark"] h3,
 [data-theme="dark"] h4,
 [data-theme="dark"] h5,
-[data-theme="dark"] h6 {
+[data-theme="dark"] h6,
+body.dark-mode h1,
+body.dark-mode h2,
+body.dark-mode h3,
+body.dark-mode h4,
+body.dark-mode h5,
+body.dark-mode h6 {
   color: var(--color-text-primary) !important;
+  font-weight: var(--font-weight-semibold);
 }
 
-.dark-mode p,
-.dark-mode span,
-.dark-mode div,
-.dark-mode li,
-.dark-mode td,
-.dark-mode th,
 [data-theme="dark"] p,
 [data-theme="dark"] span,
-[data-theme="dark"] div,
+[data-theme="dark"] div:not(.no-theme-force),
 [data-theme="dark"] li,
 [data-theme="dark"] td,
-[data-theme="dark"] th {
-  color: var(--color-text-primary) !important;
+[data-theme="dark"] th,
+[data-theme="dark"] label,
+[data-theme="dark"] caption,
+body.dark-mode p,
+body.dark-mode span,
+body.dark-mode div:not(.no-theme-force),
+body.dark-mode li,
+body.dark-mode td,
+body.dark-mode th,
+body.dark-mode label,
+body.dark-mode caption {
+  color: var(--color-text-secondary) !important;
 }
 
-.dark-mode a,
-[data-theme="dark"] a {
-  color: var(--color-primary) !important;
+[data-theme="dark"] small,
+[data-theme="dark"] .text-muted,
+[data-theme="dark"] .text-disabled,
+body.dark-mode small,
+body.dark-mode .text-muted,
+body.dark-mode .text-disabled {
+  color: var(--color-text-muted) !important;
 }
 
-.dark-mode button,
-[data-theme="dark"] button {
-  color: var(--color-button-text) !important;
+/* ===============================
+   Typography
+   =============================== */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-tight);
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-md);
+}
+
+h1 { 
+  font-size: var(--font-size-4xl);
+  letter-spacing: var(--letter-spacing-tight);
+}
+
+h2 { 
+  font-size: var(--font-size-3xl);
+  letter-spacing: var(--letter-spacing-tight);
+}
+
+h3 { 
+  font-size: var(--font-size-2xl);
+}
+
+h4 { 
+  font-size: var(--font-size-xl);
+}
+
+h5 { 
+  font-size: var(--font-size-lg);
+}
+
+h6 { 
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+}
+
+p {
+  margin-bottom: var(--spacing-md);
+  color: var(--color-text-secondary);
+  line-height: var(--line-height-relaxed);
+}
+
+/* ===============================
+   Links
+   =============================== */
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+  position: relative;
+}
+
+a:hover {
+  color: var(--color-primary-dark);
+  text-decoration: underline;
+}
+
+a:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* ===============================
+   Buttons
+   =============================== */
+button {
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  border: none;
+  outline: none;
+  transition: all var(--transition-fast);
+  color: var(--color-button-text);
+  background-color: transparent;
+  user-select: none;
+}
+
+button:not(:disabled):hover {
+  transform: translateY(-1px);
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+button:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+/* ===============================
+   Form Elements
+   =============================== */
+input,
+textarea,
+select {
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  color: var(--color-input-text);
+  background-color: var(--color-input-background);
+  border: 1px solid var(--color-input-border);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  outline: none;
+  transition: all var(--transition-fast);
+  width: 100%;
+}
+
+input:hover,
+textarea:hover,
+select:hover {
+  border-color: var(--color-primary-light);
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-focus-ring);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--color-input-placeholder);
+  opacity: 0.8;
+}
+
+input:disabled,
+textarea:disabled,
+select:disabled {
+  background-color: var(--color-disabled);
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 
 /* ===============================
    Scrollbar Styling
    =============================== */
 ::-webkit-scrollbar {
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-track {
   background: var(--color-surface);
+  border-radius: var(--radius-full);
 }
 
 ::-webkit-scrollbar-thumb {
   background: var(--color-border);
   border-radius: var(--radius-full);
+  border: 2px solid var(--color-surface);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-text-secondary);
+  background: var(--color-text-muted);
+}
+
+::-webkit-scrollbar-corner {
+  background: var(--color-surface);
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) var(--color-surface);
 }
 
 /* ===============================
@@ -301,185 +505,215 @@ body * {
   color: var(--color-text-primary);
 }
 
-/* ===============================
-   Links
-   =============================== */
-a {
-  color: var(--color-primary);
-  text-decoration: none;
-  transition: color var(--transition-fast);
-}
-
-a:hover {
-  color: var(--color-primary-dark);
-}
-
-/* ===============================
-   Headings
-   =============================== */
-h1, h2, h3, h4, h5, h6 {
-  font-weight: var(--font-weight-semibold);
-  line-height: var(--line-height-tight);
-  color: var(--color-text-primary);
-  margin-bottom: var(--spacing-md);
-}
-
-h1 { font-size: var(--font-size-4xl); }
-h2 { font-size: var(--font-size-3xl); }
-h3 { font-size: var(--font-size-2xl); }
-h4 { font-size: var(--font-size-xl); }
-h5 { font-size: var(--font-size-lg); }
-h6 { font-size: var(--font-size-base); }
-
-/* ===============================
-   Paragraphs
-   =============================== */
-p {
-  margin-bottom: var(--spacing-md);
-  color: var(--color-text-secondary);
-}
-
-/* ===============================
-   Buttons
-   =============================== */
-button {
-  font-family: var(--font-family);
-  font-size: var(--font-size-base);
-  cursor: pointer;
-  border: none;
-  outline: none;
-  transition: all var(--transition-fast);
-  color: var(--color-button-text);
-}
-
-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-/* ===============================
-   Inputs
-   =============================== */
-input,
-textarea,
-select {
-  font-family: var(--font-family);
-  font-size: var(--font-size-base);
-  color: var(--color-text-primary);
-  background-color: var(--color-input-background);
-  border: 1px solid var(--color-input-border);
-  border-radius: var(--radius-md);
-  padding: var(--spacing-sm) var(--spacing-md);
-  outline: none;
-  transition: all var(--transition-fast);
-}
-
-input:focus,
-textarea:focus,
-select:focus {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px var(--color-selected);
-}
-
-input::placeholder,
-textarea::placeholder {
-  color: var(--color-input-placeholder);
-}
-
-input:disabled,
-textarea:disabled,
-select:disabled {
-  background-color: var(--color-disabled);
-  cursor: not-allowed;
-}
-
-/* ===============================
-   Cards and Surfaces
-   =============================== */
-.card,
-.surface {
-  background-color: var(--color-surface);
-  border-radius: var(--radius-lg);
-  padding: var(--spacing-lg);
-  box-shadow: var(--shadow-sm);
+::-moz-selection {
+  background-color: var(--color-primary-light);
   color: var(--color-text-primary);
 }
 
 /* ===============================
    Utility Classes
    =============================== */
-.text-primary { color: var(--color-text-primary); }
-.text-secondary { color: var(--color-text-secondary); }
-.text-disabled { color: var(--color-text-disabled); }
+/* Text Colors */
+.text-primary { color: var(--color-text-primary) !important; }
+.text-secondary { color: var(--color-text-secondary) !important; }
+.text-disabled { color: var(--color-text-disabled) !important; }
+.text-muted { color: var(--color-text-muted) !important; }
 
-.bg-primary { background-color: var(--color-primary); }
-.bg-surface { background-color: var(--color-surface); }
-.bg-background { background-color: var(--color-background); }
+/* Background Colors */
+.bg-primary { background-color: var(--color-primary) !important; }
+.bg-surface { background-color: var(--color-surface) !important; }
+.bg-paper { background-color: var(--color-paper) !important; }
+.bg-background { background-color: var(--color-background) !important; }
 
-.border { border: 1px solid var(--color-border); }
-.border-primary { border-color: var(--color-primary); }
+/* Borders */
+.border { border: 1px solid var(--color-border) !important; }
+.border-top { border-top: 1px solid var(--color-border) !important; }
+.border-bottom { border-bottom: 1px solid var(--color-border) !important; }
+.border-left { border-left: 1px solid var(--color-border) !important; }
+.border-right { border-right: 1px solid var(--color-border) !important; }
+.border-primary { border-color: var(--color-primary) !important; }
 
-.shadow-sm { box-shadow: var(--shadow-sm); }
-.shadow-md { box-shadow: var(--shadow-md); }
-.shadow-lg { box-shadow: var(--shadow-lg); }
+/* Shadows */
+.shadow-sm { box-shadow: var(--shadow-sm) !important; }
+.shadow-md { box-shadow: var(--shadow-md) !important; }
+.shadow-lg { box-shadow: var(--shadow-lg) !important; }
+.shadow-xl { box-shadow: var(--shadow-xl) !important; }
+.shadow-inner { box-shadow: var(--shadow-inner) !important; }
 
-.rounded-sm { border-radius: var(--radius-sm); }
-.rounded-md { border-radius: var(--radius-md); }
-.rounded-lg { border-radius: var(--radius-lg); }
-.rounded-full { border-radius: var(--radius-full); }
+/* Border Radius */
+.rounded-sm { border-radius: var(--radius-sm) !important; }
+.rounded-md { border-radius: var(--radius-md) !important; }
+.rounded-lg { border-radius: var(--radius-lg) !important; }
+.rounded-xl { border-radius: var(--radius-xl) !important; }
+.rounded-full { border-radius: var(--radius-full) !important; }
+
+/* Spacing */
+.m-0 { margin: 0 !important; }
+.p-0 { padding: 0 !important; }
+
+/* Display */
+.hidden { display: none !important; }
+.block { display: block !important; }
+.inline-block { display: inline-block !important; }
+.flex { display: flex !important; }
+.inline-flex { display: inline-flex !important; }
 
 /* ===============================
-   Layout Components
+   Cards and Containers
    =============================== */
-.app-wrapper {
-  min-height: 100vh;
-  background-color: var(--color-background);
+.card {
+  background-color: var(--color-paper);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-border);
   color: var(--color-text-primary);
+}
+
+.surface {
+  background-color: var(--color-surface);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  color: var(--color-text-primary);
+}
+
+.paper {
+  background-color: var(--color-paper);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  color: var(--color-text-primary);
+}
+
+/* ===============================
+   Tables
+   =============================== */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  color: var(--color-text-primary);
+}
+
+thead {
+  background-color: var(--color-surface);
+}
+
+th {
+  padding: var(--spacing-md);
+  text-align: left;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  border-bottom: 2px solid var(--color-divider);
+}
+
+td {
+  padding: var(--spacing-md);
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  background-color: var(--color-paper);
+}
+
+tr:hover td {
+  background-color: var(--color-hover);
+}
+
+/* Dark mode table fixes */
+[data-theme="dark"] table,
+body.dark-mode table {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] th,
+body.dark-mode th {
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+  border-color: var(--color-divider);
+}
+
+[data-theme="dark"] td,
+body.dark-mode td {
+  background-color: var(--color-paper);
+  color: var(--color-text-secondary);
+  border-color: var(--color-border);
+}
+
+/* ===============================
+   Lists
+   =============================== */
+ul, ol {
+  padding-left: var(--spacing-xl);
+  margin-bottom: var(--spacing-md);
+  color: var(--color-text-secondary);
+}
+
+li {
+  margin-bottom: var(--spacing-xs);
+  color: var(--color-text-secondary);
+}
+
+/* ===============================
+   Code and Preformatted Text
+   =============================== */
+code {
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  padding: 0.2em 0.4em;
+  background-color: var(--color-surface);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-primary);
+}
+
+pre {
+  font-family: var(--font-mono);
+  padding: var(--spacing-md);
+  background-color: var(--color-surface);
+  border-radius: var(--radius-md);
+  overflow-x: auto;
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
 }
 
 /* ===============================
    Theme Toggle Button
    =============================== */
 .theme-toggle-button {
-  background: var(--color-primary) !important;
-  color: var(--color-button-text) !important;
-  border: none !important;
-  padding: var(--spacing-sm) var(--spacing-md) !important;
-  border-radius: var(--radius-full) !important;
-  cursor: pointer !important;
-  display: flex !important;
-  align-items: center !important;
-  gap: var(--spacing-sm) !important;
-  font-size: var(--font-size-sm) !important;
-  font-weight: var(--font-weight-medium) !important;
-  transition: all var(--transition-fast) !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--color-primary);
+  color: var(--color-button-text);
+  border: none;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  min-height: 36px;
 }
 
-.theme-toggle-button:hover {
-  background: var(--color-primary-dark) !important;
-  transform: translateY(-2px) !important;
+.theme-toggle-button:hover:not(:disabled) {
+  background-color: var(--color-button-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.theme-toggle-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.theme-toggle-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* ===============================
-   Tables in Dark Mode
+   Focus States (Accessibility)
    =============================== */
-.dark-mode table,
-[data-theme="dark"] table {
-  color: var(--color-text-primary);
-  border-color: var(--color-border);
-}
-
-.dark-mode table th,
-[data-theme="dark"] table th {
-  background-color: var(--color-surface);
-  color: var(--color-text-primary);
-}
-
-.dark-mode table td,
-[data-theme="dark"] table td {
-  background-color: var(--color-paper);
-  color: var(--color-text-primary);
-  border-color: var(--color-border);
+:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
 }
 
 /* ===============================
@@ -488,31 +722,31 @@ select:disabled {
 @media print {
   body {
     color: #000 !important;
-    background-color: #fff !important;
+    background: #fff !important;
+    font-size: 12pt !important;
   }
   
-  .no-print {
+  .no-print,
+  .theme-toggle-button,
+  button:not(.print-keep) {
     display: none !important;
   }
-}
-
-/* ===============================
-   High Contrast Mode Support
-   =============================== */
-@media (prefers-contrast: high) {
-  :root {
-    --color-text-primary: #1A237E;  /* Deep Indigo/Navy Blue */
-    --color-text-secondary: #283593; /* Medium Indigo/Navy Blue */
+  
+  a {
+    color: #000 !important;
+    text-decoration: underline !important;
   }
   
-  [data-theme="dark"] {
-    --color-text-primary: #7986CB;   /* Light Indigo */
-    --color-text-secondary: #9FA8DA; /* Lighter Indigo */
+  .card,
+  .surface,
+  .paper {
+    border: 1px solid #ddd !important;
+    box-shadow: none !important;
   }
 }
 
 /* ===============================
-   Reduced Motion Support
+   Reduced Motion
    =============================== */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -521,24 +755,34 @@ select:disabled {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
 
 /* ===============================
    Responsive Design
    =============================== */
+@media (max-width: 1024px) {
+  :root {
+    --spacing-xl: 28px;
+    --spacing-2xl: 40px;
+    --font-size-4xl: 2rem;
+    --font-size-3xl: 1.75rem;
+  }
+}
+
 @media (max-width: 768px) {
   :root {
     --spacing-lg: 20px;
     --spacing-xl: 24px;
-    --font-size-4xl: 2rem;
-    --font-size-3xl: 1.75rem;
-    --font-size-2xl: 1.5rem;
+    --spacing-2xl: 32px;
+    --font-size-4xl: 1.875rem;
+    --font-size-3xl: 1.625rem;
+    --font-size-2xl: 1.375rem;
   }
   
-  .theme-toggle-button {
-    padding: 6px 12px !important;
-    font-size: 12px !important;
+  .card {
+    padding: var(--spacing-md);
   }
 }
 
@@ -546,5 +790,87 @@ select:disabled {
   :root {
     --spacing-md: 12px;
     --spacing-lg: 16px;
+    --spacing-xl: 20px;
+    --font-size-4xl: 1.75rem;
+    --font-size-3xl: 1.5rem;
+    --font-size-2xl: 1.25rem;
+  }
+  
+  .theme-toggle-button {
+    padding: 8px 16px;
+    font-size: var(--font-size-xs);
+  }
+}
+
+/* ===============================
+   Dark Mode Debug Helper
+   =============================== */
+.debug-dark-mode {
+  border: 2px dashed #ff0000 !important;
+}
+
+.debug-dark-mode * {
+  border: 1px solid #00ff00 !important;
+}
+
+/* ===============================
+   Accessibility
+   =============================== */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ===============================
+   Custom Scrollable Areas
+   =============================== */
+.scrollable {
+  overflow: auto;
+  scroll-behavior: smooth;
+}
+
+.scrollable-x {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.scrollable-y {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* ===============================
+   Loading States
+   =============================== */
+.loading {
+  opacity: 0.6;
+  pointer-events: none;
+  position: relative;
+}
+
+.loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
   }
 }

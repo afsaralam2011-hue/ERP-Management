@@ -1,4 +1,4 @@
-// src/components/Settings/ThemeSettings.jsx
+// src/components/Settings/ThemeSettings.jsx - FINAL VERSION
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -37,11 +37,12 @@ const ThemeSettings = () => {
   // CUSTOM COLORS کو INDIGO/NAVY میں تبدیل کریں
   const [customColors, setCustomColors] = useState({
     primary: '#1976D2',
-    secondary: '#DC004E',
+    secondary: '#64B5F6',
     background: '#FFFFFF',
     surface: '#F5F5F5',
-    textPrimary: '#1A237E',        // BLACK سے INDIGO/NAVY
-    textSecondary: '#283593',      // BLACK سے INDIGO/NAVY
+    // Text colors ko black se indigo/navy mein badlein
+    textPrimary: '#1A237E',        // Deep Indigo/Navy Blue
+    textSecondary: '#283593',      // Medium Indigo/Navy Blue
     border: '#E0E0E0',
     success: '#4CAF50',
     warning: '#FF9800',
@@ -50,7 +51,7 @@ const ThemeSettings = () => {
   });
   
   const [importingFile, setImportingFile] = useState(null);
-  const [activeTab, setActiveTab] = useState('predefined'); // 'predefined', 'custom', 'actions'
+  const [activeTab, setActiveTab] = useState('predefined');
   const [themeSearch, setThemeSearch] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
   const [notification, setNotification] = useState({ type: '', message: '' });
@@ -62,17 +63,11 @@ const ThemeSettings = () => {
 
   // === ہیلپر فنکشنز ===
 
-  /**
-   * نوٹیفکیشن دکھائیں
-   */
   const showNotification = useCallback((type, message, duration = 3000) => {
     setNotification({ type, message });
     setTimeout(() => setNotification({ type: '', message: '' }), duration);
   }, []);
 
-  /**
-   * تھیم منتخب کریں اور پرفارمنس میٹرک ریکارڈ کریں
-   */
   const handleThemeSelect = useCallback((themeId) => {
     const startTime = performance.now();
     
@@ -88,20 +83,12 @@ const ThemeSettings = () => {
         }));
         
         showNotification('success', `Theme "${theme.name}" applied successfully`);
-        
-        // پرفارمنس ٹریکنگ (صرف ڈویلپمنٹ میں)
-        if (process.env.NODE_ENV === 'development') {
-          console.log(`Theme switch completed in ${switchTime.toFixed(2)}ms`);
-        }
       }
     } catch (err) {
       showNotification('error', `Failed to apply theme: ${err.message}`);
     }
   }, [setTheme, showNotification]);
 
-  /**
-   * تھیم موڈ تبدیل کریں
-   */
   const handleModeChange = useCallback((newMode) => {
     const startTime = performance.now();
     
@@ -123,9 +110,6 @@ const ThemeSettings = () => {
     }
   }, [setMode, showNotification]);
 
-  /**
-   * کسٹم تھیم بنائیں
-   */
   const handleCreateCustomTheme = useCallback(() => {
     if (!customThemeName.trim()) {
       showNotification('error', 'Please enter a theme name');
@@ -135,21 +119,19 @@ const ThemeSettings = () => {
     try {
       const newTheme = createCustomTheme(customThemeName, customColors, mode);
       if (newTheme) {
-        // نئی تھیم منتخب کریں
         setTheme(newTheme.id);
         
-        // موڈل بند کریں اور ری سیٹ کریں
         setShowCustomThemeModal(false);
         setCustomThemeName('');
         
-        // CUSTOM COLORS کو INDIGO/NAVY میں ری سیٹ کریں
+        // FIXED: Colors ko proper indigo/navy mein reset karein
         setCustomColors({
           primary: '#1976D2',
-          secondary: '#DC004E',
+          secondary: '#64B5F6',
           background: '#FFFFFF',
           surface: '#F5F5F5',
-          textPrimary: '#1A237E',        // INDIGO/NAVY
-          textSecondary: '#283593',      // INDIGO/NAVY
+          textPrimary: '#1A237E',        // Deep Indigo/Navy Blue
+          textSecondary: '#283593',      // Medium Indigo/Navy Blue
           border: '#E0E0E0',
           success: '#4CAF50',
           warning: '#FF9800',
@@ -158,8 +140,6 @@ const ThemeSettings = () => {
         });
         
         showNotification('success', `Custom theme "${newTheme.name}" created successfully`);
-        
-        // کسٹم تھیمز ٹیب پر سوئچ کریں
         setActiveTab('custom');
       }
     } catch (err) {
@@ -167,12 +147,8 @@ const ThemeSettings = () => {
     }
   }, [customThemeName, customColors, mode, createCustomTheme, setTheme, showNotification]);
 
-  /**
-   * کسٹم تھیم ڈیلیٹ کریں
-   */
   const handleDeleteCustomTheme = useCallback((themeId, themeName) => {
     if (!showDeleteConfirm || showDeleteConfirm !== themeId) {
-      // کنفرمیشن سٹیج
       setShowDeleteConfirm(themeId);
       showNotification('warning', `Click again to delete "${themeName}"`, 2000);
       return;
@@ -190,9 +166,6 @@ const ThemeSettings = () => {
     }
   }, [deleteCustomTheme, showNotification, showDeleteConfirm]);
 
-  /**
-   * تھیم ایکسپورٹ کریں
-   */
   const handleExportTheme = useCallback((theme = currentTheme) => {
     try {
       const success = exportTheme(theme.id);
@@ -204,9 +177,6 @@ const ThemeSettings = () => {
     }
   }, [exportTheme, currentTheme, showNotification]);
 
-  /**
-   * تھیم امپورٹ کریں
-   */
   const handleImportTheme = useCallback((e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -219,8 +189,6 @@ const ThemeSettings = () => {
         setTheme(importedTheme.id);
         setActiveTab('custom');
         setImportingFile(null);
-        
-        // ان پٹ ری سیٹ کریں تاکہ ایک ہی فائل دوبارہ لوڈ کی جا سکے
         e.target.value = '';
       })
       .catch((err) => {
@@ -230,9 +198,6 @@ const ThemeSettings = () => {
       });
   }, [importTheme, setTheme, showNotification]);
 
-  /**
-   * تھیم ری سیٹ کریں
-   */
   const handleResetTheme = useCallback(() => {
     if (window.confirm('Are you sure you want to reset to default theme?')) {
       try {
@@ -245,9 +210,6 @@ const ThemeSettings = () => {
     }
   }, [resetTheme, showNotification]);
 
-  /**
-   * تھیم کو ڈیوپلیکیٹ کریں
-   */
   const handleDuplicateTheme = useCallback((theme) => {
     try {
       const duplicatedTheme = createCustomTheme(
@@ -264,9 +226,6 @@ const ThemeSettings = () => {
     }
   }, [createCustomTheme, showNotification]);
 
-  /**
-   * رنگ تبدیل کریں
-   */
   const handleColorChange = useCallback((colorType, color) => {
     setCustomColors(prev => ({
       ...prev,
@@ -276,7 +235,6 @@ const ThemeSettings = () => {
 
   // === فلٹرڈ تھیمز ===
 
-  // پری ڈیفائنڈ تھیمز
   const predefinedThemes = useMemo(() => {
     const filtered = allThemes.filter(t => !t.isCustom && t.category !== 'custom');
     
@@ -291,7 +249,6 @@ const ThemeSettings = () => {
     return filtered;
   }, [allThemes, themeSearch]);
 
-  // فلٹرڈ کسٹم تھیمز
   const filteredCustomThemes = useMemo(() => {
     if (themeSearch.trim()) {
       const searchTerm = themeSearch.toLowerCase();
@@ -305,7 +262,6 @@ const ThemeSettings = () => {
 
   // === ایفیکٹس ===
 
-  // نوٹیفکیشن آٹو کلین اپ
   useEffect(() => {
     if (notification.message) {
       const timer = setTimeout(() => {
@@ -316,7 +272,6 @@ const ThemeSettings = () => {
     }
   }, [notification]);
 
-  // رینڈر ٹائم ٹریکنگ
   useEffect(() => {
     const startTime = performance.now();
     
@@ -333,7 +288,6 @@ const ThemeSettings = () => {
 
   // === رینڈرنگ ===
 
-  // لوڈنگ اسٹیٹ
   if (isLoading) {
     return (
       <div className="theme-settings-loading">
@@ -343,7 +297,6 @@ const ThemeSettings = () => {
     );
   }
 
-  // ایرر اسٹیٹ
   if (error) {
     return (
       <div className="theme-settings-error">
@@ -380,7 +333,7 @@ const ThemeSettings = () => {
         </div>
       )}
 
-      {/* ہیڈر */}
+      {/* ہیڈر - MODE TOGGLE BUTTON ADDED */}
       <div className="theme-settings-header">
         <div className="header-content">
           <h1 className="header-title">
@@ -390,6 +343,22 @@ const ThemeSettings = () => {
           <p className="header-subtitle">
             Customize the appearance of your application
           </p>
+          
+          {/* MODE TOGGLE BUTTON - Yeh header ke andar add kiya hai */}
+          <div className="header-mode-toggle">
+            <button
+              className="mode-toggle-button"
+              onClick={toggleMode}
+              title={`Switch to ${isDarkMode ? 'Light' : 'Dark'} Mode`}
+            >
+              <span className="mode-toggle-icon">
+                {isDarkMode ? '☀️' : '🌙'}
+              </span>
+              <span className="mode-toggle-text">
+                {isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              </span>
+            </button>
+          </div>
         </div>
         
         {/* پرفارمنس بینچ مارکس ٹوگل */}
@@ -830,28 +799,6 @@ const ThemeSettings = () => {
                   </ul>
                 </div>
                 {isDarkMode && <div className="mode-check">✓ Active</div>}
-              </div>
-            </div>
-
-            <div className="mode-auto-section">
-              <h4>Auto Mode Settings</h4>
-              <p>Automatically switch between light and dark modes</p>
-              <div className="auto-options">
-                <label className="auto-option">
-                  <input type="radio" name="auto-mode" defaultChecked />
-                  <span className="option-label">Follow System</span>
-                  <span className="option-description">Use your device's theme setting</span>
-                </label>
-                <label className="auto-option">
-                  <input type="radio" name="auto-mode" />
-                  <span className="option-label">Schedule</span>
-                  <span className="option-description">Switch based on time of day</span>
-                </label>
-                <label className="auto-option">
-                  <input type="radio" name="auto-mode" />
-                  <span className="option-label">Manual</span>
-                  <span className="option-description">Always use selected mode</span>
-                </label>
               </div>
             </div>
           </div>

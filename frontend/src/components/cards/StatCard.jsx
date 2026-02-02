@@ -11,43 +11,35 @@ const StatCard = ({
   description = '',
   link = '#',
   loading = false,
-  isPositive = true
+  isPositive = true,
+  darkMode = false // ✅ تھیم سپورٹ
 }) => {
   
-  // ✅ تھیم کے مطابق CSS Variables سے رنگ حاصل کریں
+  // ✅ تھیم کے مطابق رنگ حاصل کرنے کا فنکشن
   const getColor = (colorName) => {
     if (typeof document === 'undefined') return '#000000';
-    return getComputedStyle(document.documentElement).getPropertyValue(colorName).trim() || '#000000';
+    return getComputedStyle(document.documentElement).getPropertyValue(`--color-${colorName}`).trim() || 
+          (darkMode ? '#FFFFFF' : '#000000');
   };
-
-  // ✅ چیک کریں کہ Dark Mode ہے یا نہیں
-  const isDarkMode = () => {
-    if (typeof document === 'undefined') return false;
-    return document.body.classList.contains('dark-mode') || 
-           document.body.classList.contains('theme-dark');
-  };
-
-  const darkMode = isDarkMode();
 
   // ✅ تھیم کے مطابق CSS Variables
   const themeColors = {
-    background: getColor('--color-background'),
-    textPrimary: getColor('--color-text-primary'), // Deep Indigo/Navy Blue
-    textSecondary: getColor('--color-text-secondary'), // Medium Indigo/Navy Blue
-    surface: getColor('--color-surface'),
-    border: getColor('--color-border'),
-    primary: getColor('--color-primary'),
-    success: getColor('--color-success'),
-    error: getColor('--color-error'),
-    warning: getColor('--color-warning'),
-    info: getColor('--color-info'),
-    hover: getColor('--color-hover') || (darkMode ? 'rgba(26, 35, 126, 0.1)' : 'rgba(26, 35, 126, 0.04)'),
+    background: darkMode ? '#1e1e1e' : '#ffffff',
+    textPrimary: darkMode ? '#ffffff' : '#1e293b',
+    textSecondary: darkMode ? '#94a3b8' : '#64748b',
+    surface: darkMode ? '#2d2d2d' : '#f8fafc',
+    border: darkMode ? '#404040' : '#e2e8f0',
+    success: darkMode ? '#10b981' : '#059669',
+    error: darkMode ? '#ef4444' : '#dc2626',
+    warning: darkMode ? '#f59e0b' : '#d97706',
+    info: darkMode ? '#3b82f6' : '#1d4ed8',
+    hover: darkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
   };
 
   // ✅ تھیم کے مطابق card background gradient
   const getCardBackground = () => {
     if (darkMode) {
-      return `linear-gradient(145deg, ${color}15 0%, ${themeColors.surface} 100%)`;
+      return `linear-gradient(145deg, ${color}10 0%, ${themeColors.surface} 100%)`;
     } else {
       return `linear-gradient(145deg, ${themeColors.background} 0%, ${color}05 100%)`;
     }
@@ -77,15 +69,6 @@ const StatCard = ({
       return darkMode ? '#6ee7b7' : '#059669';
     } else {
       return darkMode ? '#fca5a5' : '#dc2626';
-    }
-  };
-
-  // ✅ تھیم کے مطابق gradient text color
-  const getGradientTextColor = () => {
-    if (darkMode) {
-      return `linear-gradient(135deg, ${themeColors.textPrimary} 0%, ${color} 100%)`;
-    } else {
-      return `linear-gradient(135deg, ${themeColors.textPrimary} 0%, ${color} 100%)`;
     }
   };
 
@@ -223,7 +206,7 @@ const StatCard = ({
             margin: '0 0 12px 0',
             fontSize: '13px',
             fontWeight: '600',
-            color: themeColors.textSecondary, // Medium Indigo/Navy Blue
+            color: themeColors.textSecondary,
             textTransform: 'uppercase',
             letterSpacing: '0.8px',
             opacity: darkMode ? 0.8 : 1
@@ -234,9 +217,12 @@ const StatCard = ({
           <div style={{
             fontSize: '36px',
             fontWeight: '800',
+            color: themeColors.textPrimary,
             marginBottom: '12px',
             lineHeight: '1.1',
-            background: getGradientTextColor(),
+            background: darkMode 
+              ? `linear-gradient(135deg, ${themeColors.textPrimary} 0%, ${color} 100%)`
+              : `linear-gradient(135deg, ${themeColors.textPrimary} 0%, ${color} 100%)`,
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text',
@@ -252,11 +238,7 @@ const StatCard = ({
                   : 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
                 backgroundSize: '200% 100%',
                 animation: 'loading 1.5s infinite',
-                borderRadius: '8px',
-                WebkitBackgroundClip: 'initial',
-                WebkitTextFillColor: 'initial',
-                backgroundClip: 'initial',
-                textFillColor: 'initial'
+                borderRadius: '8px'
               }}></div>
             ) : (
               value
@@ -267,7 +249,7 @@ const StatCard = ({
             <p style={{
               margin: '0',
               fontSize: '14px',
-              color: themeColors.textSecondary, // Medium Indigo/Navy Blue
+              color: themeColors.textSecondary,
               lineHeight: '1.5',
               opacity: darkMode ? 0.7 : 0.9
             }}>
@@ -291,7 +273,7 @@ const StatCard = ({
           }}>
             <span style={{
               fontSize: '13px',
-              color: themeColors.textSecondary, // Medium Indigo/Navy Blue
+              color: themeColors.textSecondary,
               fontStyle: 'italic',
               fontWeight: '500'
             }}>

@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { 
-  applyThemeToDOM as applyThemeUtils, 
+  applyThemeToDOM, 
   getCurrentThemeFromDOM, 
   getCurrentThemeMode,
   saveThemeToStorage,
@@ -10,9 +10,22 @@ import {
   getAllCustomThemes,
   detectSystemTheme,
   dispatchThemeEvent,
-  onThemeChange
+  onThemeChange,
+  validateTheme,
+  isValidHexColor,
+  hexToRgb,
+  lightenColor as lightenColorUtil,
+  darkenColor as darkenColorUtil,
+  exportThemeToFile,
+  importThemeFromFile
 } from '../utils/themeUtils';
-import { getAllThemes, getThemeById, getThemesByMode as getThemesByModeUtils } from '../styles/themes/theme-config';
+import { 
+  getAllThemes, 
+  getThemeById, 
+  getThemesByMode as getThemesByModeUtils,
+  themeToCssVariables,
+  cssVariablesToStyle
+} from '../styles/themes/theme-config';
 
 /**
  * تھیم کونٹیکسٹ
@@ -56,9 +69,6 @@ export const ThemeProvider = ({
   // تھیم لوڈ ہونے کا اسٹیٹ
   const [isThemeApplied, setIsThemeApplied] = useState(false);
   
-  // تھیم ایونٹ سننے والے
-  const [themeListeners, setThemeListeners] = useState([]);
-
   // === انیشیلائزیشن ===
 
   // تھیم کی ابتدائی ترتیب
@@ -70,10 +80,14 @@ export const ThemeProvider = ({
       // 1. تمام تھیمز لوڈ کریں
       const allPredefinedThemes = getAllThemes();
       const allCustomThemes = getAllCustomThemes();
-      const combinedThemes = [...allPredefinedThemes, ...allCustomThemes];
+      
+      // Validate custom themes
+      const validatedCustomThemes = allCustomThemes.filter(theme => validateTheme(theme));
+      
+      const combinedThemes = [...allPredefinedThemes, ...validatedCustomThemes];
       
       setThemes(combinedThemes);
-      setCustomThemes(allCustomThemes);
+      setCustomThemes(validatedCustomThemes);
 
       // 2. سیوڈ تھیم تلاش کریں
       let savedThemeId = null;
@@ -82,15 +96,20 @@ export const ThemeProvider = ({
       }
 
       // 3. سسٹم تھیم کا پتہ لگائیں
-      let systemMode = detectSystemTheme();
-      if (enableSystemThemeDetection && systemMode !== 'no-preference') {
+      let systemMode = 'light';
+      if (enableSystemThemeDetection) {
+        systemMode = detectSystemTheme();
+        if (systemMode === 'no-preference') {
+          systemMode = 'light';
+        }
+        
         if (persistTheme) {
           localStorage.setItem('preferredSystemMode', systemMode);
         }
       }
 
       // 4. تھیم منتخب کریں (ترجیحی ترتیب)
-      let selectedTheme;
+      let selectedTheme = null;
       
       // پہلا: سیوڈ تھیم
       if (savedThemeId) {
@@ -98,7 +117,7 @@ export const ThemeProvider = ({
       }
       
       // دوسرا: سسٹم موڈ کے مطابق تھیم
-      if (!selectedTheme && systemMode !== 'no-preference') {
+      if (!selectedTheme && enableSystemThemeDetection) {
         const themesForSystemMode = getThemesByModeUtils(systemMode);
         if (themesForSystemMode.length > 0) {
           selectedTheme = themesForSystemMode[0];
@@ -120,8 +139,8 @@ export const ThemeProvider = ({
         setCurrentTheme(selectedTheme);
         setMode(selectedTheme.mode);
         
-        // 6. DOM پر تھیم اپلائی کریں
-        const applied = applyThemeUtils(selectedTheme);
+        // 6. DOM پر تھیم اپلائی کریں (فکسڈ: indigo/navy text colors)
+        const applied = applyThemeWithForcedColors(selectedTheme);
         setIsThemeApplied(applied);
         
         // 7. localStorage میں سیو کریں
@@ -134,14 +153,14 @@ export const ThemeProvider = ({
         dispatchThemeEvent('themeInitialized', {
           theme: selectedTheme,
           mode: selectedTheme.mode,
-          source: savedThemeId ? 'saved' : (systemMode !== 'no-preference' ? 'system' : 'default')
+          source: savedThemeId ? 'saved' : (enableSystemThemeDetection ? 'system' : 'default')
         });
       }
 
     } catch (err) {
       console.error('Theme initialization error:', err);
       setError({
-        message: err.message,
+        message: err.message || 'Failed to initialize theme',
         code: 'INIT_ERROR',
         timestamp: new Date().toISOString()
       });
@@ -149,7 +168,7 @@ export const ThemeProvider = ({
       // ڈیفالٹ تھیم اپلائی کریں
       const defaultTheme = getThemeById(defaultThemeId);
       if (defaultTheme) {
-        applyThemeUtils(defaultTheme);
+        applyThemeWithForcedColors(defaultTheme);
         setCurrentTheme(defaultTheme);
         setMode(defaultTheme.mode);
       }
@@ -158,14 +177,105 @@ export const ThemeProvider = ({
     }
   }, [defaultThemeId, enableSystemThemeDetection, persistTheme]);
 
+  // === تھیم اپلائی فنکشن - فکسڈ ===
+
+  /**
+   * تھیم اپلائی کریں فورسڈ ٹیکسٹ کالرز کے ساتھ
+   * @param {Object} theme - تھیم آبجیکٹ
+   * @returns {boolean} کامیابی کی صورت میں true
+   */
+  const applyThemeWithForcedColors = useCallback((theme) => {
+    if (!theme || !theme.colors) {
+      console.error('Invalid theme object');
+      return false;
+    }
+
+    try {
+      const root = document.documentElement;
+      const body = document.body;
+      
+      // 1. کلین اپ
+      body.classList.remove(
+        'theme-light', 'theme-dark',
+        'light-mode', 'dark-mode',
+        'light-theme', 'dark-theme'
+      );
+      
+      root.removeAttribute('data-theme');
+      root.removeAttribute('data-theme-mode');
+      body.removeAttribute('data-theme');
+      body.removeAttribute('data-theme-mode');
+      
+      // 2. فورس کالرز سیٹ کریں
+      const isDarkMode = theme.mode === 'dark';
+      
+      if (isDarkMode) {
+        // FIX: Dark mode میں بلیک ٹیکسٹ کے بجائے indigo/blue
+        body.style.color = '#E3F2FD'; // Light Blue/White
+        body.style.backgroundColor = '#121212'; // Dark background
+        body.classList.add('dark-mode', 'theme-dark', 'dark-theme');
+      } else {
+        // FIX: Light mode میں indigo/navy blue text
+        body.style.color = '#1A237E'; // Deep Indigo/Navy Blue
+        body.style.backgroundColor = '#FFFFFF'; // Light background
+        body.classList.add('light-mode', 'theme-light', 'light-theme');
+      }
+      
+      // 3. تھیم اپلائی کریں
+      const applied = applyThemeToDOM(theme);
+      
+      // 4. اضافی فورس کالرز
+      const forceTextColors = () => {
+        const textSelectors = [
+          'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+          'p', 'span', 'div', 'a', 'li', 'td', 'th',
+          '.text', '.title', '.subtitle', '.label',
+          '.card', '.panel', '.modal', '.dialog',
+          '.sidebar', '.header', '.navbar',
+          'aside', 'nav', 'header', 'footer', 'section'
+        ];
+        
+        textSelectors.forEach(selector => {
+          try {
+            document.querySelectorAll(selector).forEach(element => {
+              if (element.tagName === 'BUTTON' || 
+                  element.tagName === 'INPUT' || 
+                  element.tagName === 'TEXTAREA' || 
+                  element.tagName === 'SELECT') {
+                return;
+              }
+              
+              if (isDarkMode) {
+                element.style.color = '#E3F2FD';
+                element.style.setProperty('color', '#E3F2FD', 'important');
+              } else {
+                element.style.color = '#1A237E';
+                element.style.setProperty('color', '#1A237E', 'important');
+              }
+            });
+          } catch (e) {
+            // Silent fail
+          }
+        });
+      };
+      
+      // 5. فورس کالرز اپلائی کریں
+      setTimeout(forceTextColors, 100);
+      setTimeout(forceTextColors, 500);
+      
+      return applied;
+    } catch (err) {
+      console.error('Error applying theme with forced colors:', err);
+      return false;
+    }
+  }, []);
+
   // === تھیم ایونٹ ہینڈلرز ===
 
   // تھیم تبدیلی کا سننے والا
   useEffect(() => {
     const cleanup = onThemeChange((eventDetail) => {
-      // تھیم تبدیلی کا نوٹیفکیشن
       if (eventDetail.type === 'themeChanged') {
-        // کسی بھی ضروری اپڈیٹس کے لیے
         console.log('Theme change event received:', eventDetail);
       }
     });
@@ -194,7 +304,7 @@ export const ThemeProvider = ({
           const newTheme = themesForSystemMode[0];
           setCurrentTheme(newTheme);
           setMode(systemMode);
-          applyThemeUtils(newTheme);
+          applyThemeWithForcedColors(newTheme);
           
           if (persistTheme) {
             localStorage.setItem('selectedThemeId', newTheme.id);
@@ -211,7 +321,7 @@ export const ThemeProvider = ({
     return () => {
       mediaQuery.removeEventListener('change', handleSystemThemeChange);
     };
-  }, [enableSystemThemeDetection, persistTheme, currentTheme]);
+  }, [enableSystemThemeDetection, persistTheme, currentTheme, applyThemeWithForcedColors]);
 
   // === تھیم مینجمنٹ فنکشنز ===
 
@@ -232,8 +342,8 @@ export const ThemeProvider = ({
         throw new Error(`Theme "${themeId}" not found`);
       }
 
-      // تھیم اپلائی کریں
-      const applied = applyThemeUtils(themeToApply);
+      // تھیم اپلائی کریں (فورسڈ کالرز کے ساتھ)
+      const applied = applyThemeWithForcedColors(themeToApply);
       if (!applied) {
         throw new Error('Failed to apply theme');
       }
@@ -270,7 +380,7 @@ export const ThemeProvider = ({
       });
       return null;
     }
-  }, [currentTheme, persistTheme]);
+  }, [currentTheme, persistTheme, applyThemeWithForcedColors]);
 
   /**
    * تھیم موڈ تبدیل کریں
@@ -300,9 +410,10 @@ export const ThemeProvider = ({
       
       // پہلے اسی نام کی تھیم تلاش کریں (اگر موجود ہو)
       if (currentTheme) {
+        const themeNameBase = currentTheme.name.replace('Light', '').replace('Dark', '').trim();
         const sameNameTheme = themesForMode.find(t => 
-          t.name === currentTheme.name.replace('Light', '').replace('Dark', '').trim() ||
-          t.name === currentTheme.name.replace('Dark', '').replace('Light', '').trim()
+          t.name === themeNameBase ||
+          t.name.replace('Light', '').replace('Dark', '').trim() === themeNameBase
         );
         
         if (sameNameTheme) {
@@ -319,7 +430,7 @@ export const ThemeProvider = ({
       if (newTheme) {
         setTheme(newTheme.id);
       } else {
-        // صرف موڈ تبدیل کریں (تھیم اپلائی نہیں ہوگی)
+        // صرف موڈ تبدیل کریں
         setMode(newMode);
         if (persistTheme) {
           localStorage.setItem('themeMode', newMode);
@@ -357,8 +468,27 @@ export const ThemeProvider = ({
         throw new Error('Name and primary colors are required');
       }
 
+      if (!isValidHexColor(colors.primary)) {
+        throw new Error('Invalid primary color format');
+      }
+
+      if (!isValidHexColor(colors.background)) {
+        throw new Error('Invalid background color format');
+      }
+
       // تھیم ID بنائیں
       const themeId = `custom-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      
+      // رنگوں کو indigo/navy blue میں تبدیل کریں
+      const textColors = themeMode === 'dark' ? {
+        textPrimary: '#E3F2FD',    // Light Blue/White
+        textSecondary: '#BBDEFB',  // Light Blue
+        textDisabled: '#78909C'    // Grey-Blue
+      } : {
+        textPrimary: '#1A237E',    // Deep Indigo/Navy Blue
+        textSecondary: '#283593',  // Medium Indigo/Navy Blue
+        textDisabled: '#5C6BC0'    // Light Indigo
+      };
       
       // نیا تھیم آبجیکٹ
       const newTheme = {
@@ -370,52 +500,64 @@ export const ThemeProvider = ({
         colors: {
           // بنیادی رنگ
           primary: colors.primary,
-          primaryLight: colors.primaryLight || lightenColor(colors.primary, 30),
-          primaryDark: colors.primaryDark || darkenColor(colors.primary, 20),
+          primaryLight: colors.primaryLight || lightenColorUtil(colors.primary, 30),
+          primaryDark: colors.primaryDark || darkenColorUtil(colors.primary, 20),
           secondary: colors.secondary || colors.primary,
+          secondaryLight: colors.secondaryLight || lightenColorUtil(colors.secondary || colors.primary, 30),
+          secondaryDark: colors.secondaryDark || darkenColorUtil(colors.secondary || colors.primary, 20),
           
           // بیک گراؤنڈ
           background: colors.background,
-          surface: colors.surface || (themeMode === 'dark' ? darkenColor(colors.background, 10) : lightenColor(colors.background, 10)),
+          surface: colors.surface || (themeMode === 'dark' ? darkenColorUtil(colors.background, 10) : lightenColorUtil(colors.background, 10)),
+          paper: colors.paper || (themeMode === 'dark' ? darkenColorUtil(colors.background, 5) : lightenColorUtil(colors.background, 5)),
           
           // ٹیکسٹ - BLACK سے INDIGO/NAVY میں تبدیل
-          textPrimary: colors.textPrimary || (themeMode === 'dark' ? '#7986CB' : '#1A237E'),
-          textSecondary: colors.textSecondary || (themeMode === 'dark' ? '#9FA8DA' : '#283593'),
+          textPrimary: colors.textPrimary || textColors.textPrimary,
+          textSecondary: colors.textSecondary || textColors.textSecondary,
+          textDisabled: colors.textDisabled || textColors.textDisabled,
+          textHint: colors.textHint || (themeMode === 'dark' ? '#90A4AE' : '#7986CB'),
           
           // اضافی رنگ
-          border: colors.border || (themeMode === 'dark' ? '#333333' : '#E0E0E0'),
-          success: colors.success || '#4CAF50',
-          warning: colors.warning || '#FF9800',
-          error: colors.error || '#F44336',
+          border: colors.border || (themeMode === 'dark' ? '#2D2D2D' : '#E0E0E0'),
+          divider: colors.divider || (themeMode === 'dark' ? '#37474F' : '#EEEEEE'),
+          success: colors.success || (themeMode === 'dark' ? '#66BB6A' : '#4CAF50'),
+          warning: colors.warning || (themeMode === 'dark' ? '#FFB74D' : '#FF9800'),
+          error: colors.error || (themeMode === 'dark' ? '#EF5350' : '#F44336'),
           info: colors.info || colors.primary,
           
-          // ڈیفالٹ ویلیوز
-          hover: colors.hover || (themeMode === 'dark' ? 'rgba(121, 134, 203, 0.04)' : 'rgba(26, 35, 126, 0.04)'),
-          focus: colors.focus || `rgba(${hexToRgb(colors.primary).r}, ${hexToRgb(colors.primary).g}, ${hexToRgb(colors.primary).b}, 0.12)`,
+          // ایکشن رنگ
+          hover: colors.hover || (themeMode === 'dark' ? 'rgba(187, 222, 251, 0.08)' : 'rgba(26, 35, 126, 0.04)'),
+          selected: colors.selected || (themeMode === 'dark' ? 'rgba(144, 202, 249, 0.16)' : 'rgba(25, 118, 210, 0.08)'),
+          focus: colors.focus || (themeMode === 'dark' ? 'rgba(66, 165, 245, 0.12)' : 'rgba(25, 118, 210, 0.12)'),
         },
         isCustom: true,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        createdBy: 'user',
       };
 
+      // Validate the theme
+      const validatedTheme = validateTheme(newTheme);
+      if (!validatedTheme) {
+        throw new Error('Theme validation failed');
+      }
+
       // localStorage میں سیو کریں
-      const saved = saveThemeToStorage(newTheme, 'customThemes');
+      const saved = saveThemeToStorage(validatedTheme, 'customThemes');
       if (!saved) {
         throw new Error('Failed to save theme to storage');
       }
 
       // اسٹیٹ اپڈیٹ کریں
-      setThemes(prev => [...prev, newTheme]);
-      setCustomThemes(prev => [...prev, newTheme]);
+      setThemes(prev => [...prev, validatedTheme]);
+      setCustomThemes(prev => [...prev, validatedTheme]);
 
       dispatchThemeEvent('customThemeCreated', {
-        theme: newTheme,
+        theme: validatedTheme,
         timestamp: new Date().toISOString()
       });
 
       console.log(`Custom theme "${name}" created successfully`);
-      return newTheme;
+      return validatedTheme;
 
     } catch (err) {
       console.error('Error creating custom theme:', err);
@@ -489,15 +631,10 @@ export const ThemeProvider = ({
         throw new Error('No theme to export');
       }
 
-      const dataStr = JSON.stringify(theme, null, 2);
-      const dataUri = `data:application/json;charset=utf-8,${encodeURIComponent(dataStr)}`;
-      
-      const exportFileDefaultName = `theme-${theme.name}-${theme.mode}.json`;
-      
-      const linkElement = document.createElement('a');
-      linkElement.setAttribute('href', dataUri);
-      linkElement.setAttribute('download', exportFileDefaultName);
-      linkElement.click();
+      const success = exportThemeToFile(theme);
+      if (!success) {
+        throw new Error('Failed to export theme');
+      }
 
       dispatchThemeEvent('themeExported', {
         theme,
@@ -524,66 +661,51 @@ export const ThemeProvider = ({
    * @returns {Promise<Object>} امپورٹ شدہ تھیم
    */
   const importTheme = useCallback(async (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
+    try {
+      const importedTheme = await importThemeFromFile(file);
+      
+      if (!importedTheme) {
+        throw new Error('Failed to import theme from file');
+      }
 
-      reader.onload = (event) => {
-        try {
-          const importedTheme = JSON.parse(event.target.result);
-          
-          // بنیادی تصدیق
-          if (!importedTheme.name || !importedTheme.colors || !importedTheme.mode) {
-            throw new Error('Invalid theme file format');
-          }
+      // Validate the imported theme
+      const validatedTheme = validateTheme(importedTheme);
+      if (!validatedTheme) {
+        throw new Error('Imported theme validation failed');
+      }
 
-          // ID تبدیل کریں
-          importedTheme.id = `custom-imported-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-          importedTheme.isCustom = true;
-          importedTheme.category = 'custom';
-          importedTheme.importedAt = new Date().toISOString();
-          importedTheme.updatedAt = new Date().toISOString();
+      // Ensure it's marked as custom
+      validatedTheme.isCustom = true;
+      validatedTheme.category = 'custom';
+      validatedTheme.importedAt = new Date().toISOString();
 
-          // localStorage میں سیو کریں
-          const saved = saveThemeToStorage(importedTheme, 'customThemes');
-          if (!saved) {
-            throw new Error('Failed to save imported theme');
-          }
+      // localStorage میں سیو کریں
+      const saved = saveThemeToStorage(validatedTheme, 'customThemes');
+      if (!saved) {
+        throw new Error('Failed to save imported theme');
+      }
 
-          // اسٹیٹ اپڈیٹ کریں
-          setThemes(prev => [...prev, importedTheme]);
-          setCustomThemes(prev => [...prev, importedTheme]);
+      // اسٹیٹ اپڈیٹ کریں
+      setThemes(prev => [...prev, validatedTheme]);
+      setCustomThemes(prev => [...prev, validatedTheme]);
 
-          dispatchThemeEvent('themeImported', {
-            theme: importedTheme,
-            timestamp: new Date().toISOString()
-          });
+      dispatchThemeEvent('themeImported', {
+        theme: validatedTheme,
+        timestamp: new Date().toISOString()
+      });
 
-          console.log(`Theme "${importedTheme.name}" imported successfully`);
-          resolve(importedTheme);
+      console.log(`Theme "${validatedTheme.name}" imported successfully`);
+      return validatedTheme;
 
-        } catch (err) {
-          console.error('Error importing theme:', err);
-          setError({
-            message: err.message,
-            code: 'IMPORT_THEME_ERROR',
-            timestamp: new Date().toISOString()
-          });
-          reject(err);
-        }
-      };
-
-      reader.onerror = () => {
-        const err = new Error('Failed to read file');
-        setError({
-          message: err.message,
-          code: 'FILE_READ_ERROR',
-          timestamp: new Date().toISOString()
-        });
-        reject(err);
-      };
-
-      reader.readAsText(file);
-    });
+    } catch (err) {
+      console.error('Error importing theme:', err);
+      setError({
+        message: err.message,
+        code: 'IMPORT_THEME_ERROR',
+        timestamp: new Date().toISOString()
+      });
+      throw err;
+    }
   }, []);
 
   /**
@@ -632,44 +754,6 @@ export const ThemeProvider = ({
     return themes.filter(theme => theme.mode === themeMode);
   }, [themes, mode]);
 
-  /**
-   * ہیلپر فنکشنز (in-memory)
-   */
-  const hexToRgb = (hex) => {
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result ? {
-      r: parseInt(result[1], 16),
-      g: parseInt(result[2], 16),
-      b: parseInt(result[3], 16)
-    } : { r: 0, g: 0, b: 0 };
-  };
-
-  const lightenColor = (color, percent) => {
-    const hex = color.replace('#', '');
-    const r = parseInt(hex.substr(0, 2), 16);
-    const g = parseInt(hex.substr(2, 2), 16);
-    const b = parseInt(hex.substr(4, 2), 16);
-    
-    const newR = Math.min(255, Math.floor(r + (255 - r) * (percent / 100)));
-    const newG = Math.min(255, Math.floor(g + (255 - g) * (percent / 100)));
-    const newB = Math.min(255, Math.floor(b + (255 - b) * (percent / 100)));
-    
-    return `#${newR.toString(16).padStart(2, '0')}${newG.toString(16).padStart(2, '0')}${newB.toString(16).padStart(2, '0')}`;
-  };
-
-  const darkenColor = (color, percent) => {
-    const hex = color.replace('#', '');
-    const r = parseInt(hex.substr(0, 2), 16);
-    const g = parseInt(hex.substr(2, 2), 16);
-    const b = parseInt(hex.substr(4, 2), 16);
-    
-    const newR = Math.max(0, Math.floor(r * (1 - percent / 100)));
-    const newG = Math.max(0, Math.floor(g * (1 - percent / 100)));
-    const newB = Math.max(0, Math.floor(b * (1 - percent / 100)));
-    
-    return `#${newR.toString(16).padStart(2, '0')}${newG.toString(16).padStart(2, '0')}${newB.toString(16).padStart(2, '0')}`;
-  };
-
   // === ایکشنز ===
 
   // کمپوننٹ ماؤنٹ پر تھیم انیشیلائز کریں
@@ -694,7 +778,7 @@ export const ThemeProvider = ({
     setTheme,
     setMode: setModeHandler,
     createCustomTheme,
-    updateCustomTheme: createCustomTheme, // ایک ہی فنکشن
+    updateCustomTheme: createCustomTheme,
     deleteCustomTheme,
     exportTheme,
     importTheme,
@@ -751,7 +835,7 @@ export const ThemeProvider = ({
         alignItems: 'center',
         minHeight: '100vh',
         backgroundColor: mode === 'dark' ? '#121212' : '#FFFFFF',
-        color: mode === 'dark' ? '#7986CB' : '#1A237E', // INDIGO/NAVY میں تبدیل
+        color: mode === 'dark' ? '#E3F2FD' : '#1A237E', // FIXED: indigo/navy colors
         transition: 'all 0.3s ease'
       }}>
         <div style={{ textAlign: 'center' }}>

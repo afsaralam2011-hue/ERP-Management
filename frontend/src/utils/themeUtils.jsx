@@ -6,6 +6,91 @@
  */
 
 /**
+ * تھیم آبجیکٹ کی تصدیق کریں
+ * @param {Object} theme - تھیم آبجیکٹ
+ * @returns {Object|null} - تصدیق شدہ تھیم یا null اگر ناقص ہے
+ */
+export const validateTheme = (theme) => {
+  try {
+    if (!theme || typeof theme !== 'object') {
+      console.error('Theme must be an object');
+      return null;
+    }
+
+    // ضروری پراپرٹیز کی جانچ
+    const requiredProps = ['id', 'name', 'mode', 'colors'];
+    for (const prop of requiredProps) {
+      if (!theme[prop]) {
+        console.error(`Theme missing required property: ${prop}`);
+        return null;
+      }
+    }
+
+    // تھیم موڈ کی تصدیق
+    const validModes = ['light', 'dark', 'auto'];
+    if (!validModes.includes(theme.mode)) {
+      console.error(`Invalid theme mode: ${theme.mode}. Must be one of: ${validModes.join(', ')}`);
+      return null;
+    }
+
+    // رنگوں کی تصدیق
+    if (!theme.colors || typeof theme.colors !== 'object') {
+      console.error('Theme must have a colors object');
+      return null;
+    }
+
+    // ضروری رنگوں کی جانچ
+    const requiredColors = [
+      'primary',
+      'background',
+      'surface',
+      'textPrimary',
+      'textSecondary',
+      'border'
+    ];
+
+    for (const color of requiredColors) {
+      if (!theme.colors[color]) {
+        console.error(`Theme missing required color: ${color}`);
+        return null;
+      }
+      
+      if (!isValidHexColor(theme.colors[color]) && !theme.colors[color].startsWith('rgba(') && !theme.colors[color].startsWith('rgb(')) {
+        console.error(`Invalid color format for ${color}: ${theme.colors[color]}`);
+        return null;
+      }
+    }
+
+    // اختیاری تصدیقات
+    if (theme.isCustom && !theme.createdAt) {
+      console.warn('Custom theme should have a createdAt property');
+    }
+
+    // تھیم میں اضافی پراپرٹیز شامل کریں اگر موجود نہیں ہیں
+    const validatedTheme = {
+      ...theme,
+      description: theme.description || `${theme.name} theme`,
+      category: theme.category || (theme.isCustom ? 'custom' : 'predefined'),
+      type: theme.type || 'standard',
+    };
+
+    // کلر کنٹراسٹ کی تصدیق (اختیاری)
+    if (theme.colors.primary && theme.colors.textPrimary) {
+      const contrast = calculateColorContrast(theme.colors.primary, theme.colors.textPrimary);
+      if (contrast < 4.5) {
+        console.warn(`Low contrast (${contrast.toFixed(2)}:1) between primary and textPrimary colors`);
+      }
+    }
+
+    console.log(`Theme validated: ${theme.name} (${theme.id})`);
+    return validatedTheme;
+  } catch (error) {
+    console.error('Error validating theme:', error);
+    return null;
+  }
+};
+
+/**
  * DOM پر تھیم کے رنگوں کو CSS ویری ایبلز کے ذریعے اپلائی کریں
  * @param {Object} theme - تھیم آبجیکٹ جس میں colors پراپرٹی موجود ہو
  * @returns {boolean} اپلیکیشن کامیاب ہوئی یا نہیں
@@ -492,7 +577,7 @@ export const getThemeFromStorage = (themeId, key = 'customThemes') => {
 };
 
 /**
- localStorage سے تمام کسٹم تھیمز حاصل کریں
+ * localStorage سے تمام کسٹم تھیمز حاصل کریں
  * @param {string} key - کلید (ڈیفالٹ: 'customThemes')
  * @returns {Array} تمام کسٹم تھیمز
  */
@@ -562,7 +647,72 @@ export const onThemeChange = (callback) => {
   };
 };
 
+/**
+ * تھیم کو فائل سے درآمد کریں
+ * @param {File} file - تھیم فائل
+ * @returns {Promise<Object>} درآمد شدہ تھیم
+ */
+export const importThemeFromFile = (file) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    
+    reader.onload = (event) => {
+      try {
+        const themeData = JSON.parse(event.target.result);
+        const validatedTheme = validateTheme(themeData);
+        
+        if (!validatedTheme) {
+          reject(new Error('Invalid theme data in file'));
+          return;
+        }
+        
+        // Generate new ID for imported theme
+        validatedTheme.id = `imported-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        validatedTheme.isCustom = true;
+        validatedTheme.createdAt = new Date().toISOString();
+        
+        resolve(validatedTheme);
+      } catch (error) {
+        reject(new Error('Failed to parse theme file'));
+      }
+    };
+    
+    reader.onerror = () => {
+      reject(new Error('Failed to read file'));
+    };
+    
+    reader.readAsText(file);
+  });
+};
+
+/**
+ * تھیم کو فائل میں برآمد کریں
+ * @param {Object} theme - برآمد کرنے کے لیے تھیم
+ * @returns {boolean} کامیابی کی صورت میں true
+ */
+export const exportThemeToFile = (theme) => {
+  try {
+    const themeData = JSON.stringify(theme, null, 2);
+    const blob = new Blob([themeData], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `theme-${theme.name.toLowerCase().replace(/\s+/g, '-')}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    
+    URL.revokeObjectURL(url);
+    return true;
+  } catch (error) {
+    console.error('Error exporting theme:', error);
+    return false;
+  }
+};
+
 export default {
+  validateTheme,
   applyThemeToDOM,
   updateThemeMetaTags,
   camelToKebab,
@@ -589,4 +739,6 @@ export default {
   detectSystemTheme,
   dispatchThemeEvent,
   onThemeChange,
+  importThemeFromFile,
+  exportThemeToFile,
 };
