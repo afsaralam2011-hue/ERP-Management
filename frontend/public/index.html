@@ -34,7 +34,7 @@
     
     <title>Pakistan Wire Industries</title>
     
-    <!-- Critical CSS for Fast Loading -->
+    <!-- Critical CSS for Fast Loading - FIXED FOR THEME COMPATIBILITY -->
     <style>
       /* Base Mobile Optimizations */
       * {
@@ -57,7 +57,7 @@
         }
       }
       
-      /* Body Styles */
+      /* Body Styles - FIXED: Removed hardcoded colors */
       body {
         margin: 0;
         padding: 0;
@@ -66,8 +66,8 @@
           sans-serif;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
-        background-color: #FFFFFF;
-        color: #1F2937;
+        background-color: var(--color-background, #FFFFFF); /* Use CSS variable */
+        color: var(--color-text-primary, #1A237E); /* Use indigo/navy color */
         line-height: 1.5;
         height: 100%;
         overflow-x: hidden;
@@ -179,6 +179,9 @@
         animation: spin 1s linear infinite;
         margin-bottom: 20px;
       }
+      
+      /* Theme Compatibility - REMOVED CONFLICTING STYLES */
+      /* Removed .dark class override */
       
       /* Animations */
       @keyframes spin {
@@ -408,6 +411,42 @@
     <!-- Main App Container -->
     <div id="root"></div>
     
+    <!-- Theme Initialization Script -->
+    <script>
+      // Initialize theme immediately to prevent FOUC (Flash of Unstyled Content)
+      (function() {
+        // Check for saved theme
+        const savedThemeMode = localStorage.getItem('themeMode') || 'light';
+        const savedThemeId = localStorage.getItem('selectedThemeId');
+        
+        // Apply theme mode immediately
+        if (savedThemeMode === 'dark') {
+          document.body.classList.add('dark-mode', 'theme-dark');
+          document.body.classList.remove('light-mode', 'theme-light');
+        } else {
+          document.body.classList.add('light-mode', 'theme-light');
+          document.body.classList.remove('dark-mode', 'theme-dark');
+        }
+        
+        // Set data attributes for theme system
+        document.body.setAttribute('data-theme-mode', savedThemeMode);
+        if (savedThemeId) {
+          document.body.setAttribute('data-theme', savedThemeId);
+        }
+        
+        // Set initial CSS variables
+        if (savedThemeMode === 'dark') {
+          document.documentElement.style.setProperty('--color-background', '#121212');
+          document.documentElement.style.setProperty('--color-text-primary', '#E3F2FD');
+          document.documentElement.style.setProperty('--color-text-secondary', '#BBDEFB');
+        } else {
+          document.documentElement.style.setProperty('--color-background', '#FFFFFF');
+          document.documentElement.style.setProperty('--color-text-primary', '#1A237E');
+          document.documentElement.style.setProperty('--color-text-secondary', '#283593');
+        }
+      })();
+    </script>
+    
     <!-- Main Script -->
     <script>
       // Global variables
@@ -630,6 +669,21 @@
           setTimeout(() => {
             loadingScreen.style.display = 'none';
           }, 300);
+        }
+      };
+      
+      // Theme initialization function for React
+      window.initializeThemeFromReact = function(theme, themeMode) {
+        if (themeMode === 'dark') {
+          document.body.classList.add('dark-mode', 'theme-dark');
+          document.body.classList.remove('light-mode', 'theme-light');
+          document.body.style.color = '#E3F2FD';
+          document.body.style.backgroundColor = '#121212';
+        } else {
+          document.body.classList.add('light-mode', 'theme-light');
+          document.body.classList.remove('dark-mode', 'theme-dark');
+          document.body.style.color = '#1A237E';
+          document.body.style.backgroundColor = '#FFFFFF';
         }
       };
     </script>

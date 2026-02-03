@@ -57,6 +57,18 @@ const NewProductionDashboard = () => {
   
   const [dailyData, setDailyData] = useState([]);
   const [shiftData, setShiftData] = useState({});
+  
+  // Separate states for historical data
+  const [yesterdayProduction, setYesterdayProduction] = useState(0);
+  const [lastWeekProduction, setLastWeekProduction] = useState(0);
+  const [lastMonthProduction, setLastMonthProduction] = useState(0);
+  const [lastMonthEfficiency, setLastMonthEfficiency] = useState(0);
+  
+  // Shift data for different dates
+  const [yesterdayShiftData, setYesterdayShiftData] = useState({});
+  const [lastWeekShiftData, setLastWeekShiftData] = useState({});
+  const [lastMonthShiftData, setLastMonthShiftData] = useState({});
+  
   const [stats, setStats] = useState({
     todayProduction: 0,
     avgEfficiency: 0,
@@ -293,6 +305,274 @@ const NewProductionDashboard = () => {
       .join(' ');
   }, []);
 
+  // 🔥 **Calculate change percentage**
+  const calculateChange = useCallback((current, previous) => {
+    if (previous === 0) {
+      return current > 0 ? "+100%" : "0%";
+    }
+    const change = ((current - previous) / previous) * 100;
+    return `${change >= 0 ? '+' : ''}${Math.round(change)}%`;
+  }, []);
+
+  // 🔥 **Calculate total production from data array**
+  const calculateTotalProduction = useCallback((data, department) => {
+    if (!data || !data.length || !department) return 0;
+    
+    return data.reduce((total, record) => {
+      const production = Number(record[department.keyField]) || 0;
+      return total + Math.floor(production);
+    }, 0);
+  }, []);
+
+  // 🔥 **Calculate average efficiency from data array**
+  const calculateAverageEfficiency = useCallback((data, department) => {
+    if (!data || !data.length || !department || !department.efficiencyField) return 0;
+    
+    const efficiencyRecords = data.filter(record => 
+      record[department.efficiencyField] && 
+      !isNaN(Number(record[department.efficiencyField]))
+    );
+    
+    if (efficiencyRecords.length === 0) return 0;
+    
+    const totalEfficiency = efficiencyRecords.reduce((total, record) => {
+      return total + Math.floor(Number(record[department.efficiencyField]));
+    }, 0);
+    
+    return Math.floor(totalEfficiency / efficiencyRecords.length);
+  }, []);
+
+  // 🔥 **Fetch yesterday's production data - FIXED**
+  const fetchYesterdayProduction = useCallback(async (department) => {
+    if (!department) return 0;
+    
+    try {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayStr = yesterday.toISOString().split('T')[0];
+      
+      console.log('Fetching yesterday data for date:', yesterdayStr);
+      
+      const { data, error } = await supabase
+        .from(department.tableName)
+        .select(department.keyField)
+        .eq(department.dateField, yesterdayStr);
+      
+      if (error) {
+        console.error('Error fetching yesterday production:', error);
+        return 0;
+      }
+      
+      const production = calculateTotalProduction(data || [], department);
+      console.log('Yesterday production found:', production, 'records:', data?.length || 0);
+      return production;
+    } catch (error) {
+      console.error('Error fetching yesterday production:', error);
+      return 0;
+    }
+  }, [calculateTotalProduction]);
+
+  // 🔥 **Fetch last week's production data - FIXED**
+  const fetchLastWeekProduction = useCallback(async (department) => {
+    if (!department) return 0;
+    
+    try {
+      const today = new Date();
+      const lastWeekStart = new Date();
+      lastWeekStart.setDate(today.getDate() - 7);
+      
+      const lastWeekStartStr = lastWeekStart.toISOString().split('T')[0];
+      const todayStr = today.toISOString().split('T')[0];
+      
+      console.log('Fetching last week data from:', lastWeekStartStr, 'to:', todayStr);
+      
+      const { data, error } = await supabase
+        .from(department.tableName)
+        .select(department.keyField)
+        .gte(department.dateField, lastWeekStartStr)
+        .lt(department.dateField, todayStr);
+      
+      if (error) {
+        console.error('Error fetching last week production:', error);
+        return 0;
+      }
+      
+      const production = calculateTotalProduction(data || [], department);
+      console.log('Last week production found:', production, 'records:', data?.length || 0);
+      return production;
+    } catch (error) {
+      console.error('Error fetching last week production:', error);
+      return 0;
+    }
+  }, [calculateTotalProduction]);
+
+  // 🔥 **Fetch last month's production data - COMPLETELY FIXED**
+  const fetchLastMonthProduction = useCallback(async (department) => {
+    if (!department) return { production: 0, efficiency: 0 };
+    
+    try {
+      const today = new Date();
+      const currentMonth = today.getMonth();
+      const currentYear = today.getFullYear();
+      
+      // Calculate first day of last month
+      let lastMonth = currentMonth - 1;
+      let year = currentYear;
+      if (lastMonth < 0) {
+        lastMonth = 11;
+        year = currentYear - 1;
+      }
+      
+      const firstDayOfLastMonth = new Date(year, lastMonth, 1);
+      const lastDayOfLastMonth = new Date(year, lastMonth + 1, 0);
+      
+      const firstDayStr = firstDayOfLastMonth.toISOString().split('T')[0];
+      const lastDayStr = lastDayOfLastMonth.toISOString().split('T')[0];
+      
+      console.log(`Fetching last month data from ${firstDayStr} to ${lastDayStr}`);
+      console.log('Last month range:', firstDayOfLastMonth.toDateString(), 'to', lastDayOfLastMonth.toDateString());
+      
+      const { data, error } = await supabase
+        .from(department.tableName)
+        .select('*')
+        .gte(department.dateField, firstDayStr)
+        .lte(department.dateField, lastDayStr);
+      
+      if (error) {
+        console.error('Error in last month query:', error);
+        throw error;
+      }
+      
+      console.log(`Last month data found: ${data?.length || 0} records`);
+      
+      const production = calculateTotalProduction(data || [], department);
+      const efficiency = calculateAverageEfficiency(data || [], department);
+      
+      console.log(`Last month results - Production: ${production}, Efficiency: ${efficiency}%`);
+      
+      return { production, efficiency };
+    } catch (error) {
+      console.error('Error fetching last month production:', error);
+      return { production: 0, efficiency: 0 };
+    }
+  }, [calculateTotalProduction, calculateAverageEfficiency]);
+
+  // 🔥 **Fetch shift data for any date - NEW FUNCTION**
+  const fetchShiftDataForDate = useCallback(async (dateStr, department = currentDept) => {
+    if (!department) return {};
+    
+    try {
+      const actualShiftField = await detectShiftField(department.tableName);
+      
+      const { data, error } = await supabase
+        .from(department.tableName)
+        .select(`${actualShiftField}, ${department.keyField}`)
+        .eq(department.dateField, dateStr);
+      
+      if (error) throw error;
+      
+      const shiftProduction = {};
+      
+      data?.forEach(record => {
+        const shift = record[actualShiftField];
+        const production = Number(record[department.keyField]) || 0;
+        
+        if (shift && shift.toString().trim() !== '' && shift.toString().trim().toLowerCase() !== 'null') {
+          const shiftName = formatShiftName(shift.toString().trim());
+          const cleanProduction = Math.floor(production);
+          
+          if (!shiftProduction[shiftName]) {
+            shiftProduction[shiftName] = 0;
+          }
+          shiftProduction[shiftName] += cleanProduction;
+        }
+      });
+      
+      return shiftProduction;
+    } catch (error) {
+      console.error(`Error fetching shift data for date ${dateStr}:`, error);
+      return {};
+    }
+  }, [detectShiftField, formatShiftName]);
+
+  // 🔥 **Fetch all shift data - NEW FUNCTION**
+  const fetchAllShiftData = useCallback(async (department = currentDept) => {
+    if (!department) return;
+    
+    try {
+      // Today's shift data
+      const today = new Date().toISOString().split('T')[0];
+      const todayShiftData = await fetchShiftDataForDate(today, department);
+      setShiftData(todayShiftData);
+      
+      // Yesterday's shift data
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayStr = yesterday.toISOString().split('T')[0];
+      const yesterdayShiftData = await fetchShiftDataForDate(yesterdayStr, department);
+      setYesterdayShiftData(yesterdayShiftData);
+      
+      // Last week shift data (aggregate)
+      const lastWeekStart = new Date();
+      lastWeekStart.setDate(lastWeekStart.getDate() - 7);
+      const lastWeekStartStr = lastWeekStart.toISOString().split('T')[0];
+      
+      const { data: lastWeekData } = await supabase
+        .from(department.tableName)
+        .select('*')
+        .gte(department.dateField, lastWeekStartStr)
+        .lt(department.dateField, today);
+      
+      const lastWeekShiftData = {};
+      lastWeekData?.forEach(record => {
+        const shift = record[department.shiftField] || record.shift_name || record.shift;
+        const production = Number(record[department.keyField]) || 0;
+        
+        if (shift) {
+          const shiftName = formatShiftName(shift.toString().trim());
+          if (!lastWeekShiftData[shiftName]) {
+            lastWeekShiftData[shiftName] = 0;
+          }
+          lastWeekShiftData[shiftName] += Math.floor(production);
+        }
+      });
+      setLastWeekShiftData(lastWeekShiftData);
+      
+      // Last month shift data (aggregate)
+      const todayObj = new Date();
+      const lastMonth = new Date(todayObj.getFullYear(), todayObj.getMonth() - 1, 1);
+      const firstDayOfLastMonth = new Date(lastMonth.getFullYear(), lastMonth.getMonth(), 1);
+      const lastDayOfLastMonth = new Date(todayObj.getFullYear(), todayObj.getMonth(), 0);
+      
+      const firstDayStr = firstDayOfLastMonth.toISOString().split('T')[0];
+      const lastDayStr = lastDayOfLastMonth.toISOString().split('T')[0];
+      
+      const { data: lastMonthData } = await supabase
+        .from(department.tableName)
+        .select('*')
+        .gte(department.dateField, firstDayStr)
+        .lte(department.dateField, lastDayStr);
+      
+      const lastMonthShiftData = {};
+      lastMonthData?.forEach(record => {
+        const shift = record[department.shiftField] || record.shift_name || record.shift;
+        const production = Number(record[department.keyField]) || 0;
+        
+        if (shift) {
+          const shiftName = formatShiftName(shift.toString().trim());
+          if (!lastMonthShiftData[shiftName]) {
+            lastMonthShiftData[shiftName] = 0;
+          }
+          lastMonthShiftData[shiftName] += Math.floor(production);
+        }
+      });
+      setLastMonthShiftData(lastMonthShiftData);
+      
+    } catch (error) {
+      console.error('Error fetching all shift data:', error);
+    }
+  }, [fetchShiftDataForDate]);
+
   // 🔥 **Weekly Data Fetch**
   const fetchWeeklyData = useCallback(async (offset = 0, department = currentDept) => {
     if (!department) return;
@@ -472,61 +752,19 @@ const NewProductionDashboard = () => {
     }
   }, []);
 
-  // 🔥 **Correct Shift Data Fetch**
-  const fetchShiftData = useCallback(async (department = currentDept) => {
-    if (!department) return;
-    
-    try {
-      const today = new Date().toISOString().split('T')[0];
-      const actualShiftField = await detectShiftField(department.tableName);
-      
-      const { data, error } = await supabase
-        .from(department.tableName)
-        .select(`${actualShiftField}, ${department.keyField}`)
-        .eq(department.dateField, today);
-      
-      if (error) throw error;
-      
-      const shiftProduction = {};
-      
-      data?.forEach(record => {
-        const shift = record[actualShiftField];
-        const production = Number(record[department.keyField]) || 0;
-        
-        if (shift && shift.toString().trim() !== '' && shift.toString().trim().toLowerCase() !== 'null') {
-          const shiftName = formatShiftName(shift.toString().trim());
-          const cleanProduction = Math.floor(production);
-          
-          if (!shiftProduction[shiftName]) {
-            shiftProduction[shiftName] = 0;
-          }
-          shiftProduction[shiftName] += cleanProduction;
-        }
-      });
-      
-      setShiftData(shiftProduction);
-      
-    } catch (error) {
-      console.error('Error fetching shift data:', error);
-      setShiftData({});
-    }
-  }, [detectShiftField, formatShiftName]);
-
-  // 🔥 **Calculate Statistics**
+  // 🔥 **Calculate Statistics - REMOVED FAKE CALCULATIONS**
   const calculateStats = useCallback((data, department = currentDept) => {
     if (!data || !data.length || !department) {
-      setStats({
+      setStats(prev => ({
+        ...prev,
         todayProduction: 0,
         avgEfficiency: 0,
         activeMachines: 0,
         totalOperators: 0,
         shiftWise: {},
         machineWise: [],
-        operatorWise: [],
-        yesterdayProduction: 0,
-        lastWeekProduction: 0,
-        lastMonthProduction: 0
-      });
+        operatorWise: []
+      }));
       return;
     }
 
@@ -609,26 +847,58 @@ const NewProductionDashboard = () => {
       machine: stats.machine
     })).sort((a, b) => b.production - a.production);
     
-    // Calculate other productions
-    const yesterdayProduction = Math.floor(totalProduction * 0.8);
-    const lastWeekProduction = Math.floor(totalProduction * 5.5);
-    const lastMonthProduction = Math.floor(totalProduction * 22);
-    
-    setStats({
+    setStats(prev => ({
+      ...prev,
       todayProduction: totalProduction,
       avgEfficiency: efficiencyCount > 0 ? Math.floor(totalEfficiency / efficiencyCount) : 0,
       activeMachines: machines.size,
       totalOperators: uniqueOperators.size,
       shiftWise: shiftCount,
       machineWise: machineWiseData,
-      operatorWise: operatorWiseData,
-      yesterdayProduction,
-      lastWeekProduction,
-      lastMonthProduction
-    });
+      operatorWise: operatorWiseData
+    }));
   }, []);
 
-  // 🔥 **Main Fetch Function - Fixed with proper dependencies**
+  // 🔥 **Fetch historical data separately - FIXED**
+  const fetchHistoricalData = useCallback(async (department = currentDept) => {
+    if (!department) return;
+    
+    try {
+      console.log('Starting to fetch historical data for:', department.name);
+      
+      // Fetch yesterday's data
+      const yesterdayProd = await fetchYesterdayProduction(department);
+      setYesterdayProduction(yesterdayProd);
+      console.log('Yesterday production:', yesterdayProd);
+      
+      // Fetch last week's data
+      const lastWeekProd = await fetchLastWeekProduction(department);
+      setLastWeekProduction(lastWeekProd);
+      console.log('Last week production:', lastWeekProd);
+      
+      // Fetch last month's data - FIXED
+      const lastMonthResult = await fetchLastMonthProduction(department);
+      setLastMonthProduction(lastMonthResult.production);
+      setLastMonthEfficiency(lastMonthResult.efficiency);
+      
+      console.log('Last month results:', lastMonthResult);
+      console.log('Historical Data Summary:', {
+        yesterday: yesterdayProd,
+        lastWeek: lastWeekProd,
+        lastMonth: lastMonthResult.production,
+        lastMonthEfficiency: lastMonthResult.efficiency
+      });
+      
+    } catch (error) {
+      console.error('Error fetching historical data:', error);
+      setYesterdayProduction(0);
+      setLastWeekProduction(0);
+      setLastMonthProduction(0);
+      setLastMonthEfficiency(0);
+    }
+  }, [currentDept, fetchYesterdayProduction, fetchLastWeekProduction, fetchLastMonthProduction]);
+
+  // 🔥 **Main Fetch Function - Fixed with actual data fetching**
   const fetchDepartmentData = useCallback(async () => {
     if (!currentDept) return;
     
@@ -672,6 +942,12 @@ const NewProductionDashboard = () => {
       // Calculate statistics
       calculateStats(data || [], currentDept);
       
+      // Fetch historical data (yesterday, last week, last month)
+      fetchHistoricalData(currentDept);
+      
+      // Fetch shift data for all periods
+      fetchAllShiftData(currentDept);
+      
       // Fetch weekly data with current offset
       fetchWeeklyData(weeklyOffset, currentDept);
       
@@ -681,17 +957,21 @@ const NewProductionDashboard = () => {
       // Fetch current month daily data
       fetchCurrentMonthDailyData(currentDept);
       
-      // Fetch shift data
-      fetchShiftData(currentDept);
-      
     } catch (error) {
       console.error(`Error fetching data from ${currentDept.tableName}:`, error);
       setProductionData([]);
       setLastEntry(null);
+      setYesterdayProduction(0);
+      setLastWeekProduction(0);
+      setLastMonthProduction(0);
+      setLastMonthEfficiency(0);
+      setShiftData({});
+      setYesterdayShiftData({});
+      setLastWeekShiftData({});
+      setLastMonthShiftData({});
       setWeeklyData([]);
       setMonthlyData([]);
       setDailyData([]);
-      setShiftData({});
       setStats({
         todayProduction: 0,
         avgEfficiency: 0,
@@ -708,8 +988,8 @@ const NewProductionDashboard = () => {
       setLoading(false);
     }
   }, [currentDept, dateFilter, weeklyOffset, monthlyOffset, 
-      calculateStats, fetchWeeklyData, fetchMonthlyData, 
-      fetchCurrentMonthDailyData, fetchShiftData]);
+      calculateStats, fetchHistoricalData, fetchAllShiftData, fetchWeeklyData, fetchMonthlyData, 
+      fetchCurrentMonthDailyData]);
 
   // Handle weekly navigation
   const handleWeeklyPrev = useCallback(() => {
@@ -767,6 +1047,34 @@ const NewProductionDashboard = () => {
     return `${monthNames[targetDate.getMonth()]} ${targetDate.getFullYear()}`;
   }, [monthlyOffset]);
 
+  // 🔥 **Get shift data based on date filter**
+  const getShiftDataForCurrentFilter = useCallback(() => {
+    switch(dateFilter) {
+      case 'yesterday':
+        return yesterdayShiftData;
+      case 'week':
+        return lastWeekShiftData;
+      case 'month':
+        return lastMonthShiftData;
+      default: // today
+        return shiftData;
+    }
+  }, [dateFilter, shiftData, yesterdayShiftData, lastWeekShiftData, lastMonthShiftData]);
+
+  // 🔥 **Get shift data label based on date filter**
+  const getShiftDataLabel = useCallback(() => {
+    switch(dateFilter) {
+      case 'yesterday':
+        return "Yesterday's Shift-wise Production";
+      case 'week':
+        return "Last Week Shift-wise Production";
+      case 'month':
+        return "Last Month Shift-wise Production";
+      default:
+        return "Today's Shift-wise Production";
+    }
+  }, [dateFilter]);
+
   // 🔥 **Fix: Main useEffect - No infinite loop**
   useEffect(() => {
     if (currentDept) {
@@ -801,9 +1109,15 @@ const NewProductionDashboard = () => {
       weeklyData: weeklyData,
       monthlyData: monthlyData,
       dailyData: dailyData,
-      shiftData: shiftData,
+      shiftData: getShiftDataForCurrentFilter(),
       data: productionData,
-      summary: stats
+      summary: {
+        ...stats,
+        yesterdayProduction,
+        lastWeekProduction,
+        lastMonthProduction,
+        lastMonthEfficiency
+      }
     };
     
     const dataStr = JSON.stringify(exportData, null, 2);
@@ -816,7 +1130,7 @@ const NewProductionDashboard = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  }, [productionData, selectedDepartment, currentDept, dateFilter, lastEntry, weeklyData, monthlyData, dailyData, shiftData, stats]);
+  }, [productionData, selectedDepartment, currentDept, dateFilter, lastEntry, weeklyData, monthlyData, dailyData, stats, yesterdayProduction, lastWeekProduction, lastMonthProduction, lastMonthEfficiency, getShiftDataForCurrentFilter]);
 
   // Get top operators (top 5)
   const getTopOperators = useCallback(() => {
@@ -862,56 +1176,56 @@ const NewProductionDashboard = () => {
     return name.length > 12 ? name.substring(0, 12) + '...' : name;
   }, []);
 
-  // 🔥 **Stats cards data - Fixed loading issue**
+  // 🔥 **Stats cards data - Fixed with REAL data**
   const statsCards = useMemo(() => [
     { 
       title: "Today's Production", 
       value: loading ? "..." : removeDecimals(stats.todayProduction), 
-      change: "+15%", 
+      change: calculateChange(stats.todayProduction, yesterdayProduction), 
       icon: FiPackage, 
       color: currentDept?.color || "#3b82f6",
       description: `${currentDept?.unit} produced today`,
-      isPositive: true,
+      isPositive: stats.todayProduction >= yesterdayProduction,
       link: "#"
     },
     { 
       title: "Yesterday's Production", 
-      value: loading ? "..." : removeDecimals(stats.yesterdayProduction), 
-      change: "+5%", 
+      value: loading ? "..." : removeDecimals(yesterdayProduction), 
+      change: calculateChange(yesterdayProduction, lastWeekProduction / 7), 
       icon: FaHistory, 
       color: "#8b5cf6",
       description: `${currentDept?.unit} produced yesterday`,
-      isPositive: stats.yesterdayProduction > 0,
+      isPositive: yesterdayProduction > 0,
       link: "#"
     },
     { 
       title: "Last Week Total", 
-      value: loading ? "..." : removeDecimals(stats.lastWeekProduction), 
-      change: "+12%", 
+      value: loading ? "..." : removeDecimals(lastWeekProduction), 
+      change: calculateChange(lastWeekProduction, lastMonthProduction / 4), 
       icon: FaCalendarAlt, 
       color: "#10b981",
       description: `${currentDept?.unit} last week`,
-      isPositive: true,
+      isPositive: lastWeekProduction > 0,
       link: "#"
     },
     { 
       title: "Last Month Total", 
-      value: loading ? "..." : removeDecimals(stats.lastMonthProduction), 
-      change: "+18%", 
+      value: loading ? "..." : removeDecimals(lastMonthProduction), 
+      change: "+0%", 
       icon: FaRegCalendarCheck, 
       color: "#ec4899",
       description: `${currentDept?.unit} last month`,
-      isPositive: true,
+      isPositive: lastMonthProduction > 0,
       link: "#"
     },
     { 
       title: "Avg Efficiency", 
       value: loading ? "..." : `${stats.avgEfficiency}%`, 
-      change: stats.avgEfficiency > 85 ? "+3%" : "-2%", 
+      change: calculateChange(stats.avgEfficiency, lastMonthEfficiency), 
       icon: FiActivity, 
       color: "#06b6d4",
       description: "Average efficiency rate",
-      isPositive: stats.avgEfficiency > 85,
+      isPositive: stats.avgEfficiency >= lastMonthEfficiency,
       link: "#"
     },
     { 
@@ -924,7 +1238,7 @@ const NewProductionDashboard = () => {
       isPositive: true,
       link: "#"
     }
-  ], [loading, stats, currentDept, removeDecimals]);
+  ], [loading, stats, yesterdayProduction, lastWeekProduction, lastMonthProduction, lastMonthEfficiency, currentDept, removeDecimals, calculateChange]);
 
   // 🔥 **Render function - Main component return**
   return (
@@ -1262,7 +1576,7 @@ const NewProductionDashboard = () => {
         </div>
       )}
 
-      {/* Stats Cards - 🔥 Fixed loading issue */}
+      {/* Stats Cards - 🔥 Now showing REAL data */}
       <div className="grid-cards">
         {statsCards.map((stat, index) => (
           <div className="dashboard-card" key={index}>
@@ -1511,28 +1825,56 @@ const NewProductionDashboard = () => {
           )}
         </div>
 
-        {/* 🔥 Shift-wise Production - Fixed */}
+        {/* 🔥 Shift-wise Production - COMPLETELY FIXED */}
         <div className="dashboard-section">
           <div className="chart-controls">
             <h3 className="chart-title">
               <IconBox icon={FiClock} color="#f59e0b" size={20} />
-              Shift-wise Production
+              {getShiftDataLabel()}
             </h3>
             <span className="badge badge-warning">
-              {Object.keys(shiftData).length} Shifts
+              {Object.keys(getShiftDataForCurrentFilter()).length} Shifts
             </span>
+          </div>
+          
+          <div style={{ marginBottom: "15px", display: "flex", gap: "10px", justifyContent: "center" }}>
+            {['today', 'yesterday', 'week', 'month'].map(filterType => (
+              <button
+                key={filterType}
+                onClick={() => setDateFilter(filterType)}
+                className="btn"
+                style={{
+                  background: dateFilter === filterType ? 
+                    `${filterType === 'today' ? '#10b981' : 
+                      filterType === 'yesterday' ? '#f59e0b' : 
+                      filterType === 'week' ? '#3b82f6' : '#8b5cf6'}${darkMode ? '30' : '15'}` : 'transparent',
+                  color: dateFilter === filterType ? 
+                    getDarkColor(filterType === 'today' ? '#10b981' : 
+                      filterType === 'yesterday' ? '#f59e0b' : 
+                      filterType === 'week' ? '#3b82f6' : '#8b5cf6') : "var(--color-text-secondary)",
+                  border: `1px solid ${dateFilter === filterType ? 
+                    getDarkColor(filterType === 'today' ? '#10b981' : 
+                      filterType === 'yesterday' ? '#f59e0b' : 
+                      filterType === 'week' ? '#3b82f6' : '#8b5cf6') : "var(--color-border)"}`,
+                  padding: '6px 12px',
+                  fontSize: '13px'
+                }}
+              >
+                {filterType.charAt(0).toUpperCase() + filterType.slice(1)}
+              </button>
+            ))}
           </div>
           
           {loading ? (
             <div className="loading-state">
               Loading shift data...
             </div>
-          ) : Object.keys(shiftData).length > 0 ? (
+          ) : Object.keys(getShiftDataForCurrentFilter()).length > 0 ? (
             <div>
               <ProductionPieChart 
                 title={null}
-                labels={Object.keys(shiftData)}
-                data={Object.values(shiftData)}
+                labels={Object.keys(getShiftDataForCurrentFilter())}
+                data={Object.values(getShiftDataForCurrentFilter())}
                 colors={['#f59e0b', '#06b6d4', '#8b5cf6', '#10b981', '#ec4899', '#ef4444']}
                 height={250}
                 darkMode={darkMode}
@@ -1543,7 +1885,7 @@ const NewProductionDashboard = () => {
                 gap: "15px",
                 marginTop: "20px"
               }}>
-                {Object.entries(shiftData).map(([shift, production], index) => (
+                {Object.entries(getShiftDataForCurrentFilter()).map(([shift, production], index) => (
                   <div key={index} style={{
                     background: `${['#f59e0b', '#06b6d4', '#8b5cf6', '#10b981', '#ec4899', '#ef4444'][index % 6]}${darkMode ? '20' : '10'}`,
                     padding: "15px",
@@ -1581,7 +1923,10 @@ const NewProductionDashboard = () => {
             </div>
           ) : (
             <div className="empty-state">
-              No shift data available for today
+              {dateFilter === 'today' ? 'No shift data available for today' :
+               dateFilter === 'yesterday' ? 'No shift data available for yesterday' :
+               dateFilter === 'week' ? 'No shift data available for last week' :
+               'No shift data available for last month'}
             </div>
           )}
         </div>
@@ -1594,7 +1939,7 @@ const NewProductionDashboard = () => {
           <div className="chart-controls">
             <h3 className="chart-title">
               <IconBox icon={FaCog} color="#8b5cf6" size={20} />
-              Machine-wise Production
+              Machine-wise Production ({dateFilter})
             </h3>
             <span className="badge badge-primary">
               Top {Math.min(5, stats.machineWise.length)} Machines
@@ -1621,7 +1966,7 @@ const NewProductionDashboard = () => {
                 <div className="chart-details-header">
                   <div className="chart-details-title">
                     <IconBox icon={FaCogs} color="#8b5cf6" size={16} />
-                    Machine Performance Details
+                    Machine Performance Details ({dateFilter})
                   </div>
                   <div className="badge badge-primary">
                     {stats.activeMachines} Active Machines
@@ -1716,7 +2061,7 @@ const NewProductionDashboard = () => {
           <div className="chart-controls">
             <h3 className="chart-title">
               <IconBox icon={FiUser} color="#10b981" size={20} />
-              Operator-wise Production
+              Operator-wise Production ({dateFilter})
             </h3>
             <span className="badge badge-success">
               Top {Math.min(5, stats.operatorWise.length)} Operators
@@ -1745,7 +2090,7 @@ const NewProductionDashboard = () => {
                 <div className="chart-details-header">
                   <div className="chart-details-title">
                     <IconBox icon={FiUsers} color="#10b981" size={16} />
-                    Operator Performance Details
+                    Operator Performance Details ({dateFilter})
                   </div>
                   <div className="badge badge-success">
                     {stats.totalOperators} Unique Operators
@@ -1844,7 +2189,7 @@ const NewProductionDashboard = () => {
                       gap: '8px'
                     }}>
                       <IconBox icon={FiActivity} color="#f59e0b" size={14} />
-                      Operator Performance Summary
+                      Operator Performance Summary ({dateFilter})
                     </div>
                     <div className="badge badge-warning">
                       {stats.operatorWise.length} Operators
@@ -1905,7 +2250,7 @@ const NewProductionDashboard = () => {
         <div className="dashboard-section">
           <h3 className="chart-title">
             <IconBox icon={FiStar} color="#f59e0b" size={20} />
-            Top Operators Performance (Unique)
+            Top Operators Performance (Unique) - {dateFilter}
           </h3>
           
           {loading ? (
@@ -1982,7 +2327,7 @@ const NewProductionDashboard = () => {
         <div className="dashboard-section">
           <h3 className="chart-title">
             <IconBox icon={FiAward} color="#06b6d4" size={20} />
-            Top Machines Performance
+            Top Machines Performance - {dateFilter}
           </h3>
           
           {loading ? (
@@ -2061,7 +2406,7 @@ const NewProductionDashboard = () => {
         <div className="chart-controls">
           <h3 className="chart-title">
             <IconBox icon={FaTable} color="#8b5cf6" size={20} />
-            Production Records ({productionData.length} records)
+            Production Records ({dateFilter}) - {productionData.length} records
           </h3>
           <div style={{ display: "flex", gap: "10px" }}>
             <button
@@ -2165,7 +2510,7 @@ const NewProductionDashboard = () => {
           </div>
         ) : (
           <div className="empty-state">
-            No production records found for selected date filter
+            No production records found for selected date filter ({dateFilter})
           </div>
         )}
       </div>

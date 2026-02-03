@@ -439,7 +439,7 @@ const Navigation = () => {
       
       production: {
         path: "/production/new",
-        label: "Production",
+        label: "Production Dashboard",
         icon: <FiPackage />,
         color: themeColors.accent,
         iconColor: themeColors.accent,
