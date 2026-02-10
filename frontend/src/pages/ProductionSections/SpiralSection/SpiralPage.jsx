@@ -1,6 +1,7 @@
-// src/pages/ProductionSections/SpiralSection/SpiralPage.jsx
+/// src/pages/ProductionSections/SpiralSection/SpiralPage.jsx
 // ============================================================
-// Spiral Section - 100% LAYOUT COMPATIBLE VERSION
+// Spiral Section - 100% HORIZONTAL LAYOUT COMPATIBLE VERSION
+// ALL FILTERS AND BUTTONS IN SINGLE LINE
 // Complete file - Just copy and paste
 // ============================================================
 
@@ -46,6 +47,13 @@ import {
   FiSmartphone,
   FiCheckSquare,
   FiSettings,
+  FiHash,
+  FiDollarSign,
+  FiPercent,
+  FiShoppingBag,
+  FiServer,
+  FiTrendingDown,
+  FiTrendingUp as FiTrendingUpIcon,
 } from "react-icons/fi";
 import { FaWhatsapp } from "react-icons/fa";
 import { useTheme } from "../../../contexts/ThemeContext";
@@ -114,10 +122,10 @@ const SpiralPage = () => {
 
   // CSS Variables کے ذریعے colors لینے کا function
   const getColor = (varName) => {
-    return getComputedStyle(document.documentElement).getPropertyValue(varName).trim() || '#000000';
+    return getComputedStyle(document.documentElement).getPropertyValue(varName).trim() || (isDarkMode ? '#7986CB' : '#1A237E');
   };
 
-  // Theme-based colors
+  // Theme-based colors - INDIGO/NAVY BLUE COLORS
   const themeColors = {
     background: getColor('--color-background'),
     textPrimary: getColor('--color-text-primary'),
@@ -139,7 +147,7 @@ const SpiralPage = () => {
     disabled: getColor('--color-disabled'),
   };
 
-  // Header background gradient colors (theme-based)
+  // Header background gradient colors (theme-based) - INDIGO GRADIENT
   const headerGradient = isDarkMode 
     ? 'linear-gradient(135deg, #1A237E 0%, #283593 100%)' // Indigo gradient for dark mode
     : 'linear-gradient(135deg, #1A237E 0%, #283593 100%)'; // Indigo gradient for light mode
@@ -877,12 +885,12 @@ const SpiralPage = () => {
         onClick={(e) => e.stopPropagation()}
         style={{
           background: themeColors.paper || themeColors.background,
-          borderRadius: '8px',
+          borderRadius: '12px',
           width: '90%',
           maxWidth: '500px',
           maxHeight: '90vh',
           overflow: 'auto',
-          boxShadow: `0 10px 40px ${themeColors.shadow}`
+          boxShadow: `0 20px 60px ${themeColors.shadow}`
         }}
       >
         <div 
@@ -895,11 +903,11 @@ const SpiralPage = () => {
             alignItems: 'center',
             background: headerGradient,
             color: 'white',
-            borderTopLeftRadius: '8px',
-            borderTopRightRadius: '8px'
+            borderTopLeftRadius: '12px',
+            borderTopRightRadius: '12px'
           }}
         >
-          <h2 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <h2 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '10px', fontSize: '18px' }}>
             <FaWhatsapp className="whatsapp-icon" /> Send Report via WhatsApp
           </h2>
           <button
@@ -938,7 +946,7 @@ const SpiralPage = () => {
             }}
           >
             <FaWhatsapp size={48} color="#25D366" />
-            <h3 style={{ margin: '10px 0 5px 0' }}>Send to WhatsApp Desktop</h3>
+            <h3 style={{ margin: '10px 0 5px 0', fontSize: '16px' }}>Send to WhatsApp Desktop</h3>
             <p style={{ margin: 0, fontSize: '14px', color: themeColors.textSecondary }}>
               Select one of the options below. Report will automatically open in WhatsApp Desktop.
             </p>
@@ -968,7 +976,7 @@ const SpiralPage = () => {
                   background: '#25D366',
                   color: 'white',
                   border: 'none',
-                  borderRadius: '6px',
+                  borderRadius: '8px',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
@@ -996,7 +1004,7 @@ const SpiralPage = () => {
                   background: themeColors.primary,
                   color: 'white',
                   border: 'none',
-                  borderRadius: '6px',
+                  borderRadius: '8px',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
@@ -1018,7 +1026,7 @@ const SpiralPage = () => {
                   background: themeColors.error,
                   color: 'white',
                   border: 'none',
-                  borderRadius: '6px',
+                  borderRadius: '8px',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
@@ -1041,7 +1049,7 @@ const SpiralPage = () => {
               borderTop: `1px solid ${themeColors.border}`
             }}
           >
-            <h4 style={{ margin: '0 0 10px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <h4 style={{ margin: '0 0 10px 0', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px' }}>
               <FiEye /> Message Preview
             </h4>
             <div 
@@ -1049,7 +1057,7 @@ const SpiralPage = () => {
               style={{
                 background: themeColors.surface,
                 padding: '15px',
-                borderRadius: '6px',
+                borderRadius: '8px',
                 fontSize: '12px',
                 maxHeight: '200px',
                 overflow: 'auto',
@@ -1121,6 +1129,7 @@ const SpiralPage = () => {
         "Shift Code",
         "Shift Name",
         "Remarks",
+        "Production Data",
         "Created At",
       ],
       ...filteredRecords.map((record) => [
@@ -1145,6 +1154,7 @@ const SpiralPage = () => {
         `"${record.shift_code || ""}"`,
         `"${record.shift_name || ""}"`,
         `"${record.remarks || ""}"`,
+        `"${record.production_data || ""}"`,
         `"${new Date(record.created_at).toLocaleString()}"`,
       ]),
     ]
@@ -1182,14 +1192,14 @@ const SpiralPage = () => {
           body { 
             font-family: Arial, sans-serif; 
             margin: 40px; 
-            color: #1A237E;
-            background: white;
+            color: ${isDarkMode ? '#7986CB' : '#1A237E'};
+            background: ${isDarkMode ? '#121212' : 'white'};
           }
           .header { 
             text-align: center; 
             margin-bottom: 30px; 
             padding: 20px;
-            background: #1A237E;
+            background: ${isDarkMode ? '#283593' : '#1A237E'};
             color: #FFFFFF;
           }
           .header h1 { 
@@ -1204,25 +1214,27 @@ const SpiralPage = () => {
             margin: 20px 0; 
           }
           .table th, .table td { 
-            border: 1px solid #283593; 
+            border: 1px solid ${isDarkMode ? '#7986CB' : '#283593'}; 
             padding: 12px; 
             text-align: left; 
           }
           .table th { 
-            background-color: #1A237E; 
+            background-color: ${isDarkMode ? '#283593' : '#1A237E'}; 
             color: #FFFFFF;
           }
           .summary { 
-            background-color: #F4F4F4; 
+            background-color: ${isDarkMode ? '#1a1a1a' : '#F4F4F4'}; 
             padding: 20px; 
             margin: 20px 0; 
-            border: 1px solid #283593;
+            border: 1px solid ${isDarkMode ? '#7986CB' : '#283593'};
+            color: ${isDarkMode ? '#7986CB' : '#1A237E'};
           }
           .shift-section { 
             margin: 20px 0; 
             padding: 15px; 
-            border-left: 4px solid #1A237E;
-            background: #F4F4F4;
+            border-left: 4px solid ${isDarkMode ? '#7986CB' : '#1A237E'};
+            background: ${isDarkMode ? '#1a1a1a' : '#F4F4F4'};
+            color: ${isDarkMode ? '#7986CB' : '#1A237E'};
           }
           .shift-header { 
             display: flex; 
@@ -1234,7 +1246,7 @@ const SpiralPage = () => {
             margin-top: 4px; 
             text-align: center; 
             font-size: 1px; 
-            color: #1A237E;
+            color: ${isDarkMode ? '#7986CB' : '#1A237E'};
           }
           @media print {
             body { margin: 20px; }
@@ -1251,7 +1263,7 @@ const SpiralPage = () => {
         
         <div class="shift-section">
           <div class="shift-header">
-            <h3 style="margin: 0; color: #1A237E;">☀️ Day Shift Summary</h3>
+            <h3 style="margin: 0; color: ${isDarkMode ? '#7986CB' : '#1A237E'};">☀️ Day Shift Summary</h3>
           </div>
           <p><strong>Production:</strong> ${Math.round(
             reportData.dayShiftData.production
@@ -1267,7 +1279,7 @@ const SpiralPage = () => {
         
         <div class="shift-section">
           <div class="shift-header">
-            <h3 style="margin: 0; color: #1A237E;">🌙 Night Shift Summary</h3>
+            <h3 style="margin: 0; color: ${isDarkMode ? '#7986CB' : '#1A237E'};">🌙 Night Shift Summary</h3>
           </div>
           <p><strong>Production:</strong> ${Math.round(
             reportData.nightShiftData.production
@@ -1415,10 +1427,10 @@ const SpiralPage = () => {
         </div>
         
         <div class="no-print" style="margin-top: 20px;">
-          <button onclick="window.print()" style="padding: 10px 20px; background: #1A237E; color: #FFFFFF; border: none; cursor: pointer;">
+          <button onclick="window.print()" style="padding: 10px 20px; background: ${isDarkMode ? '#283593' : '#1A237E'}; color: #FFFFFF; border: none; cursor: pointer;">
             Print Report
           </button>
-          <button onclick="window.close()" style="padding: 10px 20px; background: #283593; color: #FFFFFF; border: none; cursor: pointer; margin-left: 10px;">
+          <button onclick="window.close()" style="padding: 10px 20px; background: ${isDarkMode ? '#7986CB' : '#283593'}; color: #FFFFFF; border: none; cursor: pointer; margin-left: 10px;">
             Close
           </button>
         </div>
@@ -1589,6 +1601,8 @@ const SpiralPage = () => {
       value: stats.totalRecords,
       icon: FiDatabase,
       description: "All production records",
+      color: "#6366F1",
+      trend: stats.todayRecords > 0 ? "up" : "neutral"
     },
     {
       id: "total-production",
@@ -1596,6 +1610,8 @@ const SpiralPage = () => {
       value: `${Math.round(stats.totalProduction)} M`,
       icon: FiColumns,
       description: "Total production in meters",
+      color: "#10B981",
+      trend: stats.todayProduction > 0 ? "up" : "neutral"
     },
     {
       id: "total-weight",
@@ -1603,13 +1619,17 @@ const SpiralPage = () => {
       value: `${Math.round(stats.totalWeight)} KG`,
       icon: FiFeather,
       description: "Total weight in kilograms",
+      color: "#F59E0B",
+      trend: stats.todayWeight > 0 ? "up" : "neutral"
     },
     {
       id: "avg-efficiency",
       title: "Avg Efficiency",
       value: `${Math.round(stats.avgEfficiency)}%`,
-      icon: FiTrendingUp,
+      icon: FiTrendingUpIcon,
       description: "Average efficiency percentage",
+      color: "#EF4444",
+      trend: stats.todayAvgEfficiency > 85 ? "up" : "down"
     },
     {
       id: "today-records",
@@ -1617,6 +1637,8 @@ const SpiralPage = () => {
       value: stats.todayRecords,
       icon: FiCalendar,
       description: "Records added today",
+      color: "#8B5CF6",
+      trend: stats.todayRecords > 0 ? "up" : "neutral"
     },
     {
       id: "today-production",
@@ -1624,6 +1646,8 @@ const SpiralPage = () => {
       value: `${Math.round(stats.todayProduction)} M`,
       icon: FiPackage,
       description: "Today's production",
+      color: "#06B6D4",
+      trend: stats.todayProduction > 0 ? "up" : "neutral"
     },
     {
       id: "today-weight",
@@ -1631,6 +1655,8 @@ const SpiralPage = () => {
       value: `${Math.round(stats.todayWeight)} KG`,
       icon: FiFeather,
       description: "Today's weight",
+      color: "#F97316",
+      trend: stats.todayWeight > 0 ? "up" : "neutral"
     },
     {
       id: "today-avg-efficiency",
@@ -1638,6 +1664,8 @@ const SpiralPage = () => {
       value: `${Math.round(stats.todayAvgEfficiency)}%`,
       icon: FiActivity,
       description: "Today's average efficiency",
+      color: "#EC4899",
+      trend: stats.todayAvgEfficiency > 85 ? "up" : "down"
     },
   ];
 
@@ -1699,7 +1727,7 @@ const SpiralPage = () => {
             background: headerGradient,
             color: 'white',
             border: 'none',
-            borderRadius: '4px',
+            borderRadius: '8px',
             padding: '8px',
             cursor: 'pointer',
             display: window.innerWidth < 768 ? 'block' : 'none'
@@ -1711,15 +1739,15 @@ const SpiralPage = () => {
         {/* Database Connection Alert */}
         {!isSupabaseConnected && (
           <div style={{
-            background: themeColors.errorLight || '#f8d7da',
-            color: themeColors.errorDark || '#721c24',
-            padding: '12px',
-            margin: '0 0 10px 0',
-            borderRadius: '4px',
+            background: themeColors.error + '20',
+            color: themeColors.error,
+            padding: '12px 20px',
+            margin: '0',
+            borderRadius: '0',
             display: 'flex',
             alignItems: 'center',
-            gap: '10px',
-            border: `1px solid ${themeColors.error}`
+            gap: '12px',
+            borderBottom: `1px solid ${themeColors.error}`
           }}>
             <FiAlertCircle size={20} />
             <div>
@@ -1811,7 +1839,7 @@ const SpiralPage = () => {
                     background: themeColors.surface,
                     color: themeColors.textPrimary,
                     border: `1px solid ${themeColors.border}`,
-                    borderRadius: '4px',
+                    borderRadius: '8px',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
@@ -1834,7 +1862,7 @@ const SpiralPage = () => {
                     background: themeColors.surface,
                     color: themeColors.textPrimary,
                     border: `1px solid ${themeColors.border}`,
-                    borderRadius: '4px',
+                    borderRadius: '8px',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
@@ -1857,7 +1885,7 @@ const SpiralPage = () => {
                     background: headerGradient,
                     color: 'white',
                     border: 'none',
-                    borderRadius: '4px',
+                    borderRadius: '8px',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
@@ -1880,7 +1908,7 @@ const SpiralPage = () => {
                     background: themeColors.surface,
                     color: themeColors.textPrimary,
                     border: `1px solid ${themeColors.border}`,
-                    borderRadius: '4px',
+                    borderRadius: '8px',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
@@ -1908,7 +1936,7 @@ const SpiralPage = () => {
                     background: themeColors.surface,
                     color: themeColors.textPrimary,
                     border: `1px solid ${themeColors.border}`,
-                    borderRadius: '4px',
+                    borderRadius: '8px',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
@@ -1936,7 +1964,7 @@ const SpiralPage = () => {
                     background: themeColors.surface,
                     color: themeColors.textPrimary,
                     border: `1px solid ${themeColors.border}`,
-                    borderRadius: '4px',
+                    borderRadius: '8px',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
@@ -1959,7 +1987,7 @@ const SpiralPage = () => {
                     background: themeColors.surface,
                     color: themeColors.textPrimary,
                     border: `1px solid ${themeColors.border}`,
-                    borderRadius: '4px',
+                    borderRadius: '8px',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
@@ -2000,16 +2028,25 @@ const SpiralPage = () => {
               title="New Entry"
               style={{
                 padding: '8px 12px',
-                background: themeColors.success || '#4CAF50',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
+                background: 'transparent',
+                color: themeColors.primary,
+                border: `1px solid ${themeColors.primary}`,
+                borderRadius: '6px',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
                 fontSize: '13px',
-                fontWeight: '500'
+                fontWeight: '500',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.background = themeColors.primary;
+                e.target.style.color = 'white';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = 'transparent';
+                e.target.style.color = themeColors.primary;
               }}
             >
               <FiPlus size={16} />
@@ -2021,16 +2058,25 @@ const SpiralPage = () => {
               title="Smart Entry"
               style={{
                 padding: '8px 12px',
-                background: themeColors.info || '#2196F3',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
+                background: 'transparent',
+                color: themeColors.info,
+                border: `1px solid ${themeColors.info}`,
+                borderRadius: '6px',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
                 fontSize: '13px',
-                fontWeight: '500'
+                fontWeight: '500',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.background = themeColors.info;
+                e.target.style.color = 'white';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = 'transparent';
+                e.target.style.color = themeColors.info;
               }}
             >
               <FiSmartphone size={16} />
@@ -2042,16 +2088,25 @@ const SpiralPage = () => {
               title="Settings"
               style={{
                 padding: '8px 12px',
-                background: themeColors.warning || '#FF9800',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
+                background: 'transparent',
+                color: themeColors.warning,
+                border: `1px solid ${themeColors.warning}`,
+                borderRadius: '6px',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
                 fontSize: '13px',
-                fontWeight: '500'
+                fontWeight: '500',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.background = themeColors.warning;
+                e.target.style.color = 'white';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = 'transparent';
+                e.target.style.color = themeColors.warning;
               }}
             >
               <FiSettings size={16} />
@@ -2064,17 +2119,30 @@ const SpiralPage = () => {
               title="Refresh Data"
               style={{
                 padding: '8px 12px',
-                background: themeColors.primary,
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
+                background: 'transparent',
+                color: themeColors.primary,
+                border: `1px solid ${themeColors.primary}`,
+                borderRadius: '6px',
+                cursor: loading ? 'not-allowed' : 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
                 fontSize: '13px',
                 fontWeight: '500',
+                transition: 'all 0.2s ease',
                 opacity: loading ? 0.6 : 1
+              }}
+              onMouseEnter={(e) => {
+                if (!loading) {
+                  e.target.style.background = themeColors.primary;
+                  e.target.style.color = 'white';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!loading) {
+                  e.target.style.background = 'transparent';
+                  e.target.style.color = themeColors.primary;
+                }
               }}
             >
               {loading ? (
@@ -2083,8 +2151,8 @@ const SpiralPage = () => {
                   style={{
                     width: '16px',
                     height: '16px',
-                    border: `2px solid rgba(255, 255, 255, 0.3)`,
-                    borderTop: `2px solid white`,
+                    border: `2px solid ${themeColors.primary}30`,
+                    borderTop: `2px solid ${themeColors.primary}`,
                     borderRadius: '50%',
                     animation: 'spin 1s linear infinite'
                   }}
@@ -2101,17 +2169,30 @@ const SpiralPage = () => {
               title="Export Data"
               style={{
                 padding: '8px 12px',
-                background: themeColors.secondary,
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
+                background: 'transparent',
+                color: themeColors.secondary,
+                border: `1px solid ${themeColors.secondary}`,
+                borderRadius: '6px',
+                cursor: records.length === 0 ? 'not-allowed' : 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
                 fontSize: '13px',
                 fontWeight: '500',
+                transition: 'all 0.2s ease',
                 opacity: records.length === 0 ? 0.6 : 1
+              }}
+              onMouseEnter={(e) => {
+                if (records.length > 0) {
+                  e.target.style.background = themeColors.secondary;
+                  e.target.style.color = 'white';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (records.length > 0) {
+                  e.target.style.background = 'transparent';
+                  e.target.style.color = themeColors.secondary;
+                }
               }}
             >
               <FiDownload size={16} />
@@ -2123,16 +2204,25 @@ const SpiralPage = () => {
               title="Dashboard"
               style={{
                 padding: '8px 12px',
-                background: themeColors.info || '#2196F3',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
+                background: 'transparent',
+                color: themeColors.info,
+                border: `1px solid ${themeColors.info}`,
+                borderRadius: '6px',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
                 fontSize: '13px',
-                fontWeight: '500'
+                fontWeight: '500',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.background = themeColors.info;
+                e.target.style.color = 'white';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = 'transparent';
+                e.target.style.color = themeColors.info;
               }}
             >
               <FiHome size={16} />
@@ -2144,16 +2234,25 @@ const SpiralPage = () => {
               title="Production Sections"
               style={{
                 padding: '8px 12px',
-                background: '#283593',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
+                background: 'transparent',
+                color: '#283593',
+                border: '1px solid #283593',
+                borderRadius: '6px',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
                 fontSize: '13px',
-                fontWeight: '500'
+                fontWeight: '500',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.background = '#283593';
+                e.target.style.color = 'white';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = 'transparent';
+                e.target.style.color = '#283593';
               }}
             >
               <FiArrowLeft size={16} />
@@ -2165,16 +2264,25 @@ const SpiralPage = () => {
               title="Toggle Dashboard"
               style={{
                 padding: '8px 12px',
-                background: themeColors.primary,
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
+                background: 'transparent',
+                color: themeColors.primary,
+                border: `1px solid ${themeColors.primary}`,
+                borderRadius: '6px',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
                 fontSize: '13px',
-                fontWeight: '500'
+                fontWeight: '500',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.background = themeColors.primary;
+                e.target.style.color = 'white';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = 'transparent';
+                e.target.style.color = themeColors.primary;
               }}
             >
               {showDashboard ? (
@@ -2190,16 +2298,25 @@ const SpiralPage = () => {
               title="Toggle Stats"
               style={{
                 padding: '8px 12px',
-                background: themeColors.primary,
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
+                background: 'transparent',
+                color: themeColors.primary,
+                border: `1px solid ${themeColors.primary}`,
+                borderRadius: '6px',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
                 fontSize: '13px',
-                fontWeight: '500'
+                fontWeight: '500',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.background = themeColors.primary;
+                e.target.style.color = 'white';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = 'transparent';
+                e.target.style.color = themeColors.primary;
               }}
             >
               {showStatsCards ? (
@@ -2215,16 +2332,25 @@ const SpiralPage = () => {
               title="Batch Entry"
               style={{
                 padding: '8px 12px',
-                background: themeColors.success || '#4CAF50',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
+                background: 'transparent',
+                color: themeColors.success,
+                border: `1px solid ${themeColors.success}`,
+                borderRadius: '6px',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
                 fontSize: '13px',
-                fontWeight: '500'
+                fontWeight: '500',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.background = themeColors.success;
+                e.target.style.color = 'white';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = 'transparent';
+                e.target.style.color = themeColors.success;
               }}
             >
               <FiCheckSquare size={16} />
@@ -2239,7 +2365,7 @@ const SpiralPage = () => {
               style={{
                 background: themeColors.background,
                 color: themeColors.textPrimary,
-                padding: '15px',
+                padding: '20px',
                 borderBottom: `1px solid ${themeColors.border}`
               }}
             >
@@ -2249,11 +2375,27 @@ const SpiralPage = () => {
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
-                  marginBottom: '15px'
+                  marginBottom: '20px'
                 }}
               >
-                <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <FiActivity size={20} />
+                <h3 style={{ 
+                  margin: 0, 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '10px',
+                  fontSize: '18px',
+                  fontWeight: '600'
+                }}>
+                  <div style={{
+                    background: themeColors.primary + '20',
+                    padding: '8px',
+                    borderRadius: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <FiActivity size={20} color={themeColors.primary} />
+                  </div>
                   Production Statistics
                 </h3>
                 <div 
@@ -2261,22 +2403,30 @@ const SpiralPage = () => {
                   style={{
                     display: 'flex',
                     gap: '15px',
-                    fontSize: '12px',
-                    color: themeColors.textSecondary
+                    fontSize: '13px',
+                    color: themeColors.textSecondary,
+                    background: themeColors.surface,
+                    padding: '8px 16px',
+                    borderRadius: '8px',
+                    border: `1px solid ${themeColors.border}`
                   }}
                 >
-                  <span className="summary-item">
+                  <span className="summary-item" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <FiDatabase size={14} />
                     Total: {stats.totalRecords} records
                   </span>
-                  <span className="summary-item">Managed by: {loggedInUser}</span>
+                  <span className="summary-item" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <FiUser size={14} />
+                    {loggedInUser}
+                  </span>
                 </div>
               </div>
               <div 
                 className="stats-grid"
                 style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-                  gap: '10px'
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
+                  gap: '16px'
                 }}
               >
                 {statCards.map((card) => (
@@ -2285,25 +2435,87 @@ const SpiralPage = () => {
                     className="stat-card"
                     style={{
                       background: themeColors.surface,
-                      padding: '15px',
-                      borderRadius: '6px',
-                      border: `1px solid ${themeColors.border}`
+                      padding: '20px',
+                      borderRadius: '12px',
+                      border: `1px solid ${themeColors.border}`,
+                      boxShadow: `0 2px 8px ${themeColors.shadow}`,
+                      transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                      position: 'relative',
+                      overflow: 'hidden'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-4px)';
+                      e.currentTarget.style.boxShadow = `0 8px 24px ${themeColors.shadow}`;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = `0 2px 8px ${themeColors.shadow}`;
                     }}
                   >
                     <div 
                       className="stat-header"
                       style={{
                         display: 'flex',
-                        alignItems: 'center',
-                        gap: '10px',
-                        marginBottom: '10px'
+                        justifyContent: 'space-between',
+                        alignItems: 'flex-start',
+                        marginBottom: '16px'
                       }}
                     >
-                      <card.icon size={20} className="stat-icon" style={{ color: themeColors.primary }} />
-                      <div className="stat-title" style={{ fontSize: '14px', fontWeight: '500' }}>{card.title}</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{
+                          background: card.color + '20',
+                          padding: '10px',
+                          borderRadius: '10px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}>
+                          <card.icon size={20} color={card.color} />
+                        </div>
+                        <div className="stat-title" style={{ fontSize: '14px', fontWeight: '500', color: themeColors.textSecondary }}>{card.title}</div>
+                      </div>
+                      {card.trend !== "neutral" && (
+                        <div style={{
+                          background: card.trend === "up" ? '#10B98120' : '#EF444420',
+                          color: card.trend === "up" ? '#10B981' : '#EF4444',
+                          padding: '4px 8px',
+                          borderRadius: '12px',
+                          fontSize: '11px',
+                          fontWeight: '500',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px'
+                        }}>
+                          {card.trend === "up" ? <FiTrendingUpIcon size={12} /> : <FiTrendingDown size={12} />}
+                          {card.trend === "up" ? 'Up' : 'Down'}
+                        </div>
+                      )}
                     </div>
-                    <div className="stat-value" style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '5px' }}>{card.value}</div>
-                    <div className="stat-footer" style={{ fontSize: '12px', color: themeColors.textSecondary }}>{card.description}</div>
+                    <div className="stat-value" style={{ 
+                      fontSize: '28px', 
+                      fontWeight: 'bold', 
+                      marginBottom: '8px',
+                      color: themeColors.textPrimary
+                    }}>{card.value}</div>
+                    <div className="stat-footer" style={{ 
+                      fontSize: '13px', 
+                      color: themeColors.textSecondary,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}>
+                      <div style={{ flex: 1 }}>{card.description}</div>
+                    </div>
+                    <div style={{
+                      position: 'absolute',
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      height: '4px',
+                      background: `linear-gradient(90deg, ${card.color} 0%, ${card.color}80 100%)`,
+                      borderBottomLeftRadius: '12px',
+                      borderBottomRightRadius: '12px'
+                    }} />
                   </div>
                 ))}
               </div>
@@ -2317,7 +2529,7 @@ const SpiralPage = () => {
               style={{
                 background: themeColors.background,
                 color: themeColors.textPrimary,
-                padding: '15px',
+                padding: '20px',
                 borderBottom: `1px solid ${themeColors.border}`
               }}
             >
@@ -2327,11 +2539,27 @@ const SpiralPage = () => {
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
-                  marginBottom: '15px'
+                  marginBottom: '20px'
                 }}
               >
-                <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <FiCpu size={20} />
+                <h3 style={{ 
+                  margin: 0, 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '10px',
+                  fontSize: '18px',
+                  fontWeight: '600'
+                }}>
+                  <div style={{
+                    background: themeColors.primary + '20',
+                    padding: '8px',
+                    borderRadius: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <FiCpu size={20} color={themeColors.primary} />
+                  </div>
                   Today's Production Dashboard
                 </h3>
                 <div 
@@ -2339,12 +2567,22 @@ const SpiralPage = () => {
                   style={{
                     display: 'flex',
                     gap: '15px',
-                    fontSize: '12px',
-                    color: themeColors.textPrimary 
+                    fontSize: '13px',
+                    color: themeColors.textPrimary,
+                    background: themeColors.surface,
+                    padding: '8px 16px',
+                    borderRadius: '8px',
+                    border: `1px solid ${themeColors.border}`
                   }}
                 >
-                  <span className="info-item">Managed by: {loggedInUser}</span>
-                  <span className="info-item">Records: {stats.todayRecords}</span>
+                  <span className="info-item" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <FiUser size={14} />
+                    {loggedInUser}
+                  </span>
+                  <span className="info-item" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <FiDatabase size={14} />
+                    {stats.todayRecords} records
+                  </span>
                 </div>
               </div>
 
@@ -2352,30 +2590,43 @@ const SpiralPage = () => {
                 className="dashboard-grid"
                 style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-                  gap: '15px'
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+                  gap: '20px'
                 }}
               >
                 <div 
                   className="dashboard-card"
                   style={{
                     background: themeColors.surface,
-                    padding: '15px',
-                    borderRadius: '6px',
-                    border: `1px solid ${themeColors.border}`
+                    padding: '20px',
+                    borderRadius: '12px',
+                    border: `1px solid ${themeColors.border}`,
+                    boxShadow: `0 2px 8px ${themeColors.shadow}`,
+                    transition: 'transform 0.2s ease'
                   }}
+                  onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-4px)'}
+                  onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
                 >
                   <div 
                     className="card-header"
                     style={{
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '10px',
-                      marginBottom: '15px'
+                      gap: '12px',
+                      marginBottom: '20px'
                     }}
                   >
-                    <FiPackage size={20} style={{ color: themeColors.primary }} />
-                    <h4 style={{ margin: 0 }}>Item-wise Production</h4>
+                    <div style={{
+                      background: themeColors.primary + '20',
+                      padding: '10px',
+                      borderRadius: '10px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                      <FiPackage size={20} color={themeColors.primary} />
+                    </div>
+                    <h4 style={{ margin: 0, fontSize: '16px', fontWeight: '600' }}>Item-wise Production</h4>
                   </div>
                   <div className="card-content">
                     {Object.entries(stats.itemWiseToday).length > 0 ? (
@@ -2386,36 +2637,70 @@ const SpiralPage = () => {
                               key={item} 
                               className="item-row"
                               style={{
-                                padding: '10px',
-                                marginBottom: '8px',
+                                padding: '12px',
+                                marginBottom: '10px',
                                 background: themeColors.background,
-                                borderRadius: '4px',
-                                border: `1px solid ${themeColors.border}`
+                                borderRadius: '8px',
+                                border: `1px solid ${themeColors.border}`,
+                                transition: 'border-color 0.2s ease'
                               }}
+                              onMouseEnter={(e) => e.currentTarget.style.borderColor = themeColors.primary}
+                              onMouseLeave={(e) => e.currentTarget.style.borderColor = themeColors.border}
                             >
-                              <div className="item-name" style={{ fontWeight: '500', marginBottom: '5px' }}>{item}</div>
+                              <div className="item-name" style={{ 
+                                fontWeight: '500', 
+                                marginBottom: '8px',
+                                fontSize: '14px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px'
+                              }}>
+                                <FiPackage size={14} color={themeColors.textSecondary} />
+                                {item}
+                              </div>
                               <div 
                                 className="item-stats"
                                 style={{
-                                  display: 'flex',
-                                  justifyContent: 'space-between',
-                                  fontSize: '12px'
+                                  display: 'grid',
+                                  gridTemplateColumns: 'repeat(3, 1fr)',
+                                  gap: '12px'
                                 }}
                               >
-                                <span className="stat-value" style={{ color: themeColors.primary }}>
-                                  {Math.round(data.production)} M
-                                </span>
-                                <span className="stat-value" style={{ color: themeColors.success }}>
-                                  {Math.round(data.weight)} KG
-                                </span>
-                                <span className="stat-value" style={{ color: themeColors.warning }}>
-                                  {Math.round(
-                                    data.count > 0
-                                      ? data.efficiency / data.count
-                                      : 0
-                                  )}
-                                  %
-                                </span>
+                                <div style={{ textAlign: 'center' }}>
+                                  <div className="stat-value" style={{ 
+                                    color: themeColors.primary,
+                                    fontSize: '16px',
+                                    fontWeight: 'bold'
+                                  }}>
+                                    {Math.round(data.production)} M
+                                  </div>
+                                  <div style={{ fontSize: '11px', color: themeColors.textSecondary, marginTop: '2px' }}>Production</div>
+                                </div>
+                                <div style={{ textAlign: 'center' }}>
+                                  <div className="stat-value" style={{ 
+                                    color: themeColors.success,
+                                    fontSize: '16px',
+                                    fontWeight: 'bold'
+                                  }}>
+                                    {Math.round(data.weight)} KG
+                                  </div>
+                                  <div style={{ fontSize: '11px', color: themeColors.textSecondary, marginTop: '2px' }}>Weight</div>
+                                </div>
+                                <div style={{ textAlign: 'center' }}>
+                                  <div className="stat-value" style={{ 
+                                    color: themeColors.warning,
+                                    fontSize: '16px',
+                                    fontWeight: 'bold'
+                                  }}>
+                                    {Math.round(
+                                      data.count > 0
+                                        ? data.efficiency / data.count
+                                        : 0
+                                    )}
+                                    %
+                                  </div>
+                                  <div style={{ fontSize: '11px', color: themeColors.textSecondary, marginTop: '2px' }}>Efficiency</div>
+                                </div>
                               </div>
                             </div>
                           )
@@ -2426,12 +2711,24 @@ const SpiralPage = () => {
                         className="empty-state"
                         style={{
                           textAlign: 'center',
-                          padding: '30px',
+                          padding: '40px 20px',
                           color: themeColors.textSecondary
                         }}
                       >
-                        <FiPackage size={24} style={{ marginBottom: '10px', opacity: 0.5 }} />
-                        <p style={{ margin: 0 }}>No item production today</p>
+                        <div style={{
+                          background: themeColors.border,
+                          width: '64px',
+                          height: '64px',
+                          borderRadius: '50%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          margin: '0 auto 16px'
+                        }}>
+                          <FiPackage size={24} color={themeColors.textSecondary} />
+                        </div>
+                        <h5 style={{ margin: '0 0 8px 0', color: themeColors.textPrimary }}>No Production Today</h5>
+                        <p style={{ margin: 0, fontSize: '14px' }}>No item production records for today</p>
                       </div>
                     )}
                   </div>
@@ -2441,22 +2738,35 @@ const SpiralPage = () => {
                   className="dashboard-card"
                   style={{
                     background: themeColors.surface,
-                    padding: '15px',
-                    borderRadius: '6px',
-                    border: `1px solid ${themeColors.border}`
+                    padding: '20px',
+                    borderRadius: '12px',
+                    border: `1px solid ${themeColors.border}`,
+                    boxShadow: `0 2px 8px ${themeColors.shadow}`,
+                    transition: 'transform 0.2s ease'
                   }}
+                  onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-4px)'}
+                  onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
                 >
                   <div 
                     className="card-header"
                     style={{
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '10px',
-                      marginBottom: '15px'
+                      gap: '12px',
+                      marginBottom: '20px'
                     }}
                   >
-                    <FiTool size={20} style={{ color: themeColors.primary }} />
-                    <h4 style={{ margin: 0 }}>Machine-wise Production</h4>
+                    <div style={{
+                      background: themeColors.primary + '20',
+                      padding: '10px',
+                      borderRadius: '10px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                      <FiTool size={20} color={themeColors.primary} />
+                    </div>
+                    <h4 style={{ margin: 0, fontSize: '16px', fontWeight: '600' }}>Machine-wise Production</h4>
                   </div>
                   <div className="card-content">
                     {Object.entries(stats.machineWiseToday).length > 0 ? (
@@ -2467,38 +2777,70 @@ const SpiralPage = () => {
                               key={machine} 
                               className="machine-row"
                               style={{
-                                padding: '10px',
-                                marginBottom: '8px',
+                                padding: '12px',
+                                marginBottom: '10px',
                                 background: themeColors.background,
-                                borderRadius: '4px',
-                                border: `1px solid ${themeColors.border}`
+                                borderRadius: '8px',
+                                border: `1px solid ${themeColors.border}`,
+                                transition: 'border-color 0.2s ease'
                               }}
+                              onMouseEnter={(e) => e.currentTarget.style.borderColor = themeColors.primary}
+                              onMouseLeave={(e) => e.currentTarget.style.borderColor = themeColors.border}
                             >
-                              <div className="machine-name" style={{ fontWeight: '500', marginBottom: '5px' }}>
+                              <div className="machine-name" style={{ 
+                                fontWeight: '500', 
+                                marginBottom: '8px',
+                                fontSize: '14px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px'
+                              }}>
+                                <FiTool size={14} color={themeColors.textSecondary} />
                                 Machine {machine}
                               </div>
                               <div 
                                 className="machine-stats"
                                 style={{
-                                  display: 'flex',
-                                  justifyContent: 'space-between',
-                                  fontSize: '12px'
+                                  display: 'grid',
+                                  gridTemplateColumns: 'repeat(3, 1fr)',
+                                  gap: '12px'
                                 }}
                               >
-                                <span className="stat-value" style={{ color: themeColors.primary }}>
-                                  {Math.round(data.production)} M
-                                </span>
-                                <span className="stat-value" style={{ color: themeColors.success }}>
-                                  {Math.round(data.weight)} KG
-                                </span>
-                                <span className="stat-value" style={{ color: themeColors.warning }}>
-                                  {Math.round(
-                                    data.count > 0
-                                      ? data.efficiency / data.count
-                                      : 0
-                                  )}
-                                  %
-                                </span>
+                                <div style={{ textAlign: 'center' }}>
+                                  <div className="stat-value" style={{ 
+                                    color: themeColors.primary,
+                                    fontSize: '16px',
+                                    fontWeight: 'bold'
+                                  }}>
+                                    {Math.round(data.production)} M
+                                  </div>
+                                  <div style={{ fontSize: '11px', color: themeColors.textSecondary, marginTop: '2px' }}>Production</div>
+                                </div>
+                                <div style={{ textAlign: 'center' }}>
+                                  <div className="stat-value" style={{ 
+                                    color: themeColors.success,
+                                    fontSize: '16px',
+                                    fontWeight: 'bold'
+                                  }}>
+                                    {Math.round(data.weight)} KG
+                                  </div>
+                                  <div style={{ fontSize: '11px', color: themeColors.textSecondary, marginTop: '2px' }}>Weight</div>
+                                </div>
+                                <div style={{ textAlign: 'center' }}>
+                                  <div className="stat-value" style={{ 
+                                    color: themeColors.warning,
+                                    fontSize: '16px',
+                                    fontWeight: 'bold'
+                                  }}>
+                                    {Math.round(
+                                      data.count > 0
+                                        ? data.efficiency / data.count
+                                        : 0
+                                    )}
+                                    %
+                                  </div>
+                                  <div style={{ fontSize: '11px', color: themeColors.textSecondary, marginTop: '2px' }}>Efficiency</div>
+                                </div>
                               </div>
                             </div>
                           )
@@ -2509,12 +2851,24 @@ const SpiralPage = () => {
                         className="empty-state"
                         style={{
                           textAlign: 'center',
-                          padding: '30px',
+                          padding: '40px 20px',
                           color: themeColors.textSecondary
                         }}
                       >
-                        <FiTool size={24} style={{ marginBottom: '10px', opacity: 0.5 }} />
-                        <p style={{ margin: 0 }}>No machine production today</p>
+                        <div style={{
+                          background: themeColors.border,
+                          width: '64px',
+                          height: '64px',
+                          borderRadius: '50%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          margin: '0 auto 16px'
+                        }}>
+                          <FiTool size={24} color={themeColors.textSecondary} />
+                        </div>
+                        <h5 style={{ margin: '0 0 8px 0', color: themeColors.textPrimary }}>No Machine Activity</h5>
+                        <p style={{ margin: 0, fontSize: '14px' }}>No machine production records for today</p>
                       </div>
                     )}
                   </div>
@@ -2524,22 +2878,35 @@ const SpiralPage = () => {
                   className="dashboard-card"
                   style={{
                     background: themeColors.surface,
-                    padding: '15px',
-                    borderRadius: '6px',
-                    border: `1px solid ${themeColors.border}`
+                    padding: '20px',
+                    borderRadius: '12px',
+                    border: `1px solid ${themeColors.border}`,
+                    boxShadow: `0 2px 8px ${themeColors.shadow}`,
+                    transition: 'transform 0.2s ease'
                   }}
+                  onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-4px)'}
+                  onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
                 >
                   <div 
                     className="card-header"
                     style={{
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '10px',
-                      marginBottom: '15px'
+                      gap: '12px',
+                      marginBottom: '20px'
                     }}
                   >
-                    <FiBox size={20} style={{ color: themeColors.primary }} />
-                    <h4 style={{ margin: 0 }}>Finished Products</h4>
+                    <div style={{
+                      background: themeColors.primary + '20',
+                      padding: '10px',
+                      borderRadius: '10px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                      <FiBox size={20} color={themeColors.primary} />
+                    </div>
+                    <h4 style={{ margin: 0, fontSize: '16px', fontWeight: '600' }}>Finished Products</h4>
                   </div>
                   <div className="card-content">
                     {Object.entries(stats.finishedProductWiseToday).length > 0 ? (
@@ -2550,36 +2917,70 @@ const SpiralPage = () => {
                               key={product} 
                               className="product-row"
                               style={{
-                                padding: '10px',
-                                marginBottom: '8px',
+                                padding: '12px',
+                                marginBottom: '10px',
                                 background: themeColors.background,
-                                borderRadius: '4px',
-                                border: `1px solid ${themeColors.border}`
+                                borderRadius: '8px',
+                                border: `1px solid ${themeColors.border}`,
+                                transition: 'border-color 0.2s ease'
                               }}
+                              onMouseEnter={(e) => e.currentTarget.style.borderColor = themeColors.primary}
+                              onMouseLeave={(e) => e.currentTarget.style.borderColor = themeColors.border}
                             >
-                              <div className="product-name" style={{ fontWeight: '500', marginBottom: '5px' }}>{product}</div>
+                              <div className="product-name" style={{ 
+                                fontWeight: '500', 
+                                marginBottom: '8px',
+                                fontSize: '14px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px'
+                              }}>
+                                <FiBox size={14} color={themeColors.textSecondary} />
+                                {product}
+                              </div>
                               <div 
                                 className="product-stats"
                                 style={{
-                                  display: 'flex',
-                                  justifyContent: 'space-between',
-                                  fontSize: '12px'
+                                  display: 'grid',
+                                  gridTemplateColumns: 'repeat(3, 1fr)',
+                                  gap: '12px'
                                 }}
                               >
-                                <span className="stat-value" style={{ color: themeColors.primary }}>
-                                  {Math.round(data.production)} M
-                                </span>
-                                <span className="stat-value" style={{ color: themeColors.success }}>
-                                  {Math.round(data.weight)} KG
-                                </span>
-                                <span className="stat-value" style={{ color: themeColors.warning }}>
-                                  {Math.round(
-                                    data.count > 0
-                                      ? data.efficiency / data.count
-                                      : 0
-                                  )}
-                                  %
-                                </span>
+                                <div style={{ textAlign: 'center' }}>
+                                  <div className="stat-value" style={{ 
+                                    color: themeColors.primary,
+                                    fontSize: '16px',
+                                    fontWeight: 'bold'
+                                  }}>
+                                    {Math.round(data.production)} M
+                                  </div>
+                                  <div style={{ fontSize: '11px', color: themeColors.textSecondary, marginTop: '2px' }}>Production</div>
+                                </div>
+                                <div style={{ textAlign: 'center' }}>
+                                  <div className="stat-value" style={{ 
+                                    color: themeColors.success,
+                                    fontSize: '16px',
+                                    fontWeight: 'bold'
+                                  }}>
+                                    {Math.round(data.weight)} KG
+                                  </div>
+                                  <div style={{ fontSize: '11px', color: themeColors.textSecondary, marginTop: '2px' }}>Weight</div>
+                                </div>
+                                <div style={{ textAlign: 'center' }}>
+                                  <div className="stat-value" style={{ 
+                                    color: themeColors.warning,
+                                    fontSize: '16px',
+                                    fontWeight: 'bold'
+                                  }}>
+                                    {Math.round(
+                                      data.count > 0
+                                        ? data.efficiency / data.count
+                                        : 0
+                                    )}
+                                    %
+                                  </div>
+                                  <div style={{ fontSize: '11px', color: themeColors.textSecondary, marginTop: '2px' }}>Efficiency</div>
+                                </div>
                               </div>
                             </div>
                           )
@@ -2590,12 +2991,24 @@ const SpiralPage = () => {
                         className="empty-state"
                         style={{
                           textAlign: 'center',
-                          padding: '30px',
+                          padding: '40px 20px',
                           color: themeColors.textSecondary
                         }}
                       >
-                        <FiBox size={24} style={{ marginBottom: '10px', opacity: 0.5 }} />
-                        <p style={{ margin: 0 }}>No finished product today</p>
+                        <div style={{
+                          background: themeColors.border,
+                          width: '64px',
+                          height: '64px',
+                          borderRadius: '50%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          margin: '0 auto 16px'
+                        }}>
+                          <FiBox size={24} color={themeColors.textSecondary} />
+                        </div>
+                        <h5 style={{ margin: '0 0 8px 0', color: themeColors.textPrimary }}>No Finished Products</h5>
+                        <p style={{ margin: 0, fontSize: '14px' }}>No finished product records for today</p>
                       </div>
                     )}
                   </div>
@@ -2604,12 +3017,12 @@ const SpiralPage = () => {
             </div>
           )}
 
-          {/* Filters Section */}
+          {/* 🔥 🔥 🔥 FILTERS SECTION - SINGLE LINE HORIZONTAL LAYOUT 🔥 🔥 🔥 */}
           <div 
             className="filters-section"
             style={{
               background: themeColors.background,
-              padding: '15px',
+              padding: '20px',
               borderBottom: `1px solid ${themeColors.border}`
             }}
           >
@@ -2617,8 +3030,10 @@ const SpiralPage = () => {
               className="filters-container"
               style={{
                 background: themeColors.surface,
-                padding: '12px',
-                borderRadius: '6px'
+                padding: '20px',
+                borderRadius: '12px',
+                border: `1px solid ${themeColors.border}`,
+                boxShadow: `0 2px 8px ${themeColors.shadow}`
               }}
             >
               <div 
@@ -2626,113 +3041,234 @@ const SpiralPage = () => {
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '8px',
-                  marginBottom: '12px',
+                  gap: '10px',
+                  marginBottom: '20px',
                   color: themeColors.primary,
                   fontWeight: '600',
-                  fontSize: '14px'
+                  fontSize: '16px'
                 }}
               >
-                <FiFilter size={18} />
-                <span>FILTERS</span>
+                <div style={{
+                  background: themeColors.primary + '20',
+                  padding: '8px',
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <FiFilter size={18} color={themeColors.primary} />
+                </div>
+                <span>FILTERS & CONTROLS</span>
               </div>
               
+              {/* 🔥 SINGLE LINE HORIZONTAL LAYOUT - ALL ITEMS IN ONE LINE 🔥 */}
               <div 
-                className="filters-single-line"
+                className="filters-horizontal-single-line"
                 style={{
                   display: 'flex',
+                  alignItems: 'center',
                   gap: '8px',
-                  flexWrap: 'wrap'
+                  flexWrap: 'nowrap', // 🔥 Prevent wrapping to new line
+                  overflowX: 'auto', // 🔥 Horizontal scroll for small screens
+                  padding: '4px 0',
+                  scrollbarWidth: 'thin',
+                  scrollbarColor: `${themeColors.border} ${themeColors.background}`
                 }}
               >
-                <div className="filter-group" style={{ flex: 1, minWidth: '150px' }}>
-                  <input
-                    type="text"
-                    placeholder="Search records..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="filter-input"
-                    style={{
-                      width: '100%',
-                      padding: '10px',
-                      border: `1px solid ${themeColors.border}`,
-                      borderRadius: '4px',
-                      background: themeColors.background,
-                      color: themeColors.textPrimary,
-                      fontSize: '14px'
-                    }}
-                  />
+                {/* 🔍 Search Input */}
+                <div className="filter-item" style={{
+                  flex: '0 0 auto',
+                  minWidth: '180px'
+                }}>
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '8px', 
+                    marginBottom: '4px',
+                    color: themeColors.textSecondary,
+                    fontSize: '12px'
+                  }}>
+                    <FiHash size={12} />
+                    <span>Search</span>
+                  </div>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type="text"
+                      placeholder="Search records..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '8px 12px 8px 32px',
+                        border: `1px solid ${themeColors.border}`,
+                        borderRadius: '6px',
+                        background: themeColors.background,
+                        color: themeColors.textPrimary,
+                        fontSize: '13px',
+                        transition: 'border-color 0.2s ease'
+                      }}
+                      onFocus={(e) => e.target.style.borderColor = themeColors.primary}
+                      onBlur={(e) => e.target.style.borderColor = themeColors.border}
+                    />
+                    <FiHash 
+                      size={14} 
+                      style={{
+                        position: 'absolute',
+                        left: '10px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        color: themeColors.textSecondary
+                      }} 
+                    />
+                  </div>
                 </div>
 
-                <div className="filter-group" style={{ flex: 1, minWidth: '150px' }}>
-                  <select
-                    value={filterType}
-                    onChange={(e) => setFilterType(e.target.value)}
-                    className="filter-select"
-                    style={{
-                      width: '100%',
-                      padding: '10px',
-                      border: `1px solid ${themeColors.border}`,
-                      borderRadius: '4px',
-                      background: themeColors.background,
-                      color: themeColors.textPrimary,
-                      fontSize: '14px'
-                    }}
-                  >
-                    <option value="">All Wire Sizes</option>
-                    {wireSizes.map((size) => (
-                      <option key={size} value={size}>
-                        {size}
-                      </option>
-                    ))}
-                  </select>
+                {/* ⚡ Wire Size Select */}
+                <div className="filter-item" style={{
+                  flex: '0 0 auto',
+                  minWidth: '160px'
+                }}>
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '8px', 
+                    marginBottom: '4px',
+                    color: themeColors.textSecondary,
+                    fontSize: '12px'
+                  }}>
+                    <FiZap size={12} />
+                    <span>Wire Size</span>
+                  </div>
+                  <div style={{ position: 'relative' }}>
+                    <select
+                      value={filterType}
+                      onChange={(e) => setFilterType(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '8px 12px 8px 32px',
+                        border: `1px solid ${themeColors.border}`,
+                        borderRadius: '6px',
+                        background: themeColors.background,
+                        color: themeColors.textPrimary,
+                        fontSize: '13px',
+                        transition: 'border-color 0.2s ease'
+                      }}
+                      onFocus={(e) => e.target.style.borderColor = themeColors.primary}
+                      onBlur={(e) => e.target.style.borderColor = themeColors.border}
+                    >
+                      <option value="">All Wire Sizes</option>
+                      {wireSizes.map((size) => (
+                        <option key={size} value={size}>
+                          {size}
+                        </option>
+                      ))}
+                    </select>
+                    <FiZap 
+                      size={14} 
+                      style={{
+                        position: 'absolute',
+                        left: '10px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        color: themeColors.textSecondary
+                      }} 
+                    />
+                  </div>
                 </div>
 
-                <div className="filter-group" style={{ flex: 1, minWidth: '150px' }}>
-                  <input
-                    type="date"
-                    value={filterDate}
-                    onChange={(e) => setFilterDate(e.target.value)}
-                    max={new Date().toISOString().split("T")[0]}
-                    className="filter-date"
-                    style={{
-                      width: '100%',
-                      padding: '10px',
-                      border: `1px solid ${themeColors.border}`,
-                      borderRadius: '4px',
-                      background: themeColors.background,
-                      color: themeColors.textPrimary,
-                      fontSize: '14px'
-                    }}
-                  />
+                {/* 📅 Date Filter */}
+                <div className="filter-item" style={{
+                  flex: '0 0 auto',
+                  minWidth: '160px'
+                }}>
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '8px', 
+                    marginBottom: '4px',
+                    color: themeColors.textSecondary,
+                    fontSize: '12px'
+                  }}>
+                    <FiCalendar size={12} />
+                    <span>Date Filter</span>
+                  </div>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type="date"
+                      value={filterDate}
+                      onChange={(e) => setFilterDate(e.target.value)}
+                      max={new Date().toISOString().split("T")[0]}
+                      style={{
+                        width: '100%',
+                        padding: '8px 12px 8px 32px',
+                        border: `1px solid ${themeColors.border}`,
+                        borderRadius: '6px',
+                        background: themeColors.background,
+                        color: themeColors.textPrimary,
+                        fontSize: '13px',
+                        transition: 'border-color 0.2s ease'
+                      }}
+                      onFocus={(e) => e.target.style.borderColor = themeColors.primary}
+                      onBlur={(e) => e.target.style.borderColor = themeColors.border}
+                    />
+                    <FiCalendar 
+                      size={14} 
+                      style={{
+                        position: 'absolute',
+                        left: '10px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        color: themeColors.textSecondary
+                      }} 
+                    />
+                  </div>
                 </div>
 
-                <div className="filter-group" style={{ flex: '0 0 auto' }}>
+                {/* 📊 Generate Report Button */}
+                <div className="filter-item" style={{
+                  flex: '0 0 auto',
+                  marginTop: '20px'
+                }}>
                   <button
                     onClick={() =>
                       filterDate
                         ? setShowReport(true)
                         : alert("Please select a date first")
                     }
-                    className="filter-btn primary-btn"
                     style={{
-                      padding: '10px 15px',
-                      background: themeColors.primary,
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
+                      padding: '8px 16px',
+                      background: 'transparent',
+                      color: themeColors.primary,
+                      border: `1px solid ${themeColors.primary}`,
+                      borderRadius: '6px',
                       cursor: 'pointer',
-                      fontSize: '14px',
+                      fontSize: '13px',
+                      fontWeight: '500',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '8px'
+                      gap: '6px',
+                      whiteSpace: 'nowrap',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.background = themeColors.primary;
+                      e.target.style.color = 'white';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.background = 'transparent';
+                      e.target.style.color = themeColors.primary;
                     }}
                   >
-                    <FiBarChart2 /> Generate Report
+                    <FiBarChart2 size={14} />
+                    <span>Generate Report</span>
                   </button>
                 </div>
 
-                <div className="filter-group" style={{ flex: '0 0 auto' }}>
+                {/* 🗑️ Clear Filters Button */}
+                <div className="filter-item" style={{
+                  flex: '0 0 auto',
+                  marginTop: '20px'
+                }}>
                   <button
                     onClick={() => {
                       setSearchTerm("");
@@ -2741,64 +3277,182 @@ const SpiralPage = () => {
                       setShowReport(false);
                       setCurrentPage(1);
                     }}
-                    className="filter-btn secondary-btn"
                     style={{
-                      padding: '10px 15px',
-                      background: themeColors.secondary,
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
+                      padding: '8px 16px',
+                      background: 'transparent',
+                      color: themeColors.secondary,
+                      border: `1px solid ${themeColors.secondary}`,
+                      borderRadius: '6px',
                       cursor: 'pointer',
-                      fontSize: '14px',
+                      fontSize: '13px',
+                      fontWeight: '500',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '8px'
+                      gap: '6px',
+                      whiteSpace: 'nowrap',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.background = themeColors.secondary;
+                      e.target.style.color = 'white';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.background = 'transparent';
+                      e.target.style.color = themeColors.secondary;
                     }}
                   >
-                    <FiX /> Clear Filters
+                    <FiX size={14} />
+                    <span>Clear Filters</span>
                   </button>
                 </div>
 
-                <div className="filter-group" style={{ flex: '0 0 auto' }}>
+                {/* 📱 WhatsApp Button */}
+                <div className="filter-item" style={{
+                  flex: '0 0 auto',
+                  marginTop: '20px'
+                }}>
                   <button
                     onClick={() => setShowWhatsAppModal(true)}
-                    className="filter-btn whatsapp-btn"
                     style={{
-                      padding: '10px 15px',
-                      background: '#25D366',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
+                      padding: '8px 16px',
+                      background: 'transparent',
+                      color: '#25D366',
+                      border: '1px solid #25D366',
+                      borderRadius: '6px',
                       cursor: 'pointer',
-                      fontSize: '14px',
+                      fontSize: '13px',
+                      fontWeight: '500',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '8px'
+                      gap: '6px',
+                      whiteSpace: 'nowrap',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.background = '#25D366';
+                      e.target.style.color = 'white';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.background = 'transparent';
+                      e.target.style.color = '#25D366';
                     }}
                   >
-                    <FaWhatsapp /> WhatsApp
+                    <FaWhatsapp size={14} />
+                    <span>WhatsApp</span>
                   </button>
                 </div>
 
-                <div className="filter-group" style={{ flex: '0 0 auto' }}>
+                {/* 🖨️ Print Button */}
+                <div className="filter-item" style={{
+                  flex: '0 0 auto',
+                  marginTop: '20px'
+                }}>
                   <button
                     onClick={handlePrintReport}
-                    className="filter-btn print-btn"
                     style={{
-                      padding: '10px 15px',
-                      background: '#495057',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
+                      padding: '8px 16px',
+                      background: 'transparent',
+                      color: '#495057',
+                      border: '1px solid #495057',
+                      borderRadius: '6px',
                       cursor: 'pointer',
-                      fontSize: '14px',
+                      fontSize: '13px',
+                      fontWeight: '500',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '8px'
+                      gap: '6px',
+                      whiteSpace: 'nowrap',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.background = '#495057';
+                      e.target.style.color = 'white';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.background = 'transparent';
+                      e.target.style.color = '#495057';
                     }}
                   >
-                    <FiPrinter /> Print
+                    <FiPrinter size={14} />
+                    <span>Print</span>
                   </button>
+                </div>
+
+                {/* 📥 Export CSV Button */}
+                <div className="filter-item" style={{
+                  flex: '0 0 auto',
+                  marginTop: '20px'
+                }}>
+                  <button
+                    onClick={handleExport}
+                    disabled={records.length === 0}
+                    style={{
+                      padding: '8px 16px',
+                      background: 'transparent',
+                      color: themeColors.success,
+                      border: `1px solid ${themeColors.success}`,
+                      borderRadius: '6px',
+                      cursor: records.length === 0 ? 'not-allowed' : 'pointer',
+                      fontSize: '13px',
+                      fontWeight: '500',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      whiteSpace: 'nowrap',
+                      transition: 'all 0.2s ease',
+                      opacity: records.length === 0 ? 0.6 : 1
+                    }}
+                    onMouseEnter={(e) => {
+                      if (records.length > 0) {
+                        e.target.style.background = themeColors.success;
+                        e.target.style.color = 'white';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (records.length > 0) {
+                        e.target.style.background = 'transparent';
+                        e.target.style.color = themeColors.success;
+                      }
+                    }}
+                  >
+                    <FiDownload size={14} />
+                    <span>Export CSV</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Live Filtering Info */}
+              <div 
+                className="filter-info"
+                style={{
+                  marginTop: '12px',
+                  padding: '8px 12px',
+                  background: themeColors.background,
+                  borderRadius: '6px',
+                  border: `1px solid ${themeColors.border}`,
+                  fontSize: '12px',
+                  color: themeColors.textSecondary,
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <FiFilter size={12} />
+                  <span>Active Filters:</span>
+                  <span style={{ 
+                    color: themeColors.primary,
+                    fontWeight: '500',
+                    marginLeft: '4px'
+                  }}>
+                    {searchTerm && "Search: " + searchTerm}
+                    {filterType && (searchTerm ? " | " : "") + "Wire: " + filterType}
+                    {filterDate && (searchTerm || filterType ? " | " : "") + "Date: " + filterDate}
+                    {!searchTerm && !filterType && !filterDate && "No filters applied"}
+                  </span>
+                </div>
+                <div style={{ color: themeColors.textSecondary }}>
+                  Showing {filteredRecords.length} of {records.length} records
                 </div>
               </div>
             </div>
@@ -2811,7 +3465,7 @@ const SpiralPage = () => {
               style={{
                 background: themeColors.background,
                 color: themeColors.textPrimary,
-                padding: '15px',
+                padding: '20px',
                 borderBottom: `1px solid ${themeColors.border}`
               }}
             >
@@ -2820,9 +3474,9 @@ const SpiralPage = () => {
                 style={{
                   display: 'flex',
                   justifyContent: 'space-between',
-                  alignItems: 'center',
-                  marginBottom: '20px',
-                  paddingBottom: '15px',
+                  alignItems: 'flex-start',
+                  marginBottom: '24px',
+                  paddingBottom: '20px',
                   borderBottom: `1px solid ${themeColors.border}`
                 }}
               >
@@ -2830,20 +3484,43 @@ const SpiralPage = () => {
                   className="report-title"
                   style={{ flex: 1 }}
                 >
-                  <h2 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <FiBarChart2 size={24} />
+                  <h2 style={{ 
+                    margin: 0, 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '12px',
+                    fontSize: '20px',
+                    fontWeight: '600'
+                  }}>
+                    <div style={{
+                      background: themeColors.primary + '20',
+                      padding: '10px',
+                      borderRadius: '10px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                      <FiBarChart2 size={24} color={themeColors.primary} />
+                    </div>
                     Spiral Section Production Report
                   </h2>
                   <div 
                     className="report-info"
                     style={{
-                      marginTop: '5px',
+                      marginTop: '12px',
                       fontSize: '14px',
-                      color: themeColors.textSecondary
+                      color: themeColors.textSecondary,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '4px'
                     }}
                   >
-                    <div className="report-date">{reportData.formattedDate}</div>
-                    <div className="report-author">
+                    <div className="report-date" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <FiCalendar size={16} />
+                      {reportData.formattedDate}
+                    </div>
+                    <div className="report-author" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <FiUser size={16} />
                       Generated by: <strong>{loggedInUser}</strong>
                     </div>
                   </div>
@@ -2853,23 +3530,34 @@ const SpiralPage = () => {
                   className="report-actions"
                   style={{
                     display: 'flex',
-                    gap: '10px'
+                    gap: '10px',
+                    flexWrap: 'wrap'
                   }}
                 >
                   <button
                     onClick={() => setShowWhatsAppModal(true)}
                     className="action-btn whatsapp-btn"
                     style={{
-                      padding: '8px 15px',
-                      background: '#25D366',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
+                      padding: '10px 20px',
+                      background: 'transparent',
+                      color: '#25D366',
+                      border: '1px solid #25D366',
+                      borderRadius: '8px',
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
                       gap: '8px',
-                      fontSize: '14px'
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.background = '#25D366';
+                      e.target.style.color = 'white';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.background = 'transparent';
+                      e.target.style.color = '#25D366';
                     }}
                   >
                     <FaWhatsapp size={18} /> WhatsApp
@@ -2878,16 +3566,26 @@ const SpiralPage = () => {
                     onClick={handlePrintReport} 
                     className="action-btn"
                     style={{
-                      padding: '8px 15px',
-                      background: themeColors.primary,
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
+                      padding: '10px 20px',
+                      background: 'transparent',
+                      color: themeColors.primary,
+                      border: `1px solid ${themeColors.primary}`,
+                      borderRadius: '8px',
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
                       gap: '8px',
-                      fontSize: '14px'
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.background = themeColors.primary;
+                      e.target.style.color = 'white';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.background = 'transparent';
+                      e.target.style.color = themeColors.primary;
                     }}
                   >
                     <FiPrinter /> Print
@@ -2896,16 +3594,26 @@ const SpiralPage = () => {
                     onClick={handleExportReport} 
                     className="action-btn"
                     style={{
-                      padding: '8px 15px',
-                      background: themeColors.secondary,
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
+                      padding: '10px 20px',
+                      background: 'transparent',
+                      color: themeColors.secondary,
+                      border: `1px solid ${themeColors.secondary}`,
+                      borderRadius: '8px',
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
                       gap: '8px',
-                      fontSize: '14px'
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.background = themeColors.secondary;
+                      e.target.style.color = 'white';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.background = 'transparent';
+                      e.target.style.color = themeColors.secondary;
                     }}
                   >
                     <FiDownload /> Export
@@ -2914,16 +3622,26 @@ const SpiralPage = () => {
                     onClick={() => setShowReport(false)}
                     className="action-btn close-btn"
                     style={{
-                      padding: '8px 15px',
-                      background: themeColors.error,
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
+                      padding: '10px 20px',
+                      background: 'transparent',
+                      color: themeColors.error,
+                      border: `1px solid ${themeColors.error}`,
+                      borderRadius: '8px',
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
                       gap: '8px',
-                      fontSize: '14px'
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.background = themeColors.error;
+                      e.target.style.color = 'white';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.background = 'transparent';
+                      e.target.style.color = themeColors.error;
                     }}
                   >
                     <FiX /> Close
@@ -2933,24 +3651,32 @@ const SpiralPage = () => {
 
               <div 
                 className="summary-section"
-                style={{ marginBottom: '20px' }}
+                style={{ marginBottom: '24px' }}
               >
-                <h3 style={{ marginBottom: '15px' }}>Shift-wise Production Summary</h3>
+                <h3 style={{ 
+                  marginBottom: '20px',
+                  fontSize: '18px',
+                  fontWeight: '600',
+                  color: themeColors.textPrimary
+                }}>Shift-wise Production Summary</h3>
                 <div 
                   className="shift-cards-container"
                   style={{
                     display: 'grid',
                     gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-                    gap: '15px'
+                    gap: '20px'
                   }}
                 >
                   <div 
                     className="shift-card day-shift-card"
                     style={{
                       background: themeColors.surface,
-                      padding: '15px',
-                      borderRadius: '8px',
-                      border: `1px solid ${themeColors.border}`
+                      padding: '20px',
+                      borderRadius: '12px',
+                      border: `1px solid ${themeColors.border}`,
+                      boxShadow: `0 2px 8px ${themeColors.shadow}`,
+                      position: 'relative',
+                      overflow: 'hidden'
                     }}
                   >
                     <div 
@@ -2958,25 +3684,37 @@ const SpiralPage = () => {
                       style={{
                         display: 'flex',
                         justifyContent: 'space-between',
-                        alignItems: 'center',
-                        marginBottom: '15px'
+                        alignItems: 'flex-start',
+                        marginBottom: '20px'
                       }}
                     >
                       <div 
                         className="shift-title"
-                        style={{ display: 'flex', alignItems: 'center', gap: '10px' }}
+                        style={{ display: 'flex', alignItems: 'center', gap: '12px' }}
                       >
-                        <span className="shift-icon" style={{ fontSize: '24px' }}>☀️</span>
-                        <h4 style={{ margin: 0 }}>Day Shift</h4>
+                        <div style={{
+                          background: '#FFD70020',
+                          padding: '10px',
+                          borderRadius: '10px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}>
+                          <span className="shift-icon" style={{ fontSize: '20px', color: '#FFD700' }}>☀️</span>
+                        </div>
+                        <div>
+                          <h4 style={{ margin: '0 0 4px 0', fontSize: '16px', fontWeight: '600' }}>Day Shift</h4>
+                          <div style={{ fontSize: '13px', color: themeColors.textSecondary }}>Morning Production</div>
+                        </div>
                       </div>
                       <div 
                         className="shift-badge"
                         style={{
                           background: themeColors.primary,
                           color: 'white',
-                          padding: '4px 8px',
-                          borderRadius: '12px',
-                          fontSize: '12px',
+                          padding: '6px 12px',
+                          borderRadius: '20px',
+                          fontSize: '13px',
                           fontWeight: '500'
                         }}
                       >
@@ -2988,27 +3726,35 @@ const SpiralPage = () => {
                       style={{
                         display: 'grid',
                         gridTemplateColumns: 'repeat(3, 1fr)',
-                        gap: '10px'
+                        gap: '16px'
                       }}
                     >
-                      <div className="stat-item">
-                        <div className="stat-label" style={{ fontSize: '12px', color: themeColors.textSecondary }}>Production</div>
-                        <div className="stat-value" style={{ fontSize: '18px', fontWeight: 'bold' }}>
-                          {Math.round(reportData.dayShiftData.production)} M
+                      {[
+                        { label: 'Production', value: Math.round(reportData.dayShiftData.production) + ' M', icon: FiPackage, color: themeColors.primary },
+                        { label: 'Weight', value: Math.round(reportData.dayShiftData.weight) + ' KG', icon: FiFeather, color: themeColors.success },
+                        { label: 'Avg Efficiency', value: Math.round(reportData.dayShiftData.avgEfficiency) + '%', icon: FiTrendingUp, color: themeColors.warning }
+                      ].map((stat, index) => (
+                        <div key={index} className="stat-item" style={{ textAlign: 'center' }}>
+                          <div style={{
+                            background: stat.color + '20',
+                            width: '48px',
+                            height: '48px',
+                            borderRadius: '12px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            margin: '0 auto 12px'
+                          }}>
+                            <stat.icon size={20} color={stat.color} />
+                          </div>
+                          <div className="stat-value" style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '4px' }}>
+                            {stat.value}
+                          </div>
+                          <div className="stat-label" style={{ fontSize: '12px', color: themeColors.textSecondary }}>
+                            {stat.label}
+                          </div>
                         </div>
-                      </div>
-                      <div className="stat-item">
-                        <div className="stat-label" style={{ fontSize: '12px', color: themeColors.textSecondary }}>Weight</div>
-                        <div className="stat-value" style={{ fontSize: '18px', fontWeight: 'bold' }}>
-                          {Math.round(reportData.dayShiftData.weight)} KG
-                        </div>
-                      </div>
-                      <div className="stat-item">
-                        <div className="stat-label" style={{ fontSize: '12px', color: themeColors.textSecondary }}>Avg Efficiency</div>
-                        <div className="stat-value" style={{ fontSize: '18px', fontWeight: 'bold' }}>
-                          {Math.round(reportData.dayShiftData.avgEfficiency)}%
-                        </div>
-                      </div>
+                      ))}
                     </div>
                   </div>
 
@@ -3016,9 +3762,12 @@ const SpiralPage = () => {
                     className="shift-card night-shift-card"
                     style={{
                       background: themeColors.surface,
-                      padding: '15px',
-                      borderRadius: '8px',
-                      border: `1px solid ${themeColors.border}`
+                      padding: '20px',
+                      borderRadius: '12px',
+                      border: `1px solid ${themeColors.border}`,
+                      boxShadow: `0 2px 8px ${themeColors.shadow}`,
+                      position: 'relative',
+                      overflow: 'hidden'
                     }}
                   >
                     <div 
@@ -3026,25 +3775,37 @@ const SpiralPage = () => {
                       style={{
                         display: 'flex',
                         justifyContent: 'space-between',
-                        alignItems: 'center',
-                        marginBottom: '15px'
+                        alignItems: 'flex-start',
+                        marginBottom: '20px'
                       }}
                     >
                       <div 
                         className="shift-title"
-                        style={{ display: 'flex', alignItems: 'center', gap: '10px' }}
+                        style={{ display: 'flex', alignItems: 'center', gap: '12px' }}
                       >
-                        <span className="shift-icon" style={{ fontSize: '24px' }}>🌙</span>
-                        <h4 style={{ margin: 0 }}>Night Shift</h4>
+                        <div style={{
+                          background: '#6366F120',
+                          padding: '10px',
+                          borderRadius: '10px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}>
+                          <span className="shift-icon" style={{ fontSize: '20px', color: '#6366F1' }}>🌙</span>
+                        </div>
+                        <div>
+                          <h4 style={{ margin: '0 0 4px 0', fontSize: '16px', fontWeight: '600' }}>Night Shift</h4>
+                          <div style={{ fontSize: '13px', color: themeColors.textSecondary }}>Evening Production</div>
+                        </div>
                       </div>
                       <div 
                         className="shift-badge"
                         style={{
                           background: themeColors.primary,
                           color: 'white',
-                          padding: '4px 8px',
-                          borderRadius: '12px',
-                          fontSize: '12px',
+                          padding: '6px 12px',
+                          borderRadius: '20px',
+                          fontSize: '13px',
                           fontWeight: '500'
                         }}
                       >
@@ -3056,27 +3817,35 @@ const SpiralPage = () => {
                       style={{
                         display: 'grid',
                         gridTemplateColumns: 'repeat(3, 1fr)',
-                        gap: '10px'
+                        gap: '16px'
                       }}
                     >
-                      <div className="stat-item">
-                        <div className="stat-label" style={{ fontSize: '12px', color: themeColors.textSecondary }}>Production</div>
-                        <div className="stat-value" style={{ fontSize: '18px', fontWeight: 'bold' }}>
-                          {Math.round(reportData.nightShiftData.production)} M
+                      {[
+                        { label: 'Production', value: Math.round(reportData.nightShiftData.production) + ' M', icon: FiPackage, color: themeColors.primary },
+                        { label: 'Weight', value: Math.round(reportData.nightShiftData.weight) + ' KG', icon: FiFeather, color: themeColors.success },
+                        { label: 'Avg Efficiency', value: Math.round(reportData.nightShiftData.avgEfficiency) + '%', icon: FiTrendingUp, color: themeColors.warning }
+                      ].map((stat, index) => (
+                        <div key={index} className="stat-item" style={{ textAlign: 'center' }}>
+                          <div style={{
+                            background: stat.color + '20',
+                            width: '48px',
+                            height: '48px',
+                            borderRadius: '12px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            margin: '0 auto 12px'
+                          }}>
+                            <stat.icon size={20} color={stat.color} />
+                          </div>
+                          <div className="stat-value" style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '4px' }}>
+                            {stat.value}
+                          </div>
+                          <div className="stat-label" style={{ fontSize: '12px', color: themeColors.textSecondary }}>
+                            {stat.label}
+                          </div>
                         </div>
-                      </div>
-                      <div className="stat-item">
-                        <div className="stat-label" style={{ fontSize: '12px', color: themeColors.textSecondary }}>Weight</div>
-                        <div className="stat-value" style={{ fontSize: '18px', fontWeight: 'bold' }}>
-                          {Math.round(reportData.nightShiftData.weight)} KG
-                        </div>
-                      </div>
-                      <div className="stat-item">
-                        <div className="stat-label" style={{ fontSize: '12px', color: themeColors.textSecondary }}>Avg Efficiency</div>
-                        <div className="stat-value" style={{ fontSize: '18px', fontWeight: 'bold' }}>
-                          {Math.round(reportData.nightShiftData.avgEfficiency)}%
-                        </div>
-                      </div>
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -3085,7 +3854,7 @@ const SpiralPage = () => {
               {Object.keys(reportData.itemWise).length > 0 && (
                 <div 
                   className="summary-section"
-                  style={{ marginBottom: '20px' }}
+                  style={{ marginBottom: '24px' }}
                 >
                   <div 
                     className="section-header"
@@ -3093,15 +3862,24 @@ const SpiralPage = () => {
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center',
-                      marginBottom: '15px'
+                      marginBottom: '20px'
                     }}
                   >
-                    <h3 style={{ margin: 0 }}>Item-wise Summary</h3>
+                    <h3 style={{ 
+                      margin: 0,
+                      fontSize: '18px',
+                      fontWeight: '600',
+                      color: themeColors.textPrimary
+                    }}>Item-wise Summary</h3>
                     <div 
                       className="section-count"
                       style={{
                         fontSize: '14px',
-                        color: themeColors.textSecondary
+                        color: themeColors.textSecondary,
+                        background: themeColors.surface,
+                        padding: '6px 12px',
+                        borderRadius: '20px',
+                        border: `1px solid ${themeColors.border}`
                       }}
                     >
                       {Object.keys(reportData.itemWise).length} Items
@@ -3112,7 +3890,7 @@ const SpiralPage = () => {
                     style={{
                       display: 'grid',
                       gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
-                      gap: '15px'
+                      gap: '16px'
                     }}
                   >
                     {Object.entries(reportData.itemWise).map(([item, data]) => (
@@ -3121,21 +3899,34 @@ const SpiralPage = () => {
                         className="item-card"
                         style={{
                           background: themeColors.surface,
-                          padding: '15px',
-                          borderRadius: '8px',
-                          border: `1px solid ${themeColors.border}`
+                          padding: '20px',
+                          borderRadius: '12px',
+                          border: `1px solid ${themeColors.border}`,
+                          boxShadow: `0 2px 8px ${themeColors.shadow}`,
+                          transition: 'transform 0.2s ease'
                         }}
+                        onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-4px)'}
+                        onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
                       >
                         <div 
                           className="item-card-header"
                           style={{
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '10px',
-                            marginBottom: '15px'
+                            gap: '12px',
+                            marginBottom: '16px'
                           }}
                         >
-                          <FiPackage size={18} style={{ color: themeColors.primary }} />
+                          <div style={{
+                            background: themeColors.primary + '20',
+                            padding: '10px',
+                            borderRadius: '10px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}>
+                            <FiPackage size={18} color={themeColors.primary} />
+                          </div>
                           <div 
                             className="item-name"
                             style={{
@@ -3151,75 +3942,37 @@ const SpiralPage = () => {
                           style={{
                             display: 'grid',
                             gridTemplateColumns: 'repeat(3, 1fr)',
-                            gap: '10px'
+                            gap: '12px'
                           }}
                         >
-                          <div className="item-stat">
-                            <div 
-                              className="item-stat-value"
-                              style={{
-                                fontSize: '16px',
-                                fontWeight: 'bold',
-                                marginBottom: '2px'
-                              }}
-                            >
-                              {Math.round(data.production)} M
+                          {[
+                            { label: 'Production', value: Math.round(data.production) + ' M', color: themeColors.primary },
+                            { label: 'Weight', value: Math.round(data.weight) + ' KG', color: themeColors.success },
+                            { label: 'Efficiency', value: Math.round(data.count > 0 ? data.efficiency / data.count : 0) + '%', color: themeColors.warning }
+                          ].map((stat, index) => (
+                            <div key={index} className="item-stat" style={{ textAlign: 'center' }}>
+                              <div 
+                                className="item-stat-value"
+                                style={{
+                                  fontSize: '16px',
+                                  fontWeight: 'bold',
+                                  marginBottom: '4px',
+                                  color: stat.color
+                                }}
+                              >
+                                {stat.value}
+                              </div>
+                              <div 
+                                className="item-stat-label"
+                                style={{
+                                  fontSize: '11px',
+                                  color: themeColors.textSecondary
+                                }}
+                              >
+                                {stat.label}
+                              </div>
                             </div>
-                            <div 
-                              className="item-stat-label"
-                              style={{
-                                fontSize: '11px',
-                                color: themeColors.textSecondary
-                              }}
-                            >
-                              Production
-                            </div>
-                          </div>
-                          <div className="item-stat">
-                            <div 
-                              className="item-stat-value"
-                              style={{
-                                fontSize: '16px',
-                                fontWeight: 'bold',
-                                marginBottom: '2px'
-                              }}
-                            >
-                              {Math.round(data.weight)} KG
-                            </div>
-                            <div 
-                              className="item-stat-label"
-                              style={{
-                                fontSize: '11px',
-                                color: themeColors.textSecondary
-                              }}
-                            >
-                              Weight
-                            </div>
-                          </div>
-                          <div className="item-stat">
-                            <div 
-                              className="item-stat-value"
-                              style={{
-                                fontSize: '16px',
-                                fontWeight: 'bold',
-                                marginBottom: '2px'
-                              }}
-                            >
-                              {Math.round(
-                                data.count > 0 ? data.efficiency / data.count : 0
-                              )}
-                              %
-                            </div>
-                            <div 
-                              className="item-stat-label"
-                              style={{
-                                fontSize: '11px',
-                                color: themeColors.textSecondary
-                              }}
-                            >
-                              Efficiency
-                            </div>
-                          </div>
+                          ))}
                         </div>
                       </div>
                     ))}
@@ -3229,15 +3982,20 @@ const SpiralPage = () => {
 
               <div 
                 className="summary-section"
-                style={{ marginBottom: '20px' }}
+                style={{ marginBottom: '24px' }}
               >
-                <h3 style={{ marginBottom: '15px' }}>Machine-wise Summary - Day Shift</h3>
+                <h3 style={{ 
+                  marginBottom: '20px',
+                  fontSize: '18px',
+                  fontWeight: '600',
+                  color: themeColors.textPrimary
+                }}>Machine-wise Summary - Day Shift</h3>
                 <div 
                   className="machines-grid"
                   style={{
                     display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
-                    gap: '10px'
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
+                    gap: '12px'
                   }}
                 >
                   {Array.from({ length: 14 }, (_, i) => {
@@ -3260,15 +4018,19 @@ const SpiralPage = () => {
                         className="machine-card"
                         style={{
                           background: themeColors.surface,
-                          padding: '12px',
-                          borderRadius: '6px',
-                          border: `1px solid ${themeColors.border}`
+                          padding: '16px',
+                          borderRadius: '12px',
+                          border: `1px solid ${themeColors.border}`,
+                          boxShadow: `0 2px 8px ${themeColors.shadow}`,
+                          transition: 'transform 0.2s ease'
                         }}
+                        onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-4px)'}
+                        onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
                       >
                         <div 
                           className="machine-card-header"
                           style={{
-                            marginBottom: '10px'
+                            marginBottom: '12px'
                           }}
                         >
                           <div 
@@ -3276,19 +4038,23 @@ const SpiralPage = () => {
                             style={{
                               fontWeight: '500',
                               fontSize: '14px',
-                              marginBottom: '5px'
+                              marginBottom: '8px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '8px'
                             }}
                           >
+                            <FiTool size={14} color={themeColors.textSecondary} />
                             SP # {machineNum}
                           </div>
                           <div 
                             className="machine-operator"
                             style={{
-                              fontSize: '11px',
+                              fontSize: '12px',
                               color: themeColors.textSecondary,
                               display: 'flex',
                               alignItems: 'center',
-                              gap: '4px'
+                              gap: '6px'
                             }}
                           >
                             <FiUser size={12} />
@@ -3300,16 +4066,17 @@ const SpiralPage = () => {
                           style={{
                             display: 'grid',
                             gridTemplateColumns: '1fr 1fr',
-                            gap: '8px'
+                            gap: '10px'
                           }}
                         >
-                          <div className="machine-stat">
+                          <div className="machine-stat" style={{ textAlign: 'center' }}>
                             <div 
                               className="machine-stat-value"
                               style={{
                                 fontSize: '14px',
                                 fontWeight: 'bold',
-                                marginBottom: '2px'
+                                marginBottom: '2px',
+                                color: themeColors.primary
                               }}
                             >
                               {Math.round(data.production)} M
@@ -3324,13 +4091,14 @@ const SpiralPage = () => {
                               Production
                             </div>
                           </div>
-                          <div className="machine-stat">
+                          <div className="machine-stat" style={{ textAlign: 'center' }}>
                             <div 
                               className="machine-stat-value"
                               style={{
                                 fontSize: '14px',
                                 fontWeight: 'bold',
-                                marginBottom: '2px'
+                                marginBottom: '2px',
+                                color: efficiency >= 85 ? themeColors.success : efficiency >= 70 ? themeColors.warning : themeColors.error
                               }}
                             >
                               {efficiency}%
@@ -3354,15 +4122,20 @@ const SpiralPage = () => {
 
               <div 
                 className="summary-section"
-                style={{ marginBottom: '20px' }}
+                style={{ marginBottom: '24px' }}
               >
-                <h3 style={{ marginBottom: '15px' }}>Machine-wise Summary - Night Shift</h3>
+                <h3 style={{ 
+                  marginBottom: '20px',
+                  fontSize: '18px',
+                  fontWeight: '600',
+                  color: themeColors.textPrimary
+                }}>Machine-wise Summary - Night Shift</h3>
                 <div 
                   className="machines-grid"
                   style={{
                     display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
-                    gap: '10px'
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
+                    gap: '12px'
                   }}
                 >
                   {Array.from({ length: 14 }, (_, i) => {
@@ -3385,15 +4158,19 @@ const SpiralPage = () => {
                         className="machine-card"
                         style={{
                           background: themeColors.surface,
-                          padding: '12px',
-                          borderRadius: '6px',
-                          border: `1px solid ${themeColors.border}`
+                          padding: '16px',
+                          borderRadius: '12px',
+                          border: `1px solid ${themeColors.border}`,
+                          boxShadow: `0 2px 8px ${themeColors.shadow}`,
+                          transition: 'transform 0.2s ease'
                         }}
+                        onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-4px)'}
+                        onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
                       >
                         <div 
                           className="machine-card-header"
                           style={{
-                            marginBottom: '10px'
+                            marginBottom: '12px'
                           }}
                         >
                           <div 
@@ -3401,19 +4178,23 @@ const SpiralPage = () => {
                             style={{
                               fontWeight: '500',
                               fontSize: '14px',
-                              marginBottom: '5px'
+                              marginBottom: '8px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '8px'
                             }}
                           >
+                            <FiTool size={14} color={themeColors.textSecondary} />
                             SP # {machineNum}
                           </div>
                           <div 
                             className="machine-operator"
                             style={{
-                              fontSize: '11px',
+                              fontSize: '12px',
                               color: themeColors.textSecondary,
                               display: 'flex',
                               alignItems: 'center',
-                              gap: '4px'
+                              gap: '6px'
                             }}
                           >
                             <FiUser size={12} />
@@ -3425,16 +4206,17 @@ const SpiralPage = () => {
                           style={{
                             display: 'grid',
                             gridTemplateColumns: '1fr 1fr',
-                            gap: '8px'
+                            gap: '10px'
                           }}
                         >
-                          <div className="machine-stat">
+                          <div className="machine-stat" style={{ textAlign: 'center' }}>
                             <div 
                               className="machine-stat-value"
                               style={{
                                 fontSize: '14px',
                                 fontWeight: 'bold',
-                                marginBottom: '2px'
+                                marginBottom: '2px',
+                                color: themeColors.primary
                               }}
                             >
                               {Math.round(data.production)} M
@@ -3449,13 +4231,14 @@ const SpiralPage = () => {
                               Production
                             </div>
                           </div>
-                          <div className="machine-stat">
+                          <div className="machine-stat" style={{ textAlign: 'center' }}>
                             <div 
                               className="machine-stat-value"
                               style={{
                                 fontSize: '14px',
                                 fontWeight: 'bold',
-                                marginBottom: '2px'
+                                marginBottom: '2px',
+                                color: efficiency >= 85 ? themeColors.success : efficiency >= 70 ? themeColors.warning : themeColors.error
                               }}
                             >
                               {efficiency}%
@@ -3481,189 +4264,123 @@ const SpiralPage = () => {
                 className="report-summary"
                 style={{
                   background: themeColors.surface,
-                  padding: '15px',
-                  borderRadius: '8px',
-                  border: `1px solid ${themeColors.border}`
+                  padding: '24px',
+                  borderRadius: '12px',
+                  border: `1px solid ${themeColors.border}`,
+                  boxShadow: `0 2px 8px ${themeColors.shadow}`
                 }}
               >
-                <h3 style={{ marginBottom: '15px' }}>Report Summary</h3>
+                <h3 style={{ 
+                  marginBottom: '20px',
+                  fontSize: '18px',
+                  fontWeight: '600',
+                  color: themeColors.textPrimary
+                }}>Report Summary</h3>
                 <div 
                   className="summary-grid"
                   style={{
                     display: 'grid',
                     gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                    gap: '15px'
+                    gap: '20px'
                   }}
                 >
-                  <div 
-                    className="summary-card"
-                    style={{
-                      padding: '12px',
-                      background: themeColors.background,
-                      borderRadius: '6px',
-                      border: `1px solid ${themeColors.border}`
-                    }}
-                  >
+                  {[
+                    { 
+                      label: 'Total Production', 
+                      value: Math.round(reportData.totalProduction) + ' M',
+                      note: `Target: ${Math.round(reportData.totalProduction * 1.2)} M`,
+                      icon: FiPackage,
+                      color: themeColors.primary
+                    },
+                    { 
+                      label: 'Total Weight', 
+                      value: Math.round(reportData.totalWeight) + ' KG',
+                      note: 'Total weight produced',
+                      icon: FiFeather,
+                      color: themeColors.success
+                    },
+                    { 
+                      label: 'Average Efficiency', 
+                      value: Math.round(reportData.avgEfficiency) + '%',
+                      note: 'Target: 85%',
+                      icon: FiTrendingUp,
+                      color: themeColors.warning
+                    },
+                    { 
+                      label: 'Total Records', 
+                      value: reportData.recordCount.toString(),
+                      note: `Day: ${reportData.dayShiftCount} | Night: ${reportData.nightShiftCount}`,
+                      icon: FiDatabase,
+                      color: themeColors.info
+                    }
+                  ].map((item, index) => (
                     <div 
-                      className="summary-card-label"
+                      key={index}
+                      className="summary-card"
                       style={{
-                        fontSize: '12px',
-                        color: themeColors.textSecondary,
-                        marginBottom: '8px'
+                        padding: '20px',
+                        background: themeColors.background,
+                        borderRadius: '12px',
+                        border: `1px solid ${themeColors.border}`,
+                        transition: 'transform 0.2s ease'
                       }}
+                      onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-4px)'}
+                      onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
                     >
-                      Total Production
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                        <div style={{
+                          background: item.color + '20',
+                          padding: '10px',
+                          borderRadius: '10px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}>
+                          <item.icon size={20} color={item.color} />
+                        </div>
+                        <div 
+                          className="summary-card-label"
+                          style={{
+                            fontSize: '14px',
+                            color: themeColors.textSecondary,
+                            fontWeight: '500'
+                          }}
+                        >
+                          {item.label}
+                        </div>
+                      </div>
+                      <div 
+                        className="summary-card-value"
+                        style={{
+                          fontSize: '24px',
+                          fontWeight: 'bold',
+                          marginBottom: '8px',
+                          color: themeColors.textPrimary
+                        }}
+                      >
+                        {item.value}
+                      </div>
+                      <div 
+                        className="summary-card-note"
+                        style={{
+                          fontSize: '12px',
+                          color: themeColors.textSecondary
+                        }}
+                      >
+                        {item.note}
+                      </div>
                     </div>
-                    <div 
-                      className="summary-card-value"
-                      style={{
-                        fontSize: '20px',
-                        fontWeight: 'bold',
-                        marginBottom: '5px'
-                      }}
-                    >
-                      {Math.round(reportData.totalProduction)} M
-                    </div>
-                    <div 
-                      className="summary-card-note"
-                      style={{
-                        fontSize: '11px',
-                        color: themeColors.textSecondary
-                      }}
-                    >
-                      Target: {Math.round(reportData.totalProduction * 1.2)} M
-                    </div>
-                  </div>
-
-                  <div 
-                    className="summary-card"
-                    style={{
-                      padding: '12px',
-                      background: themeColors.background,
-                      borderRadius: '6px',
-                      border: `1px solid ${themeColors.border}`
-                    }}
-                  >
-                    <div 
-                      className="summary-card-label"
-                      style={{
-                        fontSize: '12px',
-                        color: themeColors.textSecondary,
-                        marginBottom: '8px'
-                      }}
-                    >
-                      Total Weight
-                    </div>
-                    <div 
-                      className="summary-card-value"
-                      style={{
-                        fontSize: '20px',
-                        fontWeight: 'bold',
-                        marginBottom: '5px'
-                      }}
-                    >
-                      {Math.round(reportData.totalWeight)} KG
-                    </div>
-                    <div 
-                      className="summary-card-note"
-                      style={{
-                        fontSize: '11px',
-                        color: themeColors.textSecondary
-                      }}
-                    >
-                      Total weight produced
-                    </div>
-                  </div>
-
-                  <div 
-                    className="summary-card"
-                    style={{
-                      padding: '12px',
-                      background: themeColors.background,
-                      borderRadius: '6px',
-                      border: `1px solid ${themeColors.border}`
-                    }}
-                  >
-                    <div 
-                      className="summary-card-label"
-                      style={{
-                        fontSize: '12px',
-                        color: themeColors.textSecondary,
-                        marginBottom: '8px'
-                      }}
-                    >
-                      Average Efficiency
-                    </div>
-                    <div 
-                      className="summary-card-value"
-                      style={{
-                        fontSize: '20px',
-                        fontWeight: 'bold',
-                        marginBottom: '5px'
-                      }}
-                    >
-                      {Math.round(reportData.avgEfficiency)}%
-                    </div>
-                    <div 
-                      className="summary-card-note"
-                      style={{
-                        fontSize: '11px',
-                        color: themeColors.textSecondary
-                      }}
-                    >
-                      Target: 85%
-                    </div>
-                  </div>
-
-                  <div 
-                    className="summary-card"
-                    style={{
-                      padding: '12px',
-                      background: themeColors.background,
-                      borderRadius: '6px',
-                      border: `1px solid ${themeColors.border}`
-                    }}
-                  >
-                    <div 
-                      className="summary-card-label"
-                      style={{
-                        fontSize: '12px',
-                        color: themeColors.textSecondary,
-                        marginBottom: '8px'
-                      }}
-                    >
-                      Total Records
-                    </div>
-                    <div 
-                      className="summary-card-value"
-                      style={{
-                        fontSize: '20px',
-                        fontWeight: 'bold',
-                        marginBottom: '5px'
-                      }}
-                    >
-                      {reportData.recordCount}
-                    </div>
-                    <div 
-                      className="summary-card-note"
-                      style={{
-                        fontSize: '11px',
-                        color: themeColors.textSecondary
-                      }}
-                    >
-                      Day: {reportData.dayShiftCount} | Night: {reportData.nightShiftCount}
-                    </div>
-                  </div>
+                  ))}
                 </div>
               </div>
 
               <div 
                 className="report-footer"
                 style={{
-                  marginTop: '20px',
-                  paddingTop: '15px',
+                  marginTop: '24px',
+                  paddingTop: '20px',
                   borderTop: `1px solid ${themeColors.border}`,
-                  fontSize: '12px',
+                  fontSize: '13px',
                   color: themeColors.textSecondary,
                   textAlign: 'center'
                 }}
@@ -3681,7 +4398,7 @@ const SpiralPage = () => {
             style={{
               background: themeColors.background,
               color: themeColors.textPrimary,
-              padding: '15px',
+              padding: '20px',
               flex: 1,
               overflow: 'hidden',
               display: 'flex',
@@ -3694,33 +4411,49 @@ const SpiralPage = () => {
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                marginBottom: '15px'
+                marginBottom: '20px'
               }}
             >
-              <h3 style={{ margin: 0 }}>Spiral Production Records</h3>
+              <h3 style={{ 
+                margin: 0,
+                fontSize: '18px',
+                fontWeight: '600'
+              }}>Spiral Production Records</h3>
               <div 
                 className="section-info"
                 style={{
                   display: 'flex',
                   gap: '15px',
-                  fontSize: '12px',
-                  color: themeColors.textPrimary 
+                  fontSize: '13px',
+                  color: themeColors.textPrimary,
+                  background: themeColors.surface,
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  border: `1px solid ${themeColors.border}`
                 }}
               >
-                <span className="info-item">Total: {records.length} records</span>
-                <span className="info-item">
+                <span className="info-item" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <FiDatabase size={14} />
+                  Total: {records.length} records
+                </span>
+                <span className="info-item" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <FiFilter size={14} />
                   Showing: {filteredRecords.length} filtered
                 </span>
-                <span className="info-item">
+                <span className="info-item" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <FiHash size={14} />
                   Page: {currentPage}/{totalPages}
                 </span>
-                <span className="info-item">Managed by: {loggedInUser}</span>
+                <span className="info-item" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <FiUser size={14} />
+                  {loggedInUser}
+                </span>
                 <div 
                   className="database-status"
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '5px'
+                    gap: '6px'
                   }}
                 >
                   <div
@@ -3731,10 +4464,10 @@ const SpiralPage = () => {
                       width: '8px',
                       height: '8px',
                       borderRadius: '50%',
-                      background: isSupabaseConnected ? '#4CAF50' : '#F44336'
+                      background: isSupabaseConnected ? themeColors.success : themeColors.error
                     }}
                   />
-                  {isSupabaseConnected ? "Connected" : "Offline"}
+                  <span style={{ fontSize: '12px' }}>{isSupabaseConnected ? "Connected" : "Offline"}</span>
                 </div>
               </div>
             </div>
@@ -3744,7 +4477,7 @@ const SpiralPage = () => {
                 className="loading-state"
                 style={{
                   textAlign: 'center',
-                  padding: '40px',
+                  padding: '60px 20px',
                   color: themeColors.textSecondary,
                   flex: 1,
                   display: 'flex',
@@ -3756,8 +4489,8 @@ const SpiralPage = () => {
                 <div 
                   className="loading-spinner"
                   style={{
-                    width: '40px',
-                    height: '40px',
+                    width: '48px',
+                    height: '48px',
                     border: `3px solid ${themeColors.border}`,
                     borderTop: `3px solid ${themeColors.primary}`,
                     borderRadius: '50%',
@@ -3765,14 +4498,15 @@ const SpiralPage = () => {
                     margin: '0 auto 20px'
                   }}
                 />
-                <p>Loading records from spiralsection table...</p>
+                <h4 style={{ margin: '0 0 12px 0', color: themeColors.textPrimary }}>Loading Records</h4>
+                <p style={{ margin: 0, fontSize: '14px' }}>Fetching records from spiralsection table...</p>
               </div>
             ) : filteredRecords.length === 0 ? (
               <div 
                 className="empty-state"
                 style={{
                   textAlign: 'center',
-                  padding: '40px',
+                  padding: '60px 20px',
                   color: themeColors.textSecondary,
                   flex: 1,
                   display: 'flex',
@@ -3781,9 +4515,20 @@ const SpiralPage = () => {
                   alignItems: 'center'
                 }}
               >
-                <FiColumns size={48} style={{ marginBottom: '20px', opacity: 0.5 }} />
-                <h4 style={{ marginBottom: '10px', color: themeColors.textPrimary }}>No records found</h4>
-                <p style={{ marginBottom: '20px' }}>
+                <div style={{
+                  background: themeColors.border,
+                  width: '80px',
+                  height: '80px',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 20px'
+                }}>
+                  <FiColumns size={32} color={themeColors.textSecondary} />
+                </div>
+                <h4 style={{ marginBottom: '12px', color: themeColors.textPrimary, fontSize: '18px' }}>No records found</h4>
+                <p style={{ marginBottom: '24px', fontSize: '14px', maxWidth: '400px' }}>
                   {searchTerm || filterDate || filterType
                     ? "No records match your search criteria. Try adjusting your filters."
                     : "No spiral production records available. Create your first record to get started."}
@@ -3793,15 +4538,25 @@ const SpiralPage = () => {
                   className="primary-btn"
                   style={{
                     padding: '12px 24px',
-                    background: headerGradient,
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
+                    background: 'transparent',
+                    color: themeColors.primary,
+                    border: `1px solid ${themeColors.primary}`,
+                    borderRadius: '8px',
                     cursor: 'pointer',
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: '10px',
-                    fontSize: '14px'
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.background = themeColors.primary;
+                    e.target.style.color = 'white';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.background = 'transparent';
+                    e.target.style.color = themeColors.primary;
                   }}
                 >
                   <FiPlus /> Create First Record
@@ -3815,7 +4570,8 @@ const SpiralPage = () => {
                     overflowX: 'auto',
                     flex: 1,
                     border: `1px solid ${themeColors.border}`,
-                    borderRadius: '6px'
+                    borderRadius: '12px',
+                    boxShadow: `0 2px 8px ${themeColors.shadow}`
                   }}
                 >
                   <table 
@@ -3823,54 +4579,203 @@ const SpiralPage = () => {
                     style={{
                       width: '100%',
                       borderCollapse: 'collapse',
-                      minWidth: '1000px'
+                      minWidth: '1200px'
                     }}
                   >
                     <thead>
-                      <tr style={{ background: headerGradient, color: 'white' }}>
-                        <th style={{ padding: '10px 8px', fontSize: '12px', textAlign: 'left' }}>
-                          <div>ID</div>
-                          <div style={{ fontSize: '10px', opacity: 0.8 }}>& Code</div>
+                      <tr style={{ 
+                        background: headerGradient, 
+                        color: 'white',
+                        position: 'sticky',
+                        top: 0,
+                        zIndex: 10
+                      }}>
+                        <th style={{ 
+                          padding: '16px 12px', 
+                          fontSize: '13px', 
+                          textAlign: 'left',
+                          borderRight: '1px solid rgba(255,255,255,0.1)'
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <FiHash size={14} />
+                            <div>
+                              <div>ID</div>
+                              <div style={{ fontSize: '11px', opacity: 0.8, fontWeight: 'normal' }}>& Code</div>
+                            </div>
+                          </div>
                         </th>
-                        <th style={{ padding: '10px 8px', fontSize: '12px', textAlign: 'left' }}>
-                          <div>Item</div>
-                          <div style={{ fontSize: '10px', opacity: 0.8 }}>Details</div>
+                        <th style={{ 
+                          padding: '16px 12px', 
+                          fontSize: '13px', 
+                          textAlign: 'left',
+                          borderRight: '1px solid rgba(255,255,255,0.1)'
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <FiPackage size={14} />
+                            <div>
+                              <div>Item</div>
+                              <div style={{ fontSize: '11px', opacity: 0.8, fontWeight: 'normal' }}>Details</div>
+                            </div>
+                          </div>
                         </th>
-                        <th style={{ padding: '10px 8px', fontSize: '12px', textAlign: 'left' }}>
-                          <div>Material</div>
-                          <div style={{ fontSize: '10px', opacity: 0.8 }}>& Wire</div>
+                        <th style={{ 
+                          padding: '16px 12px', 
+                          fontSize: '13px', 
+                          textAlign: 'left',
+                          borderRight: '1px solid rgba(255,255,255,0.1)'
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <FiZap size={14} />
+                            <div>
+                              <div>Material</div>
+                              <div style={{ fontSize: '11px', opacity: 0.8, fontWeight: 'normal' }}>& Wire</div>
+                            </div>
+                          </div>
                         </th>
-                        <th style={{ padding: '10px 8px', fontSize: '12px', textAlign: 'left' }}>
-                          <div>Product</div>
-                          <div style={{ fontSize: '10px', opacity: 0.8 }}>Details</div>
+                        <th style={{ 
+                          padding: '16px 12px', 
+                          fontSize: '13px', 
+                          textAlign: 'left',
+                          borderRight: '1px solid rgba(255,255,255,0.1)'
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <FiBox size={14} />
+                            <div>
+                              <div>Product</div>
+                              <div style={{ fontSize: '11px', opacity: 0.8, fontWeight: 'normal' }}>Details</div>
+                            </div>
+                          </div>
                         </th>
-                        <th style={{ padding: '10px 8px', fontSize: '12px', textAlign: 'left' }}>
-                          <div>Machine</div>
-                          <div style={{ fontSize: '10px', opacity: 0.8 }}>(ID)</div>
+                        <th style={{ 
+                          padding: '16px 12px', 
+                          fontSize: '13px', 
+                          textAlign: 'left',
+                          borderRight: '1px solid rgba(255,255,255,0.1)'
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <FiTool size={14} />
+                            <div>
+                              <div>Machine</div>
+                              <div style={{ fontSize: '11px', opacity: 0.8, fontWeight: 'normal' }}>(ID)</div>
+                            </div>
+                          </div>
                         </th>
-                        <th style={{ padding: '10px 8px', fontSize: '12px', textAlign: 'left' }}>
-                          <div>Production</div>
-                          <div style={{ fontSize: '10px', opacity: 0.8 }}>(Target)</div>
+                        <th style={{ 
+                          padding: '16px 12px', 
+                          fontSize: '13px', 
+                          textAlign: 'left',
+                          borderRight: '1px solid rgba(255,255,255,0.1)'
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <FiTrendingUpIcon size={14} />
+                            <div>
+                              <div>Production</div>
+                              <div style={{ fontSize: '11px', opacity: 0.8, fontWeight: 'normal' }}>(Target)</div>
+                            </div>
+                          </div>
                         </th>
-                        <th style={{ padding: '10px 8px', fontSize: '12px', textAlign: 'left' }}>
-                          <div>Weight</div>
-                          <div style={{ fontSize: '10px', opacity: 0.8 }}>(Per M)</div>
+                        <th style={{ 
+                          padding: '16px 12px', 
+                          fontSize: '13px', 
+                          textAlign: 'left',
+                          borderRight: '1px solid rgba(255,255,255,0.1)'
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <FiFeather size={14} />
+                            <div>
+                              <div>Weight</div>
+                              <div style={{ fontSize: '11px', opacity: 0.8, fontWeight: 'normal' }}>(Per M)</div>
+                            </div>
+                          </div>
                         </th>
-                        <th style={{ padding: '10px 8px', fontSize: '12px', textAlign: 'left' }}>
-                          <div>Efficiency</div>
-                          <div style={{ fontSize: '10px', opacity: 0.8 }}>(Target)</div>
+                        <th style={{ 
+                          padding: '16px 12px', 
+                          fontSize: '13px', 
+                          textAlign: 'left',
+                          borderRight: '1px solid rgba(255,255,255,0.1)'
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <FiPercent size={14} />
+                            <div>
+                              <div>Efficiency</div>
+                              <div style={{ fontSize: '11px', opacity: 0.8, fontWeight: 'normal' }}>(Target)</div>
+                            </div>
+                          </div>
                         </th>
-                        <th style={{ padding: '10px 8px', fontSize: '12px', textAlign: 'left' }}>Operator</th>
-                        <th style={{ padding: '10px 8px', fontSize: '12px', textAlign: 'left' }}>User</th>
-                        <th style={{ padding: '10px 8px', fontSize: '12px', textAlign: 'left' }}>
-                          <div>Shift</div>
-                          <div style={{ fontSize: '10px', opacity: 0.8 }}>(Code)</div>
+                        <th style={{ 
+                          padding: '16px 12px', 
+                          fontSize: '13px', 
+                          textAlign: 'left',
+                          borderRight: '1px solid rgba(255,255,255,0.1)'
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <FiUser size={14} />
+                            <div>Operator</div>
+                          </div>
                         </th>
-                        <th style={{ padding: '10px 8px', fontSize: '12px', textAlign: 'left' }}>
-                          <div>Date</div>
-                          <div style={{ fontSize: '10px', opacity: 0.8 }}>& Time</div>
+                        <th style={{ 
+                          padding: '16px 12px', 
+                          fontSize: '13px', 
+                          textAlign: 'left',
+                          borderRight: '1px solid rgba(255,255,255,0.1)'
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <FiUser size={14} />
+                            <div>User</div>
+                          </div>
                         </th>
-                        <th style={{ padding: '10px 8px', fontSize: '12px', textAlign: 'left' }}>Actions</th>
+                        <th style={{ 
+                          padding: '16px 12px', 
+                          fontSize: '13px', 
+                          textAlign: 'left',
+                          borderRight: '1px solid rgba(255,255,255,0.1)'
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <FiClock size={14} />
+                            <div>
+                              <div>Shift</div>
+                              <div style={{ fontSize: '11px', opacity: 0.8, fontWeight: 'normal' }}>(Code)</div>
+                            </div>
+                          </div>
+                        </th>
+                        <th style={{ 
+                          padding: '16px 12px', 
+                          fontSize: '13px', 
+                          textAlign: 'left',
+                          borderRight: '1px solid rgba(255,255,255,0.1)'
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <FiShoppingBag size={14} />
+                            <div>
+                              <div>Production</div>
+                              <div style={{ fontSize: '11px', opacity: 0.8, fontWeight: 'normal' }}>Data</div>
+                            </div>
+                          </div>
+                        </th>
+                        <th style={{ 
+                          padding: '16px 12px', 
+                          fontSize: '13px', 
+                          textAlign: 'left',
+                          borderRight: '1px solid rgba(255,255,255,0.1)'
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <FiCalendar size={14} />
+                            <div>
+                              <div>Date</div>
+                              <div style={{ fontSize: '11px', opacity: 0.8, fontWeight: 'normal' }}>& Time</div>
+                            </div>
+                          </div>
+                        </th>
+                        <th style={{ 
+                          padding: '16px 12px', 
+                          fontSize: '13px', 
+                          textAlign: 'left'
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <FiSettings size={14} />
+                            <div>Actions</div>
+                          </div>
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
@@ -3879,70 +4784,80 @@ const SpiralPage = () => {
                           key={record.id}
                           style={{
                             background: index % 2 === 0 ? themeColors.background : themeColors.surface,
-                            borderBottom: `1px solid ${themeColors.border}`
+                            borderBottom: `1px solid ${themeColors.border}`,
+                            transition: 'background-color 0.2s ease'
                           }}
+                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = themeColors.hover + '20'}
+                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = index % 2 === 0 ? themeColors.background : themeColors.surface}
                         >
-                          <td style={{ padding: '10px 8px', fontSize: '12px' }}>
+                          <td style={{ padding: '16px 12px', fontSize: '13px', borderRight: `1px solid ${themeColors.border}` }}>
                             <div>
-                              <div style={{ fontWeight: 'bold' }}>#{record.id}</div>
+                              <div style={{ fontWeight: 'bold', color: themeColors.primary }}>#{record.id}</div>
                               {record.item_code && (
-                                <div style={{ fontSize: '10px', color: themeColors.textSecondary, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <div style={{ 
+                                  fontSize: '11px', 
+                                  color: themeColors.textSecondary, 
+                                  display: 'flex', 
+                                  alignItems: 'center', 
+                                  gap: '4px',
+                                  marginTop: '4px'
+                                }}>
                                   <FiCode size={10} /> {record.item_code}
                                 </div>
                               )}
                             </div>
                           </td>
 
-                          <td style={{ padding: '10px 8px', fontSize: '12px' }}>
+                          <td style={{ padding: '16px 12px', fontSize: '13px', borderRight: `1px solid ${themeColors.border}` }}>
                             <div>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-                                <FiPackage size={14} style={{ color: themeColors.primary }} />
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                                <FiPackage size={16} style={{ color: themeColors.primary }} />
                                 <span style={{ fontWeight: '500' }}>
                                   {record.item_name || "N/A"}
                                 </span>
                               </div>
-                              <div style={{ fontSize: '10px', color: themeColors.textSecondary }}>
+                              <div style={{ fontSize: '11px', color: themeColors.textSecondary }}>
                                 <span>Size:</span>
                                 <span style={{ marginLeft: '4px' }}>{record.raw_material_flatsize || "N/A"}</span>
                               </div>
                             </div>
                           </td>
 
-                          <td style={{ padding: '10px 8px', fontSize: '12px' }}>
+                          <td style={{ padding: '16px 12px', fontSize: '13px', borderRight: `1px solid ${themeColors.border}` }}>
                             <div>
                               <div style={{ fontWeight: '500' }}>{record.material_type || "N/A"}</div>
-                              <div style={{ fontSize: '10px', color: themeColors.textSecondary, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <div style={{ fontSize: '11px', color: themeColors.textSecondary, display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}>
                                 <FiZap size={12} /> {record.wire_size || "N/A"}
                               </div>
                             </div>
                           </td>
 
-                          <td style={{ padding: '10px 8px', fontSize: '12px' }}>
+                          <td style={{ padding: '16px 12px', fontSize: '13px', borderRight: `1px solid ${themeColors.border}` }}>
                             <div>
                               <div style={{ fontWeight: '500' }}>{record.finishedproductname || "N/A"}</div>
                             </div>
                           </td>
 
-                          <td style={{ padding: '10px 8px', fontSize: '12px' }}>
+                          <td style={{ padding: '16px 12px', fontSize: '13px', borderRight: `1px solid ${themeColors.border}` }}>
                             <div>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-                                <FiTool size={14} style={{ color: themeColors.primary }} />
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                                <FiTool size={16} style={{ color: themeColors.primary }} />
                                 <span style={{ fontWeight: '500' }}>{record.machine_no || "N/A"}</span>
                               </div>
-                              <div style={{ fontSize: '10px', color: themeColors.textSecondary }}>
+                              <div style={{ fontSize: '11px', color: themeColors.textSecondary }}>
                                 <span>ID:</span>
                                 <span style={{ marginLeft: '4px' }}>{record.machine_id || "N/A"}</span>
                               </div>
                             </div>
                           </td>
 
-                          <td style={{ padding: '10px 8px', fontSize: '12px' }}>
+                          <td style={{ padding: '16px 12px', fontSize: '13px', borderRight: `1px solid ${themeColors.border}` }}>
                             <div>
-                              <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>
+                              <div style={{ fontWeight: 'bold', marginBottom: '6px' }}>
                                 <span>{Math.round(parseFloat(record.production_quantity || 0))}</span>
-                                <span style={{ fontSize: '10px', marginLeft: '2px', color: themeColors.textSecondary }}>M</span>
+                                <span style={{ fontSize: '11px', marginLeft: '2px', color: themeColors.textSecondary }}>M</span>
                               </div>
-                              <div style={{ fontSize: '10px', color: themeColors.textSecondary, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <div style={{ fontSize: '11px', color: themeColors.textSecondary, display: 'flex', alignItems: 'center', gap: '4px' }}>
                                 <FiTarget size={12} />
                                 <span>Target:</span>
                                 <span>{Math.round(
@@ -3955,86 +4870,99 @@ const SpiralPage = () => {
                             </div>
                           </td>
 
-                          <td style={{ padding: '10px 8px', fontSize: '12px' }}>
+                          <td style={{ padding: '16px 12px', fontSize: '13px', borderRight: `1px solid ${themeColors.border}` }}>
                             <div>
-                              <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>
+                              <div style={{ fontWeight: 'bold', marginBottom: '6px' }}>
                                 <span>{Math.round(parseFloat(record.weight || 0))}</span>
-                                <span style={{ fontSize: '10px', marginLeft: '2px', color: themeColors.textSecondary }}>KG</span>
+                                <span style={{ fontSize: '11px', marginLeft: '2px', color: themeColors.textSecondary }}>KG</span>
                               </div>
-                              <div style={{ fontSize: '10px', color: themeColors.textSecondary }}>
+                              <div style={{ fontSize: '11px', color: themeColors.textSecondary }}>
                                 <span>Per M:</span>
                                 <span style={{ marginLeft: '4px' }}>{Math.round(parseFloat(record.per_meter_wt || 0))} KG</span>
                               </div>
                             </div>
                           </td>
 
-                          <td style={{ padding: '10px 8px', fontSize: '12px' }}>
+                          <td style={{ padding: '16px 12px', fontSize: '13px', borderRight: `1px solid ${themeColors.border}` }}>
                             <div>
                               <div 
                                 style={{
-                                  padding: '4px 8px',
-                                  borderRadius: '12px',
+                                  padding: '6px 12px',
+                                  borderRadius: '20px',
                                   fontWeight: 'bold',
-                                  fontSize: '11px',
-                                  display: 'inline-block',
-                                  marginBottom: '4px',
+                                  fontSize: '12px',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '4px',
+                                  marginBottom: '6px',
                                   background: parseFloat(record.efficiency || 0) >= 85 
-                                    ? 'rgba(76, 175, 80, 0.2)' 
+                                    ? themeColors.success + '20' 
                                     : parseFloat(record.efficiency || 0) >= 70
-                                    ? 'rgba(255, 152, 0, 0.2)'
-                                    : 'rgba(244, 67, 54, 0.2)',
+                                    ? themeColors.warning + '20'
+                                    : themeColors.error + '20',
                                   color: parseFloat(record.efficiency || 0) >= 85 
-                                    ? '#4CAF50' 
+                                    ? themeColors.success 
                                     : parseFloat(record.efficiency || 0) >= 70
-                                    ? '#FF9800'
-                                    : '#F44336',
-                                  border: `1px solid ${parseFloat(record.efficiency || 0) >= 85 
-                                    ? '#4CAF50' 
-                                    : parseFloat(record.efficiency || 0) >= 70
-                                    ? '#FF9800'
-                                    : '#F44336'}`
+                                    ? themeColors.warning
+                                    : themeColors.error
                                 }}
                               >
+                                <FiPercent size={10} />
                                 {Math.round(parseFloat(record.efficiency || 0))}%
                               </div>
-                              <div style={{ fontSize: '10px', color: themeColors.textSecondary }}>
+                              <div style={{ fontSize: '11px', color: themeColors.textSecondary }}>
                                 <span>Target:</span>
                                 <span style={{ marginLeft: '4px' }}>85%</span>
                               </div>
                             </div>
                           </td>
 
-                          <td style={{ padding: '10px 8px', fontSize: '12px' }}>
+                          <td style={{ padding: '16px 12px', fontSize: '13px', borderRight: `1px solid ${themeColors.border}` }}>
                             <div>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                <FiUser size={14} style={{ color: themeColors.primary }} />
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <FiUser size={16} style={{ color: themeColors.textSecondary }} />
                                 <span>{record.operator_name || "N/A"}</span>
                               </div>
                             </div>
                           </td>
 
-                          <td style={{ padding: '10px 8px', fontSize: '12px' }}>
+                          <td style={{ padding: '16px 12px', fontSize: '13px', borderRight: `1px solid ${themeColors.border}` }}>
                             <div>
                               <div style={{ fontWeight: '500' }}>{record.users_name || "N/A"}</div>
                             </div>
                           </td>
 
-                          <td style={{ padding: '10px 8px', fontSize: '12px' }}>
+                          <td style={{ padding: '16px 12px', fontSize: '13px', borderRight: `1px solid ${themeColors.border}` }}>
                             <div>
-                              <div style={{ fontWeight: '500', marginBottom: '4px' }}>{record.shift_name || "N/A"}</div>
-                              <div style={{ fontSize: '10px', color: themeColors.textSecondary }}>
+                              <div style={{ fontWeight: '500', marginBottom: '6px' }}>{record.shift_name || "N/A"}</div>
+                              <div style={{ fontSize: '11px', color: themeColors.textSecondary }}>
                                 <span>Code:</span>
                                 <span style={{ marginLeft: '4px' }}>{record.shift_code || "N/A"}</span>
                               </div>
                             </div>
                           </td>
 
-                          <td style={{ padding: '10px 8px', fontSize: '12px' }}>
+                          <td style={{ padding: '16px 12px', fontSize: '13px', borderRight: `1px solid ${themeColors.border}` }}>
                             <div>
-                              <div style={{ marginBottom: '4px' }}>
+                              <div style={{ 
+                                fontSize: '12px', 
+                                color: record.production_data ? themeColors.textPrimary : themeColors.textSecondary,
+                                maxWidth: '150px',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap'
+                              }}>
+                                {record.production_data || "No data"}
+                              </div>
+                            </div>
+                          </td>
+
+                          <td style={{ padding: '16px 12px', fontSize: '13px', borderRight: `1px solid ${themeColors.border}` }}>
+                            <div>
+                              <div style={{ marginBottom: '6px' }}>
                                 {new Date(record.created_at).toLocaleDateString("en-GB")}
                               </div>
-                              <div style={{ fontSize: '10px', color: themeColors.textSecondary }}>
+                              <div style={{ fontSize: '11px', color: themeColors.textSecondary }}>
                                 {new Date(record.created_at).toLocaleTimeString([], {
                                   hour: "2-digit",
                                   minute: "2-digit",
@@ -4043,61 +4971,88 @@ const SpiralPage = () => {
                             </div>
                           </td>
 
-                          <td style={{ padding: '10px 8px', fontSize: '12px' }}>
-                            <div style={{ display: 'flex', gap: '6px' }}>
+                          <td style={{ padding: '16px 12px', fontSize: '13px' }}>
+                            <div style={{ display: 'flex', gap: '8px' }}>
                               <button
                                 onClick={() => handleView(record.id)}
                                 className="action-btn view-btn"
                                 title="View Record"
                                 style={{
-                                  padding: '6px',
-                                  background: themeColors.info || '#2196F3',
-                                  color: 'white',
-                                  border: 'none',
-                                  borderRadius: '4px',
+                                  padding: '8px',
+                                  background: 'transparent',
+                                  color: themeColors.info,
+                                  border: `1px solid ${themeColors.info}`,
+                                  borderRadius: '8px',
                                   cursor: 'pointer',
                                   display: 'flex',
                                   alignItems: 'center',
-                                  justifyContent: 'center'
+                                  justifyContent: 'center',
+                                  transition: 'all 0.2s ease'
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.target.style.background = themeColors.info;
+                                  e.target.style.color = 'white';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.target.style.background = 'transparent';
+                                  e.target.style.color = themeColors.info;
                                 }}
                               >
-                                <FiEye size={16} />
+                                <FiEye size={18} />
                               </button>
                               <button
                                 onClick={() => handleEdit(record.id)}
                                 className="action-btn edit-btn"
                                 title="Edit Record"
                                 style={{
-                                  padding: '6px',
-                                  background: themeColors.warning || '#FF9800',
-                                  color: 'white',
-                                  border: 'none',
-                                  borderRadius: '4px',
+                                  padding: '8px',
+                                  background: 'transparent',
+                                  color: themeColors.warning,
+                                  border: `1px solid ${themeColors.warning}`,
+                                  borderRadius: '8px',
                                   cursor: 'pointer',
                                   display: 'flex',
                                   alignItems: 'center',
-                                  justifyContent: 'center'
+                                  justifyContent: 'center',
+                                  transition: 'all 0.2s ease'
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.target.style.background = themeColors.warning;
+                                  e.target.style.color = 'white';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.target.style.background = 'transparent';
+                                  e.target.style.color = themeColors.warning;
                                 }}
                               >
-                                <FiEdit size={16} />
+                                <FiEdit size={18} />
                               </button>
                               <button
                                 onClick={() => handleDelete(record.id)}
                                 className="action-btn delete-btn"
                                 title="Delete Record"
                                 style={{
-                                  padding: '6px',
-                                  background: themeColors.error || '#F44336',
-                                  color: 'white',
-                                  border: 'none',
-                                  borderRadius: '4px',
+                                  padding: '8px',
+                                  background: 'transparent',
+                                  color: themeColors.error,
+                                  border: `1px solid ${themeColors.error}`,
+                                  borderRadius: '8px',
                                   cursor: 'pointer',
                                   display: 'flex',
                                   alignItems: 'center',
-                                  justifyContent: 'center'
+                                  justifyContent: 'center',
+                                  transition: 'all 0.2s ease'
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.target.style.background = themeColors.error;
+                                  e.target.style.color = 'white';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.target.style.background = 'transparent';
+                                  e.target.style.color = themeColors.error;
                                 }}
                               >
-                                <FiTrash2 size={16} />
+                                <FiTrash2 size={18} />
                               </button>
                             </div>
                           </td>
@@ -4111,19 +5066,19 @@ const SpiralPage = () => {
                   <div 
                     className="pagination"
                     style={{
-                      marginTop: '20px',
-                      paddingTop: '15px',
+                      marginTop: '24px',
+                      paddingTop: '20px',
                       borderTop: `1px solid ${themeColors.border}`,
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
-                      gap: '10px'
+                      gap: '12px'
                     }}
                   >
                     <div 
                       className="pagination-info"
                       style={{
-                        fontSize: '12px',
+                        fontSize: '13px',
                         color: themeColors.textSecondary
                       }}
                     >
@@ -4136,25 +5091,39 @@ const SpiralPage = () => {
                       style={{
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '10px'
+                        gap: '12px'
                       }}
-                    >
+                >
                       <button
                         onClick={handlePrevPage}
                         disabled={currentPage === 1}
                         className="pagination-btn"
                         style={{
-                          padding: '8px 15px',
-                          background: currentPage === 1 ? themeColors.disabled : themeColors.primary,
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '4px',
+                          padding: '10px 20px',
+                          background: currentPage === 1 ? themeColors.disabled : 'transparent',
+                          color: currentPage === 1 ? themeColors.textSecondary : themeColors.primary,
+                          border: `1px solid ${currentPage === 1 ? themeColors.disabled : themeColors.primary}`,
+                          borderRadius: '8px',
                           cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
                           opacity: currentPage === 1 ? 0.6 : 1,
                           display: 'flex',
                           alignItems: 'center',
-                          gap: '6px',
-                          fontSize: '14px'
+                          gap: '8px',
+                          fontSize: '14px',
+                          fontWeight: '500',
+                          transition: currentPage === 1 ? 'none' : 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                          if (currentPage !== 1) {
+                            e.target.style.background = themeColors.primary;
+                            e.target.style.color = 'white';
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (currentPage !== 1) {
+                            e.target.style.background = 'transparent';
+                            e.target.style.color = themeColors.primary;
+                          }
                         }}
                       >
                         <FiChevronLeft /> Previous
@@ -4164,7 +5133,7 @@ const SpiralPage = () => {
                         className="page-numbers"
                         style={{
                           display: 'flex',
-                          gap: '5px'
+                          gap: '6px'
                         }}
                       >
                         {Array.from(
@@ -4189,13 +5158,27 @@ const SpiralPage = () => {
                                   currentPage === pageNum ? "active" : ""
                                 }`}
                                 style={{
-                                  padding: '8px 12px',
-                                  background: currentPage === pageNum ? themeColors.primary : themeColors.surface,
+                                  padding: '10px 16px',
+                                  background: currentPage === pageNum ? themeColors.primary : 'transparent',
                                   color: currentPage === pageNum ? 'white' : themeColors.textPrimary,
                                   border: `1px solid ${currentPage === pageNum ? themeColors.primary : themeColors.border}`,
-                                  borderRadius: '4px',
+                                  borderRadius: '8px',
                                   cursor: 'pointer',
-                                  fontSize: '14px'
+                                  fontSize: '14px',
+                                  fontWeight: '500',
+                                  transition: 'all 0.2s ease'
+                                }}
+                                onMouseEnter={(e) => {
+                                  if (currentPage !== pageNum) {
+                                    e.target.style.background = themeColors.primary + '20';
+                                    e.target.style.borderColor = themeColors.primary;
+                                  }
+                                }}
+                                onMouseLeave={(e) => {
+                                  if (currentPage !== pageNum) {
+                                    e.target.style.background = 'transparent';
+                                    e.target.style.borderColor = themeColors.border;
+                                  }
                                 }}
                               >
                                 {pageNum}
@@ -4210,17 +5193,31 @@ const SpiralPage = () => {
                         disabled={currentPage === totalPages}
                         className="pagination-btn"
                         style={{
-                          padding: '8px 15px',
-                          background: currentPage === totalPages ? themeColors.disabled : themeColors.primary,
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '4px',
+                          padding: '10px 20px',
+                          background: currentPage === totalPages ? themeColors.disabled : 'transparent',
+                          color: currentPage === totalPages ? themeColors.textSecondary : themeColors.primary,
+                          border: `1px solid ${currentPage === totalPages ? themeColors.disabled : themeColors.primary}`,
+                          borderRadius: '8px',
                           cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
                           opacity: currentPage === totalPages ? 0.6 : 1,
                           display: 'flex',
                           alignItems: 'center',
-                          gap: '6px',
-                          fontSize: '14px'
+                          gap: '8px',
+                          fontSize: '14px',
+                          fontWeight: '500',
+                          transition: currentPage === totalPages ? 'none' : 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                          if (currentPage !== totalPages) {
+                            e.target.style.background = themeColors.primary;
+                            e.target.style.color = 'white';
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (currentPage !== totalPages) {
+                            e.target.style.background = 'transparent';
+                            e.target.style.color = themeColors.primary;
+                          }
                         }}
                       >
                         Next <FiChevronRight />
@@ -4238,24 +5235,42 @@ const SpiralPage = () => {
           className="bottom-info-bar"
           style={{
             background: themeColors.surface,
-            padding: '10px 15px',
+            padding: '12px 20px',
             borderTop: `1px solid ${themeColors.border}`,
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            fontSize: '12px',
+            fontSize: '13px',
             color: themeColors.textSecondary
           }}
         >
-          <div className="info-left" style={{ display: 'flex', gap: '15px' }}>
-            <span>Records: {stats.totalRecords}</span>
-            <span>User: {loggedInUser}</span>
-            <span>Time: {new Date().toLocaleTimeString()}</span>
+          <div className="info-left" style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <FiDatabase size={14} />
+              Records: {stats.totalRecords}
+            </span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <FiUser size={14} />
+              {loggedInUser}
+            </span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <FiClock size={14} />
+              {new Date().toLocaleTimeString()}
+            </span>
           </div>
-          <div className="info-right" style={{ display: 'flex', gap: '15px' }}>
-            <span>Production: {Math.round(stats.totalProduction)} M</span>
-            <span>Weight: {Math.round(stats.totalWeight)} KG</span>
-            <span>Efficiency: {Math.round(stats.avgEfficiency)}%</span>
+          <div className="info-right" style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <FiPackage size={14} />
+              Production: {Math.round(stats.totalProduction)} M
+            </span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <FiFeather size={14} />
+              Weight: {Math.round(stats.totalWeight)} KG
+            </span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <FiPercent size={14} />
+              Efficiency: {Math.round(stats.avgEfficiency)}%
+            </span>
           </div>
         </div>
       </div>
@@ -4273,17 +5288,36 @@ const SpiralPage = () => {
         }
         
         .table-container::-webkit-scrollbar {
-          height: 6px;
-          width: 6px;
+          height: 8px;
+          width: 8px;
         }
         
         .table-container::-webkit-scrollbar-track {
           background: ${themeColors.background};
+          border-radius: 4px;
         }
         
         .table-container::-webkit-scrollbar-thumb {
           background: ${themeColors.border};
-          border-radius: 3px;
+          border-radius: 4px;
+        }
+        
+        .table-container::-webkit-scrollbar-thumb:hover {
+          background: ${themeColors.primary};
+        }
+        
+        .filters-horizontal-single-line::-webkit-scrollbar {
+          height: 4px;
+        }
+        
+        .filters-horizontal-single-line::-webkit-scrollbar-track {
+          background: ${themeColors.background};
+          border-radius: 2px;
+        }
+        
+        .filters-horizontal-single-line::-webkit-scrollbar-thumb {
+          background: ${themeColors.border};
+          border-radius: 2px;
         }
         
         @media (max-width: 768px) {
@@ -4296,17 +5330,49 @@ const SpiralPage = () => {
             justify-content: center;
           }
           
-          .filters-single-line {
-            flex-direction: column;
+          .filters-horizontal-single-line {
+            gap: 6px;
+            padding-bottom: 8px;
           }
           
-          .filter-group {
-            width: 100%;
+          .filter-item {
+            min-width: 150px !important;
           }
           
           .section-info {
             flex-direction: column;
             gap: 5px;
+          }
+          
+          .stats-grid,
+          .dashboard-grid {
+            grid-template-columns: 1fr;
+          }
+          
+          .records-table th,
+          .records-table td {
+            padding: 12px 8px;
+            font-size: 12px;
+          }
+          
+          .pagination-controls {
+            flex-direction: column;
+            gap: 10px;
+          }
+          
+          .page-numbers {
+            flex-wrap: wrap;
+            justify-content: center;
+          }
+          
+          .report-actions {
+            flex-direction: column;
+            width: 100%;
+          }
+          
+          .action-btn {
+            width: 100%;
+            justify-content: center;
           }
         }
       `}</style>
