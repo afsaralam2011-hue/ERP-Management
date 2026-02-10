@@ -1,8 +1,4 @@
-// ========================================================
-// FILE: SpiralSmartForm.jsx
-// PURPOSE: Smart Production Entry - Navy Blue Theme + All Fixes + WhatsApp Feature
-// VERSION: 5.1 - Navy Blue Theme, No Gaps, Auto User, WhatsApp Feature
-// ========================================================
+// src/components/ProductionSections/SpiralSection/SpiralSmartForm.jsx
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -12,13 +8,17 @@ import {
   FiCpu, FiPackage, FiEdit3, FiChevronRight,
   FiChevronLeft, FiArrowUp, FiArrowDown,
   FiTarget, FiBarChart2, FiXCircle, FiActivity,
-  FiMessageSquare, FiFileText, FiEye // WhatsApp, PDF, and Eye icons
+  FiMessageSquare, FiFileText, FiEye, FiCalendar
 } from 'react-icons/fi';
 import { supabase } from '../../../supabaseClient';
-import './SpiralSmartForm.css';
+import { useTheme } from '../../../contexts/ThemeContext'; // ✅ Theme import
+import './SpiralSmartForm.css'; // ✅ Separate CSS file
 
 const SpiralSmartForm = () => {
   const navigate = useNavigate();
+  
+  // ✅ Theme Context
+  const { mode, isDarkMode, currentTheme } = useTheme();
   
   // Constants
   const CURRENT_SECTION = 'Spiral';
@@ -45,6 +45,76 @@ const SpiralSmartForm = () => {
   const [whatsAppNumber, setWhatsAppNumber] = useState('');
   const [whatsAppMessage, setWhatsAppMessage] = useState('');
   const [sendingWhatsApp, setSendingWhatsApp] = useState(false);
+
+  // Production Date state
+  const [productionDate, setProductionDate] = useState(new Date().toISOString().split('T')[0]);
+
+  // ✅ Get Theme Colors
+  const getThemeColor = (colorName, fallback) => {
+    return currentTheme?.colors?.[colorName] || fallback;
+  };
+
+  // ✅ Theme-based colors
+  const themeColors = {
+    primary: getThemeColor('primary', '#1e40af'),
+    secondary: getThemeColor('secondary', '#1e293b'),
+    background: getThemeColor('background', '#0f172a'),
+    surface: getThemeColor('surface', '#1e293b'),
+    textPrimary: getThemeColor('textPrimary', '#f8fafc'),
+    textSecondary: getThemeColor('textSecondary', '#cbd5e1'),
+    border: getThemeColor('border', '#475569'),
+    success: getThemeColor('success', '#10b981'),
+    warning: getThemeColor('warning', '#f59e0b'),
+    error: getThemeColor('error', '#ef4444'),
+    info: getThemeColor('info', '#3b82f6'),
+  };
+
+  // ✅ Theme-based style objects
+  const themeStyles = {
+    modalOverlay: {
+      backgroundColor: isDarkMode ? 'rgba(0, 10, 20, 0.9)' : 'rgba(0, 20, 40, 0.8)'
+    },
+    modalContainer: {
+      background: isDarkMode 
+        ? `linear-gradient(135deg, ${themeColors.background} 0%, ${themeColors.surface} 100%)`
+        : 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+      border: `1px solid ${themeColors.info}`,
+      color: themeColors.textPrimary
+    },
+    header: {
+      background: `linear-gradient(135deg, ${themeColors.primary} 0%, ${themeColors.info} 100%)`,
+      borderBottom: `2px solid ${themeColors.info}`
+    },
+    sidebar: {
+      backgroundColor: themeColors.surface,
+      border: `1px solid ${themeColors.border}`,
+      color: themeColors.textPrimary
+    },
+    card: {
+      backgroundColor: themeColors.surface,
+      border: `1px solid ${themeColors.border}`,
+      color: themeColors.textPrimary
+    },
+    input: {
+      backgroundColor: isDarkMode ? '#334155' : '#f1f5f9',
+      border: `1px solid ${themeColors.border}`,
+      color: themeColors.textPrimary
+    },
+    button: {
+      primary: {
+        background: `linear-gradient(135deg, ${themeColors.primary} 0%, ${themeColors.info} 100%)`,
+        color: 'white'
+      },
+      success: {
+        background: `linear-gradient(135deg, ${themeColors.success} 0%, #059669 100%)`,
+        color: 'white'
+      },
+      warning: {
+        background: `linear-gradient(135deg, ${themeColors.warning} 0%, #d97706 100%)`,
+        color: 'white'
+      }
+    }
+  };
 
   // ==================== GET CURRENT USER ====================
   useEffect(() => {
@@ -80,6 +150,7 @@ const SpiralSmartForm = () => {
           const draftData = {
             shift: selectedShift,
             machineData,
+            productionDate,
             timestamp: new Date().toISOString()
           };
           localStorage.setItem(`spiral_draft_${selectedShift}`, JSON.stringify(draftData));
@@ -99,7 +170,7 @@ const SpiralSmartForm = () => {
     return () => {
       if (autoSaveTimer) clearTimeout(autoSaveTimer);
     };
-  }, [selectedShift, machineData]);
+  }, [selectedShift, machineData, productionDate]);
 
   // ==================== LOAD DRAFT ON SHIFT SELECT ====================
   const loadDraftForShift = useCallback((shiftCode) => {
@@ -109,6 +180,9 @@ const SpiralSmartForm = () => {
         const parsedDraft = JSON.parse(draft);
         if (parsedDraft.machineData) {
           setMachineData(parsedDraft.machineData);
+          if (parsedDraft.productionDate) {
+            setProductionDate(parsedDraft.productionDate);
+          }
           setSuccess('Previous draft loaded successfully');
           setTimeout(() => setSuccess(''), 3000);
         }
@@ -255,6 +329,7 @@ const SpiralSmartForm = () => {
           unit: target?.uom || 'Meter',
           shift_code: shiftCode,
           shift_name: selectedShiftData?.shift_name || shiftCode,
+          production_date: productionDate,
           items: [{ 
             id: Date.now(), 
             item_code: '', 
@@ -343,8 +418,6 @@ const SpiralSmartForm = () => {
   }, [sectionProductionTotal, totalTarget]);
 
   // ==================== WHATSAPP FUNCTIONS ====================
-  
-  // WhatsApp کے لیے ڈیٹا تیار کرنا
   const prepareWhatsAppData = useCallback(() => {
     if (!selectedShift || Object.keys(machineData).length === 0) {
       return "No production data available.";
@@ -355,7 +428,7 @@ const SpiralSmartForm = () => {
     const shiftTime = shiftData ? `${shiftData.start_time} - ${shiftData.end_time}` : '';
     
     let message = `🏭 *Spiral Section Production Report*\n`;
-    message += `📅 Date: ${new Date().toLocaleDateString()}\n`;
+    message += `📅 Production Date: ${productionDate}\n`;
     message += `🕒 Shift: ${shiftName} (${selectedShift}) ${shiftTime}\n`;
     message += `👤 User: ${currentUser}\n`;
     message += `📊 *Overall Summary:*\n`;
@@ -395,9 +468,8 @@ const SpiralSmartForm = () => {
     message += `\n✅ Generated via Spiral Smart Form`;
     
     return message;
-  }, [selectedShift, machineData, shifts, currentUser, totalTarget, sectionProductionTotal, sectionTotal, totalEfficiency, calculateMachineTotal, calculateMachineProductionTotal, calculateMachineEfficiency]);
+  }, [selectedShift, machineData, shifts, currentUser, totalTarget, sectionProductionTotal, sectionTotal, totalEfficiency, calculateMachineTotal, calculateMachineProductionTotal, calculateMachineEfficiency, productionDate]);
 
-  // WhatsApp پر میسج بھیجنے کا فنکشن
   const sendViaWhatsApp = () => {
     if (!whatsAppNumber) {
       setError('Please enter WhatsApp number');
@@ -409,10 +481,8 @@ const SpiralSmartForm = () => {
     const message = whatsAppMessage || prepareWhatsAppData();
     const formattedNumber = whatsAppNumber.replace(/[^0-9]/g, '');
     
-    // WhatsApp API URL (بین الاقوامی فارمیٹ)
     const whatsappUrl = `https://wa.me/${formattedNumber}?text=${encodeURIComponent(message)}`;
     
-    // WhatsApp ونڈو کھولنا
     window.open(whatsappUrl, '_blank');
     
     setTimeout(() => {
@@ -423,11 +493,9 @@ const SpiralSmartForm = () => {
     }, 1000);
   };
 
-  // PDF جنریٹ کرنا (اگر آپ چاہیں تو بعد میں)
   const generatePDF = () => {
     setSuccess('PDF generation feature will be implemented soon!');
     setTimeout(() => setSuccess(''), 3000);
-    // یہاں PDF جنریٹ کرنے کا کوڈ شامل کریں
   };
 
   // ==================== HANDLE ITEM CHANGES ====================
@@ -479,6 +547,19 @@ const SpiralSmartForm = () => {
     });
   };
 
+  // ==================== UPDATE PRODUCTION DATE FOR ALL MACHINES ====================
+  const updateProductionDateForAll = (date) => {
+    setProductionDate(date);
+    const updatedData = { ...machineData };
+    Object.keys(updatedData).forEach(machineNo => {
+      updatedData[machineNo] = {
+        ...updatedData[machineNo],
+        production_date: date
+      };
+    });
+    setMachineData(updatedData);
+  };
+
   // ==================== BULK OPERATIONS ====================
   const handleBulkUpdate = (field, value) => {
     const updatedData = { ...machineData };
@@ -517,7 +598,8 @@ const SpiralSmartForm = () => {
         }],
         operator_name: '',
         users_name: currentUser,
-        remarks: ''
+        remarks: '',
+        production_date: productionDate
       };
       
       return updated;
@@ -652,12 +734,27 @@ const SpiralSmartForm = () => {
     });
   };
 
+  // ==================== FORMAT DATE ====================
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      weekday: 'short',
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
   // ==================== VALIDATION ====================
   const validateForm = () => {
     const errors = {};
 
     if (!selectedShift) {
       errors.shift = 'Please select a shift';
+    }
+
+    if (!productionDate) {
+      errors.productionDate = 'Production date is required';
     }
 
     Object.keys(machineData).forEach(machineNo => {
@@ -737,6 +834,7 @@ const SpiralSmartForm = () => {
               shift_code: machine.shift_code,
               shift_name: machine.shift_name,
               target_qty: machine.target_qty || 0,
+              production_date: productionDate,
               remarks: machine.remarks || '',
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString()
@@ -760,7 +858,7 @@ const SpiralSmartForm = () => {
 
       localStorage.removeItem(`spiral_draft_${selectedShift}`);
       
-      setSuccess(`Success! ${allRecords.length} records saved for ${Object.keys(machineData).length} machines`);
+      setSuccess(`Success! ${allRecords.length} records saved for ${Object.keys(machineData).length} machines on ${formatDate(productionDate)}`);
 
       setTimeout(() => {
         setSelectedShift('');
@@ -810,8 +908,8 @@ const SpiralSmartForm = () => {
   // ==================== LOADING STATE ====================
   if (loading) {
     return (
-      <div className="modal-overlay navy-overlay">
-        <div className="modal-container loading-modal navy-modal">
+      <div className="modal-overlay" style={themeStyles.modalOverlay}>
+        <div className="modal-container loading-modal" style={themeStyles.modalContainer}>
           <div className="loading-content">
             <div className="loading-spinner-large"></div>
             <h3>Loading Production Form</h3>
@@ -824,8 +922,8 @@ const SpiralSmartForm = () => {
 
   // ==================== WHATSAPP MODAL ====================
   const WhatsAppModal = () => (
-    <div className="modal-overlay whatsapp-modal-overlay">
-      <div className="modal-container whatsapp-modal navy-modal">
+    <div className="whatsapp-modal-overlay">
+      <div className="modal-container whatsapp-modal">
         <div className="modal-header">
           <h2><FiMessageSquare /> Send via WhatsApp</h2>
           <button 
@@ -905,37 +1003,55 @@ const SpiralSmartForm = () => {
     </div>
   );
 
-  // ==================== MAIN RENDER - NAVY BLUE THEME ====================
+  // ==================== MAIN RENDER ====================
   return (
     <>
-      <div className="modal-overlay navy-overlay" onClick={(e) => {
+      <div className="modal-overlay" style={themeStyles.modalOverlay} onClick={(e) => {
         if (e.target === e.currentTarget) handleBackClick();
       }}>
-        <div className="modal-container smart-form-modal navy-theme">
+        <div className="modal-container smart-form-modal" style={themeStyles.modalContainer}>
           
-          {/* HEADER - NAVY BLUE */}
-          <div className="modal-header navy-header">
+          {/* HEADER - Theme integrated */}
+          <div className="modal-header" style={themeStyles.header}>
             <div className="final-header-content">
-              <h1 className="final-main-title navy-title">Spiral Production Entry</h1>
-              <p className="final-subtitle navy-subtitle">
+              <h1 className="final-main-title">Spiral Production Entry</h1>
+              <p className="final-subtitle">
                 <FiPackage /> Smart entry form for spiral section
               </p>
             </div>
             
             <div className="final-header-actions">
               {draftSaved && (
-                <span className="draft-saved-badge navy-draft-badge">
+                <span className="draft-saved-badge">
                   <FiSave /> Draft Saved
                 </span>
               )}
               
-              {/* SHARE BUTTONS - WhatsApp & PDF */}
+              {/* PRODUCTION DATE PICKER */}
+              {selectedShift && (
+                <div className="production-date-picker">
+                  <FiCalendar />
+                  <input
+                    type="date"
+                    value={productionDate}
+                    onChange={(e) => updateProductionDateForAll(e.target.value)}
+                    className="date-input"
+                    title="Select production date"
+                  />
+                  {validationErrors.productionDate && (
+                    <span className="error-text">{validationErrors.productionDate}</span>
+                  )}
+                </div>
+              )}
+              
+              {/* SHARE BUTTONS */}
               {selectedShift && Object.keys(machineData).length > 0 && (
                 <div className="share-buttons-container">
                   <button
                     type="button"
                     onClick={() => setShowWhatsAppModal(true)}
-                    className="btn btn-success whatsapp-btn"
+                    className="btn whatsapp-btn"
+                    style={themeStyles.button.success}
                     title="Share via WhatsApp"
                   >
                     <FiMessageSquare /> WhatsApp
@@ -944,7 +1060,8 @@ const SpiralSmartForm = () => {
                   <button
                     type="button"
                     onClick={generatePDF}
-                    className="btn btn-warning pdf-btn"
+                    className="btn pdf-btn"
+                    style={themeStyles.button.warning}
                     title="Generate PDF"
                   >
                     <FiFileText /> PDF
@@ -953,22 +1070,22 @@ const SpiralSmartForm = () => {
               )}
               
               {selectedShift && machinesForCurrentShift.length > 0 && (
-                <div className="machine-navigation-header navy-machine-nav">
+                <div className="machine-navigation-header">
                   <button
                     type="button"
                     onClick={prevMachine}
                     disabled={activeMachineIndex === 0}
-                    className="nav-btn-header navy-nav-btn"
+                    className="nav-btn-header"
                     title="Previous Machine"
                   >
                     <FiChevronLeft />
                   </button>
                   
-                  <div className="nav-info-header navy-nav-info">
-                    <span className="nav-current-header navy-nav-current">
+                  <div className="nav-info-header">
+                    <span className="nav-current-header">
                       <FiCpu /> Machine {machinesForCurrentShift[activeMachineIndex]}
                     </span>
-                    <span className="nav-counter-header navy-nav-counter">
+                    <span className="nav-counter-header">
                       {activeMachineIndex + 1} / {machinesForCurrentShift.length}
                     </span>
                   </div>
@@ -977,7 +1094,7 @@ const SpiralSmartForm = () => {
                     type="button"
                     onClick={nextMachine}
                     disabled={activeMachineIndex === machinesForCurrentShift.length - 1}
-                    className="nav-btn-header navy-nav-btn"
+                    className="nav-btn-header"
                     title="Next Machine"
                   >
                     <FiChevronRight />
@@ -986,9 +1103,10 @@ const SpiralSmartForm = () => {
               )}
               
               <button 
-                className="btn btn-back navy-back-btn"
+                className="btn btn-back"
                 onClick={handleBackClick}
                 title="Go back"
+                style={themeStyles.button.primary}
               >
                 <FiArrowLeft /> {!isMobile && 'Back'}
               </button>
@@ -997,42 +1115,43 @@ const SpiralSmartForm = () => {
 
           {/* MESSAGES */}
           {success && (
-            <div className="alert alert-success navy-alert">
+            <div className="alert alert-success">
               <FiCheck /> {success}
             </div>
           )}
 
           {error && (
-            <div className="alert alert-error navy-alert">
+            <div className="alert alert-error">
               <FiAlertCircle /> {error}
             </div>
           )}
 
-          {/* FORM LAYOUT - COMPACT NAVY */}
-          <div className="form-layout navy-layout">
+          {/* FORM LAYOUT */}
+          <div className="form-layout">
             
-            {/* SIDEBAR - NAVY SCROLLABLE */}
-            <div className="form-sidebar navy-sidebar scrollable-sidebar">
-              <div className="sidebar-header navy-sidebar-header">
+            {/* SIDEBAR */}
+            <div className="form-sidebar scrollable-sidebar" style={themeStyles.sidebar}>
+              <div className="sidebar-header">
                 <FiClock />
                 <h3>Select Shift</h3>
               </div>
               
-              <div className="shift-options navy-shift-options">
+              <div className="shift-options">
                 {shifts.map(shift => (
                   <div
                     key={shift.id}
-                    className={`shift-option navy-shift-option ${selectedShift === shift.shift_code ? 'active' : ''}`}
+                    className={`shift-option ${selectedShift === shift.shift_code ? 'active' : ''}`}
                     onClick={() => handleShiftSelect(shift.shift_code)}
+                    style={themeStyles.card}
                   >
-                    <div className="option-content navy-option-content">
-                      <span className="option-code navy-option-code">Shift {shift.shift_code}</span>
-                      <span className="option-name navy-option-name">
+                    <div className="option-content">
+                      <span className="option-code">Shift {shift.shift_code}</span>
+                      <span className="option-name">
                         {shift.shift_name === 'Day Shift' ? 'Day Shift' : 'Night Shift'}
                       </span>
-                      <span className="option-time navy-option-time">{shift.start_time} - {shift.end_time}</span>
+                      <span className="option-time">{shift.start_time} - {shift.end_time}</span>
                     </div>
-                    <div className="option-status navy-option-status">
+                    <div className="option-status">
                       {selectedShift === shift.shift_code ? (
                         <span className="status-active">Active</span>
                       ) : (
@@ -1043,62 +1162,69 @@ const SpiralSmartForm = () => {
                 ))}
               </div>
 
-              {/* BULK OPERATIONS - NO LABELS */}
+              {/* BULK OPERATIONS */}
               {selectedShift && Object.keys(machineData).length > 0 && (
-                <div className="bulk-operations navy-bulk-operations no-labels">
-                  <div className="bulk-header navy-bulk-header">
+                <div className="bulk-operations">
+                  <div className="bulk-header">
                     <FiEdit3 />
                     <h4>Bulk Operations</h4>
                   </div>
-                  <div className="bulk-controls navy-bulk-controls">
+                  <div className="bulk-controls">
                     <input
                       type="text"
                       placeholder="Operator Name (All Machines)"
                       onChange={(e) => handleBulkUpdate('operator_name', e.target.value)}
-                      className="form-input navy-form-input navy-input"
+                      className="form-input"
+                      style={themeStyles.input}
                     />
                     <input
                       type="text"
                       value={currentUser}
                       readOnly
-                      className="form-input navy-form-input navy-input readonly-input"
+                      className="form-input readonly-input"
                       placeholder="User Name (Auto)"
+                      style={themeStyles.input}
                     />
                     <input
                       type="text"
                       placeholder="Remarks (All Machines)"
                       onChange={(e) => handleBulkUpdate('remarks', e.target.value)}
-                      className="form-input navy-form-input navy-input"
+                      className="form-input"
+                      style={themeStyles.input}
                     />
                   </div>
                 </div>
               )}
 
-              <div className="sidebar-stats navy-sidebar-stats">
-                <div className="stat-item navy-stat-item">
-                  <span className="stat-label navy-stat-label">Total Machines</span>
-                  <span className="stat-value navy-stat-value">{totalMachinesCount}</span>
+              <div className="sidebar-stats" style={themeStyles.card}>
+                <div className="stat-item">
+                  <span className="stat-label">Production Date</span>
+                  <span className="stat-value">{formatDate(productionDate)}</span>
+                </div>
+                <div className="stat-item">
+                  <span className="stat-label">Total Machines</span>
+                  <span className="stat-value">{totalMachinesCount}</span>
                 </div>
                 {selectedShift ? (
                   <>
-                    <div className="stat-item navy-stat-item">
-                      <span className="stat-label navy-stat-label">Active Machines</span>
-                      <span className="stat-value navy-stat-value">{machinesForCurrentShift.length}</span>
+                    <div className="stat-item">
+                      <span className="stat-label">Active Machines</span>
+                      <span className="stat-value">{machinesForCurrentShift.length}</span>
                     </div>
-                    <div className="stat-item navy-stat-item">
-                      <span className="stat-label navy-stat-label">Total Items</span>
-                      <span className="stat-value navy-stat-value">{totalItems}</span>
+                    <div className="stat-item">
+                      <span className="stat-label">Total Items</span>
+                      <span className="stat-value">{totalItems}</span>
                     </div>
                   </>
                 ) : (
                   <>
-                    <div className="stat-item navy-stat-item">
-                      <span className="stat-label navy-stat-label">Shifts</span>
-                      <span className="stat-value navy-stat-value">{shifts.length}</span>
+                    <div className="stat-item">
+                      <span className="stat-label">Shifts</span>
+                      <span className="stat-value">{shifts.length}</span>
                     </div>
-                    <div className="stat-item navy-stat-item">
-                      <span className="stat-label navy-stat-label">Items</span>
-                      <span className="stat-value navy-stat-value">{items.length}</span>
+                    <div className="stat-item">
+                      <span className="stat-label">Items</span>
+                      <span className="stat-value">{items.length}</span>
                     </div>
                   </>
                 )}
@@ -1115,8 +1241,9 @@ const SpiralSmartForm = () => {
                       setValidationErrors({});
                       setError('');
                       setSuccess('');
+                      setProductionDate(new Date().toISOString().split('T')[0]);
                     }}
-                    className="btn btn-secondary navy-change-shift-btn"
+                    className="btn btn-secondary"
                     title="Change shift"
                   >
                     <FiRefreshCw />
@@ -1126,67 +1253,70 @@ const SpiralSmartForm = () => {
               )}
             </div>
 
-            {/* MAIN CONTENT - COMPACT NAVY */}
-            <div className="form-main-content navy-main-content">
+            {/* MAIN CONTENT */}
+            <div className="form-main-content" style={themeStyles.card}>
               
               {selectedShift && (
-                <div className="final-production-header navy-production-header">
-                  <div className="final-shift-title navy-shift-title">
+                <div className="final-production-header">
+                  <div className="final-shift-title">
                     <h2 className="compact-title">Shift {selectedShift} Production</h2>
+                    <div className="production-date-display">
+                      <FiCalendar /> {formatDate(productionDate)}
+                    </div>
                   </div>
                   
-                  {/* FOUR BOXES - NAVY STYLE */}
-                  <div className="final-summary-boxes navy-summary-boxes">
-                    <div className="final-summary-box navy-box navy-box-target">
-                      <div className="final-box-icon navy-box-icon">
+                  {/* SUMMARY BOXES */}
+                  <div className="final-summary-boxes">
+                    <div className="final-summary-box" style={themeStyles.card}>
+                      <div className="final-box-icon">
                         <FiTarget />
                       </div>
-                      <div className="final-box-content navy-box-content">
-                        <div className="final-box-label navy-box-label">TOTAL TARGET</div>
-                        <div className="final-box-value navy-box-value">
+                      <div className="final-box-content">
+                        <div className="final-box-label">TOTAL TARGET</div>
+                        <div className="final-box-value">
                           {formatNumber(totalTarget)} 
-                          <span className="final-box-unit navy-box-unit">Meter</span>
+                          <span className="final-box-unit">Meter</span>
                         </div>
                       </div>
                     </div>
                     
-                    <div className="final-summary-box navy-box navy-box-production">
-                      <div className="final-box-icon navy-box-icon">
+                    <div className="final-summary-box" style={themeStyles.card}>
+                      <div className="final-box-icon">
                         <FiActivity />
                       </div>
-                      <div className="final-box-content navy-box-content">
-                        <div className="final-box-label navy-box-label">TOTAL PRODUCTION</div>
-                        <div className="final-box-value navy-box-value">
+                      <div className="final-box-content">
+                        <div className="final-box-label">TOTAL PRODUCTION</div>
+                        <div className="final-box-value">
                           {formatNumber(sectionProductionTotal)}
-                          <span className="final-box-unit navy-box-unit">Meter</span>
+                          <span className="final-box-unit">Meter</span>
                         </div>
                       </div>
                     </div>
                     
-                    <div className="final-summary-box navy-box navy-box-weight">
-                      <div className="final-box-icon navy-box-icon">
+                    <div className="final-summary-box" style={themeStyles.card}>
+                      <div className="final-box-icon">
                         <FiPackage />
                       </div>
-                      <div className="final-box-content navy-box-content">
-                        <div className="final-box-label navy-box-label">TOTAL WEIGHT</div>
-                        <div className="final-box-value navy-box-value">
+                      <div className="final-box-content">
+                        <div className="final-box-label">TOTAL WEIGHT</div>
+                        <div className="final-box-value">
                           {formatNumber(sectionTotal)}
-                          <span className="final-box-unit navy-box-unit">Kg</span>
+                          <span className="final-box-unit">Kg</span>
                         </div>
                       </div>
                     </div>
                     
-                    <div className="final-summary-box navy-box navy-box-efficiency">
-                      <div className="final-box-icon navy-box-icon">
+                    <div className="final-summary-box" style={themeStyles.card}>
+                      <div className="final-box-icon">
                         <FiBarChart2 />
                       </div>
-                      <div className="final-box-content navy-box-content">
-                        <div className="final-box-label navy-box-label">TOTAL EFFICIENCY</div>
-                        <div className="final-box-value-row navy-box-value-row">
-                          <span className="final-box-efficiency-value navy-efficiency-value" style={{ color: getEfficiencyColor(totalEfficiency) }}>
+                      <div className="final-box-content">
+                        <div className="final-box-label">TOTAL EFFICIENCY</div>
+                        <div className="final-box-value-row">
+                          <span className="final-box-efficiency-value" style={{ color: getEfficiencyColor(totalEfficiency) }}>
                             {formatNumber(totalEfficiency)}%
                           </span>
-                          <span className="final-box-efficiency-status navy-efficiency-status" style={{ color: getEfficiencyColor(totalEfficiency) }}>
+                          <span className="final-box-efficiency-status" style={{ color: getEfficiencyColor(totalEfficiency) }}>
                             {totalEfficiency >= 100 ? '↑' : '↓'} {getEfficiencyStatus(totalEfficiency).text}
                           </span>
                         </div>
@@ -1194,29 +1324,29 @@ const SpiralSmartForm = () => {
                     </div>
                   </div>
                   
-                  {/* COMPACT MACHINE INFO - NO GAP */}
-                  <div className="final-machine-stats-combined navy-machine-stats">
-                    <div className="final-machine-info-line navy-machine-line">
+                  {/* MACHINE INFO */}
+                  <div className="final-machine-stats-combined" style={themeStyles.card}>
+                    <div className="final-machine-info-line">
                       {getCurrentMachineInfo() && (
-                        <div className="final-current-machine-info navy-machine-info">
-                          <FiCpu className="final-machine-icon-small navy-machine-icon" />
-                          <span className="final-machine-text-bold navy-machine-text">
+                        <div className="final-current-machine-info" style={themeStyles.input}>
+                          <FiCpu className="final-machine-icon-small" />
+                          <span className="final-machine-text-bold">
                             Machine {getCurrentMachineInfo().machineNo} | Target: {formatNumber(getCurrentMachineInfo().targetQty)} {getCurrentMachineInfo().targetUnit}
                           </span>
                         </div>
                       )}
                       
-                      <div className="final-machine-stats-line navy-stats-line">
-                        <div className="final-machine-stat navy-stat">
-                          <span className="final-stat-label navy-stat-label">TOTAL WEIGHT:</span>
-                          <span className="final-stat-value navy-stat-value">
+                      <div className="final-machine-stats-line">
+                        <div className="final-machine-stat">
+                          <span className="final-stat-label">TOTAL WEIGHT:</span>
+                          <span className="final-stat-value">
                             {formatNumber(calculateMachineTotal(machinesForCurrentShift[activeMachineIndex] || ''))} Kg
                           </span>
                         </div>
-                        <div className="final-machine-stat navy-stat">
-                          <span className="final-stat-label navy-stat-label">MACHINE EFFICIENCY:</span>
+                        <div className="final-machine-stat">
+                          <span className="final-stat-label">MACHINE EFFICIENCY:</span>
                           <span 
-                            className="final-stat-efficiency navy-stat-efficiency" 
+                            className="final-stat-efficiency" 
                             style={{ color: getEfficiencyColor(calculateMachineEfficiency(machinesForCurrentShift[activeMachineIndex] || '')) }}
                           >
                             {formatNumber(calculateMachineEfficiency(machinesForCurrentShift[activeMachineIndex] || ''))}%
@@ -1229,22 +1359,22 @@ const SpiralSmartForm = () => {
                 </div>
               )}
 
-              {/* PRODUCTION ENTRY - COMPACT */}
+              {/* PRODUCTION ENTRY */}
               {selectedShift && machinesForCurrentShift.length > 0 && (
-                <div className="production-entry navy-production-entry">
+                <div className="production-entry">
                   {machinesForCurrentShift.map((machineNo, index) => {
                     const data = machineData[machineNo] || {};
                     
                     return (
                       <div 
                         key={machineNo} 
-                        className={`machine-card navy-machine-card ${index === activeMachineIndex ? 'active' : ''}`}
-                        style={{ display: index === activeMachineIndex ? 'block' : 'none' }}
+                        className={`machine-card ${index === activeMachineIndex ? 'active' : ''}`}
+                        style={{ display: index === activeMachineIndex ? 'block' : 'none', ...themeStyles.card }}
                       >
                         
-                        {/* COMPACT ITEMS TABLE */}
-                        <div className="items-table-wrapper navy-table-wrapper">
-                          <table className="items-table navy-items-table">
+                        {/* ITEMS TABLE */}
+                        <div className="items-table-wrapper">
+                          <table className="items-table">
                             <thead>
                               <tr>
                                 <th>Item Details</th>
@@ -1262,8 +1392,9 @@ const SpiralSmartForm = () => {
                                     <select
                                       value={item.item_code}
                                       onChange={(e) => handleItemChange(machineNo, item.id, 'item_code', e.target.value)}
-                                      className={`form-select navy-form-select ${validationErrors[`item_${machineNo}_${itemIndex}`] ? 'error' : ''}`}
+                                      className={`form-select ${validationErrors[`item_${machineNo}_${itemIndex}`] ? 'error' : ''}`}
                                       title="Select item"
+                                      style={themeStyles.input}
                                     >
                                       <option value="">-- Select Item --</option>
                                       {items.map(itm => (
@@ -1275,37 +1406,40 @@ const SpiralSmartForm = () => {
                                   </td>
                                   
                                   <td>
-                                    <div className="raw-material-fields navy-raw-material-fields">
+                                    <div className="raw-material-fields">
                                       <input
                                         type="text"
                                         value={item.raw_material_flatsize || ''}
                                         onChange={(e) => handleItemChange(machineNo, item.id, 'raw_material_flatsize', e.target.value)}
-                                        className={`form-input small navy-form-input ${validationErrors[`flat_${machineNo}_${itemIndex}`] ? 'error' : ''}`}
+                                        className={`form-input small ${validationErrors[`flat_${machineNo}_${itemIndex}`] ? 'error' : ''}`}
                                         placeholder="Flat Size"
                                         title="Raw material flat size"
+                                        style={themeStyles.input}
                                       />
                                       <input
                                         type="text"
                                         value={item.material_type || ''}
                                         onChange={(e) => handleItemChange(machineNo, item.id, 'material_type', e.target.value)}
-                                        className={`form-input small navy-form-input ${validationErrors[`material_${machineNo}_${itemIndex}`] ? 'error' : ''}`}
+                                        className={`form-input small ${validationErrors[`material_${machineNo}_${itemIndex}`] ? 'error' : ''}`}
                                         placeholder="Material Type"
                                         title="Material type"
+                                        style={themeStyles.input}
                                       />
                                     </div>
                                   </td>
                                   
                                   <td>
-                                    <div className="production-fields navy-production-fields">
+                                    <div className="production-fields">
                                       <input
                                         type="number"
                                         value={item.production_quantity}
                                         onChange={(e) => handleItemChange(machineNo, item.id, 'production_quantity', e.target.value)}
                                         step="0.01"
                                         min="0"
-                                        className={`form-input small navy-form-input ${validationErrors[`qty_${machineNo}_${itemIndex}`] ? 'error' : ''}`}
+                                        className={`form-input small ${validationErrors[`qty_${machineNo}_${itemIndex}`] ? 'error' : ''}`}
                                         placeholder="Quantity"
                                         title="Production quantity"
+                                        style={themeStyles.input}
                                       />
                                       <input
                                         type="number"
@@ -1313,22 +1447,23 @@ const SpiralSmartForm = () => {
                                         onChange={(e) => handleItemChange(machineNo, item.id, 'per_meter_wt', e.target.value)}
                                         step="0.001"
                                         min="0"
-                                        className={`form-input small navy-form-input ${validationErrors[`weight_${machineNo}_${itemIndex}`] ? 'error' : ''}`}
+                                        className={`form-input small ${validationErrors[`weight_${machineNo}_${itemIndex}`] ? 'error' : ''}`}
                                         placeholder="Per M Wt"
                                         title="Per meter weight"
+                                        style={themeStyles.input}
                                       />
                                     </div>
                                   </td>
                                   
                                   <td>
-                                    <div className="weight-display navy-weight-display">
+                                    <div className="weight-display">
                                       {formatNumber(item.weight || '0')} Kg
                                     </div>
                                   </td>
                                   
                                   <td>
                                     <div 
-                                      className="efficiency-badge navy-efficiency-badge"
+                                      className="efficiency-badge"
                                       style={{ 
                                         backgroundColor: getEfficiencyColor(item.efficiency) + '20', 
                                         color: getEfficiencyColor(item.efficiency),
@@ -1339,14 +1474,14 @@ const SpiralSmartForm = () => {
                                     </div>
                                   </td>
                                   
-                                  {/* ACTIONS COLUMN - BUTTONS INSIDE */}
+                                  {/* ACTIONS */}
                                   <td>
-                                    <div className="action-buttons navy-action-buttons">
+                                    <div className="action-buttons">
                                       {data.items.length > 1 && (
                                         <button
                                           type="button"
                                           onClick={() => removeItem(machineNo, item.id)}
-                                          className="btn-icon btn-danger navy-remove-btn"
+                                          className="btn-icon btn-danger"
                                           title="Remove item"
                                         >
                                           <FiTrash2 />
@@ -1357,7 +1492,7 @@ const SpiralSmartForm = () => {
                                         <button
                                           type="button"
                                           onClick={() => addItem(machineNo)}
-                                          className="btn btn-outline navy-add-btn-inline"
+                                          className="btn btn-outline"
                                           title="Add new item"
                                         >
                                           <FiPlus /> Add
@@ -1368,7 +1503,7 @@ const SpiralSmartForm = () => {
                                         <button
                                           type="button"
                                           onClick={() => clearMachineData(machineNo)}
-                                          className="btn btn-secondary navy-clear-btn-inline"
+                                          className="btn btn-secondary"
                                           title="Clear all data for this machine"
                                         >
                                           <FiXCircle /> Clear
@@ -1382,9 +1517,9 @@ const SpiralSmartForm = () => {
                           </table>
                         </div>
 
-                        {/* OPERATOR DETAILS - NO LABELS */}
-                        <div className="machine-footer navy-machine-footer no-labels">
-                          <div className="footer-grid navy-footer-grid">
+                        {/* OPERATOR DETAILS */}
+                        <div className="machine-footer no-labels" style={themeStyles.card}>
+                          <div className="footer-grid">
                             <input
                               type="text"
                               value={data.operator_name || ''}
@@ -1392,16 +1527,18 @@ const SpiralSmartForm = () => {
                                 ...prev,
                                 [machineNo]: { ...prev[machineNo], operator_name: e.target.value }
                               }))}
-                              className={`form-input navy-form-input navy-input ${validationErrors[`operator_${machineNo}`] ? 'error' : ''}`}
+                              className={`form-input ${validationErrors[`operator_${machineNo}`] ? 'error' : ''}`}
                               placeholder="Operator Name"
+                              style={themeStyles.input}
                             />
                             
                             <input
                               type="text"
                               value={data.users_name || currentUser}
                               readOnly
-                              className="form-input navy-form-input navy-input readonly-input"
+                              className="form-input readonly-input"
                               placeholder="User Name (Auto)"
+                              style={themeStyles.input}
                             />
                             
                             <input
@@ -1411,8 +1548,9 @@ const SpiralSmartForm = () => {
                                 ...prev,
                                 [machineNo]: { ...prev[machineNo], remarks: e.target.value }
                               }))}
-                              className="form-input navy-form-input navy-input"
+                              className="form-input"
                               placeholder="Remarks"
+                              style={themeStyles.input}
                             />
                           </div>
                         </div>
@@ -1424,11 +1562,12 @@ const SpiralSmartForm = () => {
 
               {/* SUBMIT BUTTON */}
               {selectedShift && machinesForCurrentShift.length > 0 && (
-                <div className="form-actions navy-form-actions">
+                <div className="form-actions">
                   <button
                     type="button"
                     onClick={() => setShowWhatsAppModal(true)}
-                    className="btn btn-success navy-whatsapp-btn"
+                    className="btn navy-whatsapp-btn"
+                    style={themeStyles.button.success}
                     title="Share via WhatsApp"
                   >
                     <FiMessageSquare /> Share via WhatsApp
@@ -1437,8 +1576,9 @@ const SpiralSmartForm = () => {
                   <button
                     type="submit"
                     onClick={handleSubmit}
-                    className="btn btn-primary navy-save-btn"
+                    className="btn btn-primary"
                     disabled={saving}
+                    style={themeStyles.button.primary}
                   >
                     {saving ? (
                       <>

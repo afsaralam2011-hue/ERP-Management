@@ -2,15 +2,18 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
   FiSave, FiX, FiArrowLeft,
-   FiCheck, FiAlertCircle,
+  FiCheck, FiAlertCircle,
   FiCheckCircle, FiTarget, FiTrendingUp,
-  FiPlusCircle, FiRefreshCw
+  FiPlusCircle, FiRefreshCw, FiCalendar
 } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../../supabaseClient';
+import { useTheme } from '../../../contexts/ThemeContext';
+import './SpiralForm.css';
 
 const SpiralForm = () => {
   const navigate = useNavigate();
+  const { mode, isDarkMode } = useTheme();
   
   // Initial form state
   const initialFormData = {
@@ -33,20 +36,16 @@ const SpiralForm = () => {
     shift_code: '',
     shift_name: '',
     target_qty: '',
-    remarks: ''
+    remarks: '',
+    production_date: new Date().toISOString().split('T')[0]
   };
 
   const [formData, setFormData] = useState(initialFormData);
-
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [duplicateError, setDuplicateError] = useState('');
-  
-  // Success message state
   const [successMessage, setSuccessMessage] = useState('');
-  
-  // Track which fields have been filled
   const [filledFields, setFilledFields] = useState({});
   
   // Machine completion tracking
@@ -111,18 +110,20 @@ const SpiralForm = () => {
 
   // Function to clear the form after successful submission
   const clearForm = () => {
-    // Clear all fields except section_name, users_name, and unit
+    // Clear all fields except section_name, users_name, unit, and production_date
     setFormData({
       ...initialFormData,
       section_name: 'Spiral',
       users_name: currentUser,
-      unit: 'Meter'
+      unit: 'Meter',
+      production_date: new Date().toISOString().split('T')[0]
     });
     
-    // Clear all filled fields
+    // Clear all filled fields except production_date
     setFilledFields({
       section_name: true,
-      users_name: true
+      users_name: true,
+      production_date: true
     });
     
     // Clear errors
@@ -139,18 +140,18 @@ const SpiralForm = () => {
     setCurrentTarget(null);
   };
 
-  // Fetch today's machine entries to track completion
-  const fetchTodayEntries = useCallback(async (shiftCode = null) => {
+  // Fetch entries for selected date and shift
+  const fetchDateEntries = useCallback(async (date = null, shiftCode = null) => {
     try {
-      const today = new Date();
-      const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0).toISOString();
-      const todayEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59).toISOString();
+      const selectedDate = date || new Date();
+      const dateStart = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate(), 0, 0, 0).toISOString();
+      const dateEnd = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate(), 23, 59, 59).toISOString();
 
       let query = supabase
         .from('spiralsection')
         .select('machine_id, shift_code')
-        .gte('created_at', todayStart)
-        .lte('created_at', todayEnd);
+        .gte('production_date', dateStart)
+        .lte('production_date', dateEnd);
 
       if (shiftCode) {
         query = query.eq('shift_code', shiftCode);
@@ -159,19 +160,19 @@ const SpiralForm = () => {
       const { data, error } = await query;
 
       if (error) {
-        console.error('Error fetching today entries:', error);
+        console.error('Error fetching date entries:', error);
         return [];
       }
 
       return data || [];
     } catch (error) {
-      console.error('Error in fetchTodayEntries:', error);
+      console.error('Error in fetchDateEntries:', error);
       return [];
     }
   }, []);
 
-  // Calculate machine completion status
-  const calculateMachineCompletion = useCallback((todayEntries, shiftCode, targets) => {
+  // Calculate machine completion status for selected date
+  const calculateMachineCompletion = useCallback((dateEntries, shiftCode, targets) => {
     // Filter targets for current shift
     const shiftTargets = shiftCode 
       ? targets.filter(target => target.shift_code === shiftCode)
@@ -180,8 +181,8 @@ const SpiralForm = () => {
     // Get unique machines for this shift
     const uniqueMachines = [...new Set(shiftTargets.map(target => target.machine_id))];
     
-    // Get machines already entered today
-    const enteredMachines = [...new Set(todayEntries.map(entry => entry.machine_id))];
+    // Get machines already entered for selected date
+    const enteredMachines = [...new Set(dateEntries.map(entry => entry.machine_id))];
     
     // Calculate completion
     const completedMachines = enteredMachines.filter(machineId => 
@@ -200,14 +201,15 @@ const SpiralForm = () => {
     };
   }, []);
 
-  // Update machine completion when shift changes or targets load
+  // Update machine completion when shift or date changes
   useEffect(() => {
     const updateMachineCompletion = async () => {
-      if (targetsData.length === 0) return;
+      if (targetsData.length === 0 || !formData.production_date) return;
       
-      const todayEntries = await fetchTodayEntries(formData.shift_code);
+      const selectedDate = new Date(formData.production_date);
+      const dateEntries = await fetchDateEntries(selectedDate, formData.shift_code);
       const completion = calculateMachineCompletion(
-        todayEntries, 
+        dateEntries, 
         formData.shift_code, 
         targetsData
       );
@@ -216,7 +218,7 @@ const SpiralForm = () => {
     };
     
     updateMachineCompletion();
-  }, [formData.shift_code, targetsData, fetchTodayEntries, calculateMachineCompletion]);
+  }, [formData.shift_code, formData.production_date, targetsData, fetchDateEntries, calculateMachineCompletion]);
 
   const fetchConfigurationData = useCallback(async () => {
     try {
@@ -576,22 +578,22 @@ const SpiralForm = () => {
 
   // Check for duplicate entry before submitting
   const checkDuplicateEntry = async () => {
-    if (!formData.machine_id || !formData.shift_code) {
+    if (!formData.machine_id || !formData.shift_code || !formData.production_date) {
       return false;
     }
 
     try {
-      const today = new Date();
-      const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0).toISOString();
-      const todayEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59).toISOString();
+      const selectedDate = new Date(formData.production_date);
+      const dateStart = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate(), 0, 0, 0).toISOString();
+      const dateEnd = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate(), 23, 59, 59).toISOString();
 
       const { data, error } = await supabase
         .from('spiralsection')
         .select('*')
         .eq('machine_id', formData.machine_id)
         .eq('shift_code', formData.shift_code)
-        .gte('created_at', todayStart)
-        .lte('created_at', todayEnd);
+        .gte('production_date', dateStart)
+        .lte('production_date', dateEnd);
 
       if (error) {
         console.error('Error checking duplicate:', error);
@@ -629,7 +631,27 @@ const SpiralForm = () => {
       }));
     }
     
-    if (name === 'shift_code') {
+    if (name === 'production_date') {
+      setFormData(prev => ({
+        ...prev,
+        production_date: value
+      }));
+      // Refresh machine completion for new date
+      if (value && formData.shift_code) {
+        const updateCompletion = async () => {
+          const selectedDate = new Date(value);
+          const dateEntries = await fetchDateEntries(selectedDate, formData.shift_code);
+          const completion = calculateMachineCompletion(
+            dateEntries, 
+            formData.shift_code, 
+            targetsData
+          );
+          setMachineCompletion(completion);
+        };
+        updateCompletion();
+      }
+    }
+    else if (name === 'shift_code') {
       const selectedShift = shifts.find(shift => shift.shift_code === value);
       setFormData(prev => ({
         ...prev,
@@ -746,62 +768,34 @@ const SpiralForm = () => {
       isFilled,
       hasError,
       // Required fields validation
-      isRequired: ['machine_id', 'item_code', 'production_quantity', 'shift_code', 'operator_name', 'target_qty'].includes(fieldName)
+      isRequired: ['machine_id', 'item_code', 'production_quantity', 'shift_code', 'operator_name', 'target_qty', 'production_date'].includes(fieldName)
     };
   };
 
-  // Get field style based on status
-  const getFieldStyle = (fieldName, value, isSelect = false) => {
+  // Get field CSS class based on status
+  const getFieldClass = (fieldName, value, isSelect = false) => {
     const status = getFieldStatus(fieldName, value);
+    let className = isSelect ? 'form-select' : 'form-input';
     
     if (status.hasError) {
-      return {
-        borderColor: '#ef4444',
-        backgroundColor: '#fef2f2',
-        color: '#7f1d1d'
-      };
+      className += ' form-input-error';
+    } else if (status.isFilled) {
+      className += ' form-input-filled';
     }
     
-    if (status.isFilled) {
-      return {
-        borderColor: '#10b981',
-        backgroundColor: '#d1fae5',
-        color: '#065f46',
-        fontSize: '15px',
-        fontWeight: '600'
-      };
-    }
-    
-    if (status.isRequired) {
-      return {
-        borderColor: '#fecaca',
-        backgroundColor: '#f8fafc'
-      };
-    }
-    
-    return {};
+    return className;
   };
 
-  // Get display div style
-  const getDisplayStyle = (fieldName, value) => {
+  // Get display field class
+  const getDisplayFieldClass = (fieldName, value) => {
     const status = getFieldStatus(fieldName, value);
+    let className = 'display-field';
     
     if (status.isFilled) {
-      return {
-        border: '2px solid #10b981',
-        backgroundColor: '#d1fae5',
-        color: '#065f46',
-        fontSize: '15px',
-        fontWeight: '600',
-        padding: '14px 15px'
-      };
+      className += ' display-field-filled';
     }
     
-    return {
-      border: '1px solid #e5e7eb',
-      backgroundColor: '#f8fafc',
-      color: '#9ca3af'
-    };
+    return className;
   };
 
   const validateForm = () => {
@@ -824,6 +818,15 @@ const SpiralForm = () => {
     } else if (isNaN(formData.target_qty) || formData.target_qty <= 0) {
       newErrors.target_qty = 'Please enter a valid target quantity';
     }
+    if (!formData.production_date) {
+      newErrors.production_date = 'Production date is required';
+    } else {
+      const selectedDate = new Date(formData.production_date);
+      const today = new Date();
+      if (selectedDate > today) {
+        newErrors.production_date = 'Production date cannot be in the future';
+      }
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -839,7 +842,7 @@ const SpiralForm = () => {
     // Check for duplicate entry
     const isDuplicate = await checkDuplicateEntry();
     if (isDuplicate) {
-      setDuplicateError(`This machine (${formData.machine_id}) already has an entry for ${formData.shift_name} shift today. Only one entry per machine per shift per day is allowed.`);
+      setDuplicateError(`This machine (${formData.machine_id}) already has an entry for ${formData.shift_name} shift on ${formData.production_date}. Only one entry per machine per shift per day is allowed.`);
       return;
     }
 
@@ -866,6 +869,7 @@ const SpiralForm = () => {
         users_name: currentUser,
         shift_code: formData.shift_code,
         shift_name: formData.shift_name,
+        production_date: formData.production_date,
         remarks: formData.remarks.trim(),
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
@@ -878,18 +882,19 @@ const SpiralForm = () => {
       if (error) throw error;
       
       // Refresh machine completion status after successful submission
-      const todayEntries = await fetchTodayEntries(formData.shift_code);
+      const selectedDate = new Date(formData.production_date);
+      const dateEntries = await fetchDateEntries(selectedDate, formData.shift_code);
       const completion = calculateMachineCompletion(
-        todayEntries, 
+        dateEntries, 
         formData.shift_code, 
         targetsData
       );
       setMachineCompletion(completion);
       
       // Show success message
-      setSuccessMessage(`✅ Record saved successfully for ${formData.machine_id} - ${formData.operator_name}!`);
+      setSuccessMessage(`✅ Record saved successfully for ${formData.machine_id} - ${formData.operator_name} on ${formData.production_date}!`);
       
-      // Clear the form after 1 second (to show success message)
+      // Clear the form after 1.5 seconds (to show success message)
       setTimeout(() => {
         clearForm();
         setSuccessMessage('');
@@ -925,35 +930,17 @@ const SpiralForm = () => {
   const getMachineStatusIcon = (machineId) => {
     const isCompleted = machineCompletion.todayEntries.includes(machineId);
     return isCompleted ? (
-      <FiCheckCircle style={{ color: '#10b981', marginRight: '8px' }} />
+      <FiCheckCircle className="machine-icon-completed" />
     ) : (
-      <div style={{
-        width: '10px',
-        height: '10px',
-        borderRadius: '50%',
-        background: '#e5e7eb',
-        marginRight: '8px'
-      }} />
+      <div className="machine-icon-pending" />
     );
   };
 
   if (loading) {
     return (
-      <div style={{ 
-        padding: '50px', 
-        textAlign: 'center', 
-        color: '#64748b' 
-      }}>
-        <div style={{ 
-          width: '40px', 
-          height: '40px', 
-          border: '3px solid #e2e8f0',
-          borderTopColor: '#10b981',
-          borderRadius: '50%',
-          animation: 'spin 1s linear infinite',
-          margin: '0 auto 20px'
-        }} />
-        <p>Loading configuration data from database...</p>
+      <div className={`spiral-form-container loading-container ${isDarkMode ? 'dark-mode' : ''}`}>
+        <div className="loading-spinner"></div>
+        <p className="loading-text">Loading configuration data from database...</p>
       </div>
     );
   }
@@ -966,174 +953,91 @@ const SpiralForm = () => {
     )
   );
 
+  // Format date for display
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      weekday: 'short',
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
   return (
-    <div style={{ 
-      padding: '0', 
-      maxWidth: '1200px', 
-      margin: '0 auto',
-      width: '100%'
-    }}>
+    <div className={`spiral-form-container ${isDarkMode ? 'dark-mode' : ''}`}>
       {/* Header */}
-      <div style={{
-        padding: '20px',
-        marginBottom: '20px',
-        background: 'white',
-        borderBottom: '1px solid #e5e7eb'
-      }}>
+      <div className="form-header">
         <button
           onClick={() => navigate('/production-sections/spiral')}
-          style={{
-            background: 'transparent',
-            border: 'none',
-            color: '#64748b',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            fontSize: '14px',
-            marginBottom: '15px',
-            padding: '0'
-          }}
+          className="back-button"
         >
           <FiArrowLeft /> Back to Spiral Section
         </button>
-        <h1 style={{
-          margin: '0',
-          fontSize: '24px',
-          color: '#1e293b'
-        }}>
+        <h1 className="form-title">
           New Spiral Section Record
         </h1>
-        <p style={{ 
-          margin: '8px 0 0', 
-          color: '#64748b',
-          fontSize: '14px'
-        }}>
-          Production in Meter | Weight in KG | Targets from targets table
+        <p className="form-subtitle">
+          Production in Meter | Weight in KG | Targets from targets table | Date Selection Enabled
         </p>
-        <p style={{ 
-          margin: '4px 0 0', 
-          color: '#ef4444',
-          fontSize: '13px',
-          fontWeight: '500'
-        }}>
+        <p className="form-note">
           Note: Only one entry per machine per shift per day is allowed
         </p>
       </div>
 
       {/* Success Message */}
       {successMessage && (
-        <div style={{
-          background: '#d1fae5',
-          border: '2px solid #10b981',
-          borderRadius: '6px',
-          padding: '12px 15px',
-          marginBottom: '20px',
-          color: '#065f46',
-          fontSize: '14px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '10px',
-          animation: 'fadeIn 0.5s ease'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <FiCheckCircle size={20} />
-            <div>
-              <strong style={{ fontSize: '15px' }}>Success!</strong>
-              <div style={{ marginTop: '3px' }}>{successMessage}</div>
-              <div style={{ fontSize: '12px', marginTop: '5px', color: '#047857' }}>
-                Form cleared. Ready for next entry...
-              </div>
+        <div className="success-message">
+          <div className="success-content">
+            <FiCheckCircle className="success-icon" />
+            <div className="success-details">
+              <strong className="success-title">Success!</strong>
+              <div className="success-description">{successMessage}</div>
+              <div className="success-hint">Form cleared. Ready for next entry...</div>
             </div>
           </div>
           <button
             onClick={() => setSuccessMessage('')}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: '#065f46',
-              cursor: 'pointer',
-              fontSize: '14px'
-            }}
+            className="close-message-button"
           >
             ✕
           </button>
         </div>
       )}
 
-      {/* Machine Completion Tracker - TOP BAR */}
-      {formData.shift_code && (
-        <div style={{
-          background: 'white',
-          border: '2px solid #e5e7eb',
-          borderRadius: '8px',
-          padding: '15px',
-          marginBottom: '20px',
-          boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)'
-        }}>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '15px'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <FiTarget style={{ color: '#3b82f6', fontSize: '20px' }} />
-              <div>
-                <div style={{ fontWeight: '600', color: '#1e293b', fontSize: '16px' }}>
+      {/* Machine Completion Tracker */}
+      {formData.shift_code && formData.production_date && (
+        <div className="completion-tracker">
+          <div className="tracker-header">
+            <div className="tracker-title">
+              <FiTarget className="tracker-icon" />
+              <div className="tracker-text">
+                <div className="tracker-main-title">
                   {formData.shift_name} Shift Machine Completion
                 </div>
-                <div style={{ fontSize: '13px', color: '#64748b', marginTop: '2px' }}>
-                  Today's progress for selected shift
+                <div className="tracker-subtitle">
+                  {formData.production_date === new Date().toISOString().split('T')[0] 
+                    ? "Today's progress" 
+                    : `Progress for ${formatDate(formData.production_date)}`}
                 </div>
               </div>
             </div>
             
-            <div style={{
-              background: machineCompletion.completionPercentage === 100 ? '#d1fae5' : '#f0f9ff',
-              border: machineCompletion.completionPercentage === 100 ? '2px solid #10b981' : '2px solid #0ea5e9',
-              padding: '8px 15px',
-              borderRadius: '20px',
-              fontWeight: '700',
-              fontSize: '14px',
-              color: machineCompletion.completionPercentage === 100 ? '#065f46' : '#0369a1'
-            }}>
+            <div className={`completion-badge ${machineCompletion.completionPercentage === 100 ? 'completion-badge-full' : ''}`}>
               {machineCompletion.completedMachines} / {machineCompletion.totalMachines} Machines
-              <span style={{ marginLeft: '8px' }}>
+              <span className="completion-percentage">
                 ({machineCompletion.completionPercentage}%)
               </span>
             </div>
           </div>
 
           {/* Progress Bar */}
-          <div style={{
-            height: '12px',
-            background: '#f1f5f9',
-            borderRadius: '6px',
-            overflow: 'hidden',
-            marginBottom: '12px',
-            position: 'relative'
-          }}>
-            <div style={{
-              height: '100%',
-              background: machineCompletion.completionPercentage === 100 
-                ? 'linear-gradient(90deg, #10b981, #34d399)' 
-                : 'linear-gradient(90deg, #0ea5e9, #38bdf8)',
-              width: `${machineCompletion.completionPercentage}%`,
-              transition: 'width 0.5s ease',
-              borderRadius: '6px'
-            }} />
+          <div className="progress-bar">
+            <div className={`progress-fill ${machineCompletion.completionPercentage === 100 ? 'progress-fill-complete' : ''}`} 
+                 style={{ width: `${machineCompletion.completionPercentage}%` }} />
             
             {/* Machine markers */}
-            <div style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              display: 'flex'
-            }}>
+            <div className="machine-markers">
               {machineCompletion.totalMachines > 0 && 
                 Array.from({ length: machineCompletion.totalMachines }).map((_, index) => {
                   const position = ((index + 0.5) / machineCompletion.totalMachines) * 100;
@@ -1142,30 +1046,11 @@ const SpiralForm = () => {
                   return (
                     <div
                       key={index}
-                      style={{
-                        position: 'absolute',
-                        left: `${position}%`,
-                        top: '50%',
-                        transform: 'translate(-50%, -50%)',
-                        width: '16px',
-                        height: '16px',
-                        borderRadius: '50%',
-                        background: isCompleted ? '#10b981' : '#e2e8f0',
-                        border: isCompleted ? '2px solid white' : '2px solid #f8fafc',
-                        boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
-                        transition: 'all 0.3s ease'
-                      }}
+                      className={`machine-marker ${isCompleted ? 'machine-marker-completed' : ''}`}
+                      style={{ left: `${position}%` }}
                     >
                       {isCompleted && (
-                        <div style={{
-                          position: 'absolute',
-                          top: '50%',
-                          left: '50%',
-                          transform: 'translate(-50%, -50%)',
-                          color: 'white',
-                          fontSize: '10px',
-                          fontWeight: 'bold'
-                        }}>
+                        <div className="marker-check">
                           ✓
                         </div>
                       )}
@@ -1177,80 +1062,40 @@ const SpiralForm = () => {
 
           {/* Machine List */}
           {machineCompletion.shiftMachines.length > 0 && (
-            <div>
-              <div style={{
-                fontSize: '13px',
-                fontWeight: '600',
-                color: '#64748b',
-                marginBottom: '8px',
-                display: 'flex',
-                justifyContent: 'space-between'
-              }}>
-                <span>Machine Status:</span>
-                <span>
-                  <span style={{ color: '#10b981', fontWeight: '700' }}>
+            <div className="machine-list-container">
+              <div className="machine-list-header">
+                <span className="machine-list-title">Machine Status:</span>
+                <div className="machine-list-counts">
+                  <span className="completed-count">
                     {machineCompletion.completedMachines} Completed
                   </span>
-                  {' • '}
-                  <span style={{ color: '#ef4444', fontWeight: '700' }}>
+                  <span className="count-separator">•</span>
+                  <span className="pending-count">
                     {machineCompletion.totalMachines - machineCompletion.completedMachines} Pending
                   </span>
-                </span>
+                </div>
               </div>
               
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
-                gap: '8px',
-                maxHeight: '120px',
-                overflowY: 'auto',
-                padding: '10px',
-                background: '#f8fafc',
-                borderRadius: '6px',
-                border: '1px solid #e5e7eb'
-              }}>
+              <div className="machine-grid">
                 {machineCompletion.shiftMachines.map((machineId, index) => {
                   const isCompleted = machineCompletion.todayEntries.includes(machineId);
                   const isCurrentMachine = machineId === formData.machine_id;
                   
+                  const statusClass = isCurrentMachine 
+                    ? 'machine-status-current' 
+                    : isCompleted 
+                      ? 'machine-status-completed' 
+                      : 'machine-status-item';
+                  
                   return (
                     <div
                       key={machineId}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        padding: '6px 10px',
-                        borderRadius: '4px',
-                        background: isCurrentMachine 
-                          ? '#dbeafe' 
-                          : isCompleted 
-                            ? '#d1fae5' 
-                            : 'white',
-                        border: isCurrentMachine
-                          ? '2px solid #3b82f6'
-                          : isCompleted
-                            ? '2px solid #10b981'
-                            : '1px solid #e5e7eb',
-                        fontSize: '12px',
-                        fontWeight: isCurrentMachine ? '700' : (isCompleted ? '600' : '500'),
-                        color: isCurrentMachine
-                          ? '#1e40af'
-                          : isCompleted
-                            ? '#065f46'
-                            : '#64748b'
-                      }}
+                      className={`machine-status ${statusClass}`}
                     >
                       {getMachineStatusIcon(machineId)}
-                      <span>{machineId}</span>
+                      <span className="machine-name">{machineId}</span>
                       {isCurrentMachine && (
-                        <div style={{
-                          marginLeft: 'auto',
-                          width: '8px',
-                          height: '8px',
-                          borderRadius: '50%',
-                          background: '#3b82f6',
-                          animation: 'pulse 1.5s infinite'
-                        }} />
+                        <div className="current-machine-indicator" />
                       )}
                     </div>
                   );
@@ -1259,23 +1104,11 @@ const SpiralForm = () => {
               
               {/* Completion Message */}
               {machineCompletion.completionPercentage === 100 && (
-                <div style={{
-                  marginTop: '10px',
-                  padding: '10px',
-                  background: 'linear-gradient(90deg, #d1fae5, #a7f3d0)',
-                  border: '2px solid #10b981',
-                  borderRadius: '6px',
-                  color: '#065f46',
-                  fontWeight: '600',
-                  fontSize: '13px',
-                  textAlign: 'center',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px'
-                }}>
-                  <FiCheckCircle size={16} />
-                  All machines completed for {formData.shift_name} shift! Great work! 🎉
+                <div className="all-completed-message">
+                  <FiCheckCircle className="all-completed-icon" />
+                  <span className="all-completed-text">
+                    All machines completed for {formData.shift_name} shift on {formData.production_date}! Great work! 🎉
+                  </span>
                 </div>
               )}
             </div>
@@ -1284,104 +1117,94 @@ const SpiralForm = () => {
       )}
 
       {/* Form Container */}
-      <form onSubmit={handleSubmit}>
-        <div style={{
-          background: 'white',
-          padding: '20px'
-        }}>
+      <form onSubmit={handleSubmit} className="main-form">
+        <div className="form-content">
           
           {/* Duplicate Entry Error Message */}
           {duplicateError && (
-            <div style={{
-              background: '#fee2e2',
-              border: '2px solid #ef4444',
-              borderRadius: '6px',
-              padding: '12px 15px',
-              marginBottom: '20px',
-              color: '#b91c1c',
-              fontSize: '14px',
-              display: 'flex',
-              alignItems: 'flex-start',
-              gap: '10px'
-            }}>
-              <div style={{
-                width: '20px',
-                height: '20px',
-                background: '#ef4444',
-                borderRadius: '50%',
-                color: 'white',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '12px',
-                fontWeight: 'bold',
-                flexShrink: 0
-              }}>!</div>
-              <div>
-                <strong>Duplicate Entry Detected!</strong>
-                <div style={{ marginTop: '5px' }}>{duplicateError}</div>
-                <div style={{ marginTop: '5px', fontSize: '13px' }}>
-                  Please check existing records or select a different machine/shift.
+            <div className="error-message">
+              <div className="error-icon">
+                !
+              </div>
+              <div className="error-content">
+                <strong className="error-title">Duplicate Entry Detected!</strong>
+                <div className="error-description">{duplicateError}</div>
+                <div className="error-suggestion">
+                  Please check existing records or select a different machine/shift/date.
                 </div>
               </div>
             </div>
           )}
 
-          {/* Section 1: Basic Information */}
-          <div style={{ marginBottom: '25px' }}>
-            <h3 style={{ 
-              margin: '0 0 15px 0', 
-              color: '#1e293b',
-              paddingBottom: '8px',
-              borderBottom: '1px solid #d1d5db',
-              fontSize: '18px',
-              fontWeight: '600'
-            }}>
+          {/* Section 1: Basic Information with Production Date */}
+          <div className="form-section">
+            <h3 className="section-title">
               Basic Information
             </h3>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-              gap: '15px'
-            }}>
-              {/* Section Name */}
-              <div>
-                <label style={labelStyle}>
-                  Section Name
-                  {getFieldStatus('section_name', formData.section_name).isFilled && (
-                    <FiCheck style={{ marginLeft: '5px', color: '#10b981' }} size={14} />
+            <div className="form-grid">
+              {/* Production Date */}
+              <div className="form-field">
+                <label className="form-label">
+                  Production Date *
+                  {getFieldStatus('production_date', formData.production_date).hasError && (
+                    <FiAlertCircle className="error-indicator" />
+                  )}
+                  {getFieldStatus('production_date', formData.production_date).isFilled && (
+                    <FiCheck className="success-indicator" />
                   )}
                 </label>
-                <div style={{
-                  padding: '12px 15px',
-                  borderRadius: '6px',
-                  ...getDisplayStyle('section_name', formData.section_name),
-                  fontWeight: '500'
-                }}>
+                <div className="input-with-icon">
+                  <input
+                    type="date"
+                    name="production_date"
+                    value={formData.production_date}
+                    onChange={handleChange}
+                    max={new Date().toISOString().split('T')[0]}
+                    className={getFieldClass('production_date', formData.production_date)}
+                  />
+                  <FiCalendar className="date-icon" />
+                  {getFieldStatus('production_date', formData.production_date).isFilled && (
+                    <div className="field-checkmark">
+                      ✓
+                    </div>
+                  )}
+                </div>
+                {errors.production_date && <div className="error-text">{errors.production_date}</div>}
+                <div className="field-hint">
+                  Select any past date for historical data entry (cannot be future date)
+                </div>
+              </div>
+
+              {/* Section Name */}
+              <div className="form-field">
+                <label className="form-label">
+                  Section Name
+                  {getFieldStatus('section_name', formData.section_name).isFilled && (
+                    <FiCheck className="success-indicator" />
+                  )}
+                </label>
+                <div className={getDisplayFieldClass('section_name', formData.section_name)}>
                   {formData.section_name}
                 </div>
               </div>
 
               {/* Shift Code */}
-              <div>
-                <label style={labelStyle}>
+              <div className="form-field">
+                <label className="form-label">
                   Shift *
                   {getFieldStatus('shift_code', formData.shift_code).hasError && (
-                    <FiAlertCircle style={{ marginLeft: '5px', color: '#ef4444' }} size={14} />
+                    <FiAlertCircle className="error-indicator" />
                   )}
                   {getFieldStatus('shift_code', formData.shift_code).isFilled && (
-                    <FiCheck style={{ marginLeft: '5px', color: '#10b981' }} size={14} />
+                    <FiCheck className="success-indicator" />
                   )}
                 </label>
-                <div style={{ position: 'relative' }}>
+                <div className="select-with-indicator">
                   <select
                     name="shift_code"
                     value={formData.shift_code}
                     onChange={handleChange}
-                    style={{
-                      ...selectStyle(getFieldStatus('shift_code', formData.shift_code).hasError),
-                      ...getFieldStyle('shift_code', formData.shift_code, true)
-                    }}
+                    className={getFieldClass('shift_code', formData.shift_code, true)}
                   >
                     <option value="">Select shift</option>
                     {availableShifts.map(shift => (
@@ -1391,33 +1214,24 @@ const SpiralForm = () => {
                     ))}
                   </select>
                   {getFieldStatus('shift_code', formData.shift_code).isFilled && (
-                    <div style={{
-                      position: 'absolute',
-                      right: '35px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      color: '#10b981',
-                      fontWeight: 'bold'
-                    }}>✓</div>
+                    <div className="select-checkmark">✓</div>
                   )}
                 </div>
-                {errors.shift_code && <ErrorText text={errors.shift_code} />}
+                {errors.shift_code && <div className="error-text">{errors.shift_code}</div>}
               </div>
-
+            </div>
+            
+            {/* Shift Name - moved to second row */}
+            <div className="form-grid shift-name-row">
               {/* Shift Name */}
-              <div>
-                <label style={labelStyle}>
+              <div className="form-field">
+                <label className="form-label">
                   Shift Name
                   {getFieldStatus('shift_name', formData.shift_name).isFilled && (
-                    <FiCheck style={{ marginLeft: '5px', color: '#10b981' }} size={14} />
+                    <FiCheck className="success-indicator" />
                   )}
                 </label>
-                <div style={{
-                  padding: '12px 15px',
-                  borderRadius: '6px',
-                  ...getDisplayStyle('shift_name', formData.shift_name),
-                  fontWeight: '500'
-                }}>
+                <div className={getDisplayFieldClass('shift_name', formData.shift_name)}>
                   {formData.shift_name || 'Select Shift first'}
                 </div>
               </div>
@@ -1425,44 +1239,30 @@ const SpiralForm = () => {
           </div>
 
           {/* Section 2: Machine Details */}
-          <div style={{ 
-            marginBottom: '25px',
-            paddingTop: '10px',
-            borderTop: '2px solid #e5e7eb'
-          }}>
-            <h3 style={{ 
-              margin: '0 0 15px 0', 
-              color: '#1e293b',
-              fontSize: '18px',
-              fontWeight: '600'
-            }}>
+          <div className="form-section">
+            <h3 className="section-title">
               Machine Details
             </h3>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-              gap: '15px'
-            }}>
+            <div className="form-grid">
               {/* Machine ID */}
-              <div>
-                <label style={labelStyle}>
+              <div className="form-field">
+                <label className="form-label">
                   Machine ID *
                   {getFieldStatus('machine_id', formData.machine_id).hasError && (
-                    <FiAlertCircle style={{ marginLeft: '5px', color: '#ef4444' }} size={14} />
+                    <FiAlertCircle className="error-indicator" />
                   )}
                   {getFieldStatus('machine_id', formData.machine_id).isFilled && (
-                    <FiCheck style={{ marginLeft: '5px', color: '#10b981' }} size={14} />
+                    <FiCheck className="success-indicator" />
                   )}
                 </label>
-                <div style={{ position: 'relative' }}>
+                <div className="select-with-indicator">
                   <select
                     name="machine_id"
                     value={formData.machine_id}
                     onChange={handleChange}
                     disabled={!formData.shift_code}
+                    className={getFieldClass('machine_id', formData.machine_id, true)}
                     style={{
-                      ...selectStyle(getFieldStatus('machine_id', formData.machine_id).hasError),
-                      ...getFieldStyle('machine_id', formData.machine_id, true),
                       opacity: formData.shift_code ? 1 : 0.6,
                       cursor: formData.shift_code ? 'pointer' : 'not-allowed'
                     }}
@@ -1479,49 +1279,37 @@ const SpiralForm = () => {
                     ))}
                   </select>
                   {getFieldStatus('machine_id', formData.machine_id).isFilled && (
-                    <div style={{
-                      position: 'absolute',
-                      right: '35px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      color: '#10b981',
-                      fontWeight: 'bold'
-                    }}>✓</div>
+                    <div className="select-checkmark">✓</div>
                   )}
                 </div>
-                {errors.machine_id && <ErrorText text={errors.machine_id} />}
+                {errors.machine_id && <div className="error-text">{errors.machine_id}</div>}
               </div>
 
               {/* Machine Number */}
-              <div>
-                <label style={labelStyle}>
+              <div className="form-field">
+                <label className="form-label">
                   Machine Number
                   {getFieldStatus('machine_no', formData.machine_no).isFilled && (
-                    <FiCheck style={{ marginLeft: '5px', color: '#10b981' }} size={14} />
+                    <FiCheck className="success-indicator" />
                   )}
                 </label>
-                <div style={{
-                  padding: '12px 15px',
-                  borderRadius: '6px',
-                  ...getDisplayStyle('machine_no', formData.machine_no),
-                  fontWeight: '500'
-                }}>
+                <div className={getDisplayFieldClass('machine_no', formData.machine_no)}>
                   {formData.machine_no || 'Select Machine ID first'}
                 </div>
               </div>
 
               {/* Target Quantity */}
-              <div>
-                <label style={labelStyle}>
+              <div className="form-field">
+                <label className="form-label">
                   Target Quantity *
                   {getFieldStatus('target_qty', formData.target_qty).hasError && (
-                    <FiAlertCircle style={{ marginLeft: '5px', color: '#ef4444' }} size={14} />
+                    <FiAlertCircle className="error-indicator" />
                   )}
                   {getFieldStatus('target_qty', formData.target_qty).isFilled && (
-                    <FiCheck style={{ marginLeft: '5px', color: '#10b981' }} size={14} />
+                    <FiCheck className="success-indicator" />
                   )}
                 </label>
-                <div style={{ position: 'relative' }}>
+                <div className="input-with-unit">
                   <input
                     type="number"
                     name="target_qty"
@@ -1531,35 +1319,14 @@ const SpiralForm = () => {
                     min="0.01"
                     step="0.01"
                     disabled={!formData.machine_id}
-                    style={{
-                      ...inputStyle(getFieldStatus('target_qty', formData.target_qty).hasError),
-                      ...getFieldStyle('target_qty', formData.target_qty),
-                      paddingRight: '70px',
-                      opacity: formData.machine_id ? 1 : 0.6,
-                      cursor: formData.machine_id ? 'text' : 'not-allowed',
-                      background: formData.machine_id ? 
-                        (getFieldStatus('target_qty', formData.target_qty).isFilled ? '#d1fae5' : '#f8fafc') : '#f3f4f6'
-                    }}
+                    className={getFieldClass('target_qty', formData.target_qty)}
                   />
-                  <div style={{
-                    position: 'absolute',
-                    right: '15px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    color: getFieldStatus('target_qty', formData.target_qty).isFilled ? '#065f46' : '#6b7280',
-                    fontWeight: '500',
-                    fontSize: getFieldStatus('target_qty', formData.target_qty).isFilled ? '14px' : '13px'
-                  }}>
+                  <div className="input-unit">
                     Meter
                   </div>
                 </div>
-                {errors.target_qty && <ErrorText text={errors.target_qty} />}
-                <div style={{ 
-                  fontSize: '11px', 
-                  color: '#6b7280', 
-                  marginTop: '5px',
-                  fontStyle: 'italic'
-                }}>
+                {errors.target_qty && <div className="error-text">{errors.target_qty}</div>}
+                <div className="field-hint">
                   Auto-filled from targets table when machine is selected
                 </div>
               </div>
@@ -1567,44 +1334,28 @@ const SpiralForm = () => {
           </div>
 
           {/* Section 3: Item Details */}
-          <div style={{ 
-            marginBottom: '25px',
-            paddingTop: '10px',
-            borderTop: '2px solid #e5e7eb'
-          }}>
-            <h3 style={{ 
-              margin: '0 0 15px 0', 
-              color: '#1e293b',
-              fontSize: '18px',
-              fontWeight: '600'
-            }}>
+          <div className="form-section">
+            <h3 className="section-title">
               Item Details
             </h3>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-              gap: '15px'
-            }}>
+            <div className="form-grid">
               {/* Item Code */}
-              <div>
-                <label style={labelStyle}>
+              <div className="form-field">
+                <label className="form-label">
                   Item Code *
                   {getFieldStatus('item_code', formData.item_code).hasError && (
-                    <FiAlertCircle style={{ marginLeft: '5px', color: '#ef4444' }} size={14} />
+                    <FiAlertCircle className="error-indicator" />
                   )}
                   {getFieldStatus('item_code', formData.item_code).isFilled && (
-                    <FiCheck style={{ marginLeft: '5px', color: '#10b981' }} size={14} />
+                    <FiCheck className="success-indicator" />
                   )}
                 </label>
-                <div style={{ position: 'relative' }}>
+                <div className="select-with-indicator">
                   <select
                     name="item_code"
                     value={formData.item_code}
                     onChange={handleChange}
-                    style={{
-                      ...selectStyle(getFieldStatus('item_code', formData.item_code).hasError),
-                      ...getFieldStyle('item_code', formData.item_code, true)
-                    }}
+                    className={getFieldClass('item_code', formData.item_code, true)}
                   >
                     <option value="">Select item code</option>
                     {spiralItems.map(item => (
@@ -1614,51 +1365,34 @@ const SpiralForm = () => {
                     ))}
                   </select>
                   {getFieldStatus('item_code', formData.item_code).isFilled && (
-                    <div style={{
-                      position: 'absolute',
-                      right: '35px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      color: '#10b981',
-                      fontWeight: 'bold'
-                    }}>✓</div>
+                    <div className="select-checkmark">✓</div>
                   )}
                 </div>
-                {errors.item_code && <ErrorText text={errors.item_code} />}
+                {errors.item_code && <div className="error-text">{errors.item_code}</div>}
               </div>
 
               {/* Item Name */}
-              <div>
-                <label style={labelStyle}>
+              <div className="form-field">
+                <label className="form-label">
                   Item Name
                   {getFieldStatus('item_name', formData.item_name).isFilled && (
-                    <FiCheck style={{ marginLeft: '5px', color: '#10b981' }} size={14} />
+                    <FiCheck className="success-indicator" />
                   )}
                 </label>
-                <div style={{
-                  padding: '12px 15px',
-                  borderRadius: '6px',
-                  ...getDisplayStyle('item_name', formData.item_name),
-                  fontWeight: '500'
-                }}>
+                <div className={getDisplayFieldClass('item_name', formData.item_name)}>
                   {formData.item_name || 'Select Item Code first'}
                 </div>
               </div>
 
               {/* Finished Product Name */}
-              <div>
-                <label style={labelStyle}>
+              <div className="form-field">
+                <label className="form-label">
                   Finished Product Name
                   {getFieldStatus('finishedproductname', formData.finishedproductname).isFilled && (
-                    <FiCheck style={{ marginLeft: '5px', color: '#10b981' }} size={14} />
+                    <FiCheck className="success-indicator" />
                   )}
                 </label>
-                <div style={{
-                  padding: '12px 15px',
-                  borderRadius: '6px',
-                  ...getDisplayStyle('finishedproductname', formData.finishedproductname),
-                  fontWeight: '500'
-                }}>
+                <div className={getDisplayFieldClass('finishedproductname', formData.finishedproductname)}>
                   {formData.finishedproductname || 'Select Item Code first'}
                 </div>
               </div>
@@ -1666,36 +1400,23 @@ const SpiralForm = () => {
           </div>
 
           {/* Section 4: Production Details */}
-          <div style={{ 
-            marginBottom: '25px',
-            paddingTop: '10px',
-            borderTop: '2px solid #e5e7eb'
-          }}>
-            <h3 style={{ 
-              margin: '0 0 15px 0', 
-              color: '#1e293b',
-              fontSize: '18px',
-              fontWeight: '600'
-            }}>
+          <div className="form-section">
+            <h3 className="section-title">
               Production Details
             </h3>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-              gap: '15px'
-            }}>
+            <div className="form-grid">
               {/* Production Quantity */}
-              <div>
-                <label style={labelStyle}>
+              <div className="form-field">
+                <label className="form-label">
                   Production Quantity (Meter) *
                   {getFieldStatus('production_quantity', formData.production_quantity).hasError && (
-                    <FiAlertCircle style={{ marginLeft: '5px', color: '#ef4444' }} size={14} />
+                    <FiAlertCircle className="error-indicator" />
                   )}
                   {getFieldStatus('production_quantity', formData.production_quantity).isFilled && (
-                    <FiCheck style={{ marginLeft: '5px', color: '#10b981' }} size={14} />
+                    <FiCheck className="success-indicator" />
                   )}
                 </label>
-                <div style={{ position: 'relative' }}>
+                <div className="input-with-unit">
                   <input
                     type="number"
                     name="production_quantity"
@@ -1704,36 +1425,24 @@ const SpiralForm = () => {
                     placeholder="Enter quantity"
                     min="0.01"
                     step="0.01"
-                    style={{
-                      ...inputStyle(getFieldStatus('production_quantity', formData.production_quantity).hasError),
-                      ...getFieldStyle('production_quantity', formData.production_quantity),
-                      paddingRight: '70px'
-                    }}
+                    className={getFieldClass('production_quantity', formData.production_quantity)}
                   />
-                  <div style={{
-                    position: 'absolute',
-                    right: '15px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    color: getFieldStatus('production_quantity', formData.production_quantity).isFilled ? '#065f46' : '#6b7280',
-                    fontWeight: '500',
-                    fontSize: getFieldStatus('production_quantity', formData.production_quantity).isFilled ? '14px' : '13px'
-                  }}>
+                  <div className="input-unit">
                     Meter
                   </div>
                 </div>
-                {errors.production_quantity && <ErrorText text={errors.production_quantity} />}
+                {errors.production_quantity && <div className="error-text">{errors.production_quantity}</div>}
               </div>
 
               {/* Per Meter Weight */}
-              <div>
-                <label style={labelStyle}>
+              <div className="form-field">
+                <label className="form-label">
                   Per Meter Weight
                   {getFieldStatus('per_meter_wt', formData.per_meter_wt).isFilled && (
-                    <FiCheck style={{ marginLeft: '5px', color: '#10b981' }} size={14} />
+                    <FiCheck className="success-indicator" />
                   )}
                 </label>
-                <div style={{ position: 'relative' }}>
+                <div className="input-with-unit">
                   <input
                     type="number"
                     name="per_meter_wt"
@@ -1742,38 +1451,18 @@ const SpiralForm = () => {
                     placeholder="0.0000"
                     min="0"
                     step="0.0001"
-                    style={{
-                      ...inputStyle(),
-                      ...getFieldStyle('per_meter_wt', formData.per_meter_wt),
-                      paddingRight: '45px'
-                    }}
+                    className={getFieldClass('per_meter_wt', formData.per_meter_wt)}
                   />
-                  <div style={{
-                    position: 'absolute',
-                    right: '15px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    color: getFieldStatus('per_meter_wt', formData.per_meter_wt).isFilled ? '#065f46' : '#6b7280',
-                    fontWeight: '500',
-                    fontSize: getFieldStatus('per_meter_wt', formData.per_meter_wt).isFilled ? '14px' : '13px'
-                  }}>
+                  <div className="input-unit">
                     KG
                   </div>
                 </div>
               </div>
 
               {/* Unit */}
-              <div>
-                <label style={labelStyle}>Unit</label>
-                <div style={{
-                  padding: '12px 15px',
-                  borderRadius: '6px',
-                  border: '2px solid #10b981',
-                  background: '#d1fae5',
-                  fontSize: '15px',
-                  color: '#065f46',
-                  fontWeight: '600'
-                }}>
+              <div className="form-field">
+                <label className="form-label">Unit</label>
+                <div className="unit-display">
                   Meter
                 </div>
               </div>
@@ -1781,81 +1470,30 @@ const SpiralForm = () => {
           </div>
 
           {/* Section 5: Auto-Calculations */}
-          <div style={{ 
-            marginBottom: '25px',
-            paddingTop: '10px',
-            borderTop: '2px solid #e5e7eb'
-          }}>
-            <h3 style={{ 
-              margin: '0 0 15px 0', 
-              color: '#1e293b',
-              fontSize: '18px',
-              fontWeight: '600'
-            }}>
+          <div className="form-section">
+            <h3 className="section-title">
               Auto-Calculations
             </h3>
             
-            <div style={{
-              border: '2px solid #e5e7eb',
-              borderRadius: '8px',
-              padding: '15px',
-              marginBottom: '15px',
-              background: calculatedWeight > 0 || calculatedEfficiency > 0 ? '#ecfdf5' : '#f8fafc'
-            }}>
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                gap: '15px'
-              }}>
+            <div className={`calculation-box ${calculatedWeight > 0 || calculatedEfficiency > 0 ? 'calculation-box-active' : ''}`}>
+              <div className="calculation-grid">
                 {/* Weight Calculation */}
-                <div style={{
-                  background: calculatedWeight > 0 ? '#d1fae5' : '#f8fafc',
-                  padding: '15px',
-                  borderRadius: '8px',
-                  border: calculatedWeight > 0 ? '2px solid #10b981' : '1px solid #e5e7eb'
-                }}>
-                  <div style={{ 
-                    fontSize: '12px', 
-                    color: calculatedWeight > 0 ? '#065f46' : '#6b7280', 
-                    marginBottom: '5px', 
-                    fontWeight: '600'
-                  }}>
+                <div className={`calculation-item ${calculatedWeight > 0 ? 'calculation-item-active' : ''}`}>
+                  <div className="calculation-label">
                     Calculated Weight
                   </div>
-                  <div style={{ 
-                    fontSize: calculatedWeight > 0 ? '20px' : '18px', 
-                    fontWeight: calculatedWeight > 0 ? '800' : '700', 
-                    color: calculatedWeight > 0 ? '#065f46' : '#374151'
-                  }}>
+                  <div className="calculation-value">
                     {calculatedWeight > 0 ? calculatedWeight.toFixed(2) : '0.00'} 
-                    <span style={{ 
-                      fontSize: calculatedWeight > 0 ? '16px' : '14px', 
-                      fontWeight: '600',
-                      color: calculatedWeight > 0 ? '#065f46' : '#374151'
-                    }}> KG</span>
+                    <span className="calculation-unit">KG</span>
                   </div>
                 </div>
 
                 {/* Efficiency Display */}
-                <div style={{
-                  background: calculatedEfficiency > 0 ? '#d1fae5' : '#f8fafc',
-                  padding: '15px',
-                  borderRadius: '8px',
-                  border: calculatedEfficiency > 0 ? '2px solid #10b981' : '1px solid #e5e7eb'
-                }}>
-                  <div style={{ 
-                    fontSize: '12px', 
-                    color: calculatedEfficiency > 0 ? '#065f46' : '#6b7280',
-                    marginBottom: '5px',
-                    fontWeight: '600'
-                  }}>
+                <div className={`calculation-item ${calculatedEfficiency > 0 ? 'calculation-item-active' : ''}`}>
+                  <div className="calculation-label">
                     Efficiency
                   </div>
-                  <div style={{ 
-                    fontSize: calculatedEfficiency > 0 ? '20px' : '18px', 
-                    fontWeight: calculatedEfficiency > 0 ? '800' : '700', 
-                    color: calculatedEfficiency > 0 ? '#065f46' : '#374151'
-                  }}>
+                  <div className="calculation-value">
                     {calculatedEfficiency > 0 ? calculatedEfficiency.toFixed(2) : '0.00'}%
                   </div>
                 </div>
@@ -1864,36 +1502,23 @@ const SpiralForm = () => {
           </div>
 
           {/* Section 6: Operator Details */}
-          <div style={{ 
-            marginBottom: '25px',
-            paddingTop: '10px',
-            borderTop: '2px solid #e5e7eb'
-          }}>
-            <h3 style={{ 
-              margin: '0 0 15px 0', 
-              color: '#1e293b',
-              fontSize: '18px',
-              fontWeight: '600'
-            }}>
+          <div className="form-section">
+            <h3 className="section-title">
               Operator Details
             </h3>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-              gap: '15px'
-            }}>
+            <div className="form-grid">
               {/* Operator Name with datalist for suggestions */}
-              <div>
-                <label style={labelStyle}>
+              <div className="form-field">
+                <label className="form-label">
                   Operator Name *
                   {getFieldStatus('operator_name', formData.operator_name).hasError && (
-                    <FiAlertCircle style={{ marginLeft: '5px', color: '#ef4444' }} size={14} />
+                    <FiAlertCircle className="error-indicator" />
                   )}
                   {getFieldStatus('operator_name', formData.operator_name).isFilled && (
-                    <FiCheck style={{ marginLeft: '5px', color: '#10b981' }} size={14} />
+                    <FiCheck className="success-indicator" />
                   )}
                 </label>
-                <div style={{ position: 'relative' }}>
+                <div className="input-with-datalist">
                   <input
                     type="text"
                     name="operator_name"
@@ -1901,10 +1526,7 @@ const SpiralForm = () => {
                     onChange={handleChange}
                     placeholder="Enter or select operator name"
                     list="operatorSuggestions"
-                    style={{
-                      ...inputStyle(getFieldStatus('operator_name', formData.operator_name).hasError),
-                      ...getFieldStyle('operator_name', formData.operator_name)
-                    }}
+                    className={getFieldClass('operator_name', formData.operator_name)}
                   />
                   <datalist id="operatorSuggestions">
                     {operators.map((operator, index) => (
@@ -1912,15 +1534,15 @@ const SpiralForm = () => {
                     ))}
                   </datalist>
                 </div>
-                {errors.operator_name && <ErrorText text={errors.operator_name} />}
+                {errors.operator_name && <div className="error-text">{errors.operator_name}</div>}
               </div>
 
               {/* User Name - Auto-filled and disabled */}
-              <div>
-                <label style={labelStyle}>
+              <div className="form-field">
+                <label className="form-label">
                   User Name
                   {getFieldStatus('users_name', currentUser).isFilled && (
-                    <FiCheck style={{ marginLeft: '5px', color: '#10b981' }} size={14} />
+                    <FiCheck className="success-indicator" />
                   )}
                 </label>
                 <input
@@ -1928,19 +1550,9 @@ const SpiralForm = () => {
                   name="users_name"
                   value={currentUser}
                   disabled
-                  style={{
-                    ...inputStyle(),
-                    ...getFieldStyle('users_name', currentUser),
-                    background: getFieldStatus('users_name', currentUser).isFilled ? '#d1fae5' : '#f3f4f6',
-                    cursor: 'not-allowed'
-                  }}
+                  className={getFieldClass('users_name', currentUser)}
                 />
-                <div style={{ 
-                  fontSize: '12px', 
-                  color: getFieldStatus('users_name', currentUser).isFilled ? '#065f46' : '#6b7280', 
-                  marginTop: '5px',
-                  fontWeight: getFieldStatus('users_name', currentUser).isFilled ? '600' : '400'
-                }}>
+                <div className="field-hint">
                   Auto-filled from logged-in user
                 </div>
               </div>
@@ -1948,24 +1560,15 @@ const SpiralForm = () => {
           </div>
 
           {/* Section 7: Remarks */}
-          <div style={{ 
-            marginBottom: '25px',
-            paddingTop: '10px',
-            borderTop: '2px solid #e5e7eb'
-          }}>
-            <h3 style={{ 
-              margin: '0 0 15px 0', 
-              color: '#1e293b',
-              fontSize: '18px',
-              fontWeight: '600'
-            }}>
+          <div className="form-section">
+            <h3 className="section-title">
               Additional Information
             </h3>
-            <div>
-              <label style={labelStyle}>
+            <div className="form-field">
+              <label className="form-label">
                 Remarks
                 {getFieldStatus('remarks', formData.remarks).isFilled && (
-                  <FiCheck style={{ marginLeft: '5px', color: '#10b981' }} size={14} />
+                  <FiCheck className="success-indicator" />
                 )}
               </label>
               <textarea
@@ -1974,166 +1577,70 @@ const SpiralForm = () => {
                 onChange={handleChange}
                 placeholder="Enter any additional notes or remarks..."
                 rows="3"
-                style={{
-                  width: '100%',
-                  padding: '12px 15px',
-                  borderRadius: '6px',
-                  border: getFieldStatus('remarks', formData.remarks).isFilled ? '2px solid #10b981' : '1px solid #e5e7eb',
-                  background: getFieldStatus('remarks', formData.remarks).isFilled ? '#d1fae5' : '#f8fafc',
-                  fontSize: getFieldStatus('remarks', formData.remarks).isFilled ? '15px' : '14px',
-                  color: getFieldStatus('remarks', formData.remarks).isFilled ? '#065f46' : '#1f2937',
-                  resize: 'vertical',
-                  fontFamily: 'inherit',
-                  boxSizing: 'border-box',
-                  fontWeight: getFieldStatus('remarks', formData.remarks).isFilled ? '500' : '400'
-                }}
+                className={getFieldClass('remarks', formData.remarks)}
               />
             </div>
           </div>
 
           {/* Form Completion Status */}
-          <div style={{
-            background: '#f0f9ff',
-            border: '2px solid #0ea5e9',
-            borderRadius: '8px',
-            padding: '15px',
-            marginBottom: '25px'
-          }}>
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: '10px'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <FiTrendingUp style={{ color: '#0ea5e9' }} />
-                <div style={{ fontWeight: '600', color: '#0369a1', fontSize: '15px' }}>
-                  Form Completion Status
-                </div>
+          <div className="completion-status">
+            <div className="completion-header">
+              <div className="completion-title">
+                <FiTrendingUp className="completion-icon" />
+                <div className="completion-label">Form Completion Status</div>
               </div>
-              <div style={{ fontWeight: '700', color: '#0369a1', fontSize: '16px' }}>
+              <div className="completion-count">
                 {Object.values(filledFields).filter(Boolean).length} of {Object.keys(formData).length} fields filled
               </div>
             </div>
-            <div style={{
-              height: '8px',
-              background: '#e0f2fe',
-              borderRadius: '4px',
-              overflow: 'hidden'
-            }}>
-              <div style={{
-                height: '100%',
-                background: '#0ea5e9',
-                width: `${(Object.values(filledFields).filter(Boolean).length / Object.keys(formData).length) * 100}%`,
-                transition: 'width 0.3s ease'
-              }} />
+            <div className="completion-progress-bar">
+              <div className="completion-progress-fill" 
+                   style={{ width: `${(Object.values(filledFields).filter(Boolean).length / Object.keys(formData).length) * 100}%` }} />
             </div>
           </div>
 
           {/* Form Actions */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            paddingTop: '20px',
-            borderTop: '2px solid #e5e7eb'
-          }}>
-            <div style={{ display: 'flex', gap: '12px' }}>
+          <div className="form-actions">
+            <div className="button-group">
               <button
                 type="button"
                 onClick={handleReset}
-                style={{
-                  background: 'transparent',
-                  border: '2px solid #d1d5db',
-                  padding: '10px 20px',
-                  borderRadius: '6px',
-                  color: '#6b7280',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  fontWeight: '600',
-                  fontSize: '14px'
-                }}
+                className="form-button button-reset"
               >
-                <FiRefreshCw size={16} /> Reset
+                <FiRefreshCw className="button-icon" /> Reset
               </button>
 
               <button
                 type="button"
                 onClick={handleAddNew}
-                style={{
-                  background: 'transparent',
-                  border: '2px solid #60a5fa',
-                  padding: '10px 20px',
-                  borderRadius: '6px',
-                  color: '#2563eb',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  fontWeight: '600',
-                  fontSize: '14px'
-                }}
+                className="form-button button-new"
               >
-                <FiPlusCircle size={16} /> New Entry
+                <FiPlusCircle className="button-icon" /> New Entry
               </button>
             </div>
 
-            <div style={{ display: 'flex', gap: '12px' }}>
+            <div className="button-group">
               <button
                 type="button"
                 onClick={handleCancel}
-                style={{
-                  background: 'transparent',
-                  border: '2px solid #fca5a5',
-                  padding: '10px 20px',
-                  borderRadius: '6px',
-                  color: '#ef4444',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  fontWeight: '600',
-                  fontSize: '14px'
-                }}
+                className="form-button button-cancel"
               >
-                <FiX size={16} /> Cancel
+                <FiX className="button-icon" /> Cancel
               </button>
 
               <button
                 type="submit"
                 disabled={isSubmitting}
-                style={{
-                  background: isSubmitting ? '#9ca3af' : '#10b981',
-                  border: 'none',
-                  padding: '10px 24px',
-                  borderRadius: '6px',
-                  color: 'white',
-                  cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  minWidth: '140px'
-                }}
+                className="form-button button-submit"
               >
                 {isSubmitting ? (
                   <>
-                    <div style={{
-                      width: '14px',
-                      height: '14px',
-                      border: '2px solid rgba(255,255,255,0.3)',
-                      borderTopColor: 'white',
-                      borderRadius: '50%',
-                      animation: 'spin 1s linear infinite'
-                    }} />
+                    <div className="submit-spinner" />
                     Saving...
                   </>
                 ) : (
                   <>
-                    <FiSave size={16} /> Save & Continue
+                    <FiSave className="button-icon" /> Save & Continue
                   </>
                 )}
               </button>
@@ -2141,161 +1648,8 @@ const SpiralForm = () => {
           </div>
         </div>
       </form>
-
-      <style>{`
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-        
-        @keyframes pulse {
-          0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
-          70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(59, 130, 246, 0); }
-          100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
-        }
-        
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(-10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        
-        /* Mobile Responsive Styles */
-        @media (max-width: 768px) {
-          div[style*="grid-template-columns"] {
-            grid-template-columns: 1fr !important;
-          }
-          
-          h1 {
-            font-size: 20px !important;
-          }
-          
-          h3 {
-            font-size: 16px !important;
-          }
-          
-          /* Machine completion tracker mobile adjustments */
-          div[style*="justify-content: space-between"] {
-            flex-direction: column !important;
-            align-items: flex-start !important;
-            gap: 10px !important;
-          }
-          
-          div[style*="grid-template-columns: repeat(auto-fill, minmax(150px, 1fr))"] {
-            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)) !important;
-          }
-          
-          /* Form actions mobile adjustments */
-          div[style*="justify-content: space-between"] {
-            flex-direction: column !important;
-            gap: 15px !important;
-          }
-          
-          div[style*="display: flex; gap: 12px"] {
-            width: 100%;
-            justify-content: space-between;
-          }
-          
-          button {
-            flex: 1;
-            text-align: center;
-          }
-        }
-        
-        /* Better mobile input styles */
-        input, select, textarea {
-          font-size: 16px !important;
-          width: 100% !important;
-          box-sizing: border-box !important;
-        }
-        
-        /* Larger touch targets for mobile */
-        button, select, input[type="text"], input[type="number"] {
-          min-height: 44px;
-        }
-        
-        /* Green filled field animations */
-        input:focus, select:focus, textarea:focus {
-          outline: none;
-          box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
-        }
-        
-        /* Transition effects */
-        input, select, textarea, div[style*="border"] {
-          transition: all 0.3s ease;
-        }
-        
-        /* Scrollbar styling for machine list */
-        div[style*="overflow-y: auto"]::-webkit-scrollbar {
-          width: 6px;
-        }
-        
-        div[style*="overflow-y: auto"]::-webkit-scrollbar-track {
-          background: #f1f1f1;
-          border-radius: 10px;
-        }
-        
-        div[style*="overflow-y: auto"]::-webkit-scrollbar-thumb {
-          background: #cbd5e1;
-          border-radius: 10px;
-        }
-        
-        div[style*="overflow-y: auto"]::-webkit-scrollbar-thumb:hover {
-          background: '#94a3b8';
-        }
-      `}</style>
     </div>
   );
 };
-
-// Reusable styles
-const labelStyle = {
-  marginBottom: '6px',
-  fontWeight: '600',
-  color: '#374151',
-  fontSize: '13px',
-  display: 'block'
-};
-
-const inputStyle = (hasError) => ({
-  width: '100%',
-  padding: '10px 12px',
-  borderRadius: '6px',
-  border: '1px solid #e5e7eb',
-  background: '#f8fafc',
-  fontSize: '14px',
-  color: '#1f2937',
-  outline: 'none',
-  boxSizing: 'border-box'
-});
-
-const selectStyle = (hasError) => ({
-  width: '100%',
-  padding: '10px 12px',
-  paddingRight: '35px',
-  borderRadius: '6px',
-  border: '1px solid #e5e7eb',
-  background: '#f8fafc',
-  fontSize: '14px',
-  color: '#1f2937',
-  outline: 'none',
-  boxSizing: 'border-box',
-  cursor: 'pointer',
-  appearance: 'none',
-  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-  backgroundRepeat: 'no-repeat',
-  backgroundPosition: 'right 12px center',
-  backgroundSize: '14px'
-});
-
-const ErrorText = ({ text }) => (
-  <div style={{ 
-    color: '#ef4444', 
-    fontSize: '12px', 
-    marginTop: '4px',
-    fontWeight: '500'
-  }}>
-    {text}
-  </div>
-);
 
 export default SpiralForm;

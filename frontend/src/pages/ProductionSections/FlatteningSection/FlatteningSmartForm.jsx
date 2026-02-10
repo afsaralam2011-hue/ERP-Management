@@ -1,6 +1,6 @@
 // ========================================================
 // FILE: FlatteningSmartForm.jsx - 100% FINAL VERSION
-// COMPLETELY FIXED - READY TO USE
+// WITH THEME SYSTEM INTEGRATED
 // ========================================================
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
@@ -9,14 +9,20 @@ import {
   FiSave, FiClock, FiCheck, FiAlertCircle, FiPlus,
   FiTrash2, FiTrendingUp, FiRefreshCw, FiArrowLeft, 
   FiCpu, FiPackage, FiUser, FiEdit3, FiChevronRight,
-  FiChevronLeft, FiDownload, FiArrowUp, FiArrowDown
+  FiChevronLeft, FiDownload, FiArrowUp, FiArrowDown,
+  FiCalendar
 } from 'react-icons/fi';
 import { supabase } from '../../../supabaseClient';
+import { useTheme } from '../../../contexts/ThemeContext'; // Theme Context import کریں
 import './FlatteningSmartForm.css';
 
 const FlatteningSmartForm = () => {
   const navigate = useNavigate();
   const CURRENT_SECTION = 'Flattening';
+  
+  // Theme Context سے colors حاصل کریں
+  const { mode, currentTheme } = useTheme();
+  const isDarkMode = mode === 'dark';
   
   const [selectedShift, setSelectedShift] = useState('');
   const [shifts, setShifts] = useState([]);
@@ -30,6 +36,57 @@ const FlatteningSmartForm = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [activeMachineIndex, setActiveMachineIndex] = useState(0);
   const [draftSaved, setDraftSaved] = useState(false);
+  const [productionDate, setProductionDate] = useState('');
+
+  // Theme-based styles
+  const themeStyles = useMemo(() => ({
+    // Background colors
+    background: isDarkMode ? '#1a1a1a' : '#ffffff',
+    surface: isDarkMode ? '#2a2a2a' : '#f5f5f5',
+    cardBackground: isDarkMode ? '#2a2a2a' : '#ffffff',
+    
+    // Text colors
+    textPrimary: isDarkMode ? '#7986CB' : '#1A237E', // INDIGO/NAVY BLUE
+    textSecondary: isDarkMode ? '#9FA8DA' : '#283593', // LIGHT INDIGO
+    textMuted: isDarkMode ? '#aaaaaa' : '#666666',
+    
+    // Border colors
+    border: isDarkMode ? '#333333' : '#e0e0e0',
+    borderLight: isDarkMode ? '#3a3a3a' : '#eeeeee',
+    
+    // Status colors
+    primary: '#00a8ff',
+    primaryLight: isDarkMode ? 'rgba(0, 168, 255, 0.2)' : 'rgba(0, 168, 255, 0.1)',
+    success: '#00ff88',
+    successLight: isDarkMode ? 'rgba(0, 255, 136, 0.2)' : 'rgba(0, 255, 136, 0.1)',
+    error: '#ff4444',
+    errorLight: isDarkMode ? 'rgba(255, 68, 68, 0.2)' : 'rgba(255, 68, 68, 0.1)',
+    warning: '#ff9800',
+    
+    // Gradient colors
+    gradientPrimary: isDarkMode 
+      ? 'linear-gradient(135deg, #1A237E 0%, #283593 100%)' 
+      : 'linear-gradient(135deg, #7986CB 0%, #9FA8DA 100%)',
+    gradientHeader: isDarkMode 
+      ? 'linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%)' 
+      : 'linear-gradient(135deg, #f5f5f5 0%, #ffffff 100%)',
+    
+    // Shadow
+    shadow: isDarkMode 
+      ? '0 20px 60px rgba(0, 0, 0, 0.5)' 
+      : '0 10px 40px rgba(0, 0, 0, 0.1)',
+    
+    // Overlay
+    overlay: isDarkMode 
+      ? 'rgba(0, 0, 0, 0.85)' 
+      : 'rgba(0, 0, 0, 0.5)',
+  }), [isDarkMode]);
+
+  // آج کی تاریخ کو ڈیفالٹ ویلیو کے طور پر سیٹ کریں
+  useEffect(() => {
+    const today = new Date().toISOString().split('T')[0];
+    setProductionDate(today);
+  }, []);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth <= 768);
@@ -43,7 +100,12 @@ const FlatteningSmartForm = () => {
     const saveDraft = async () => {
       if (selectedShift && Object.keys(machineData).length > 0) {
         try {
-          const draftData = { shift: selectedShift, machineData, timestamp: new Date().toISOString() };
+          const draftData = { 
+            shift: selectedShift, 
+            machineData, 
+            productionDate,
+            timestamp: new Date().toISOString() 
+          };
           localStorage.setItem(`flattening_draft_${selectedShift}`, JSON.stringify(draftData));
           setDraftSaved(true);
           setTimeout(() => setDraftSaved(false), 3000);
@@ -54,7 +116,7 @@ const FlatteningSmartForm = () => {
     };
     if (selectedShift) autoSaveTimer = setTimeout(saveDraft, 30000);
     return () => { if (autoSaveTimer) clearTimeout(autoSaveTimer); };
-  }, [selectedShift, machineData]);
+  }, [selectedShift, machineData, productionDate]);
 
   const loadDraftForShift = useCallback((shiftCode) => {
     try {
@@ -63,6 +125,9 @@ const FlatteningSmartForm = () => {
         const parsedDraft = JSON.parse(draft);
         if (parsedDraft.machineData) {
           setMachineData(parsedDraft.machineData);
+          if (parsedDraft.productionDate) {
+            setProductionDate(parsedDraft.productionDate);
+          }
           setSuccess('Previous draft loaded successfully');
           setTimeout(() => setSuccess(''), 3000);
         }
@@ -297,15 +362,15 @@ const FlatteningSmartForm = () => {
       return {
         color: '#00ff88',
         icon: <FiArrowUp />,
-        bgColor: 'rgba(0, 255, 136, 0.1)',
-        borderColor: 'rgba(0, 255, 136, 0.3)'
+        bgColor: isDarkMode ? 'rgba(0, 255, 136, 0.1)' : 'rgba(0, 255, 136, 0.15)',
+        borderColor: isDarkMode ? 'rgba(0, 255, 136, 0.2)' : 'rgba(0, 255, 136, 0.3)'
       };
     } else {
       return {
         color: '#ff4444',
         icon: <FiArrowDown />,
-        bgColor: 'rgba(255, 68, 68, 0.1)',
-        borderColor: 'rgba(255, 68, 68, 0.3)'
+        bgColor: isDarkMode ? 'rgba(255, 68, 68, 0.1)' : 'rgba(255, 68, 68, 0.15)',
+        borderColor: isDarkMode ? 'rgba(255, 68, 68, 0.2)' : 'rgba(255, 68, 68, 0.3)'
       };
     }
   };
@@ -338,6 +403,16 @@ const FlatteningSmartForm = () => {
   const validateForm = () => {
     const errors = {};
     if (!selectedShift) errors.shift = 'Please select a shift';
+    if (!productionDate) errors.date = 'Production date is required';
+    
+    const selectedDate = new Date(productionDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    if (selectedDate > today) {
+      errors.date = 'Production date cannot be in the future';
+    }
+    
     Object.keys(machineData).forEach(machineNo => {
       const machine = machineData[machineNo];
       if (!machine.operator_name?.trim()) errors[`operator_${machineNo}`] = 'Operator name is required';
@@ -385,6 +460,7 @@ const FlatteningSmartForm = () => {
               shift_name: machine.shift_name,
               target_qty: machine.target_qty,
               remarks: machine.remarks || '',
+              production_date: productionDate,
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString()
             });
@@ -395,7 +471,7 @@ const FlatteningSmartForm = () => {
       const { error: insertError } = await supabase.from('flatteningsection').insert(allRecords);
       if (insertError) throw insertError;
       localStorage.removeItem(`flattening_draft_${selectedShift}`);
-      setSuccess(`Success! ${allRecords.length} records saved for ${Object.keys(machineData).length} machines`);
+      setSuccess(`Success! ${allRecords.length} records saved for ${Object.keys(machineData).length} machines on ${productionDate}`);
       setTimeout(() => {
         setSelectedShift('');
         setMachineData({});
@@ -415,12 +491,18 @@ const FlatteningSmartForm = () => {
 
   if (loading) {
     return (
-      <div className="modal-overlay">
-        <div className="modal-container loading-modal">
+      <div className="modal-overlay" style={{ background: themeStyles.overlay }}>
+        <div className="modal-container loading-modal" style={{ 
+          background: themeStyles.background,
+          border: `1px solid ${themeStyles.border}`
+        }}>
           <div className="loading-content">
-            <div className="loading-spinner-large"></div>
-            <h3>Loading Production Form</h3>
-            <p>Please wait while we fetch the data...</p>
+            <div className="loading-spinner-large" style={{ 
+              border: `3px solid ${themeStyles.primaryLight}`,
+              borderTopColor: themeStyles.primary 
+            }}></div>
+            <h3 style={{ color: themeStyles.textPrimary }}>Loading Production Form</h3>
+            <p style={{ color: themeStyles.textMuted }}>Please wait while we fetch the data...</p>
           </div>
         </div>
       </div>
@@ -428,80 +510,240 @@ const FlatteningSmartForm = () => {
   }
 
   return (
-    <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) handleBackClick(); }}>
-      <div className="modal-container smart-form-modal enhanced-form">
-        <div className="modal-header enhanced-header">
+    <div className="modal-overlay" style={{ background: themeStyles.overlay }} onClick={(e) => { if (e.target === e.currentTarget) handleBackClick(); }}>
+      <div className="modal-container smart-form-modal enhanced-form" style={{ 
+        background: themeStyles.background,
+        boxShadow: themeStyles.shadow,
+        border: `1px solid ${themeStyles.border}`
+      }}>
+        <div className="modal-header enhanced-header" style={{ 
+          background: themeStyles.gradientHeader,
+          borderBottom: `1px solid ${themeStyles.border}`
+        }}>
           <div className="header-left">
-            <div className="header-icon"><FiEdit3 /></div>
+            <div className="header-icon" style={{ 
+              background: themeStyles.gradientPrimary,
+              boxShadow: `0 4px 12px ${themeStyles.primary}40`
+            }}><FiEdit3 /></div>
             <div className="header-text">
-              <h1>Flattening Production Entry</h1>
-              <p className="header-subtitle"><FiPackage /> Smart entry form for production section</p>
+              <h1 style={{ color: themeStyles.textPrimary }}>Flattening Production Entry</h1>
+              <p className="header-subtitle" style={{ color: themeStyles.textSecondary }}>
+                <FiPackage /> Smart entry form for production section
+              </p>
             </div>
           </div>
           <div className="header-right">
             <div className="header-actions">
-              {draftSaved && (<span className="draft-saved-badge"><FiSave /> Draft Saved</span>)}
+              {draftSaved && (
+                <span className="draft-saved-badge" style={{ 
+                  background: themeStyles.successLight,
+                  color: themeStyles.success,
+                  border: `1px solid ${themeStyles.success}40`
+                }}>
+                  <FiSave /> Draft Saved
+                </span>
+              )}
               {selectedShift && machinesForCurrentShift.length > 0 && (
-                <div className="machine-nav-container">
-                  <button type="button" onClick={prevMachine} disabled={activeMachineIndex === 0} className="btn-nav-header" title="Previous Machine"><FiChevronLeft /></button>
+                <div className="machine-nav-container" style={{ 
+                  background: themeStyles.surface,
+                  border: `1px solid ${themeStyles.border}`
+                }}>
+                  <button type="button" onClick={prevMachine} disabled={activeMachineIndex === 0} className="btn-nav-header" title="Previous Machine" style={{ 
+                    background: themeStyles.surface,
+                    border: `1px solid ${themeStyles.borderLight}`,
+                    color: themeStyles.textPrimary
+                  }}><FiChevronLeft /></button>
                   <div className="machine-header-display">
-                    <span className="machine-header-number">M/C {machinesForCurrentShift[activeMachineIndex]}</span>
-                    <span className="machine-header-counter">({activeMachineIndex + 1}/{machinesForCurrentShift.length})</span>
+                    <span className="machine-header-number" style={{ color: themeStyles.textPrimary }}>M/C {machinesForCurrentShift[activeMachineIndex]}</span>
+                    <span className="machine-header-counter" style={{ color: themeStyles.textMuted }}>({activeMachineIndex + 1}/{machinesForCurrentShift.length})</span>
                   </div>
-                  <button type="button" onClick={nextMachine} disabled={activeMachineIndex === machinesForCurrentShift.length - 1} className="btn-nav-header" title="Next Machine"><FiChevronRight /></button>
+                  <button type="button" onClick={nextMachine} disabled={activeMachineIndex === machinesForCurrentShift.length - 1} className="btn-nav-header" title="Next Machine" style={{ 
+                    background: themeStyles.surface,
+                    border: `1px solid ${themeStyles.borderLight}`,
+                    color: themeStyles.textPrimary
+                  }}><FiChevronRight /></button>
                 </div>
               )}
-              <button className="btn btn-back" onClick={handleBackClick} title="Go back"><FiArrowLeft /> {!isMobile && 'Back'}</button>
+              <button className="btn btn-back" onClick={handleBackClick} title="Go back" style={{ 
+                background: themeStyles.surface,
+                border: `1px solid ${themeStyles.borderLight}`,
+                color: themeStyles.textPrimary
+              }}><FiArrowLeft /> {!isMobile && 'Back'}</button>
             </div>
           </div>
         </div>
-        {success && (<div className="alert alert-success"><FiCheck /> {success}</div>)}
-        {error && (<div className="alert alert-error"><FiAlertCircle /> {error}</div>)}
+        
+        {success && (
+          <div className="alert alert-success" style={{ 
+            background: themeStyles.successLight,
+            color: themeStyles.success,
+            border: `1px solid ${themeStyles.success}40`
+          }}>
+            <FiCheck /> {success}
+          </div>
+        )}
+        {error && (
+          <div className="alert alert-error" style={{ 
+            background: themeStyles.errorLight,
+            color: themeStyles.error,
+            border: `1px solid ${themeStyles.error}40`
+          }}>
+            <FiAlertCircle /> {error}
+          </div>
+        )}
+        
         <div className="form-layout">
-          <div className="form-sidebar">
-            <div className="sidebar-header"><FiClock /><h3>Select Shift</h3></div>
+          <div className="form-sidebar" style={{ 
+            background: themeStyles.surface,
+            borderRight: `1px solid ${themeStyles.border}`
+          }}>
+            <div className="sidebar-header" style={{ borderBottom: `1px solid ${themeStyles.border}` }}>
+              <FiClock style={{ color: themeStyles.primary }} />
+              <h3 style={{ color: themeStyles.textPrimary }}>Select Shift</h3>
+            </div>
+            
+            <div className="date-input-section">
+              <div className="form-group">
+                <label className="form-label date-label" style={{ color: themeStyles.textPrimary }}>
+                  <FiCalendar /> Production Date
+                </label>
+                <input 
+                  type="date" 
+                  value={productionDate}
+                  onChange={(e) => setProductionDate(e.target.value)}
+                  className="form-input date-input"
+                  style={{ 
+                    background: themeStyles.background,
+                    border: `1px solid ${themeStyles.border}`,
+                    color: themeStyles.textPrimary
+                  }}
+                  max={new Date().toISOString().split('T')[0]}
+                />
+              </div>
+            </div>
+            
             <div className="shift-options">
               {shifts.slice(0, 3).map(shift => (
-                <div key={shift.id} className={`shift-option ${selectedShift === shift.shift_code ? 'active' : ''}`} onClick={() => handleShiftSelect(shift.shift_code)}>
+                <div key={shift.id} className={`shift-option ${selectedShift === shift.shift_code ? 'active' : ''}`} onClick={() => handleShiftSelect(shift.shift_code)} style={{ 
+                  background: selectedShift === shift.shift_code ? themeStyles.primaryLight : themeStyles.surface,
+                  border: `1px solid ${selectedShift === shift.shift_code ? themeStyles.primary : themeStyles.border}`
+                }}>
                   <div className="option-content">
-                    <span className="option-code">Shift {shift.shift_code}</span>
-                    <span className="option-name">{shift.shift_name}</span>
-                    <span className="option-time">{shift.start_time} - {shift.end_time}</span>
+                    <span className="option-code" style={{ color: themeStyles.textPrimary }}>Shift {shift.shift_code}</span>
+                    <span className="option-name" style={{ color: themeStyles.textSecondary }}>{shift.shift_name}</span>
+                    <span className="option-time" style={{ color: themeStyles.textMuted }}>{shift.start_time} - {shift.end_time}</span>
                   </div>
                   <div className="option-status">
-                    {selectedShift === shift.shift_code ? (<span className="status-active">Active</span>) : (<span className="status-inactive">Click to load</span>)}
+                    {selectedShift === shift.shift_code ? (
+                      <span className="status-active" style={{ 
+                        background: themeStyles.successLight,
+                        color: themeStyles.success,
+                        border: `1px solid ${themeStyles.success}40`
+                      }}>Active</span>
+                    ) : (
+                      <span className="status-inactive" style={{ 
+                        background: themeStyles.surface,
+                        color: themeStyles.textMuted,
+                        border: `1px solid ${themeStyles.border}`
+                      }}>Click to load</span>
+                    )}
                   </div>
                 </div>
               ))}
             </div>
+            
             {selectedShift && Object.keys(machineData).length > 0 && (
-              <div className="bulk-operations">
-                <div className="bulk-header"><FiTrendingUp /><h4>Bulk Operations</h4></div>
+              <div className="bulk-operations" style={{ 
+                background: themeStyles.surface,
+                border: `1px solid ${themeStyles.border}`
+              }}>
+                <div className="bulk-header">
+                  <FiTrendingUp style={{ color: themeStyles.primary }} />
+                  <h4 style={{ color: themeStyles.textPrimary }}>Bulk Operations</h4>
+                </div>
                 <div className="bulk-controls">
-                  <div className="form-group"><label className="form-label">Operator Name (All Machines)</label><input type="text" placeholder="Enter for all machines" onChange={(e) => handleBulkUpdate('operator_name', e.target.value)} className="form-input" /></div>
-                  <div className="form-group"><label className="form-label">Remarks (All Machines)</label><input type="text" placeholder="Enter for all machines" onChange={(e) => handleBulkUpdate('remarks', e.target.value)} className="form-input" /></div>
+                  <div className="form-group">
+                    <label className="form-label" style={{ color: themeStyles.textPrimary }}>Operator Name (All Machines)</label>
+                    <input type="text" placeholder="Enter for all machines" onChange={(e) => handleBulkUpdate('operator_name', e.target.value)} className="form-input" style={{ 
+                      background: themeStyles.background,
+                      border: `1px solid ${themeStyles.border}`,
+                      color: themeStyles.textPrimary
+                    }} />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label" style={{ color: themeStyles.textPrimary }}>Remarks (All Machines)</label>
+                    <input type="text" placeholder="Enter for all machines" onChange={(e) => handleBulkUpdate('remarks', e.target.value)} className="form-input" style={{ 
+                      background: themeStyles.background,
+                      border: `1px solid ${themeStyles.border}`,
+                      color: themeStyles.textPrimary
+                    }} />
+                  </div>
                 </div>
               </div>
             )}
+            
             {selectedShift && (
-              <div className="sidebar-stats">
-                <div className="stat-item"><span className="stat-label">Machines</span><span className="stat-value">{machinesForCurrentShift.length}</span></div>
-                <div className="stat-item"><span className="stat-label">Items</span><span className="stat-value">{totalItems}</span></div>
-                <div className="stat-item"><span className="stat-label">Total Target</span><span className="stat-value">{totalTarget.toFixed(2)} Kg</span></div>
+              <div className="sidebar-stats" style={{ 
+                background: themeStyles.surface,
+                border: `1px solid ${themeStyles.border}`
+              }}>
+                <div className="stat-item" style={{ background: themeStyles.cardBackground }}>
+                  <span className="stat-label" style={{ color: themeStyles.textMuted }}>Machines</span>
+                  <span className="stat-value" style={{ color: themeStyles.textPrimary }}>{machinesForCurrentShift.length}</span>
+                </div>
+                <div className="stat-item" style={{ background: themeStyles.cardBackground }}>
+                  <span className="stat-label" style={{ color: themeStyles.textMuted }}>Items</span>
+                  <span className="stat-value" style={{ color: themeStyles.textPrimary }}>{totalItems}</span>
+                </div>
+                <div className="stat-item" style={{ background: themeStyles.cardBackground }}>
+                  <span className="stat-label" style={{ color: themeStyles.textMuted }}>Total Target</span>
+                  <span className="stat-value" style={{ color: themeStyles.textPrimary }}>{totalTarget.toFixed(2)} Kg</span>
+                </div>
+                <div className="stat-item" style={{ background: themeStyles.cardBackground }}>
+                  <span className="stat-label" style={{ color: themeStyles.textMuted }}>Production Date</span>
+                  <span className="stat-value date-value" style={{ color: themeStyles.textPrimary }}>{productionDate}</span>
+                </div>
               </div>
             )}
           </div>
-          <div className="form-main-content">
-            {selectedShift && (<div className="shift-header"><div className="shift-title"><h2>Shift {selectedShift} Production</h2><span className="shift-badge">{shifts.find(s => s.shift_code === selectedShift)?.shift_name}</span></div></div>)}
+          
+          <div className="form-main-content" style={{ background: themeStyles.background }}>
+            {selectedShift && (
+              <div className="shift-header" style={{ borderBottom: `1px solid ${themeStyles.border}` }}>
+                <div className="shift-title">
+                  <h2 style={{ color: themeStyles.textPrimary }}>Shift {selectedShift} Production</h2>
+                  <div className="date-badge-container">
+                    <span className="shift-badge" style={{ 
+                      background: themeStyles.primaryLight,
+                      color: themeStyles.primary,
+                      border: `1px solid ${themeStyles.primary}40`
+                    }}>{shifts.find(s => s.shift_code === selectedShift)?.shift_name}</span>
+                    <span className="date-badge" style={{ color: themeStyles.textSecondary }}>
+                      <FiCalendar /> {productionDate}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+            
             {selectedShift && machinesForCurrentShift.length > 0 && (
-              <div className="totals-line">
+              <div className="totals-line" style={{ 
+                background: themeStyles.surface,
+                border: `1px solid ${themeStyles.border}`
+              }}>
                 <div className="totals-container">
-                  <div className="total-item"><span className="total-label">Total Target:</span><span className="total-value">{totalTarget.toFixed(2)} Kg</span></div>
-                  <div className="total-separator">|</div>
-                  <div className="total-item"><span className="total-label">Total Production:</span><span className="total-value">{sectionTotal.toFixed(2)} Kg</span></div>
-                  <div className="total-separator">|</div>
-                  <div className="total-item">
-                    <span className="total-label">Total Efficiency:</span>
+                  <div className="total-item" style={{ background: themeStyles.cardBackground }}>
+                    <span className="total-label" style={{ color: themeStyles.textMuted }}>Total Target:</span>
+                    <span className="total-value" style={{ color: themeStyles.textPrimary }}>{totalTarget.toFixed(2)} Kg</span>
+                  </div>
+                  <div className="total-separator" style={{ color: themeStyles.border }}>|</div>
+                  <div className="total-item" style={{ background: themeStyles.cardBackground }}>
+                    <span className="total-label" style={{ color: themeStyles.textMuted }}>Total Production:</span>
+                    <span className="total-value" style={{ color: themeStyles.textPrimary }}>{sectionTotal.toFixed(2)} Kg</span>
+                  </div>
+                  <div className="total-separator" style={{ color: themeStyles.border }}>|</div>
+                  <div className="total-item" style={{ background: themeStyles.cardBackground }}>
+                    <span className="total-label" style={{ color: themeStyles.textMuted }}>Total Efficiency:</span>
                     <div className="total-efficiency-display">
                       <span className="total-efficiency-value" style={{ color: getEfficiencyStatus(totalEfficiency).color }}>{totalEfficiency}%</span>
                       <span className="total-efficiency-icon" style={{ color: getEfficiencyStatus(totalEfficiency).color }}>{getEfficiencyStatus(totalEfficiency).icon}</span>
@@ -510,6 +752,7 @@ const FlatteningSmartForm = () => {
                 </div>
               </div>
             )}
+            
             {selectedShift && machinesForCurrentShift.length > 0 && (
               <div className="production-entry">
                 {machinesForCurrentShift.map((machineNo, index) => {
@@ -519,32 +762,56 @@ const FlatteningSmartForm = () => {
                   const efficiencyStatus = getEfficiencyStatus(machineEfficiency);
                   
                   return (
-                    <div key={machineNo} className={`machine-card ${index === activeMachineIndex ? 'active' : 'collapsed'}`} onClick={() => setActiveMachineIndex(index)}>
-                      <div className="machine-card-header">
+                    <div key={machineNo} className={`machine-card ${index === activeMachineIndex ? 'active' : 'collapsed'}`} onClick={() => setActiveMachineIndex(index)} style={{ 
+                      background: themeStyles.cardBackground,
+                      border: `1px solid ${index === activeMachineIndex ? themeStyles.primary : themeStyles.border}`
+                    }}>
+                      <div className="machine-card-header" style={{ borderBottom: `1px solid ${themeStyles.border}` }}>
                         <div className="machine-info">
-                          <FiCpu className="machine-icon" />
+                          <FiCpu className="machine-icon" style={{ 
+                            color: themeStyles.primary,
+                            background: themeStyles.primaryLight
+                          }} />
                           <div>
-                            <h3>Machine {machineNo}</h3>
+                            <h3 style={{ color: themeStyles.textPrimary }}>Machine {machineNo}</h3>
                             <div className="machine-meta">
-                              <span className="meta-item"><FiClock /> Shift: {selectedShift}</span>
-                              {target && (<span className={`meta-item target ${calculateMachineTotal(machineNo) >= target.target_qty ? 'target-met' : 'target-missed'}`}><FiTrendingUp /> Target: {target.target_qty || 0} {target.uom || 'Kg'}</span>)}
+                              <span className="meta-item" style={{ color: themeStyles.textSecondary }}>
+                                <FiClock /> Shift: {selectedShift}
+                              </span>
+                              {target && (
+                                <span className={`meta-item target ${calculateMachineTotal(machineNo) >= target.target_qty ? 'target-met' : 'target-missed'}`} style={{ 
+                                  background: calculateMachineTotal(machineNo) >= target.target_qty ? themeStyles.successLight : themeStyles.errorLight,
+                                  color: calculateMachineTotal(machineNo) >= target.target_qty ? themeStyles.success : themeStyles.error,
+                                  border: `1px solid ${calculateMachineTotal(machineNo) >= target.target_qty ? themeStyles.success : themeStyles.error}40`
+                                }}>
+                                  <FiTrendingUp /> Target: {target.target_qty || 0} {target.uom || 'Kg'}
+                                </span>
+                              )}
+                              <span className="meta-item date-item" style={{ color: themeStyles.textSecondary }}>
+                                <FiCalendar /> {productionDate}
+                              </span>
                             </div>
                           </div>
                         </div>
                         <div className="machine-stats-compact">
                           <div className="machine-stat-item">
-                            <span className="stat-label-compact">Production:</span>
-                            <strong className="stat-value-compact">{calculateMachineTotal(machineNo).toFixed(2)} Kg</strong>
+                            <span className="stat-label-compact" style={{ color: themeStyles.textMuted }}>Production:</span>
+                            <strong className="stat-value-compact" style={{ color: themeStyles.textPrimary }}>{calculateMachineTotal(machineNo).toFixed(2)} Kg</strong>
                           </div>
                           <div className="machine-stat-item">
-                            <span className="stat-label-compact">Efficiency:</span>
-                            <div className="efficiency-box-compact" style={{ backgroundColor: efficiencyStatus.bgColor, color: efficiencyStatus.color, borderColor: efficiencyStatus.borderColor }}>
+                            <span className="stat-label-compact" style={{ color: themeStyles.textMuted }}>Efficiency:</span>
+                            <div className="efficiency-box-compact" style={{ 
+                              backgroundColor: efficiencyStatus.bgColor, 
+                              color: efficiencyStatus.color, 
+                              borderColor: efficiencyStatus.borderColor 
+                            }}>
                               <span className="efficiency-value-compact">{machineEfficiency}%</span>
                               <span className="efficiency-icon-compact">{efficiencyStatus.icon}</span>
                             </div>
                           </div>
                         </div>
                       </div>
+                      
                       {index === activeMachineIndex && (
                         <>
                           <div className="items-table-wrapper">
@@ -552,9 +819,9 @@ const FlatteningSmartForm = () => {
                               <thead>
                                 <tr>
                                   <th className="col-add"></th>
-                                  <th className="col-item">Item Code & Name</th>
-                                  <th className="col-coil-material">Coil Size & Material Type</th>
-                                  <th className="col-qty-eff">Quantity & Efficiency</th>
+                                  <th className="col-item" style={{ color: themeStyles.textSecondary }}>Item Code & Name</th>
+                                  <th className="col-coil-material" style={{ color: themeStyles.textSecondary }}>Coil Size & Material Type</th>
+                                  <th className="col-qty-eff" style={{ color: themeStyles.textSecondary }}>Quantity & Efficiency</th>
                                   <th className="col-actions"></th>
                                 </tr>
                               </thead>
@@ -565,25 +832,70 @@ const FlatteningSmartForm = () => {
                                   return (
                                     <tr key={item.id}>
                                       <td className="cell-add">
-                                        {itemIndex === 0 && (<button type="button" onClick={() => addItem(machineNo)} className="btn-add-inline" title="Add item"><FiPlus /> Add</button>)}
+                                        {itemIndex === 0 && (
+                                          <button type="button" onClick={() => addItem(machineNo)} className="btn-add-inline" title="Add item" style={{ 
+                                            background: themeStyles.surface,
+                                            border: `1px solid ${themeStyles.border}`,
+                                            color: themeStyles.textPrimary
+                                          }}>
+                                            <FiPlus /> Add
+                                          </button>
+                                        )}
                                       </td>
                                       <td className="cell-item">
-                                        <div className="item-code-select"><select value={item.item_code} onChange={(e) => handleItemChange(machineNo, item.id, 'item_code', e.target.value)} className="form-select"><option value="">-- Select Item --</option>{items.map(itm => (<option key={itm.item_code} value={itm.item_code}>{itm.item_code} - {itm.item_name || 'Unnamed Item'}</option>))}</select></div>
-                                        {item.item_code && (<div className="item-name-line">{item.item_name || items.find(i => i.item_code === item.item_code)?.item_name || 'Unknown'}</div>)}
+                                        <div className="item-code-select">
+                                          <select value={item.item_code} onChange={(e) => handleItemChange(machineNo, item.id, 'item_code', e.target.value)} className="form-select" style={{ 
+                                            background: themeStyles.background,
+                                            border: `1px solid ${themeStyles.border}`,
+                                            color: themeStyles.textPrimary
+                                          }}>
+                                            <option value="">-- Select Item --</option>
+                                            {items.map(itm => (
+                                              <option key={itm.item_code} value={itm.item_code}>{itm.item_code} - {itm.item_name || 'Unnamed Item'}</option>
+                                            ))}
+                                          </select>
+                                        </div>
+                                        {item.item_code && (
+                                          <div className="item-name-line" style={{ color: themeStyles.textSecondary }}>
+                                            {item.item_name || items.find(i => i.item_code === item.item_code)?.item_name || 'Unknown'}
+                                          </div>
+                                        )}
                                       </td>
                                       <td className="cell-coil-material">
-                                        <div className="coil-size-input"><input type="text" value={item.coil_size || ''} onChange={(e) => handleItemChange(machineNo, item.id, 'coil_size', e.target.value)} className="form-input" placeholder="Coil size" /></div>
-                                        <div className="material-type-input"><input type="text" value={item.material_type || ''} onChange={(e) => handleItemChange(machineNo, item.id, 'material_type', e.target.value)} className="form-input" placeholder="Material type" /></div>
+                                        <div className="coil-size-input">
+                                          <input type="text" value={item.coil_size || ''} onChange={(e) => handleItemChange(machineNo, item.id, 'coil_size', e.target.value)} className="form-input" placeholder="Coil size" style={{ 
+                                            background: 'transparent',
+                                            borderBottom: `1px solid ${themeStyles.border}`,
+                                            color: themeStyles.textPrimary
+                                          }} />
+                                        </div>
+                                        <div className="material-type-input">
+                                          <input type="text" value={item.material_type || ''} onChange={(e) => handleItemChange(machineNo, item.id, 'material_type', e.target.value)} className="form-input" placeholder="Material type" style={{ 
+                                            background: 'transparent',
+                                            borderBottom: `1px solid ${themeStyles.border}`,
+                                            color: themeStyles.textPrimary
+                                          }} />
+                                        </div>
                                       </td>
                                       <td className="cell-qty-eff">
-                                        <div className="quantity-input"><input type="number" value={item.quantity} onChange={(e) => handleItemChange(machineNo, item.id, 'quantity', e.target.value)} step="0.01" min="0" className="form-input" placeholder="0.00" /></div>
+                                        <div className="quantity-input">
+                                          <input type="number" value={item.quantity} onChange={(e) => handleItemChange(machineNo, item.id, 'quantity', e.target.value)} step="0.01" min="0" className="form-input" placeholder="0.00" style={{ 
+                                            background: themeStyles.background,
+                                            border: `1px solid ${themeStyles.border}`,
+                                            color: themeStyles.textPrimary
+                                          }} />
+                                        </div>
                                         <div className="item-efficiency-display">
                                           <span className="item-efficiency-value" style={{ color: itemStatus.color }}>{itemEff}%</span>
                                           <span className="item-efficiency-icon" style={{ color: itemStatus.color }}>{itemStatus.icon}</span>
                                         </div>
                                       </td>
                                       <td className="cell-actions">
-                                        {data.items.length > 1 && (<button type="button" onClick={() => removeItem(machineNo, item.id)} className="btn-icon btn-danger" title="Remove item"><FiTrash2 /></button>)}
+                                        {data.items.length > 1 && (
+                                          <button type="button" onClick={() => removeItem(machineNo, item.id)} className="btn-icon btn-danger" title="Remove item">
+                                            <FiTrash2 />
+                                          </button>
+                                        )}
                                       </td>
                                     </tr>
                                   );
@@ -591,9 +903,28 @@ const FlatteningSmartForm = () => {
                               </tbody>
                             </table>
                           </div>
-                          <div className="operator-remarks-line">
-                            <div className="form-group-inline"><label className="form-label-inline"><FiUser /> Operator:</label><input type="text" value={data.operator_name || ''} onChange={(e) => setMachineData(prev => ({ ...prev, [machineNo]: { ...prev[machineNo], operator_name: e.target.value } }))} className="form-input-inline" placeholder="Operator name" /></div>
-                            <div className="form-group-inline"><label className="form-label-inline">Remarks:</label><input type="text" value={data.remarks || ''} onChange={(e) => setMachineData(prev => ({ ...prev, [machineNo]: { ...prev[machineNo], remarks: e.target.value } }))} className="form-input-inline" placeholder="Optional remarks" /></div>
+                          <div className="operator-remarks-line" style={{ 
+                            background: themeStyles.surface,
+                            border: `1px solid ${themeStyles.border}`
+                          }}>
+                            <div className="form-group-inline">
+                              <label className="form-label-inline" style={{ color: themeStyles.textPrimary }}>
+                                <FiUser /> Operator:
+                              </label>
+                              <input type="text" value={data.operator_name || ''} onChange={(e) => setMachineData(prev => ({ ...prev, [machineNo]: { ...prev[machineNo], operator_name: e.target.value } }))} className="form-input-inline" placeholder="Operator name" style={{ 
+                                background: themeStyles.background,
+                                border: `1px solid ${themeStyles.border}`,
+                                color: themeStyles.textPrimary
+                              }} />
+                            </div>
+                            <div className="form-group-inline">
+                              <label className="form-label-inline" style={{ color: themeStyles.textPrimary }}>Remarks:</label>
+                              <input type="text" value={data.remarks || ''} onChange={(e) => setMachineData(prev => ({ ...prev, [machineNo]: { ...prev[machineNo], remarks: e.target.value } }))} className="form-input-inline" placeholder="Optional remarks" style={{ 
+                                background: themeStyles.background,
+                                border: `1px solid ${themeStyles.border}`,
+                                color: themeStyles.textPrimary
+                              }} />
+                            </div>
                           </div>
                         </>
                       )}
@@ -602,34 +933,84 @@ const FlatteningSmartForm = () => {
                 })}
               </div>
             )}
+            
             {!selectedShift && (
               <div className="empty-state centered">
-                <div className="empty-icon"><FiClock size={64} /></div>
-                <h3>Select a Shift to Begin</h3>
-                <p>Choose a shift from the sidebar to start entering production data</p>
+                <div className="empty-icon" style={{ color: themeStyles.primary }}>
+                  <FiClock size={64} />
+                </div>
+                <h3 style={{ color: themeStyles.textPrimary }}>Select a Shift to Begin</h3>
+                <p style={{ color: themeStyles.textSecondary }}>Choose a shift from the sidebar to start entering production data</p>
                 <div className="empty-stats">
-                  <div className="stat"><span className="stat-number">{shifts.length}</span><span className="stat-label">Shifts Available</span></div>
-                  <div className="stat"><span className="stat-number">{normalizedTargets.length}</span><span className="stat-label">Total Machines</span></div>
+                  <div className="stat">
+                    <span className="stat-number" style={{ color: themeStyles.textPrimary }}>{shifts.length}</span>
+                    <span className="stat-label" style={{ color: themeStyles.textMuted }}>Shifts Available</span>
+                  </div>
+                  <div className="stat">
+                    <span className="stat-number" style={{ color: themeStyles.textPrimary }}>{normalizedTargets.length}</span>
+                    <span className="stat-label" style={{ color: themeStyles.textMuted }}>Total Machines</span>
+                  </div>
+                  <div className="stat">
+                    <span className="stat-number" style={{ color: themeStyles.textPrimary }}>{productionDate}</span>
+                    <span className="stat-label" style={{ color: themeStyles.textMuted }}>Selected Date</span>
+                  </div>
                 </div>
               </div>
             )}
+            
             {selectedShift && machinesForCurrentShift.length === 0 && (
               <div className="empty-state centered">
-                <div className="empty-icon"><FiCpu size={64} /></div>
-                <h3>No Machines Found</h3>
-                <p>No machines are available for the selected shift ({selectedShift})</p>
-                <button type="button" onClick={() => setSelectedShift('')} className="btn btn-outline"><FiRefreshCw /> Change Shift</button>
+                <div className="empty-icon" style={{ color: themeStyles.primary }}>
+                  <FiCpu size={64} />
+                </div>
+                <h3 style={{ color: themeStyles.textPrimary }}>No Machines Found</h3>
+                <p style={{ color: themeStyles.textSecondary }}>No machines are available for the selected shift ({selectedShift}) on {productionDate}</p>
+                <button type="button" onClick={() => setSelectedShift('')} className="btn btn-outline" style={{ 
+                  background: 'transparent',
+                  color: themeStyles.primary,
+                  border: `1px solid ${themeStyles.primary}`
+                }}>
+                  <FiRefreshCw /> Change Shift
+                </button>
               </div>
             )}
+            
             {selectedShift && machinesForCurrentShift.length > 0 && (
-              <div className="form-actions enhanced-actions">
+              <div className="form-actions enhanced-actions" style={{ 
+                background: themeStyles.surface,
+                border: `1px solid ${themeStyles.border}`
+              }}>
                 <div className="action-left">
-                  <button type="button" onClick={() => { localStorage.removeItem(`flattening_draft_${selectedShift}`); setSelectedShift(''); setMachineData({}); setError(''); setSuccess(''); }} className="btn btn-secondary" disabled={saving} title="Change shift and reset form"><FiRefreshCw /> Change Shift</button>
-                  <button type="button" onClick={() => { const dataStr = JSON.stringify(machineData, null, 2); navigator.clipboard.writeText(dataStr); setSuccess('Data copied to clipboard'); setTimeout(() => setSuccess(''), 2000); }} className="btn btn-outline" title="Copy data to clipboard"><FiDownload /> Copy Data</button>
+                  <button type="button" onClick={() => { localStorage.removeItem(`flattening_draft_${selectedShift}`); setSelectedShift(''); setMachineData({}); setError(''); setSuccess(''); }} className="btn btn-secondary" disabled={saving} title="Change shift and reset form" style={{ 
+                    background: themeStyles.surface,
+                    border: `1px solid ${themeStyles.border}`,
+                    color: themeStyles.textPrimary
+                  }}>
+                    <FiRefreshCw /> Change Shift
+                  </button>
+                  <button type="button" onClick={() => { const dataStr = JSON.stringify({...machineData, productionDate}, null, 2); navigator.clipboard.writeText(dataStr); setSuccess('Data copied to clipboard'); setTimeout(() => setSuccess(''), 2000); }} className="btn btn-outline" title="Copy data to clipboard" style={{ 
+                    background: 'transparent',
+                    color: themeStyles.primary,
+                    border: `1px solid ${themeStyles.primary}`
+                  }}>
+                    <FiDownload /> Copy Data
+                  </button>
                 </div>
                 <div className="action-right">
-                  <button type="submit" onClick={handleSubmit} className="btn btn-primary save-btn" disabled={saving} title="Save all production data">
-                    {saving ? (<><div className="spinner-small"></div>Saving...</>) : (<><FiSave /> Save All Data ({totalItems} Items)</>)}
+                  <button type="submit" onClick={handleSubmit} className="btn btn-primary save-btn" disabled={saving} title="Save all production data" style={{ 
+                    background: themeStyles.gradientPrimary,
+                    color: 'white'
+                  }}>
+                    {saving ? (
+                      <>
+                        <div className="spinner-small" style={{ 
+                          border: `2px solid rgba(255,255,255,0.3)`,
+                          borderTopColor: 'white'
+                        }}></div>Saving...
+                      </>
+                    ) : (
+                      <><FiSave /> Save All Data ({totalItems} Items)</>
+                    )}
                   </button>
                 </div>
               </div>
