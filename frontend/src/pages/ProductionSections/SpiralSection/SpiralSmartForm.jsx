@@ -1,4 +1,8 @@
-// src/components/ProductionSections/SpiralSection/SpiralSmartForm.jsx
+// ========================================================
+// FILE: SpiralSmartForm.jsx
+// PURPOSE: Smart Production Entry - Navy Blue Theme + All Fixes + WhatsApp Feature + Production Date
+// VERSION: 5.4 - Fixed Layout + Production Date Position
+// ========================================================
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -11,14 +15,12 @@ import {
   FiMessageSquare, FiFileText, FiEye, FiCalendar
 } from 'react-icons/fi';
 import { supabase } from '../../../supabaseClient';
-import { useTheme } from '../../../contexts/ThemeContext'; // ✅ Theme import
-import './SpiralSmartForm.css'; // ✅ Separate CSS file
+import { useTheme } from '../../../contexts/ThemeContext';
+import './SpiralSmartForm.css';
 
 const SpiralSmartForm = () => {
   const navigate = useNavigate();
-  
-  // ✅ Theme Context
-  const { mode, isDarkMode, currentTheme } = useTheme();
+  const { mode, isDarkMode } = useTheme();
   
   // Constants
   const CURRENT_SECTION = 'Spiral';
@@ -46,74 +48,29 @@ const SpiralSmartForm = () => {
   const [whatsAppMessage, setWhatsAppMessage] = useState('');
   const [sendingWhatsApp, setSendingWhatsApp] = useState(false);
 
-  // Production Date state
+  // Production Date state - Default to current date
   const [productionDate, setProductionDate] = useState(new Date().toISOString().split('T')[0]);
 
-  // ✅ Get Theme Colors
-  const getThemeColor = (colorName, fallback) => {
-    return currentTheme?.colors?.[colorName] || fallback;
+  // ✅ Theme-based color variables
+  const getThemeColor = (colorVar) => {
+    if (typeof window === 'undefined') return '#000000';
+    return getComputedStyle(document.documentElement).getPropertyValue(colorVar).trim() || '#000000';
   };
 
-  // ✅ Theme-based colors
   const themeColors = {
-    primary: getThemeColor('primary', '#1e40af'),
-    secondary: getThemeColor('secondary', '#1e293b'),
-    background: getThemeColor('background', '#0f172a'),
-    surface: getThemeColor('surface', '#1e293b'),
-    textPrimary: getThemeColor('textPrimary', '#f8fafc'),
-    textSecondary: getThemeColor('textSecondary', '#cbd5e1'),
-    border: getThemeColor('border', '#475569'),
-    success: getThemeColor('success', '#10b981'),
-    warning: getThemeColor('warning', '#f59e0b'),
-    error: getThemeColor('error', '#ef4444'),
-    info: getThemeColor('info', '#3b82f6'),
-  };
-
-  // ✅ Theme-based style objects
-  const themeStyles = {
-    modalOverlay: {
-      backgroundColor: isDarkMode ? 'rgba(0, 10, 20, 0.9)' : 'rgba(0, 20, 40, 0.8)'
-    },
-    modalContainer: {
-      background: isDarkMode 
-        ? `linear-gradient(135deg, ${themeColors.background} 0%, ${themeColors.surface} 100%)`
-        : 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
-      border: `1px solid ${themeColors.info}`,
-      color: themeColors.textPrimary
-    },
-    header: {
-      background: `linear-gradient(135deg, ${themeColors.primary} 0%, ${themeColors.info} 100%)`,
-      borderBottom: `2px solid ${themeColors.info}`
-    },
-    sidebar: {
-      backgroundColor: themeColors.surface,
-      border: `1px solid ${themeColors.border}`,
-      color: themeColors.textPrimary
-    },
-    card: {
-      backgroundColor: themeColors.surface,
-      border: `1px solid ${themeColors.border}`,
-      color: themeColors.textPrimary
-    },
-    input: {
-      backgroundColor: isDarkMode ? '#334155' : '#f1f5f9',
-      border: `1px solid ${themeColors.border}`,
-      color: themeColors.textPrimary
-    },
-    button: {
-      primary: {
-        background: `linear-gradient(135deg, ${themeColors.primary} 0%, ${themeColors.info} 100%)`,
-        color: 'white'
-      },
-      success: {
-        background: `linear-gradient(135deg, ${themeColors.success} 0%, #059669 100%)`,
-        color: 'white'
-      },
-      warning: {
-        background: `linear-gradient(135deg, ${themeColors.warning} 0%, #d97706 100%)`,
-        color: 'white'
-      }
-    }
+    primary: getThemeColor('--color-primary'),
+    background: getThemeColor('--color-background'),
+    surface: getThemeColor('--color-surface'),
+    textPrimary: getThemeColor('--color-text-primary'),
+    textSecondary: getThemeColor('--color-text-secondary'),
+    border: getThemeColor('--color-border'),
+    
+    navyDark: isDarkMode ? '#0a192f' : '#f8fafc',
+    navyLight: isDarkMode ? '#112240' : '#ffffff',
+    navyAccent: isDarkMode ? '#1e3a8a' : '#1A237E',
+    navyHighlight: isDarkMode ? '#2563eb' : '#283593',
+    navyText: isDarkMode ? '#e2e8f0' : '#1A237E',
+    navyTextLight: isDarkMode ? '#93c5fd' : '#283593',
   };
 
   // ==================== GET CURRENT USER ====================
@@ -908,8 +865,8 @@ const SpiralSmartForm = () => {
   // ==================== LOADING STATE ====================
   if (loading) {
     return (
-      <div className="modal-overlay" style={themeStyles.modalOverlay}>
-        <div className="modal-container loading-modal" style={themeStyles.modalContainer}>
+      <div className="modal-overlay navy-overlay">
+        <div className="modal-container loading-modal navy-modal">
           <div className="loading-content">
             <div className="loading-spinner-large"></div>
             <h3>Loading Production Form</h3>
@@ -922,8 +879,8 @@ const SpiralSmartForm = () => {
 
   // ==================== WHATSAPP MODAL ====================
   const WhatsAppModal = () => (
-    <div className="whatsapp-modal-overlay">
-      <div className="modal-container whatsapp-modal">
+    <div className="modal-overlay whatsapp-modal-overlay">
+      <div className="modal-container whatsapp-modal navy-modal">
         <div className="modal-header">
           <h2><FiMessageSquare /> Send via WhatsApp</h2>
           <button 
@@ -1006,42 +963,37 @@ const SpiralSmartForm = () => {
   // ==================== MAIN RENDER ====================
   return (
     <>
-      <div className="modal-overlay" style={themeStyles.modalOverlay} onClick={(e) => {
+      <div className="modal-overlay navy-overlay" onClick={(e) => {
         if (e.target === e.currentTarget) handleBackClick();
       }}>
-        <div className="modal-container smart-form-modal" style={themeStyles.modalContainer}>
+        <div className="modal-container smart-form-modal">
           
-          {/* HEADER - Theme integrated */}
-          <div className="modal-header" style={themeStyles.header}>
+          {/* HEADER */}
+          <div className="modal-header" style={{
+            background: isDarkMode ? 
+              'linear-gradient(135deg, #0f3460 0%, #1e3a8a 100%)' : 
+              'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+            borderBottom: `2px solid ${themeColors.primary}`,
+            color: themeColors.textPrimary
+          }}>
             <div className="final-header-content">
-              <h1 className="final-main-title">Spiral Production Entry</h1>
-              <p className="final-subtitle">
+              <h1 className="final-main-title" style={{ color: themeColors.textPrimary }}>
+                Spiral Production Entry
+              </h1>
+              <p className="final-subtitle" style={{ color: themeColors.textSecondary }}>
                 <FiPackage /> Smart entry form for spiral section
               </p>
             </div>
             
             <div className="final-header-actions">
               {draftSaved && (
-                <span className="draft-saved-badge">
+                <span className="draft-saved-badge" style={{
+                  background: isDarkMode ? 'rgba(37, 99, 235, 0.2)' : 'rgba(26, 35, 126, 0.1)',
+                  border: `1px solid ${isDarkMode ? '#3b82f6' : '#283593'}`,
+                  color: isDarkMode ? '#60a5fa' : '#283593'
+                }}>
                   <FiSave /> Draft Saved
                 </span>
-              )}
-              
-              {/* PRODUCTION DATE PICKER */}
-              {selectedShift && (
-                <div className="production-date-picker">
-                  <FiCalendar />
-                  <input
-                    type="date"
-                    value={productionDate}
-                    onChange={(e) => updateProductionDateForAll(e.target.value)}
-                    className="date-input"
-                    title="Select production date"
-                  />
-                  {validationErrors.productionDate && (
-                    <span className="error-text">{validationErrors.productionDate}</span>
-                  )}
-                </div>
               )}
               
               {/* SHARE BUTTONS */}
@@ -1050,9 +1002,12 @@ const SpiralSmartForm = () => {
                   <button
                     type="button"
                     onClick={() => setShowWhatsAppModal(true)}
-                    className="btn whatsapp-btn"
-                    style={themeStyles.button.success}
+                    className="btn btn-success whatsapp-btn"
                     title="Share via WhatsApp"
+                    style={{
+                      background: '#25D366',
+                      borderColor: '#25D366'
+                    }}
                   >
                     <FiMessageSquare /> WhatsApp
                   </button>
@@ -1060,8 +1015,7 @@ const SpiralSmartForm = () => {
                   <button
                     type="button"
                     onClick={generatePDF}
-                    className="btn pdf-btn"
-                    style={themeStyles.button.warning}
+                    className="btn btn-warning pdf-btn"
                     title="Generate PDF"
                   >
                     <FiFileText /> PDF
@@ -1070,22 +1024,31 @@ const SpiralSmartForm = () => {
               )}
               
               {selectedShift && machinesForCurrentShift.length > 0 && (
-                <div className="machine-navigation-header">
+                <div className="machine-navigation-header" style={{
+                  background: isDarkMode ? 'rgba(15, 52, 96, 0.8)' : 'rgba(248, 250, 252, 0.8)',
+                  border: `1px solid ${isDarkMode ? '#1d4ed8' : '#cbd5e1'}`,
+                  color: themeColors.textPrimary
+                }}>
                   <button
                     type="button"
                     onClick={prevMachine}
                     disabled={activeMachineIndex === 0}
                     className="nav-btn-header"
                     title="Previous Machine"
+                    style={{
+                      background: themeColors.primary,
+                      color: 'white',
+                      border: `1px solid ${themeColors.primary}`
+                    }}
                   >
                     <FiChevronLeft />
                   </button>
                   
                   <div className="nav-info-header">
-                    <span className="nav-current-header">
+                    <span className="nav-current-header" style={{ color: themeColors.textPrimary }}>
                       <FiCpu /> Machine {machinesForCurrentShift[activeMachineIndex]}
                     </span>
-                    <span className="nav-counter-header">
+                    <span className="nav-counter-header" style={{ color: themeColors.textSecondary }}>
                       {activeMachineIndex + 1} / {machinesForCurrentShift.length}
                     </span>
                   </div>
@@ -1096,6 +1059,11 @@ const SpiralSmartForm = () => {
                     disabled={activeMachineIndex === machinesForCurrentShift.length - 1}
                     className="nav-btn-header"
                     title="Next Machine"
+                    style={{
+                      background: themeColors.primary,
+                      color: 'white',
+                      border: `1px solid ${themeColors.primary}`
+                    }}
                   >
                     <FiChevronRight />
                   </button>
@@ -1106,7 +1074,11 @@ const SpiralSmartForm = () => {
                 className="btn btn-back"
                 onClick={handleBackClick}
                 title="Go back"
-                style={themeStyles.button.primary}
+                style={{
+                  background: themeColors.primary,
+                  color: 'white',
+                  border: `1px solid ${themeColors.primary}`
+                }}
               >
                 <FiArrowLeft /> {!isMobile && 'Back'}
               </button>
@@ -1115,47 +1087,169 @@ const SpiralSmartForm = () => {
 
           {/* MESSAGES */}
           {success && (
-            <div className="alert alert-success">
+            <div className="alert alert-success" style={{
+              background: 'rgba(34, 197, 94, 0.9)',
+              border: '1px solid #22c55e',
+              color: 'white'
+            }}>
               <FiCheck /> {success}
             </div>
           )}
 
           {error && (
-            <div className="alert alert-error">
+            <div className="alert alert-error" style={{
+              background: 'rgba(239, 68, 68, 0.9)',
+              border: '1px solid #ef4444',
+              color: 'white'
+            }}>
               <FiAlertCircle /> {error}
             </div>
           )}
 
-          {/* FORM LAYOUT */}
-          <div className="form-layout">
+          {/* FORM LAYOUT - COMPACT */}
+          <div className="form-layout" style={{
+            background: themeColors.background,
+            gap: '10px',
+            padding: '15px',
+            borderRadius: '12px'
+          }}>
             
-            {/* SIDEBAR */}
-            <div className="form-sidebar scrollable-sidebar" style={themeStyles.sidebar}>
-              <div className="sidebar-header">
+            {/* SIDEBAR - PRODUCTION DATE SHIFT کے اوپر */}
+            <div className="form-sidebar scrollable-sidebar" style={{
+              background: themeColors.surface,
+              border: `1px solid ${themeColors.border}`,
+              borderRadius: '12px',
+              padding: '15px'
+            }}>
+              {/* PRODUCTION DATE PICKER - SHIFT کے اوپر */}
+              {selectedShift && (
+                <div className="production-date-section" style={{
+                  background: isDarkMode ? '#1e293b' : '#f1f5f9',
+                  border: `2px solid ${isDarkMode ? '#3b82f6' : '#2563eb'}`,
+                  borderRadius: '10px',
+                  padding: '15px',
+                  marginBottom: '20px'
+                }}>
+                  <div className="production-date-header" style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    marginBottom: '12px'
+                  }}>
+                    <FiCalendar style={{ 
+                      color: isDarkMode ? '#60a5fa' : '#2563eb',
+                      fontSize: '1.2rem'
+                    }} />
+                    <h3 style={{ 
+                      margin: 0,
+                      color: themeColors.textPrimary,
+                      fontSize: '1.1rem',
+                      fontWeight: 600
+                    }}>
+                      Production Date
+                    </h3>
+                  </div>
+                  
+                  <div className="production-date-control">
+                    <input
+                      type="date"
+                      value={productionDate}
+                      onChange={(e) => updateProductionDateForAll(e.target.value)}
+                      className="date-input"
+                      title="Select production date"
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        background: isDarkMode ? '#334155' : '#ffffff',
+                        border: `1px solid ${themeColors.border}`,
+                        color: themeColors.textPrimary,
+                        borderRadius: '8px',
+                        fontSize: '1rem',
+                        fontWeight: 500
+                      }}
+                    />
+                  </div>
+                  
+                  <div className="production-date-display" style={{
+                    marginTop: '10px',
+                    padding: '8px',
+                    background: isDarkMode ? 'rgba(96, 165, 250, 0.1)' : 'rgba(37, 99, 235, 0.05)',
+                    borderRadius: '6px',
+                    textAlign: 'center'
+                  }}>
+                    <span style={{ 
+                      color: themeColors.textSecondary,
+                      fontSize: '0.9rem',
+                      fontWeight: 500
+                    }}>
+                      {formatDate(productionDate)}
+                    </span>
+                  </div>
+                </div>
+              )}
+              
+              <div className="sidebar-header" style={{
+                color: themeColors.textPrimary,
+                borderBottom: `1px solid ${themeColors.border}`,
+                paddingBottom: '10px',
+                marginBottom: '15px'
+              }}>
                 <FiClock />
                 <h3>Select Shift</h3>
               </div>
               
-              <div className="shift-options">
+              <div className="shift-options" style={{
+                background: themeColors.surface,
+                border: `1px solid ${themeColors.border}`
+              }}>
                 {shifts.map(shift => (
                   <div
                     key={shift.id}
                     className={`shift-option ${selectedShift === shift.shift_code ? 'active' : ''}`}
                     onClick={() => handleShiftSelect(shift.shift_code)}
-                    style={themeStyles.card}
+                    style={{
+                      background: selectedShift === shift.shift_code ? 
+                        themeColors.primary : 
+                        isDarkMode ? '#334155' : '#f1f5f9',
+                      border: `1px solid ${selectedShift === shift.shift_code ? themeColors.primary : themeColors.border}`,
+                      color: selectedShift === shift.shift_code ? 'white' : themeColors.textPrimary,
+                      marginBottom: '8px',
+                      borderRadius: '8px'
+                    }}
                   >
                     <div className="option-content">
-                      <span className="option-code">Shift {shift.shift_code}</span>
-                      <span className="option-name">
+                      <span className="option-code" style={{ 
+                        color: selectedShift === shift.shift_code ? 'white' : themeColors.textPrimary,
+                        fontWeight: 600
+                      }}>
+                        Shift {shift.shift_code}
+                      </span>
+                      <span className="option-name" style={{ 
+                        color: selectedShift === shift.shift_code ? 'rgba(255,255,255,0.9)' : themeColors.textSecondary
+                      }}>
                         {shift.shift_name === 'Day Shift' ? 'Day Shift' : 'Night Shift'}
                       </span>
-                      <span className="option-time">{shift.start_time} - {shift.end_time}</span>
+                      <span className="option-time" style={{ 
+                        color: selectedShift === shift.shift_code ? 'rgba(255,255,255,0.7)' : themeColors.textSecondary,
+                        fontSize: '0.85rem'
+                      }}>
+                        {shift.start_time} - {shift.end_time}
+                      </span>
                     </div>
                     <div className="option-status">
                       {selectedShift === shift.shift_code ? (
-                        <span className="status-active">Active</span>
+                        <span className="status-active" style={{ 
+                          color: '#4ade80',
+                          background: 'rgba(74, 222, 128, 0.1)'
+                        }}>
+                          Active
+                        </span>
                       ) : (
-                        <span className="status-inactive">Click to load</span>
+                        <span className="status-inactive" style={{ 
+                          color: themeColors.textSecondary
+                        }}>
+                          Click to load
+                        </span>
                       )}
                     </div>
                   </div>
@@ -1164,8 +1258,17 @@ const SpiralSmartForm = () => {
 
               {/* BULK OPERATIONS */}
               {selectedShift && Object.keys(machineData).length > 0 && (
-                <div className="bulk-operations">
-                  <div className="bulk-header">
+                <div className="bulk-operations no-labels" style={{
+                  background: themeColors.surface,
+                  border: `1px solid ${themeColors.border}`,
+                  marginTop: '15px'
+                }}>
+                  <div className="bulk-header" style={{
+                    color: themeColors.textPrimary,
+                    borderBottom: `1px solid ${themeColors.border}`,
+                    paddingBottom: '10px',
+                    marginBottom: '15px'
+                  }}>
                     <FiEdit3 />
                     <h4>Bulk Operations</h4>
                   </div>
@@ -1175,7 +1278,13 @@ const SpiralSmartForm = () => {
                       placeholder="Operator Name (All Machines)"
                       onChange={(e) => handleBulkUpdate('operator_name', e.target.value)}
                       className="form-input"
-                      style={themeStyles.input}
+                      style={{
+                        background: isDarkMode ? '#334155' : '#ffffff',
+                        border: `1px solid ${themeColors.border}`,
+                        color: themeColors.textPrimary,
+                        borderRadius: '6px',
+                        padding: '10px'
+                      }}
                     />
                     <input
                       type="text"
@@ -1183,48 +1292,92 @@ const SpiralSmartForm = () => {
                       readOnly
                       className="form-input readonly-input"
                       placeholder="User Name (Auto)"
-                      style={themeStyles.input}
+                      style={{
+                        background: isDarkMode ? '#2d3748' : '#f8fafc',
+                        border: `1px solid ${themeColors.border}`,
+                        color: isDarkMode ? '#a0aec0' : '#64748b',
+                        borderRadius: '6px',
+                        padding: '10px',
+                        cursor: 'not-allowed'
+                      }}
                     />
                     <input
                       type="text"
                       placeholder="Remarks (All Machines)"
                       onChange={(e) => handleBulkUpdate('remarks', e.target.value)}
                       className="form-input"
-                      style={themeStyles.input}
+                      style={{
+                        background: isDarkMode ? '#334155' : '#ffffff',
+                        border: `1px solid ${themeColors.border}`,
+                        color: themeColors.textPrimary,
+                        borderRadius: '6px',
+                        padding: '10px'
+                      }}
                     />
                   </div>
                 </div>
               )}
 
-              <div className="sidebar-stats" style={themeStyles.card}>
-                <div className="stat-item">
-                  <span className="stat-label">Production Date</span>
-                  <span className="stat-value">{formatDate(productionDate)}</span>
-                </div>
-                <div className="stat-item">
-                  <span className="stat-label">Total Machines</span>
-                  <span className="stat-value">{totalMachinesCount}</span>
+              <div className="sidebar-stats" style={{
+                background: themeColors.surface,
+                border: `1px solid ${themeColors.border}`,
+                borderRadius: '8px',
+                padding: '15px',
+                marginTop: '15px'
+              }}>
+                <div className="stat-item" style={{
+                  borderBottom: `1px solid ${themeColors.border}`,
+                  padding: '8px 0'
+                }}>
+                  <span className="stat-label" style={{ color: themeColors.textSecondary }}>
+                    Total Machines
+                  </span>
+                  <span className="stat-value" style={{ color: themeColors.textPrimary, fontWeight: 700 }}>
+                    {totalMachinesCount}
+                  </span>
                 </div>
                 {selectedShift ? (
                   <>
-                    <div className="stat-item">
-                      <span className="stat-label">Active Machines</span>
-                      <span className="stat-value">{machinesForCurrentShift.length}</span>
+                    <div className="stat-item" style={{
+                      borderBottom: `1px solid ${themeColors.border}`,
+                      padding: '8px 0'
+                    }}>
+                      <span className="stat-label" style={{ color: themeColors.textSecondary }}>
+                        Active Machines
+                      </span>
+                      <span className="stat-value" style={{ color: themeColors.textPrimary, fontWeight: 700 }}>
+                        {machinesForCurrentShift.length}
+                      </span>
                     </div>
-                    <div className="stat-item">
-                      <span className="stat-label">Total Items</span>
-                      <span className="stat-value">{totalItems}</span>
+                    <div className="stat-item" style={{ padding: '8px 0' }}>
+                      <span className="stat-label" style={{ color: themeColors.textSecondary }}>
+                        Total Items
+                      </span>
+                      <span className="stat-value" style={{ color: themeColors.textPrimary, fontWeight: 700 }}>
+                        {totalItems}
+                      </span>
                     </div>
                   </>
                 ) : (
                   <>
-                    <div className="stat-item">
-                      <span className="stat-label">Shifts</span>
-                      <span className="stat-value">{shifts.length}</span>
+                    <div className="stat-item" style={{
+                      borderBottom: `1px solid ${themeColors.border}`,
+                      padding: '8px 0'
+                    }}>
+                      <span className="stat-label" style={{ color: themeColors.textSecondary }}>
+                        Shifts
+                      </span>
+                      <span className="stat-value" style={{ color: themeColors.textPrimary, fontWeight: 700 }}>
+                        {shifts.length}
+                      </span>
                     </div>
-                    <div className="stat-item">
-                      <span className="stat-label">Items</span>
-                      <span className="stat-value">{items.length}</span>
+                    <div className="stat-item" style={{ padding: '8px 0' }}>
+                      <span className="stat-label" style={{ color: themeColors.textSecondary }}>
+                        Items
+                      </span>
+                      <span className="stat-value" style={{ color: themeColors.textPrimary, fontWeight: 700 }}>
+                        {items.length}
+                      </span>
                     </div>
                   </>
                 )}
@@ -1245,6 +1398,13 @@ const SpiralSmartForm = () => {
                     }}
                     className="btn btn-secondary"
                     title="Change shift"
+                    style={{
+                      background: isDarkMode ? '#334155' : '#e2e8f0',
+                      color: themeColors.textPrimary,
+                      border: `1px solid ${themeColors.border}`,
+                      width: '100%',
+                      marginTop: '15px'
+                    }}
                   >
                     <FiRefreshCw />
                     Change Shift
@@ -1253,70 +1413,259 @@ const SpiralSmartForm = () => {
               )}
             </div>
 
-            {/* MAIN CONTENT */}
-            <div className="form-main-content" style={themeStyles.card}>
+            {/* MAIN CONTENT - FIXED LAYOUT */}
+            <div className="form-main-content" style={{
+              background: themeColors.background,
+              border: `1px solid ${themeColors.border}`,
+              borderRadius: '12px',
+              padding: '15px'
+            }}>
               
               {selectedShift && (
-                <div className="final-production-header">
+                <div className="final-production-header" style={{
+                  background: themeColors.surface,
+                  border: `1px solid ${themeColors.border}`,
+                  borderRadius: '12px',
+                  padding: '15px',
+                  marginBottom: '10px'
+                }}>
                   <div className="final-shift-title">
-                    <h2 className="compact-title">Shift {selectedShift} Production</h2>
-                    <div className="production-date-display">
+                    <h2 className="compact-title" style={{ color: themeColors.textPrimary }}>
+                      Shift {selectedShift} Production
+                    </h2>
+                    <div className="production-date-display-mobile" style={{ color: themeColors.textSecondary }}>
                       <FiCalendar /> {formatDate(productionDate)}
                     </div>
                   </div>
                   
-                  {/* SUMMARY BOXES */}
-                  <div className="final-summary-boxes">
-                    <div className="final-summary-box" style={themeStyles.card}>
-                      <div className="final-box-icon">
+                  {/* FOUR BOXES - FIXED GRID LAYOUT */}
+                  <div className="final-summary-boxes-fixed" style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                    gap: '12px',
+                    margin: '15px 0'
+                  }}>
+                    {/* Target Box */}
+                    <div className="final-summary-box-fixed" style={{
+                      background: `linear-gradient(135deg, ${themeColors.surface} 0%, ${isDarkMode ? '#334155' : '#f1f5f9'} 100%)`,
+                      border: `1px solid ${themeColors.border}`,
+                      borderLeft: '4px solid #3b82f6',
+                      borderRadius: '10px',
+                      padding: '15px',
+                      color: themeColors.textPrimary,
+                      minHeight: '90px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '15px'
+                    }}>
+                      <div className="final-box-icon-fixed" style={{
+                        background: 'rgba(96, 165, 250, 0.2)',
+                        color: '#60a5fa',
+                        minWidth: '50px',
+                        height: '50px',
+                        borderRadius: '10px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '1.5rem'
+                      }}>
                         <FiTarget />
                       </div>
-                      <div className="final-box-content">
-                        <div className="final-box-label">TOTAL TARGET</div>
-                        <div className="final-box-value">
-                          {formatNumber(totalTarget)} 
-                          <span className="final-box-unit">Meter</span>
+                      <div className="final-box-content-fixed">
+                        <div className="final-box-label-fixed" style={{ 
+                          color: themeColors.textSecondary,
+                          fontSize: '0.85rem',
+                          fontWeight: 600,
+                          marginBottom: '5px'
+                        }}>
+                          TOTAL TARGET
+                        </div>
+                        <div className="final-box-value-fixed" style={{ 
+                          color: themeColors.textPrimary,
+                          fontSize: '1.4rem',
+                          fontWeight: 700,
+                          display: 'flex',
+                          alignItems: 'baseline',
+                          gap: '5px'
+                        }}>
+                          {formatNumber(totalTarget)}
+                          <span className="final-box-unit-fixed" style={{ 
+                            color: themeColors.textSecondary,
+                            fontSize: '0.9rem',
+                            fontWeight: 500
+                          }}>
+                            Meter
+                          </span>
                         </div>
                       </div>
                     </div>
                     
-                    <div className="final-summary-box" style={themeStyles.card}>
-                      <div className="final-box-icon">
+                    {/* Production Box */}
+                    <div className="final-summary-box-fixed" style={{
+                      background: `linear-gradient(135deg, ${themeColors.surface} 0%, ${isDarkMode ? '#334155' : '#f1f5f9'} 100%)`,
+                      border: `1px solid ${themeColors.border}`,
+                      borderLeft: '4px solid #8b5cf6',
+                      borderRadius: '10px',
+                      padding: '15px',
+                      color: themeColors.textPrimary,
+                      minHeight: '90px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '15px'
+                    }}>
+                      <div className="final-box-icon-fixed" style={{
+                        background: 'rgba(139, 92, 246, 0.2)',
+                        color: '#8b5cf6',
+                        minWidth: '50px',
+                        height: '50px',
+                        borderRadius: '10px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '1.5rem'
+                      }}>
                         <FiActivity />
                       </div>
-                      <div className="final-box-content">
-                        <div className="final-box-label">TOTAL PRODUCTION</div>
-                        <div className="final-box-value">
+                      <div className="final-box-content-fixed">
+                        <div className="final-box-label-fixed" style={{ 
+                          color: themeColors.textSecondary,
+                          fontSize: '0.85rem',
+                          fontWeight: 600,
+                          marginBottom: '5px'
+                        }}>
+                          TOTAL PRODUCTION
+                        </div>
+                        <div className="final-box-value-fixed" style={{ 
+                          color: themeColors.textPrimary,
+                          fontSize: '1.4rem',
+                          fontWeight: 700,
+                          display: 'flex',
+                          alignItems: 'baseline',
+                          gap: '5px'
+                        }}>
                           {formatNumber(sectionProductionTotal)}
-                          <span className="final-box-unit">Meter</span>
+                          <span className="final-box-unit-fixed" style={{ 
+                            color: themeColors.textSecondary,
+                            fontSize: '0.9rem',
+                            fontWeight: 500
+                          }}>
+                            Meter
+                          </span>
                         </div>
                       </div>
                     </div>
                     
-                    <div className="final-summary-box" style={themeStyles.card}>
-                      <div className="final-box-icon">
+                    {/* Weight Box */}
+                    <div className="final-summary-box-fixed" style={{
+                      background: `linear-gradient(135deg, ${themeColors.surface} 0%, ${isDarkMode ? '#334155' : '#f1f5f9'} 100%)`,
+                      border: `1px solid ${themeColors.border}`,
+                      borderLeft: '4px solid #10b981',
+                      borderRadius: '10px',
+                      padding: '15px',
+                      color: themeColors.textPrimary,
+                      minHeight: '90px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '15px'
+                    }}>
+                      <div className="final-box-icon-fixed" style={{
+                        background: 'rgba(16, 185, 129, 0.2)',
+                        color: '#10b981',
+                        minWidth: '50px',
+                        height: '50px',
+                        borderRadius: '10px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '1.5rem'
+                      }}>
                         <FiPackage />
                       </div>
-                      <div className="final-box-content">
-                        <div className="final-box-label">TOTAL WEIGHT</div>
-                        <div className="final-box-value">
+                      <div className="final-box-content-fixed">
+                        <div className="final-box-label-fixed" style={{ 
+                          color: themeColors.textSecondary,
+                          fontSize: '0.85rem',
+                          fontWeight: 600,
+                          marginBottom: '5px'
+                        }}>
+                          TOTAL WEIGHT
+                        </div>
+                        <div className="final-box-value-fixed" style={{ 
+                          color: themeColors.textPrimary,
+                          fontSize: '1.4rem',
+                          fontWeight: 700,
+                          display: 'flex',
+                          alignItems: 'baseline',
+                          gap: '5px'
+                        }}>
                           {formatNumber(sectionTotal)}
-                          <span className="final-box-unit">Kg</span>
+                          <span className="final-box-unit-fixed" style={{ 
+                            color: themeColors.textSecondary,
+                            fontSize: '0.9rem',
+                            fontWeight: 500
+                          }}>
+                            Kg
+                          </span>
                         </div>
                       </div>
                     </div>
                     
-                    <div className="final-summary-box" style={themeStyles.card}>
-                      <div className="final-box-icon">
+                    {/* Efficiency Box */}
+                    <div className="final-summary-box-fixed" style={{
+                      background: `linear-gradient(135deg, ${themeColors.surface} 0%, ${isDarkMode ? '#334155' : '#f1f5f9'} 100%)`,
+                      border: `1px solid ${themeColors.border}`,
+                      borderLeft: '4px solid #f59e0b',
+                      borderRadius: '10px',
+                      padding: '15px',
+                      color: themeColors.textPrimary,
+                      minHeight: '90px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '15px'
+                    }}>
+                      <div className="final-box-icon-fixed" style={{
+                        background: 'rgba(245, 158, 11, 0.2)',
+                        color: '#f59e0b',
+                        minWidth: '50px',
+                        height: '50px',
+                        borderRadius: '10px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '1.5rem'
+                      }}>
                         <FiBarChart2 />
                       </div>
-                      <div className="final-box-content">
-                        <div className="final-box-label">TOTAL EFFICIENCY</div>
-                        <div className="final-box-value-row">
-                          <span className="final-box-efficiency-value" style={{ color: getEfficiencyColor(totalEfficiency) }}>
+                      <div className="final-box-content-fixed">
+                        <div className="final-box-label-fixed" style={{ 
+                          color: themeColors.textSecondary,
+                          fontSize: '0.85rem',
+                          fontWeight: 600,
+                          marginBottom: '5px'
+                        }}>
+                          TOTAL EFFICIENCY
+                        </div>
+                        <div className="final-box-value-fixed" style={{ 
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '5px'
+                        }}>
+                          <span className="final-box-efficiency-value-fixed" style={{ 
+                            color: getEfficiencyColor(totalEfficiency),
+                            fontSize: '1.5rem',
+                            fontWeight: 700,
+                            lineHeight: 1.2
+                          }}>
                             {formatNumber(totalEfficiency)}%
                           </span>
-                          <span className="final-box-efficiency-status" style={{ color: getEfficiencyColor(totalEfficiency) }}>
+                          <span className="final-box-efficiency-status-fixed" style={{ 
+                            color: getEfficiencyColor(totalEfficiency),
+                            fontSize: '0.85rem',
+                            fontWeight: 600,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '5px'
+                          }}>
                             {totalEfficiency >= 100 ? '↑' : '↓'} {getEfficiencyStatus(totalEfficiency).text}
                           </span>
                         </div>
@@ -1324,30 +1673,71 @@ const SpiralSmartForm = () => {
                     </div>
                   </div>
                   
-                  {/* MACHINE INFO */}
-                  <div className="final-machine-stats-combined" style={themeStyles.card}>
+                  {/* COMPACT MACHINE INFO */}
+                  <div className="final-machine-stats-combined" style={{
+                    background: themeColors.surface,
+                    border: `1px solid ${themeColors.border}`,
+                    borderRadius: '8px',
+                    padding: '12px',
+                    marginTop: '10px'
+                  }}>
                     <div className="final-machine-info-line">
                       {getCurrentMachineInfo() && (
-                        <div className="final-current-machine-info" style={themeStyles.input}>
-                          <FiCpu className="final-machine-icon-small" />
-                          <span className="final-machine-text-bold">
+                        <div className="final-current-machine-info" style={{
+                          background: isDarkMode ? '#334155' : '#f1f5f9',
+                          border: `1px solid ${themeColors.border}`,
+                          borderRadius: '6px',
+                          padding: '8px 12px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px'
+                        }}>
+                          <FiCpu className="final-machine-icon-small" style={{ color: themeColors.primary }} />
+                          <span className="final-machine-text-bold" style={{ 
+                            color: themeColors.textPrimary,
+                            fontWeight: 600,
+                            fontSize: '1rem'
+                          }}>
                             Machine {getCurrentMachineInfo().machineNo} | Target: {formatNumber(getCurrentMachineInfo().targetQty)} {getCurrentMachineInfo().targetUnit}
                           </span>
                         </div>
                       )}
                       
-                      <div className="final-machine-stats-line">
-                        <div className="final-machine-stat">
-                          <span className="final-stat-label">TOTAL WEIGHT:</span>
-                          <span className="final-stat-value">
+                      <div className="final-machine-stats-line" style={{
+                        display: 'flex',
+                        gap: '20px',
+                        alignItems: 'center',
+                        marginTop: '10px'
+                      }}>
+                        <div className="final-machine-stat" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span className="final-stat-label" style={{ 
+                            color: themeColors.textSecondary,
+                            fontWeight: 600
+                          }}>
+                            TOTAL WEIGHT:
+                          </span>
+                          <span className="final-stat-value" style={{ 
+                            color: themeColors.textPrimary,
+                            fontWeight: 700,
+                            fontSize: '1.1rem'
+                          }}>
                             {formatNumber(calculateMachineTotal(machinesForCurrentShift[activeMachineIndex] || ''))} Kg
                           </span>
                         </div>
-                        <div className="final-machine-stat">
-                          <span className="final-stat-label">MACHINE EFFICIENCY:</span>
+                        <div className="final-machine-stat" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span className="final-stat-label" style={{ 
+                            color: themeColors.textSecondary,
+                            fontWeight: 600
+                          }}>
+                            MACHINE EFFICIENCY:
+                          </span>
                           <span 
                             className="final-stat-efficiency" 
-                            style={{ color: getEfficiencyColor(calculateMachineEfficiency(machinesForCurrentShift[activeMachineIndex] || '')) }}
+                            style={{ 
+                              color: getEfficiencyColor(calculateMachineEfficiency(machinesForCurrentShift[activeMachineIndex] || '')),
+                              fontWeight: 700,
+                              fontSize: '1.1rem'
+                            }}
                           >
                             {formatNumber(calculateMachineEfficiency(machinesForCurrentShift[activeMachineIndex] || ''))}%
                             {calculateMachineEfficiency(machinesForCurrentShift[activeMachineIndex] || '') >= 100 ? ' ↑' : ' ↓'}
@@ -1359,9 +1749,9 @@ const SpiralSmartForm = () => {
                 </div>
               )}
 
-              {/* PRODUCTION ENTRY */}
+              {/* PRODUCTION ENTRY - COMPACT */}
               {selectedShift && machinesForCurrentShift.length > 0 && (
-                <div className="production-entry">
+                <div className="production-entry" style={{ marginTop: '5px' }}>
                   {machinesForCurrentShift.map((machineNo, index) => {
                     const data = machineData[machineNo] || {};
                     
@@ -1369,32 +1759,59 @@ const SpiralSmartForm = () => {
                       <div 
                         key={machineNo} 
                         className={`machine-card ${index === activeMachineIndex ? 'active' : ''}`}
-                        style={{ display: index === activeMachineIndex ? 'block' : 'none', ...themeStyles.card }}
+                        style={{ 
+                          display: index === activeMachineIndex ? 'block' : 'none',
+                          background: themeColors.surface,
+                          border: `1px solid ${themeColors.border}`,
+                          borderRadius: '12px',
+                          padding: '15px',
+                          marginBottom: '10px'
+                        }}
                       >
                         
-                        {/* ITEMS TABLE */}
-                        <div className="items-table-wrapper">
-                          <table className="items-table">
+                        {/* COMPACT ITEMS TABLE */}
+                        <div className="items-table-wrapper" style={{ marginTop: '5px' }}>
+                          <table className="items-table" style={{
+                            width: '100%',
+                            background: themeColors.surface,
+                            border: `1px solid ${themeColors.border}`,
+                            borderRadius: '8px',
+                            overflow: 'hidden',
+                            fontSize: '0.9rem'
+                          }}>
                             <thead>
-                              <tr>
-                                <th>Item Details</th>
-                                <th>Raw Material</th>
-                                <th>Production</th>
-                                <th>Weight</th>
-                                <th>Efficiency</th>
-                                <th>Actions</th>
+                              <tr style={{ 
+                                background: isDarkMode ? '#334155' : '#f1f5f9',
+                                color: themeColors.textPrimary
+                              }}>
+                                <th style={{ padding: '12px', textAlign: 'left', fontWeight: 600 }}>Item Details</th>
+                                <th style={{ padding: '12px', textAlign: 'left', fontWeight: 600 }}>Raw Material</th>
+                                <th style={{ padding: '12px', textAlign: 'left', fontWeight: 600 }}>Production</th>
+                                <th style={{ padding: '12px', textAlign: 'left', fontWeight: 600 }}>Weight</th>
+                                <th style={{ padding: '12px', textAlign: 'left', fontWeight: 600 }}>Efficiency</th>
+                                <th style={{ padding: '12px', textAlign: 'left', fontWeight: 600 }}>Actions</th>
                               </tr>
                             </thead>
                             <tbody>
                               {data.items?.map((item, itemIndex) => (
-                                <tr key={item.id}>
-                                  <td>
+                                <tr key={item.id} style={{ 
+                                  borderBottom: `1px solid ${themeColors.border}`,
+                                  color: themeColors.textPrimary
+                                }}>
+                                  <td style={{ padding: '10px' }}>
                                     <select
                                       value={item.item_code}
                                       onChange={(e) => handleItemChange(machineNo, item.id, 'item_code', e.target.value)}
                                       className={`form-select ${validationErrors[`item_${machineNo}_${itemIndex}`] ? 'error' : ''}`}
                                       title="Select item"
-                                      style={themeStyles.input}
+                                      style={{
+                                        background: isDarkMode ? '#334155' : '#ffffff',
+                                        border: `1px solid ${themeColors.border}`,
+                                        color: themeColors.textPrimary,
+                                        borderRadius: '6px',
+                                        padding: '8px',
+                                        width: '100%'
+                                      }}
                                     >
                                       <option value="">-- Select Item --</option>
                                       {items.map(itm => (
@@ -1405,8 +1822,8 @@ const SpiralSmartForm = () => {
                                     </select>
                                   </td>
                                   
-                                  <td>
-                                    <div className="raw-material-fields">
+                                  <td style={{ padding: '10px' }}>
+                                    <div className="raw-material-fields" style={{ display: 'flex', gap: '5px' }}>
                                       <input
                                         type="text"
                                         value={item.raw_material_flatsize || ''}
@@ -1414,7 +1831,14 @@ const SpiralSmartForm = () => {
                                         className={`form-input small ${validationErrors[`flat_${machineNo}_${itemIndex}`] ? 'error' : ''}`}
                                         placeholder="Flat Size"
                                         title="Raw material flat size"
-                                        style={themeStyles.input}
+                                        style={{
+                                          background: isDarkMode ? '#334155' : '#ffffff',
+                                          border: `1px solid ${themeColors.border}`,
+                                          color: themeColors.textPrimary,
+                                          borderRadius: '6px',
+                                          padding: '8px',
+                                          fontSize: '0.9rem'
+                                        }}
                                       />
                                       <input
                                         type="text"
@@ -1423,13 +1847,20 @@ const SpiralSmartForm = () => {
                                         className={`form-input small ${validationErrors[`material_${machineNo}_${itemIndex}`] ? 'error' : ''}`}
                                         placeholder="Material Type"
                                         title="Material type"
-                                        style={themeStyles.input}
+                                        style={{
+                                          background: isDarkMode ? '#334155' : '#ffffff',
+                                          border: `1px solid ${themeColors.border}`,
+                                          color: themeColors.textPrimary,
+                                          borderRadius: '6px',
+                                          padding: '8px',
+                                          fontSize: '0.9rem'
+                                        }}
                                       />
                                     </div>
                                   </td>
                                   
-                                  <td>
-                                    <div className="production-fields">
+                                  <td style={{ padding: '10px' }}>
+                                    <div className="production-fields" style={{ display: 'flex', gap: '5px' }}>
                                       <input
                                         type="number"
                                         value={item.production_quantity}
@@ -1439,7 +1870,14 @@ const SpiralSmartForm = () => {
                                         className={`form-input small ${validationErrors[`qty_${machineNo}_${itemIndex}`] ? 'error' : ''}`}
                                         placeholder="Quantity"
                                         title="Production quantity"
-                                        style={themeStyles.input}
+                                        style={{
+                                          background: isDarkMode ? '#334155' : '#ffffff',
+                                          border: `1px solid ${themeColors.border}`,
+                                          color: themeColors.textPrimary,
+                                          borderRadius: '6px',
+                                          padding: '8px',
+                                          fontSize: '0.9rem'
+                                        }}
                                       />
                                       <input
                                         type="number"
@@ -1450,23 +1888,41 @@ const SpiralSmartForm = () => {
                                         className={`form-input small ${validationErrors[`weight_${machineNo}_${itemIndex}`] ? 'error' : ''}`}
                                         placeholder="Per M Wt"
                                         title="Per meter weight"
-                                        style={themeStyles.input}
+                                        style={{
+                                          background: isDarkMode ? '#334155' : '#ffffff',
+                                          border: `1px solid ${themeColors.border}`,
+                                          color: themeColors.textPrimary,
+                                          borderRadius: '6px',
+                                          padding: '8px',
+                                          fontSize: '0.9rem'
+                                        }}
                                       />
                                     </div>
                                   </td>
                                   
-                                  <td>
-                                    <div className="weight-display">
+                                  <td style={{ padding: '10px' }}>
+                                    <div className="weight-display" style={{ 
+                                      color: themeColors.textPrimary,
+                                      fontWeight: 600,
+                                      padding: '8px'
+                                    }}>
                                       {formatNumber(item.weight || '0')} Kg
                                     </div>
                                   </td>
                                   
-                                  <td>
+                                  <td style={{ padding: '10px' }}>
                                     <div 
                                       className="efficiency-badge"
                                       style={{ 
                                         backgroundColor: getEfficiencyColor(item.efficiency) + '20', 
                                         color: getEfficiencyColor(item.efficiency),
+                                        padding: '6px 12px',
+                                        borderRadius: '20px',
+                                        fontWeight: 600,
+                                        fontSize: '0.85rem',
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '5px'
                                       }}
                                     >
                                       {formatNumber(item.efficiency)}%
@@ -1474,15 +1930,33 @@ const SpiralSmartForm = () => {
                                     </div>
                                   </td>
                                   
-                                  {/* ACTIONS */}
-                                  <td>
-                                    <div className="action-buttons">
+                                  {/* ACTIONS COLUMN */}
+                                  <td style={{ padding: '10px' }}>
+                                    <div className="action-buttons" style={{ 
+                                      display: 'flex',
+                                      flexDirection: 'column',
+                                      gap: '6px',
+                                      alignItems: 'flex-start',
+                                      minWidth: '110px'
+                                    }}>
                                       {data.items.length > 1 && (
                                         <button
                                           type="button"
                                           onClick={() => removeItem(machineNo, item.id)}
                                           className="btn-icon btn-danger"
                                           title="Remove item"
+                                          style={{
+                                            width: '32px',
+                                            height: '32px',
+                                            padding: '0',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            background: 'linear-gradient(135deg, #dc2626 0%, #991b1b 100%)',
+                                            color: 'white',
+                                            borderRadius: '6px',
+                                            border: 'none'
+                                          }}
                                         >
                                           <FiTrash2 />
                                         </button>
@@ -1494,6 +1968,18 @@ const SpiralSmartForm = () => {
                                           onClick={() => addItem(machineNo)}
                                           className="btn btn-outline"
                                           title="Add new item"
+                                          style={{
+                                            padding: '6px 10px',
+                                            fontSize: '0.8rem',
+                                            height: '32px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '4px',
+                                            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                                            color: 'white',
+                                            border: 'none',
+                                            borderRadius: '6px'
+                                          }}
                                         >
                                           <FiPlus /> Add
                                         </button>
@@ -1505,6 +1991,18 @@ const SpiralSmartForm = () => {
                                           onClick={() => clearMachineData(machineNo)}
                                           className="btn btn-secondary"
                                           title="Clear all data for this machine"
+                                          style={{
+                                            padding: '6px 10px',
+                                            fontSize: '0.8rem',
+                                            height: '32px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '4px',
+                                            background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                                            color: 'white',
+                                            border: 'none',
+                                            borderRadius: '6px'
+                                          }}
                                         >
                                           <FiXCircle /> Clear
                                         </button>
@@ -1518,8 +2016,18 @@ const SpiralSmartForm = () => {
                         </div>
 
                         {/* OPERATOR DETAILS */}
-                        <div className="machine-footer no-labels" style={themeStyles.card}>
-                          <div className="footer-grid">
+                        <div className="machine-footer no-labels" style={{
+                          background: themeColors.surface,
+                          border: `1px solid ${themeColors.border}`,
+                          borderRadius: '8px',
+                          padding: '15px',
+                          marginTop: '10px'
+                        }}>
+                          <div className="footer-grid" style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(3, 1fr)',
+                            gap: '10px'
+                          }}>
                             <input
                               type="text"
                               value={data.operator_name || ''}
@@ -1529,7 +2037,13 @@ const SpiralSmartForm = () => {
                               }))}
                               className={`form-input ${validationErrors[`operator_${machineNo}`] ? 'error' : ''}`}
                               placeholder="Operator Name"
-                              style={themeStyles.input}
+                              style={{
+                                background: isDarkMode ? '#334155' : '#ffffff',
+                                border: `1px solid ${themeColors.border}`,
+                                color: themeColors.textPrimary,
+                                borderRadius: '6px',
+                                padding: '10px'
+                              }}
                             />
                             
                             <input
@@ -1538,7 +2052,14 @@ const SpiralSmartForm = () => {
                               readOnly
                               className="form-input readonly-input"
                               placeholder="User Name (Auto)"
-                              style={themeStyles.input}
+                              style={{
+                                background: isDarkMode ? '#2d3748' : '#f8fafc',
+                                border: `1px solid ${themeColors.border}`,
+                                color: isDarkMode ? '#a0aec0' : '#64748b',
+                                borderRadius: '6px',
+                                padding: '10px',
+                                cursor: 'not-allowed'
+                              }}
                             />
                             
                             <input
@@ -1550,7 +2071,13 @@ const SpiralSmartForm = () => {
                               }))}
                               className="form-input"
                               placeholder="Remarks"
-                              style={themeStyles.input}
+                              style={{
+                                background: isDarkMode ? '#334155' : '#ffffff',
+                                border: `1px solid ${themeColors.border}`,
+                                color: themeColors.textPrimary,
+                                borderRadius: '6px',
+                                padding: '10px'
+                              }}
                             />
                           </div>
                         </div>
@@ -1562,13 +2089,18 @@ const SpiralSmartForm = () => {
 
               {/* SUBMIT BUTTON */}
               {selectedShift && machinesForCurrentShift.length > 0 && (
-                <div className="form-actions">
+                <div className="form-actions" style={{ marginTop: '15px', textAlign: 'center' }}>
                   <button
                     type="button"
                     onClick={() => setShowWhatsAppModal(true)}
-                    className="btn navy-whatsapp-btn"
-                    style={themeStyles.button.success}
+                    className="btn btn-success"
                     title="Share via WhatsApp"
+                    style={{
+                      background: '#25D366',
+                      borderColor: '#25D366',
+                      color: 'white',
+                      marginRight: '10px'
+                    }}
                   >
                     <FiMessageSquare /> Share via WhatsApp
                   </button>
@@ -1578,7 +2110,16 @@ const SpiralSmartForm = () => {
                     onClick={handleSubmit}
                     className="btn btn-primary"
                     disabled={saving}
-                    style={themeStyles.button.primary}
+                    style={{
+                      background: `linear-gradient(135deg, ${themeColors.primary} 0%, ${themeColors.primary}80 100%)`,
+                      color: 'white',
+                      border: 'none',
+                      padding: '12px 30px',
+                      fontSize: '1.1rem',
+                      fontWeight: 600,
+                      borderRadius: '8px',
+                      boxShadow: `0 4px 12px ${themeColors.primary}30`
+                    }}
                   >
                     {saving ? (
                       <>
