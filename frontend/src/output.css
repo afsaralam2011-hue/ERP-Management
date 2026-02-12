@@ -664,10 +664,6 @@ video {
   display: grid;
 }
 
-.list-item {
-  display: list-item;
-}
-
 .hidden {
   display: none;
 }
@@ -706,12 +702,6 @@ video {
 
 .gap-2 {
   gap: 0.5rem;
-}
-
-.truncate {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .rounded {
@@ -760,10 +750,6 @@ video {
 .py-3 {
   padding-top: 0.75rem;
   padding-bottom: 0.75rem;
-}
-
-.text-center {
-  text-align: center;
 }
 
 .text-2xl {

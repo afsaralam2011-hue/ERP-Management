@@ -1,21 +1,22 @@
-// src/components/cards/StatCard.jsx
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { useTheme } from '../../contexts/ThemeContext'; // ✅ تھیم کنٹیکسٹ
+import { useTheme } from '../../contexts/ThemeContext';
 
 const StatCard = ({ 
   title,
   value,
-  icon: Icon,
+  icon,  // 👈 یہاں Icon نہیں، صرف icon رکھیں
   color,
   change = '+0%',
   description = '',
   link = '#',
   loading = false,
   isPositive = true,
+  unit = '', // 👈 unit prop بھی شامل کریں
+  trend = 'stable', // 👈 trend prop بھی شامل کریں
+  size = 'medium', // 👈 size prop بھی شامل کریں
 }) => {
   
-  // ✅ تھیم کنٹیکسٹ سے ڈارک موڈ حاصل کریں
   const { isDarkMode } = useTheme();
   
   // ✅ CSS Variables سے کلرز حاصل کریں
@@ -29,46 +30,18 @@ const StatCard = ({
   
   // ✅ تھیم کے مطابق CSS Variables
   const themeColors = {
-    // Backgrounds
-    background: isDarkMode ? 'var(--color-background)' : 'var(--color-background)',
-    surface: isDarkMode ? 'var(--color-surface)' : 'var(--color-surface)',
-    card: isDarkMode ? 'var(--color-card-bg)' : 'var(--color-card-bg)',
-    paper: isDarkMode ? 'var(--color-paper)' : 'var(--color-paper)',
-    
-    // Text
     textPrimary: isDarkMode ? 'var(--color-text-primary)' : 'var(--color-text-primary)',
     textSecondary: isDarkMode ? 'var(--color-text-secondary)' : 'var(--color-text-secondary)',
-    textTertiary: isDarkMode ? 'var(--color-text-tertiary)' : 'var(--color-text-tertiary)',
     textMuted: isDarkMode ? 'var(--color-text-muted)' : 'var(--color-text-muted)',
-    
-    // Borders
-    border: isDarkMode ? 'var(--color-border)' : 'var(--color-border)',
-    borderLight: isDarkMode ? 'var(--color-border-light)' : 'var(--color-border-light)',
-    divider: isDarkMode ? 'var(--color-divider)' : 'var(--color-divider)',
-    
-    // Status
-    success: isDarkMode ? 'var(--color-success)' : 'var(--color-success)',
-    warning: isDarkMode ? 'var(--color-warning)' : 'var(--color-warning)',
-    error: isDarkMode ? 'var(--color-error)' : 'var(--color-error)',
-    info: isDarkMode ? 'var(--color-info)' : 'var(--color-info)',
-    
-    // Actions
-    hover: isDarkMode ? 'var(--color-hover)' : 'var(--color-hover)',
-    selected: isDarkMode ? 'var(--color-selected)' : 'var(--color-selected)',
-    focus: isDarkMode ? 'var(--color-focus)' : 'var(--color-focus)',
-    
-    // Icons
-    icon: isDarkMode ? 'var(--color-icon)' : 'var(--color-icon)',
-    iconSecondary: isDarkMode ? 'var(--color-icon-secondary)' : 'var(--color-icon-secondary)',
-    iconMuted: isDarkMode ? 'var(--color-icon-muted)' : 'var(--color-icon-muted)',
+    divider: isDarkMode ? 'var(--color-border)' : 'var(--color-border-light)',
   };
 
   // ✅ تھیم کے مطابق کارڈ بیک گراؤنڈ
   const getCardBackground = () => {
     if (isDarkMode) {
-      return `linear-gradient(145deg, ${primaryColor}08 0%, ${themeColors.card} 100%)`;
+      return `linear-gradient(145deg, ${primaryColor}08 0%, var(--color-card) 100%)`;
     }
-    return `linear-gradient(145deg, ${themeColors.card} 0%, ${primaryColor}05 100%)`;
+    return `linear-gradient(145deg, var(--color-card) 0%, ${primaryColor}05 100%)`;
   };
 
   // ✅ تھیم کے مطابق آئیکن بیک گراؤنڈ
@@ -103,31 +76,44 @@ const StatCard = ({
     return `1px solid ${primaryColor}20`;
   };
 
-  // ✅ تھیم کے مطابق کارڈ شیڈو
-  const getCardShadow = () => {
-    if (isDarkMode) {
-      return 'var(--shadow-lg)';
+  // ✅ سائز کے مطابق اسٹائلز
+  const getSizeStyles = () => {
+    switch(size) {
+      case 'large':
+        return {
+          padding: 'var(--spacing-xl)',
+          iconSize: 32,
+          titleFont: 'var(--font-size-base)',
+          valueFont: 'var(--font-size-5xl)',
+        };
+      case 'small':
+        return {
+          padding: 'var(--spacing-md)',
+          iconSize: 20,
+          titleFont: 'var(--font-size-xs)',
+          valueFont: 'var(--font-size-2xl)',
+        };
+      default:
+        return {
+          padding: 'var(--spacing-lg)',
+          iconSize: 28,
+          titleFont: 'var(--font-size-sm)',
+          valueFont: 'var(--font-size-4xl)',
+        };
     }
-    return 'var(--shadow-md)';
   };
 
-  // ✅ تھیم کے مطابق ہوور شیڈو
-  const getHoverShadow = () => {
-    if (isDarkMode) {
-      return `var(--shadow-xl), 0 0 30px ${primaryColor}20`;
-    }
-    return `var(--shadow-xl), 0 0 30px ${primaryColor}15`;
-  };
+  const sizeStyles = getSizeStyles();
 
   const cardContent = (
     <div
       style={{
         background: getCardBackground(),
-        padding: 'var(--spacing-lg)',
+        padding: sizeStyles.padding,
         borderRadius: 'var(--radius-xl)',
         border: getCardBorder(),
-        boxShadow: getCardShadow(),
-        transition: 'all var(--transition-base)',
+        boxShadow: 'var(--shadow-md)',
+        transition: 'all 0.3s ease',
         height: '100%',
         position: 'relative',
         overflow: 'hidden',
@@ -137,19 +123,19 @@ const StatCard = ({
       onMouseEnter={(e) => {
         if (link && link !== '#') {
           e.currentTarget.style.transform = 'translateY(-4px)';
-          e.currentTarget.style.boxShadow = getHoverShadow();
+          e.currentTarget.style.boxShadow = 'var(--shadow-xl)';
           e.currentTarget.style.borderColor = `${primaryColor}40`;
         }
       }}
       onMouseLeave={(e) => {
         if (link && link !== '#') {
           e.currentTarget.style.transform = 'translateY(0)';
-          e.currentTarget.style.boxShadow = getCardShadow();
+          e.currentTarget.style.boxShadow = 'var(--shadow-md)';
           e.currentTarget.style.borderColor = isDarkMode ? `${primaryColor}30` : `${primaryColor}20`;
         }
       }}
     >
-      {/* Background Pattern - تھیم کے مطابق */}
+      {/* Background Pattern */}
       <div
         style={{
           position: 'absolute',
@@ -165,20 +151,6 @@ const StatCard = ({
         }}
       />
 
-      {/* Decorative Corner - تھیم کے مطابق */}
-      <div
-        style={{
-          position: 'absolute',
-          top: 0,
-          right: 0,
-          width: '80px',
-          height: '80px',
-          background: `linear-gradient(135deg, transparent 50%, ${primaryColor}15 50%)`,
-          borderBottomLeftRadius: 'var(--radius-xl)',
-          zIndex: 0,
-        }}
-      />
-
       <div style={{ position: 'relative', zIndex: 1 }}>
         {/* Header */}
         <div
@@ -189,7 +161,7 @@ const StatCard = ({
             marginBottom: 'var(--spacing-lg)',
           }}
         >
-          {/* Icon Container - تھیم کے مطابق */}
+          {/* Icon Container - 👈 FIXED: اب icon کو براہ راست render کریں */}
           <div
             style={{
               width: '56px',
@@ -203,54 +175,41 @@ const StatCard = ({
               boxShadow: isDarkMode
                 ? `0 8px 16px ${primaryColor}30, inset 0 2px 4px rgba(255, 255, 255, 0.2)`
                 : `0 8px 16px ${primaryColor}20, inset 0 2px 4px rgba(255, 255, 255, 0.5)`,
-              transition: 'all var(--transition-fast)',
-            }}
-            onMouseEnter={(e) => {
-              if (link && link !== '#') {
-                e.currentTarget.style.transform = 'scale(1.1) rotate(5deg)';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (link && link !== '#') {
-                e.currentTarget.style.transform = 'scale(1) rotate(0)';
-              }
             }}
           >
-            {Icon && <Icon size={28} />}
+            {icon} {/* 👈 FIXED: Icon نہیں، براہ راست icon render کریں */}
           </div>
 
-          {/* Change Badge - تھیم کے مطابق */}
-          <div
-            style={{
-              padding: 'var(--spacing-xs) var(--spacing-md)',
-              background: getChangeBadgeBackground(),
-              borderRadius: 'var(--radius-full)',
-              fontSize: 'var(--font-size-sm)',
-              fontWeight: 'var(--font-weight-semibold)',
-              color: getChangeBadgeColor(),
-              display: 'flex',
-              alignItems: 'center',
-              gap: 'var(--spacing-xs)',
-              backdropFilter: 'blur(8px)',
-              border: isDarkMode
-                ? `1px solid ${isPositive ? themeColors.success + '40' : themeColors.error + '40'}`
-                : 'none',
-            }}
-          >
-            <span style={{ fontSize: '16px', fontWeight: 'bold' }}>
-              {isPositive ? '↑' : '↓'}
-            </span>
-            {change}
-          </div>
+          {/* Change Badge */}
+          {change && (
+            <div
+              style={{
+                padding: 'var(--spacing-xs) var(--spacing-md)',
+                background: getChangeBadgeBackground(),
+                borderRadius: 'var(--radius-full)',
+                fontSize: 'var(--font-size-sm)',
+                fontWeight: 'var(--font-weight-semibold)',
+                color: getChangeBadgeColor(),
+                display: 'flex',
+                alignItems: 'center',
+                gap: 'var(--spacing-xs)',
+                backdropFilter: 'blur(8px)',
+              }}
+            >
+              <span style={{ fontSize: '16px', fontWeight: 'bold' }}>
+                {isPositive ? '↑' : '↓'}
+              </span>
+              {change}
+            </div>
+          )}
         </div>
 
         {/* Content */}
         <div>
-          {/* Title - تھیم کے مطابق */}
           <h3
             style={{
               margin: '0 0 var(--spacing-sm) 0',
-              fontSize: 'var(--font-size-sm)',
+              fontSize: sizeStyles.titleFont,
               fontWeight: 'var(--font-weight-semibold)',
               color: themeColors.textMuted,
               textTransform: 'uppercase',
@@ -260,10 +219,9 @@ const StatCard = ({
             {title}
           </h3>
 
-          {/* Value - تھیم کے مطابق */}
           <div
             style={{
-              fontSize: 'var(--font-size-4xl)',
+              fontSize: sizeStyles.valueFont,
               fontWeight: 'var(--font-weight-bold)',
               color: themeColors.textPrimary,
               marginBottom: 'var(--spacing-sm)',
@@ -284,11 +242,10 @@ const StatCard = ({
                 }}
               />
             ) : (
-              value
+              `${value} ${unit}`
             )}
           </div>
 
-          {/* Description - تھیم کے مطابق */}
           {description && (
             <p
               style={{
@@ -303,45 +260,20 @@ const StatCard = ({
           )}
         </div>
 
-        {/* Bottom Link - تھیم کے مطابق */}
-        {link && link !== '#' && (
+        {/* Trend Indicator */}
+        {trend && trend !== 'stable' && (
           <div
             style={{
-              marginTop: 'var(--spacing-lg)',
-              paddingTop: 'var(--spacing-md)',
-              borderTop: `1px solid ${themeColors.divider}`,
+              marginTop: 'var(--spacing-md)',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'space-between',
+              gap: 'var(--spacing-xs)',
+              fontSize: 'var(--font-size-xs)',
+              color: trend === 'up' ? '#10B981' : '#EF4444',
             }}
           >
-            <span
-              style={{
-                fontSize: 'var(--font-size-xs)',
-                color: themeColors.textMuted,
-                fontWeight: 'var(--font-weight-medium)',
-              }}
-            >
-              Click to view details
-            </span>
-            <span
-              style={{
-                fontSize: '20px',
-                color: primaryColor,
-                transition: 'transform var(--transition-fast)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: '32px',
-                height: '32px',
-                borderRadius: '50%',
-                background: isDarkMode
-                  ? `${primaryColor}20`
-                  : `${primaryColor}10`,
-              }}
-            >
-              →
-            </span>
+            {trend === 'up' ? '↑' : '↓'} 
+            {trend === 'up' ? 'Increasing' : 'Decreasing'}
           </div>
         )}
       </div>
