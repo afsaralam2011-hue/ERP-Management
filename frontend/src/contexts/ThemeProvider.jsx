@@ -1,6 +1,5 @@
 // src/contexts/ThemeProvider.jsx
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { ThemeContext } from "./ThemeContext";
 import { 
   defaultTheme, 
   predefinedThemes, 
@@ -23,6 +22,23 @@ import {
 } from "../styles/themes/dark";
 import { isValidHexColor, validateTheme } from "../utils/themeUtils";
 
+// ============================================================
+// ✅ FIXED: Create ThemeContext with proper displayName
+// ============================================================
+export const ThemeContext = React.createContext(null);
+ThemeContext.displayName = 'ThemeContext';
+
+// ============================================================
+// ✅ FIXED: useTheme hook - NOW AVAILABLE AS NAMED EXPORT
+// ============================================================
+export const useTheme = () => {
+  const context = React.useContext(ThemeContext);
+  if (!context) {
+    throw new Error('useTheme must be used within a ThemeProvider');
+  }
+  return context;
+};
+
 const ThemeProvider = ({ children }) => {
   // State
   const [currentTheme, setCurrentTheme] = useState(null);
@@ -32,6 +48,77 @@ const ThemeProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isInitialized, setIsInitialized] = useState(false);
+
+  // ============================================================
+  // ✅ FIXED: Clean theme application - NO FORCED COLORS, NO !IMPORTANT
+  // ============================================================
+  const applyThemeToDocument = useCallback((theme, themeMode) => {
+    try {
+      const root = document.documentElement;
+      const body = document.body;
+      
+      // 1. Clear previous theme classes and attributes
+      body.classList.remove('dark-theme', 'light-theme', 'theme-dark', 'theme-light', 'dark-mode', 'light-mode');
+      root.removeAttribute('data-theme');
+      root.removeAttribute('data-theme-mode');
+      body.removeAttribute('data-theme');
+      body.removeAttribute('data-theme-mode');
+      
+      // 2. Reset inline styles - IMPORTANT: No forced colors!
+      root.style.cssText = '';
+      body.style.cssText = '';
+      
+      // 3. Determine actual mode
+      const actualMode = themeMode || theme?.mode || 'light';
+      const isDarkMode = actualMode === 'dark';
+      
+      // 4. Apply theme CSS variables
+      if (typeof applyThemeUtil === 'function') {
+        applyThemeUtil(theme);
+      } else {
+        // Fallback: Manual CSS variables application
+        const cssVars = themeToCssVariables(theme);
+        Object.entries(cssVars).forEach(([key, value]) => {
+          root.style.setProperty(key, value);
+        });
+      }
+      
+      // 5. Set theme attributes and classes
+      root.setAttribute('data-theme', theme.id);
+      root.setAttribute('data-theme-mode', actualMode);
+      body.setAttribute('data-theme', theme.id);
+      body.setAttribute('data-theme-mode', actualMode);
+      
+      if (isDarkMode) {
+        body.classList.add('dark-theme', 'theme-dark', 'dark-mode');
+        // ✅ FIXED: No forced colors - CSS variables handle everything
+      } else {
+        body.classList.add('light-theme', 'theme-light', 'light-mode');
+        // ✅ FIXED: No forced colors - CSS variables handle everything
+      }
+      
+      // 6. Update meta theme color
+      const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+      const metaContent = isDarkMode ? 
+        (theme.colors?.background || '#0b1f3a') : 
+        (theme.colors?.background || '#ffffff');
+      
+      if (themeColorMeta) {
+        themeColorMeta.setAttribute('content', metaContent);
+      } else {
+        const meta = document.createElement('meta');
+        meta.name = 'theme-color';
+        meta.content = metaContent;
+        document.head.appendChild(meta);
+      }
+      
+      console.log(`✅ Theme applied: ${theme.name} (${actualMode})`);
+      return true;
+    } catch (err) {
+      console.error('❌ Error applying theme to document:', err);
+      return false;
+    }
+  }, []);
 
   // Helper function to get all available themes
   const getAllAvailableThemes = useCallback(() => {
@@ -82,155 +169,20 @@ const ThemeProvider = ({ children }) => {
     return allThemes.find((theme) => theme.id === themeId) || null;
   }, [getAllAvailableThemes]);
 
-  // تمام عناصر کو تھیم اپلائی کرنے کا فکسڈ فنکشن
-  const applyThemeToDocument = useCallback((theme, themeMode) => {
-    try {
-      const root = document.documentElement;
-      const body = document.body;
-      
-      // 1. Clear previous theme classes
-      body.classList.remove(
-        'dark-theme', 'light-theme',
-        'theme-dark', 'theme-light',
-        'dark-mode', 'light-mode'
-      );
-      
-      // 2. Remove previous theme attributes
-      root.removeAttribute('data-theme');
-      root.removeAttribute('data-theme-mode');
-      body.removeAttribute('data-theme');
-      body.removeAttribute('data-theme-mode');
-      
-      // 3. Reset inline styles
-      root.style.cssText = '';
-      body.style.cssText = '';
-      
-      // 4. Determine actual mode
-      const actualMode = themeMode || theme.mode || 'light';
-      const isDarkMode = actualMode === 'dark';
-      
-      // 5. Apply theme utility (this handles CSS variables)
-      if (typeof applyThemeUtil === 'function') {
-        applyThemeUtil(theme);
-      } else {
-        // Fallback: Manual CSS variables application
-        const cssVars = themeToCssVariables(theme);
-        const styleString = cssVariablesToStyle(cssVars);
-        root.style.cssText = styleString;
-      }
-      
-      // 6. Set theme attributes and classes
-      root.setAttribute('data-theme', theme.id);
-      root.setAttribute('data-theme-mode', actualMode);
-      body.setAttribute('data-theme', theme.id);
-      body.setAttribute('data-theme-mode', actualMode);
-      
-      if (isDarkMode) {
-        body.classList.add('dark-theme', 'theme-dark', 'dark-mode');
-        // IMPORTANT: Force text colors for dark mode
-        body.style.color = '#E3F2FD'; // Light Blue/White
-        body.style.backgroundColor = '#121212'; // Dark background
-      } else {
-        body.classList.add('light-theme', 'theme-light', 'light-mode');
-        body.style.color = '#1A237E'; // Deep Indigo/Navy Blue
-        body.style.backgroundColor = '#FFFFFF'; // Light background
-      }
-      
-      // 7. Apply force text colors to all text elements
-      const forceTextColors = () => {
-        const textSelectors = [
-          'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-          'p', 'span', 'div', 'a', 'li', 'td', 'th',
-          '.text', '.title', '.subtitle', '.label',
-          '.card', '.panel', '.modal', '.dialog',
-          '.sidebar', '.header', '.navbar',
-          'aside', 'nav', 'header', 'footer', 'section'
-        ];
-        
-        textSelectors.forEach(selector => {
-          try {
-            const elements = document.querySelectorAll(selector);
-            elements.forEach(element => {
-              // Skip form elements and buttons
-              if (element.tagName === 'BUTTON' || 
-                  element.tagName === 'INPUT' || 
-                  element.tagName === 'TEXTAREA' || 
-                  element.tagName === 'SELECT') {
-                return;
-              }
-              
-              if (isDarkMode) {
-                // Dark mode text colors
-                element.style.color = '#E3F2FD'; // Light Blue/White
-                // Also set computed style to ensure it applies
-                element.style.setProperty('color', '#E3F2FD', 'important');
-              } else {
-                // Light mode text colors
-                element.style.color = '#1A237E'; // Deep Indigo/Navy Blue
-                element.style.setProperty('color', '#1A237E', 'important');
-              }
-            });
-          } catch (err) {
-            // Silent fail for individual elements
-          }
-        });
-        
-        // Also force color on body children
-        Array.from(body.children).forEach(child => {
-          if (child.tagName !== 'SCRIPT' && child.tagName !== 'STYLE') {
-            if (isDarkMode) {
-              child.style.color = '#E3F2FD';
-            } else {
-              child.style.color = '#1A237E';
-            }
-          }
-        });
-      };
-      
-      // 8. Apply force text colors immediately and after DOM updates
-      forceTextColors();
-      
-      // Re-apply after a short delay to catch dynamically added elements
-      setTimeout(forceTextColors, 100);
-      setTimeout(forceTextColors, 500);
-      
-      // 9. Update meta theme color
-      const themeColorMeta = document.querySelector('meta[name="theme-color"]');
-      const metaContent = isDarkMode ? 
-        (theme.colors?.background || '#121212') : 
-        (theme.colors?.background || '#FFFFFF');
-      
-      if (themeColorMeta) {
-        themeColorMeta.setAttribute('content', metaContent);
-      } else {
-        const meta = document.createElement('meta');
-        meta.name = 'theme-color';
-        meta.content = metaContent;
-        document.head.appendChild(meta);
-      }
-      
-      console.log(`Theme applied: ${theme.name} (${actualMode})`);
-      return true;
-    } catch (err) {
-      console.error('Error applying theme to document:', err);
-      return false;
-    }
-  }, []);
-
   // Helper function to create new theme
   const createNewTheme = useCallback((name, colors, themeMode) => {
     const themeId = `custom-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     
-    // Ensure proper text colors based on mode
+    // Ensure proper text colors based on mode - INDIGO/NAVY ONLY, NO BLACK
     const isDark = themeMode === 'dark';
     const defaultTextColors = isDark ? {
-      textPrimary: '#E3F2FD',
-      textSecondary: '#BBDEFB',
-      textDisabled: '#78909C'
+      textPrimary: '#E3F2FD', // Light Blue/White
+      textSecondary: '#BBDEFB', // Light Blue
+      textDisabled: '#90A4AE' // Grey-Blue
     } : {
-      textPrimary: '#1A237E',
-      textSecondary: '#283593',
-      textDisabled: '#5C6BC0'
+      textPrimary: '#1A237E', // Deep Indigo/Navy Blue
+      textSecondary: '#283593', // Medium Indigo
+      textDisabled: '#5C6BC0' // Light Indigo
     };
     
     return {
@@ -242,41 +194,41 @@ const ThemeProvider = ({ children }) => {
       type: 'custom',
       colors: {
         // Primary colors
-        primary: colors.primary || (isDark ? '#90CAF9' : '#1976D2'),
-        primaryLight: colors.primaryLight || (isDark ? '#E3F2FD' : '#BBDEFB'),
-        primaryDark: colors.primaryDark || (isDark ? '#42A5F5' : '#0D47A1'),
+        primary: colors.primary || (isDark ? '#60A5FA' : '#1E40AF'),
+        primaryLight: colors.primaryLight || (isDark ? '#93C5FD' : '#2563EB'),
+        primaryDark: colors.primaryDark || (isDark ? '#3B82F6' : '#1E3A8A'),
         
         // Secondary colors
-        secondary: colors.secondary || (isDark ? '#64B5F6' : '#64B5F6'),
-        secondaryLight: colors.secondaryLight || (isDark ? '#BBDEFB' : '#E3F2FD'),
-        secondaryDark: colors.secondaryDark || (isDark ? '#2196F3' : '#2196F3'),
+        secondary: colors.secondary || (isDark ? '#818CF8' : '#4F46E5'),
+        secondaryLight: colors.secondaryLight || (isDark ? '#A5B4FC' : '#6366F1'),
+        secondaryDark: colors.secondaryDark || (isDark ? '#6366F1' : '#4338CA'),
         
         // Background colors
-        background: colors.background || (isDark ? '#121212' : '#FFFFFF'),
-        surface: colors.surface || (isDark ? '#1E1E1E' : '#F5F5F5'),
-        cardBackground: colors.cardBackground || (isDark ? '#1E1E1E' : '#FFFFFF'),
+        background: colors.background || (isDark ? '#0B1F3A' : '#F8FAFC'),
+        surface: colors.surface || (isDark ? '#132B4A' : '#FFFFFF'),
+        cardBackground: colors.cardBackground || (isDark ? '#1E3A5F' : '#FFFFFF'),
         
-        // Text colors (FORCED based on mode)
-        textPrimary: colors.textPrimary || defaultTextColors.textPrimary,
-        textSecondary: colors.textSecondary || defaultTextColors.textSecondary,
-        textDisabled: colors.textDisabled || defaultTextColors.textDisabled,
-        textHint: colors.textHint || (isDark ? '#90A4AE' : '#7986CB'),
-        textIcon: colors.textIcon || (isDark ? '#BBDEFB' : '#283593'),
+        // Text colors - INDIGO/NAVY ONLY, NO BLACK
+        textPrimary: defaultTextColors.textPrimary,
+        textSecondary: defaultTextColors.textSecondary,
+        textDisabled: defaultTextColors.textDisabled,
+        textHint: isDark ? '#94A3B8' : '#64748B',
+        textIcon: isDark ? '#BBDEFB' : '#283593',
         
         // Border colors
-        border: colors.border || (isDark ? '#2D2D2D' : '#E0E0E0'),
-        divider: colors.divider || (isDark ? '#37474F' : '#EEEEEE'),
+        border: colors.border || (isDark ? '#1E3A5F' : '#E2E8F0'),
+        divider: colors.divider || (isDark ? '#2D4A6E' : '#E2E8F0'),
         
         // Status colors
-        success: colors.success || (isDark ? '#66BB6A' : '#4CAF50'),
-        warning: colors.warning || (isDark ? '#FFB74D' : '#FF9800'),
-        error: colors.error || (isDark ? '#EF5350' : '#F44336'),
-        info: colors.info || (isDark ? '#42A5F5' : '#2196F3'),
+        success: colors.success || (isDark ? '#34D399' : '#059669'),
+        warning: colors.warning || (isDark ? '#FBBF24' : '#D97706'),
+        error: colors.error || (isDark ? '#F87171' : '#DC2626'),
+        info: colors.info || (isDark ? '#60A5FA' : '#2563EB'),
         
         // Action colors
-        hover: colors.hover || (isDark ? 'rgba(187, 222, 251, 0.08)' : 'rgba(26, 35, 126, 0.04)'),
-        selected: colors.selected || (isDark ? 'rgba(144, 202, 249, 0.16)' : 'rgba(25, 118, 210, 0.08)'),
-        focus: colors.focus || (isDark ? 'rgba(66, 165, 245, 0.12)' : 'rgba(25, 118, 210, 0.12)'),
+        hover: colors.hover || (isDark ? 'rgba(96, 165, 250, 0.08)' : 'rgba(30, 64, 175, 0.04)'),
+        selected: colors.selected || (isDark ? 'rgba(96, 165, 250, 0.16)' : 'rgba(30, 64, 175, 0.08)'),
+        focus: colors.focus || (isDark ? 'rgba(96, 165, 250, 0.12)' : 'rgba(30, 64, 175, 0.12)'),
       },
       isCustom: true,
       createdAt: new Date().toISOString(),
@@ -448,10 +400,10 @@ const ThemeProvider = ({ children }) => {
         localStorage.setItem("themeMode", targetMode);
         
         setIsInitialized(true);
-        console.log("Theme system initialized successfully");
+        console.log("✅ Theme system initialized successfully");
       } catch (err) {
         setError(err.message);
-        console.error("Theme initialization error:", err);
+        console.error("❌ Theme initialization error:", err);
         
         // Fallback to default light theme
         setCurrentTheme(defaultTheme);
@@ -474,7 +426,7 @@ const ThemeProvider = ({ children }) => {
 
     const handleChange = (e) => {
       const newMode = e.matches ? "dark" : "light";
-      console.log("System theme changed to:", newMode);
+      console.log("🖥️ System theme changed to:", newMode);
       
       if (currentTheme) {
         // Keep the same theme but apply with new mode
@@ -512,14 +464,14 @@ const ThemeProvider = ({ children }) => {
       return theme;
     } catch (err) {
       setError(err.message);
-      console.error("Error setting theme:", err);
+      console.error("❌ Error setting theme:", err);
       return null;
     }
   }, [mode, getThemeById, applyThemeToDocument]);
 
   // Set theme mode
   const setModeHandler = useCallback((newMode) => {
-    console.log("Setting mode to:", newMode);
+    console.log("🎨 Setting mode to:", newMode);
     
     // Validate mode
     const validModes = ["light", "dark", "device"];
@@ -572,7 +524,7 @@ const ThemeProvider = ({ children }) => {
       localStorage.setItem("themeMode", themeMode);
     } catch (err) {
       setError(err.message);
-      console.error("Error applying theme:", err);
+      console.error("❌ Error applying theme:", err);
     }
   }, [mode, applyThemeToDocument]);
 
@@ -635,11 +587,11 @@ const ThemeProvider = ({ children }) => {
       
       localStorage.setItem("customThemes", JSON.stringify(filteredThemes));
 
-      console.log("Custom theme created:", newTheme);
+      console.log("✅ Custom theme created:", newTheme);
       return newTheme;
     } catch (err) {
       setError(err.message);
-      console.error("Error creating custom theme:", err);
+      console.error("❌ Error creating custom theme:", err);
       return null;
     }
   }, [mode, createNewTheme]);
@@ -670,7 +622,7 @@ const ThemeProvider = ({ children }) => {
       return success;
     } catch (err) {
       setError(err.message);
-      console.error("Error deleting custom theme:", err);
+      console.error("❌ Error deleting custom theme:", err);
       return false;
     }
   }, [currentTheme, mode, deleteThemeById, applyThemeToDocument]);
@@ -685,7 +637,7 @@ const ThemeProvider = ({ children }) => {
       return exportThemeToFile(theme);
     } catch (err) {
       setError(err.message);
-      console.error("Error exporting theme:", err);
+      console.error("❌ Error exporting theme:", err);
       return false;
     }
   }, [currentTheme, exportThemeToFile]);
@@ -729,7 +681,7 @@ const ThemeProvider = ({ children }) => {
       return importedTheme;
     } catch (err) {
       setError(err.message);
-      console.error("Error importing theme:", err);
+      console.error("❌ Error importing theme:", err);
       return null;
     } finally {
       setIsLoading(false);
@@ -749,11 +701,11 @@ const ThemeProvider = ({ children }) => {
       localStorage.setItem("selectedThemeId", defaultTheme.id);
       localStorage.setItem("themeMode", "light");
 
-      console.log("Theme reset to default");
+      console.log("✅ Theme reset to default");
       return true;
     } catch (err) {
       setError(err.message);
-      console.error("Error resetting theme:", err);
+      console.error("❌ Error resetting theme:", err);
       return false;
     }
   }, [resetToDefaultTheme]);
@@ -769,6 +721,11 @@ const ThemeProvider = ({ children }) => {
       isLoading,
       error,
       isInitialized,
+      
+      // Derived state
+      isDarkMode: mode === 'dark',
+      isLightMode: mode === 'light',
+      isDeviceMode: mode === 'device',
 
       // Functions
       setTheme,
@@ -779,6 +736,11 @@ const ThemeProvider = ({ children }) => {
       exportTheme,
       importTheme,
       resetTheme,
+      
+      // Utilities
+      toggleMode: () => setModeHandler(mode === 'light' ? 'dark' : 'light'),
+      getThemeById,
+      getAllAvailableThemes,
     }),
     [
       currentTheme,
@@ -796,6 +758,8 @@ const ThemeProvider = ({ children }) => {
       exportTheme,
       importTheme,
       resetTheme,
+      getThemeById,
+      getAllAvailableThemes,
     ]
   );
 
@@ -806,4 +770,7 @@ const ThemeProvider = ({ children }) => {
   );
 };
 
+// ============================================================
+// ✅ FIXED: Default export and named export both available
+// ============================================================
 export default ThemeProvider;

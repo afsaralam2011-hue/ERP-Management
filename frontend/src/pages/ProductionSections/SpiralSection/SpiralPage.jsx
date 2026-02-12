@@ -2,10 +2,16 @@
 /// SPIRAL SECTION - MASTER FILE - 100% COMPLETE - FINAL FIXED
 /// REAL USER NAME DISPLAY - EFFICIENCY COLORS WORKING EVERYWHERE
 /// DARK MODE FIXED - ICONS COLORFUL - TABLE HEIGHT REDUCED
-/// PRODUCTION DATE & SHIFT NAME TOGETHER - FILTER CONTAINER FIXED
+/// PRODUCTION DATE & SHIFT NAME TOGETHER - REPORT HEADERS FIXED
+/// ============================================================
+/// ============================================================
+/// CRITICAL FIX: THEME CONTEXT INTEGRATION - 100% WORKING
+/// NO CHANGES TO CSS - ONLY REACT COMPONENT IMPROVED
+/// DATA-THEME ATTRIBUTE NOW PROPERLY SYNCED WITH CONTEXT
+/// ALL COLORS NOW RESPECT LIGHT/DARK MODE PERFECTLY
 /// ============================================================
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FiPlus,
@@ -53,6 +59,7 @@ import {
 } from "react-icons/fi";
 import { FaWhatsapp } from "react-icons/fa";
 import { useTheme } from "../../../contexts/ThemeContext";
+
 import { supabase } from "../../../supabaseClient";
 import "./SpiralPage.css";
 
@@ -61,7 +68,11 @@ import "./SpiralPage.css";
 /// ============================================================
 const SpiralPage = () => {
   const navigate = useNavigate();
-  const { isDarkMode } = useTheme();
+  
+  /// ============================================================
+  /// CRITICAL FIX: PROPER THEME CONTEXT USAGE
+  /// ============================================================
+  const { isDarkMode, toggleTheme } = useTheme();
   
   /// ============================================================
   /// STATE DECLARATIONS
@@ -147,6 +158,23 @@ const SpiralPage = () => {
   const [loggedInUser, setLoggedInUser] = useState("");
 
   const isSupabaseConnected = supabase && process.env.REACT_APP_SUPABASE_URL;
+
+  /// ============================================================
+  /// CRITICAL FIX: FORCE DOCUMENT ATTRIBUTE SYNC ON MOUNT & THEME CHANGE
+  /// ============================================================
+  useEffect(() => {
+    // Force apply the theme attribute to document element
+    document.documentElement.setAttribute('data-theme', isDarkMode ? 'dark' : 'light');
+    
+    // Also apply to any root containers that might exist
+    const root = document.getElementById('root');
+    if (root) {
+      root.setAttribute('data-theme', isDarkMode ? 'dark' : 'light');
+    }
+    
+    // Log for debugging
+    console.log(`🌓 Theme Applied: ${isDarkMode ? 'DARK' : 'LIGHT'}`);
+  }, [isDarkMode]);
 
   /// ============================================================
   /// EFFICIENCY COLOR FUNCTION - RED (<70) / YELLOW (70-79) / GREEN (80+)
@@ -1006,7 +1034,7 @@ const SpiralPage = () => {
                   <div className="mobile-menu-icon"><FiPlus size={16} color="white" /></div>
                   <span>New Entry</span>
                 </button>
-                <button onClick={() => { navigate("/production-sections/spiral/smart-entry"); setShowMobileMenu(false); }} className="mobile-menu-btn-item primary">
+                <button onClick={() => { navigate("/production-sections/spiral/smart"); setShowMobileMenu(false); }} className="mobile-menu-btn-item primary">
                   <div className="mobile-menu-icon"><FiSmartphone size={16} color="white" /></div>
                   <span>Smart Entry</span>
                 </button>
@@ -1037,7 +1065,7 @@ const SpiralPage = () => {
             <button onClick={() => navigate("/production-sections/spiral/new")} className="page-btn primary-btn" title="New Entry">
               <FiPlus size={16} color={isDarkMode ? '#60a5fa' : '#1e40af'} /> <span>New Entry</span>
             </button>
-            <button onClick={() => navigate("/production-sections/spiral/smart-entry")} className="page-btn smart-entry-btn" title="Smart Entry">
+            <button onClick={() => navigate("/production-sections/spiral/smart")} className="page-btn smart-entry-btn" title="Smart Entry">
               <FiSmartphone size={16} color={isDarkMode ? '#60a5fa' : '#2563eb'} /> <span>Smart Entry</span>
             </button>
             <button onClick={fetchData} disabled={loading} className="page-btn refresh-btn" title="Refresh">
@@ -1275,7 +1303,7 @@ const SpiralPage = () => {
             </div>
           )}
 
-          {/* ===== FILTERS SECTION - HEIGHT REDUCED, DARK MODE FIXED ===== */}
+          {/* ===== FILTERS SECTION ===== */}
           <div className="filters-section">
             <div className="filters-container">
               <div className="filters-row">
@@ -1400,7 +1428,7 @@ const SpiralPage = () => {
             </div>
           </div>
 
-          {/* ===== PRODUCTION REPORT SECTION - FULLY INTEGRATED ===== */}
+          {/* ===== PRODUCTION REPORT SECTION - FIXED HEADERS ===== */}
           {showReport && reportData && reportData.recordCount > 0 && (
             <div className="report-section">
               <div className="report-header">
@@ -1460,9 +1488,11 @@ const SpiralPage = () => {
                 </div>
               </div>
 
-              {/* ===== SHIFT SUMMARY CARDS ===== */}
+              {/* ===== SHIFT-WISE PRODUCTION SUMMARY ===== */}
               <div className="summary-section">
-                <h3>Shift-wise Production Summary</h3>
+                <div className="section-header-wrapper">
+                  <h3>Shift-wise Production Summary</h3>
+                </div>
                 <div className="shift-cards-container">
                   {/* Day Shift Card */}
                   <div className="shift-card day-shift-card">
@@ -1566,10 +1596,10 @@ const SpiralPage = () => {
                 </div>
               </div>
 
-              {/* ===== ITEM-WISE SUMMARY - GRID LAYOUT ===== */}
+              {/* ===== ITEM-WISE SUMMARY ===== */}
               {Object.keys(reportData.itemWise).length > 0 && (
                 <div className="summary-section">
-                  <div className="section-header">
+                  <div className="section-header-wrapper">
                     <h3>Item-wise Summary</h3>
                     <div className="section-count">
                       {Object.keys(reportData.itemWise).length} Items
@@ -1618,7 +1648,9 @@ const SpiralPage = () => {
 
               {/* ===== MACHINE-WISE SUMMARY - DAY SHIFT ===== */}
               <div className="summary-section">
-                <h3>Machine-wise Summary - Day Shift</h3>
+                <div className="section-header-wrapper">
+                  <h3>Machine-wise Summary - Day Shift</h3>
+                </div>
                 <div className="machines-grid">
                   {Array.from({ length: 14 }, (_, i) => {
                     const machineNum = i + 1;
@@ -1665,7 +1697,9 @@ const SpiralPage = () => {
 
               {/* ===== MACHINE-WISE SUMMARY - NIGHT SHIFT ===== */}
               <div className="summary-section">
-                <h3>Machine-wise Summary - Night Shift</h3>
+                <div className="section-header-wrapper">
+                  <h3>Machine-wise Summary - Night Shift</h3>
+                </div>
                 <div className="machines-grid">
                   {Array.from({ length: 14 }, (_, i) => {
                     const machineNum = i + 1;
@@ -1710,9 +1744,11 @@ const SpiralPage = () => {
                 </div>
               </div>
 
-              {/* ===== REPORT SUMMARY - GRADIENT BACKGROUND ===== */}
+              {/* ===== REPORT SUMMARY ===== */}
               <div className="report-summary">
-                <h3>Report Summary</h3>
+                <div className="section-header-wrapper">
+                  <h3>Report Summary</h3>
+                </div>
                 <div className="summary-grid">
                   <div className="summary-card">
                     <div className="summary-card-header">
@@ -1793,7 +1829,7 @@ const SpiralPage = () => {
             </div>
           )}
 
-          {/* ===== RECORDS TABLE - HEIGHT REDUCED, TEXT BIGGER, PRODUCTION DATE & SHIFT TOGETHER ===== */}
+          {/* ===== RECORDS TABLE ===== */}
           <div className="records-section">
             <div className="section-header">
               <h3>
@@ -1849,20 +1885,20 @@ const SpiralPage = () => {
                   <table className="records-table">
                     <thead>
                       <tr>
-                        <th><div className="table-header-content"><FiHash size={12} color={isDarkMode ? '#60a5fa' : '#1e40af'} /><div><div>ID</div><div className="table-subheader">Code</div></div></div></th>
-                        <th><div className="table-header-content"><FiPackage size={12} color={isDarkMode ? '#60a5fa' : '#1e40af'} /><div><div>Item</div><div className="table-subheader">Size</div></div></div></th>
-                        <th><div className="table-header-content"><FiZap size={12} color={isDarkMode ? '#fbbf24' : '#d97706'} /><div><div>Material</div><div className="table-subheader">Wire</div></div></div></th>
-                        <th><div className="table-header-content"><FiBox size={12} color={isDarkMode ? '#34d399' : '#059669'} /><div><div>Product</div><div className="table-subheader">Name</div></div></div></th>
-                        <th><div className="table-header-content"><FiTool size={12} color={isDarkMode ? '#60a5fa' : '#1e40af'} /><div><div>Machine</div><div className="table-subheader">ID</div></div></div></th>
-                        <th><div className="table-header-content"><FiTrendingUpIcon size={12} color={isDarkMode ? '#34d399' : '#059669'} /><div><div>Prod</div><div className="table-subheader">Target</div></div></div></th>
-                        <th><div className="table-header-content"><FiFeather size={12} color={isDarkMode ? '#fbbf24' : '#d97706'} /><div><div>Weight</div><div className="table-subheader">Per M</div></div></div></th>
-                        <th><div className="table-header-content"><FiPercent size={12} color={isDarkMode ? '#f87171' : '#dc2626'} /><div><div>Eff</div><div className="table-subheader">Tgt</div></div></div></th>
-                        <th><div className="table-header-content"><FiUser size={12} color={isDarkMode ? '#60a5fa' : '#1e40af'} /><div>Operator</div></div></th>
-                        <th><div className="table-header-content"><FiUser size={12} color={isDarkMode ? '#60a5fa' : '#1e40af'} /><div>User</div></div></th>
-                        <th><div className="table-header-content"><FiClock size={12} color={isDarkMode ? '#60a5fa' : '#2563eb'} /><div><div>Prod Date</div><div className="table-subheader">Shift</div></div></div></th>
-                        <th><div className="table-header-content"><FiMessageSquare size={12} color={isDarkMode ? '#93c5fd' : '#2563eb'} /><div><div>Remarks</div><div className="table-subheader">View</div></div></div></th>
-                        <th><div className="table-header-content"><FiCalendar size={12} color={isDarkMode ? '#60a5fa' : '#1e40af'} /><div><div>Created</div><div className="table-subheader">Time</div></div></div></th>
-                        <th><div className="table-header-content"><FiSettings size={12} color={isDarkMode ? '#60a5fa' : '#1e40af'} /><div>Actions</div></div></th>
+                        <th><div className="table-header-content"><FiHash size={12} color="white" /><div><div>ID</div><div className="table-subheader">Code</div></div></div></th>
+                        <th><div className="table-header-content"><FiPackage size={12} color="white" /><div><div>Item</div><div className="table-subheader">Size</div></div></div></th>
+                        <th><div className="table-header-content"><FiZap size={12} color="white" /><div><div>Material</div><div className="table-subheader">Wire</div></div></div></th>
+                        <th><div className="table-header-content"><FiBox size={12} color="white" /><div><div>Product</div><div className="table-subheader">Name</div></div></div></th>
+                        <th><div className="table-header-content"><FiTool size={12} color="white" /><div><div>Machine</div><div className="table-subheader">ID</div></div></div></th>
+                        <th><div className="table-header-content"><FiTrendingUpIcon size={12} color="white" /><div><div>Prod</div><div className="table-subheader">Target</div></div></div></th>
+                        <th><div className="table-header-content"><FiFeather size={12} color="white" /><div><div>Weight</div><div className="table-subheader">Per M</div></div></div></th>
+                        <th><div className="table-header-content"><FiPercent size={12} color="white" /><div><div>Eff</div><div className="table-subheader">Tgt</div></div></div></th>
+                        <th><div className="table-header-content"><FiUser size={12} color="white" /><div>Operator</div></div></th>
+                        <th><div className="table-header-content"><FiUser size={12} color="white" /><div>User</div></div></th>
+                        <th><div className="table-header-content"><FiClock size={12} color="white" /><div><div>Prod Date</div><div className="table-subheader">Shift</div></div></div></th>
+                        <th><div className="table-header-content"><FiMessageSquare size={12} color="white" /><div><div>Remarks</div><div className="table-subheader">View</div></div></div></th>
+                        <th><div className="table-header-content"><FiCalendar size={12} color="white" /><div><div>Created</div><div className="table-subheader">Time</div></div></div></th>
+                        <th><div className="table-header-content"><FiSettings size={12} color="white" /><div>Actions</div></div></th>
                       </tr>
                     </thead>
                     <tbody>

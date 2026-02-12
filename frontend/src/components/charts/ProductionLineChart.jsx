@@ -12,6 +12,7 @@ import {
   Legend,
   Filler
 } from 'chart.js';
+import { useTheme } from '../../contexts/ThemeContext';
 
 ChartJS.register(
   CategoryScale,
@@ -28,81 +29,163 @@ const ProductionLineChart = ({
   title = 'Production Trends',
   data = [],
   labels = [],
-  fillColor = null, // ✅ تھیم کے مطابق ہوگا
-  lineColor = '#3b82f6',
+  fillColor = null,
+  lineColor,
   height = 300,
-  darkMode = false, // ✅ تھیم سپورٹ
-  unit = '' // ✅ اضافی unit prop
+  unit = '',
+  showStats = true,
+  showLegend = true,
+  showGrid = true,
+  tension = 0.4,
+  pointStyle = 'circle'
 }) => {
   
-  // ✅ تھیم کے مطابق رنگ حاصل کرنے کا فنکشن
-  const getColor = (colorName) => {
-    if (typeof document === 'undefined') return '#000000';
-    return getComputedStyle(document.documentElement).getPropertyValue(`--color-${colorName}`).trim() || 
-          (darkMode ? '#FFFFFF' : '#000000');
+  // ✅ تھیم کنٹیکسٹ سے ڈارک موڈ حاصل کریں
+  const { isDarkMode } = useTheme();
+  
+  // ✅ CSS Variables سے کلرز حاصل کریں
+  const getCssVar = (varName) => {
+    if (typeof window === 'undefined') return '';
+    return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
   };
+
+  // ✅ تھیم کے مطابق پرائمری کلر (انڈیگو/نیوی سپیکٹرم)
+  const primaryColor = lineColor || (isDarkMode ? 'var(--color-icon)' : 'var(--color-primary)');
+  const resolvedPrimaryColor = primaryColor.startsWith('var') 
+    ? getCssVar(primaryColor.replace('var(', '').replace(')', '')) 
+    : primaryColor;
+
+  // ✅ تھیم کے مطابق سیکنڈری کلر
+  const secondaryColor = isDarkMode 
+    ? 'var(--color-icon-secondary)' 
+    : 'var(--color-secondary)';
+  const resolvedSecondaryColor = getCssVar(secondaryColor.replace('var(', '').replace(')', '')) || '#5C6BC0';
 
   // ✅ تھیم کے مطابق CSS Variables
   const themeColors = {
-    background: darkMode ? '#1e1e1e' : '#ffffff',
-    textPrimary: darkMode ? '#ffffff' : '#1e293b',
-    textSecondary: darkMode ? '#94a3b8' : '#64748b',
-    surface: darkMode ? '#2d2d2d' : '#f8fafc',
-    border: darkMode ? '#404040' : '#e2e8f0',
-    gridLine: darkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(226, 232, 240, 0.5)',
+    // Backgrounds
+    background: isDarkMode ? 'var(--color-background)' : 'var(--color-background)',
+    surface: isDarkMode ? 'var(--color-surface)' : 'var(--color-surface)',
+    card: isDarkMode ? 'var(--color-card-bg)' : 'var(--color-card-bg)',
+    paper: isDarkMode ? 'var(--color-paper)' : 'var(--color-paper)',
+    
+    // Text
+    textPrimary: isDarkMode ? 'var(--color-text-primary)' : 'var(--color-text-primary)',
+    textSecondary: isDarkMode ? 'var(--color-text-secondary)' : 'var(--color-text-secondary)',
+    textTertiary: isDarkMode ? 'var(--color-text-tertiary)' : 'var(--color-text-tertiary)',
+    textMuted: isDarkMode ? 'var(--color-text-muted)' : 'var(--color-text-muted)',
+    
+    // Borders
+    border: isDarkMode ? 'var(--color-border)' : 'var(--color-border)',
+    borderLight: isDarkMode ? 'var(--color-border-light)' : 'var(--color-border-light)',
+    divider: isDarkMode ? 'var(--color-divider)' : 'var(--color-divider)',
+    
+    // Grid
+    gridLine: isDarkMode ? 'rgba(227, 242, 253, 0.1)' : 'rgba(26, 35, 126, 0.1)',
+    
+    // Status
+    success: isDarkMode ? 'var(--color-success)' : 'var(--color-success)',
+    warning: isDarkMode ? 'var(--color-warning)' : 'var(--color-warning)',
+    error: isDarkMode ? 'var(--color-error)' : 'var(--color-error)',
+    info: isDarkMode ? 'var(--color-info)' : 'var(--color-info)',
+    
+    // Icons
+    icon: isDarkMode ? 'var(--color-icon)' : 'var(--color-icon)',
+    iconSecondary: isDarkMode ? 'var(--color-icon-secondary)' : 'var(--color-icon-secondary)',
+  };
+
+  // ✅ تھیم کے مطابق fill color
+  const getFillColor = () => {
+    if (fillColor) return fillColor;
+    
+    if (isDarkMode) {
+      return `${resolvedPrimaryColor}20`; // 12% opacity in dark mode
+    }
+    return `${resolvedPrimaryColor}15`; // 8% opacity in light mode
+  };
+
+  // ✅ تھیم کے مطابق گرڈ لائنز
+  const getGridColor = () => {
+    if (!showGrid) return 'transparent';
+    return themeColors.gridLine;
   };
 
   // ✅ Default data
   const defaultData = [120, 190, 150, 220, 180, 250, 300];
   const defaultLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-  // ✅ تھیم کے مطابق fill color
-  const themeFillColor = fillColor || (darkMode 
-    ? (lineColor + '20') // Dark mode میں ہلکا fill
-    : (lineColor + '10') // Light mode میں ہلکا fill
-  );
-
+  // ✅ تھیم کے مطابق چارٹ ڈیٹا
   const chartData = {
     labels: labels.length > 0 ? labels : defaultLabels,
     datasets: [
       {
         label: `Production${unit ? ` (${unit})` : ''}`,
         data: data.length > 0 ? data : defaultData,
-        borderColor: lineColor,
-        backgroundColor: themeFillColor,
-        borderWidth: 3,
-        tension: 0.4,
+        borderColor: resolvedPrimaryColor,
+        backgroundColor: getFillColor(),
+        borderWidth: isDarkMode ? 2.5 : 2,
+        tension: tension,
         fill: true,
-        pointBackgroundColor: lineColor,
-        pointBorderColor: darkMode ? '#1e1e1e' : '#ffffff',
-        pointBorderWidth: 2,
-        pointRadius: 5,
-        pointHoverRadius: 8,
-        pointHoverBorderWidth: 3,
-        pointHoverBackgroundColor: darkMode ? '#ffffff' : lineColor,
-        pointHoverBorderColor: lineColor,
+        pointBackgroundColor: isDarkMode ? resolvedPrimaryColor : 'white',
+        pointBorderColor: resolvedPrimaryColor,
+        pointBorderWidth: isDarkMode ? 2 : 1.5,
+        pointRadius: isDarkMode ? 4 : 3.5,
+        pointHoverRadius: 6,
+        pointHoverBorderWidth: 2,
+        pointHoverBackgroundColor: isDarkMode ? 'white' : resolvedPrimaryColor,
+        pointHoverBorderColor: resolvedPrimaryColor,
+        pointStyle: pointStyle,
       },
     ],
   };
 
+  // ✅ اگر زیادہ ڈیٹا ہے تو دوسرا ڈیٹاسیٹ شامل کریں (example)
+  if (data.length > 0 && data.some(val => val > 500)) {
+    chartData.datasets.push({
+      label: `Target${unit ? ` (${unit})` : ''}`,
+      data: data.map(val => Math.round(val * 1.1)),
+      borderColor: resolvedSecondaryColor,
+      backgroundColor: 'transparent',
+      borderWidth: isDarkMode ? 1.5 : 1,
+      borderDash: [5, 5],
+      tension: tension,
+      fill: false,
+      pointRadius: 0,
+      pointHoverRadius: 4,
+      pointHoverBackgroundColor: resolvedSecondaryColor,
+      pointHoverBorderColor: resolvedSecondaryColor,
+    });
+  }
+
+  // ✅ تھیم کے مطابق آپشنز
   const options = {
     responsive: true,
     maintainAspectRatio: false,
+    layout: {
+      padding: {
+        top: showStats && data.length > 0 ? 50 : 20,
+        bottom: 20,
+        left: 10,
+        right: 20
+      }
+    },
     plugins: {
       legend: {
-        display: true,
+        display: showLegend,
         position: 'top',
         align: 'end',
         labels: {
           padding: 15,
           usePointStyle: true,
           pointStyle: 'line',
+          boxWidth: 8,
+          boxHeight: 8,
           font: {
             size: 12,
-            family: "'Inter', sans-serif",
+            family: getCssVar('--font-family') || "'Inter', sans-serif",
             weight: '500'
           },
-          color: themeColors.textSecondary,
+          color: isDarkMode ? 'var(--color-text-secondary)' : 'var(--color-text-secondary)',
         }
       },
       title: {
@@ -111,37 +194,50 @@ const ProductionLineChart = ({
         font: {
           size: 16,
           weight: '600',
-          family: "'Inter', sans-serif"
+          family: getCssVar('--font-family') || "'Inter', sans-serif"
         },
-        color: themeColors.textPrimary,
+        color: isDarkMode ? 'var(--color-text-primary)' : 'var(--color-text-primary)',
         padding: {
-          bottom: 20
-        }
+          bottom: 25
+        },
+        align: 'start'
       },
       tooltip: {
-        backgroundColor: darkMode ? 'rgba(30, 30, 30, 0.95)' : 'rgba(30, 41, 59, 0.95)',
-        titleColor: darkMode ? '#f8fafc' : '#ffffff',
-        bodyColor: darkMode ? '#f8fafc' : '#ffffff',
+        enabled: true,
+        mode: 'index',
+        intersect: false,
+        backgroundColor: isDarkMode 
+          ? 'var(--color-surface)' 
+          : 'var(--color-paper)',
+        titleColor: isDarkMode 
+          ? 'var(--color-text-primary)' 
+          : 'var(--color-text-primary)',
+        bodyColor: isDarkMode 
+          ? 'var(--color-text-secondary)' 
+          : 'var(--color-text-secondary)',
         titleFont: {
           size: 13,
-          weight: '600'
+          weight: '600',
+          family: getCssVar('--font-family') || "'Inter', sans-serif"
         },
         bodyFont: {
-          size: 13
+          size: 12,
+          family: getCssVar('--font-family') || "'Inter', sans-serif"
         },
         padding: 12,
         cornerRadius: 8,
-        borderColor: darkMode ? '#404040' : 'rgba(255, 255, 255, 0.1)',
+        borderColor: isDarkMode 
+          ? 'var(--color-border)' 
+          : 'var(--color-border-light)',
         borderWidth: 1,
-        displayColors: false,
+        displayColors: true,
+        boxPadding: 4,
+        usePointStyle: true,
         callbacks: {
           label: function(context) {
             const value = context.parsed.y;
             const label = context.dataset.label || 'Production';
-            return `${label}: ${value.toLocaleString()}`;
-          },
-          title: function(tooltipItems) {
-            return tooltipItems[0].label || '';
+            return `${label}: ${value.toLocaleString()}${unit ? ` ${unit}` : ''}`;
           }
         }
       }
@@ -149,49 +245,63 @@ const ProductionLineChart = ({
     scales: {
       x: {
         grid: {
-          display: true,
-          color: themeColors.gridLine,
+          display: showGrid,
+          color: getGridColor(),
           drawBorder: false,
+          drawOnChartArea: true,
+          drawTicks: true,
+          lineWidth: 1,
         },
         ticks: {
-          color: themeColors.textSecondary,
+          color: isDarkMode ? 'var(--color-text-tertiary)' : 'var(--color-text-tertiary)',
           font: {
             size: 11,
-            family: "'Inter', sans-serif"
+            family: getCssVar('--font-family') || "'Inter', sans-serif",
+            weight: '400'
           },
-          padding: 8
+          padding: 8,
+          maxRotation: 45,
+          minRotation: 0
         },
         border: {
-          color: themeColors.border
+          color: isDarkMode ? 'var(--color-border)' : 'var(--color-border)',
+          width: 1
         }
       },
       y: {
         beginAtZero: true,
         grid: {
-          color: themeColors.gridLine,
+          display: showGrid,
+          color: getGridColor(),
           drawBorder: false,
+          drawOnChartArea: true,
+          drawTicks: true,
+          lineWidth: 1,
         },
         ticks: {
-          color: themeColors.textSecondary,
+          color: isDarkMode ? 'var(--color-text-tertiary)' : 'var(--color-text-tertiary)',
           font: {
             size: 11,
-            family: "'Inter', sans-serif"
+            family: getCssVar('--font-family') || "'Inter', sans-serif",
+            weight: '400'
           },
           padding: 8,
+          stepSize: Math.ceil(Math.max(...(data.length > 0 ? data : defaultData)) / 5),
           callback: function(value) {
-            return value.toLocaleString() + (unit ? ` ${unit}` : '');
+            return value.toLocaleString();
           }
         },
         border: {
-          color: themeColors.border
+          color: isDarkMode ? 'var(--color-border)' : 'var(--color-border)',
+          width: 1
         },
         title: {
           display: !!unit,
           text: unit,
-          color: themeColors.textSecondary,
+          color: isDarkMode ? 'var(--color-text-muted)' : 'var(--color-text-muted)',
           font: {
-            size: 12,
-            family: "'Inter', sans-serif",
+            size: 11,
+            family: getCssVar('--font-family') || "'Inter', sans-serif",
             weight: '500'
           }
         }
@@ -202,102 +312,166 @@ const ProductionLineChart = ({
       mode: 'index'
     },
     animation: {
-      duration: 1000,
+      duration: 800,
       easing: 'easeOutQuart'
     },
     elements: {
       line: {
         cubicInterpolationMode: 'monotone'
+      },
+      point: {
+        hoverBorderWidth: 2
       }
+    },
+    hover: {
+      mode: 'index',
+      intersect: false
     }
   };
 
-  // ✅ گراف کے اوپر value display کے لیے
-  const maxValue = Math.max(...(data.length > 0 ? data : defaultData));
-  const minValue = Math.min(...(data.length > 0 ? data : defaultData));
-  const averageValue = (data.length > 0 ? data : defaultData).reduce((a, b) => a + b, 0) / (data.length > 0 ? data.length : defaultData.length);
+  // ✅ Statistics calculation
+  const chartDataValues = data.length > 0 ? data : defaultData;
+  const maxValue = Math.max(...chartDataValues);
+  const minValue = Math.min(...chartDataValues);
+  const averageValue = chartDataValues.reduce((a, b) => a + b, 0) / chartDataValues.length;
+  const lastValue = chartDataValues[chartDataValues.length - 1];
+  const firstValue = chartDataValues[0];
+  const trend = lastValue - firstValue;
+  const trendPercentage = firstValue !== 0 ? ((trend / firstValue) * 100).toFixed(1) : 0;
 
   return (
     <div style={{ 
       position: 'relative',
       height: `${height}px`,
       width: '100%',
-      background: themeColors.background,
-      borderRadius: '12px',
-      padding: '20px',
-      border: `1px solid ${themeColors.border}`,
-      boxShadow: darkMode 
-        ? '0 4px 6px -1px rgba(0, 0, 0, 0.3)' 
-        : '0 4px 6px -1px rgba(0, 0, 0, 0.05)'
+      background: isDarkMode ? 'var(--color-card-bg)' : 'var(--color-card-bg)',
+      borderRadius: 'var(--radius-xl)',
+      padding: 'var(--spacing-lg)',
+      border: `1px solid ${isDarkMode ? 'var(--color-border)' : 'var(--color-border-light)'}`,
+      boxShadow: isDarkMode 
+        ? 'var(--shadow-lg)' 
+        : 'var(--shadow-md)',
+      transition: 'all var(--transition-base)',
     }}>
-      {/* ✅ اضافی انفارمیشن dark mode کے لیے */}
-      {darkMode && data.length > 0 && (
+      
+      {/* ✅ Stats Summary - تھیم کے مطابق */}
+      {showStats && data.length > 0 && (
         <div style={{
           position: 'absolute',
-          top: '15px',
-          right: '20px',
+          top: 'var(--spacing-md)',
+          right: 'var(--spacing-lg)',
           display: 'flex',
-          gap: '15px',
-          zIndex: 1
+          gap: 'var(--spacing-lg)',
+          zIndex: 10,
+          background: isDarkMode 
+            ? 'var(--color-surface)' 
+            : 'var(--color-paper)',
+          padding: 'var(--spacing-sm) var(--spacing-md)',
+          borderRadius: 'var(--radius-full)',
+          border: `1px solid ${isDarkMode ? 'var(--color-border)' : 'var(--color-border-light)'}`,
+          backdropFilter: 'blur(8px)',
         }}>
-          <div style={{
-            textAlign: 'right'
-          }}>
+          <div style={{ textAlign: 'center' }}>
             <div style={{
-              fontSize: '11px',
-              color: themeColors.textSecondary,
-              marginBottom: '2px'
+              fontSize: 'var(--font-size-xs)',
+              color: isDarkMode ? 'var(--color-text-muted)' : 'var(--color-text-muted)',
+              marginBottom: '2px',
+              fontWeight: '500',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px'
             }}>
               Max
             </div>
             <div style={{
-              fontSize: '14px',
-              fontWeight: '600',
-              color: lineColor
+              fontSize: 'var(--font-size-sm)',
+              fontWeight: '700',
+              color: resolvedPrimaryColor,
             }}>
-              {maxValue.toLocaleString()}
+              {maxValue.toLocaleString()}{unit}
             </div>
           </div>
-          <div style={{
-            textAlign: 'right'
-          }}>
+          <div style={{ textAlign: 'center' }}>
             <div style={{
-              fontSize: '11px',
-              color: themeColors.textSecondary,
-              marginBottom: '2px'
+              fontSize: 'var(--font-size-xs)',
+              color: isDarkMode ? 'var(--color-text-muted)' : 'var(--color-text-muted)',
+              marginBottom: '2px',
+              fontWeight: '500',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px'
             }}>
               Avg
             </div>
             <div style={{
-              fontSize: '14px',
-              fontWeight: '600',
-              color: themeColors.textPrimary
+              fontSize: 'var(--font-size-sm)',
+              fontWeight: '700',
+              color: isDarkMode ? 'var(--color-text-primary)' : 'var(--color-text-primary)',
             }}>
-              {Math.round(averageValue).toLocaleString()}
+              {Math.round(averageValue).toLocaleString()}{unit}
             </div>
           </div>
-          <div style={{
-            textAlign: 'right'
-          }}>
+          <div style={{ textAlign: 'center' }}>
             <div style={{
-              fontSize: '11px',
-              color: themeColors.textSecondary,
-              marginBottom: '2px'
+              fontSize: 'var(--font-size-xs)',
+              color: isDarkMode ? 'var(--color-text-muted)' : 'var(--color-text-muted)',
+              marginBottom: '2px',
+              fontWeight: '500',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px'
             }}>
-              Min
+              Trend
             </div>
             <div style={{
-              fontSize: '14px',
-              fontWeight: '600',
-              color: '#10b981'
+              fontSize: 'var(--font-size-sm)',
+              fontWeight: '700',
+              color: trend >= 0 
+                ? (isDarkMode ? 'var(--color-success)' : 'var(--color-success)')
+                : (isDarkMode ? 'var(--color-error)' : 'var(--color-error)'),
+              display: 'flex',
+              alignItems: 'center',
+              gap: '2px'
             }}>
-              {minValue.toLocaleString()}
+              {trend >= 0 ? '↑' : '↓'} {Math.abs(trend).toLocaleString()}{unit}
             </div>
           </div>
         </div>
       )}
-      
-      <Line data={chartData} options={options} />
+
+      {/* ✅ Chart Container */}
+      <div style={{
+        width: '100%',
+        height: '100%',
+        position: 'relative',
+      }}>
+        <Line data={chartData} options={options} />
+      </div>
+
+      {/* ✅ No Data Message */}
+      {data.length === 0 && (
+        <div style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          textAlign: 'center',
+          color: isDarkMode ? 'var(--color-text-muted)' : 'var(--color-text-muted)',
+          fontSize: 'var(--font-size-sm)',
+          fontWeight: '500',
+          background: isDarkMode ? 'var(--color-surface)' : 'var(--color-paper)',
+          padding: 'var(--spacing-md) var(--spacing-lg)',
+          borderRadius: 'var(--radius-full)',
+          border: `1px solid ${isDarkMode ? 'var(--color-border)' : 'var(--color-border-light)'}`,
+          zIndex: 5
+        }}>
+          No production data available
+        </div>
+      )}
+
+      {/* ✅ CSS Variables Animation */}
+      <style>{`
+        .chart-container {
+          transition: all var(--transition-base);
+        }
+      `}</style>
     </div>
   );
 };

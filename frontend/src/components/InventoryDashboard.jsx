@@ -124,7 +124,7 @@ const InventoryDashboard = () => {
       {/* Header */}
       <div className="dashboard-header">
         <div className="header-left">
-          <h1><FiPackage /> Material Inventory Dashboard</h1>
+          <h1><FiPackage /> Material Inventory Dashboard AAAAA</h1>
           <p className="subtitle">Real-time tracking of material flow between Flattening & Spiral sections</p>
         </div>
         

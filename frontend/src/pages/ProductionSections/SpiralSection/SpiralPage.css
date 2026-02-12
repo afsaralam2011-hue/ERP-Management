@@ -2568,3 +2568,78 @@
 /* TABLE TEXT BIGGER - PRODUCTION DATE & SHIFT TOGETHER */
 /* NO BLACK ANYWHERE - PURE INDIGO/NAVY THEME          */
 /* ---------------------------------------------------- */
+/* ===== REPORT SECTION HEADER FIX - HEADINGS ABOVE CONTENT ===== */
+.section-header-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+.section-header-wrapper h3 {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text) !important;
+  margin: 0;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--primary);
+  display: inline-block;
+}
+
+/* ===== DARK MODE FILTER CONTAINER FIX ===== */
+[data-theme="dark"] .filters-container {
+  background: var(--dark-surface) !important;
+  border-color: var(--dark-border) !important;
+}
+
+[data-theme="dark"] .filter-input,
+[data-theme="dark"] .filter-select,
+[data-theme="dark"] .filter-date {
+  background: var(--dark-bg) !important;
+  color: var(--dark-text) !important;
+  border-color: var(--dark-border) !important;
+}
+
+[data-theme="dark"] .filter-count-wrapper {
+  background: var(--dark-bg) !important;
+  border-color: var(--dark-border) !important;
+}
+
+/* ===== DARK MODE ICONS FIX - NEVER WHITE ===== */
+[data-theme="dark"] .page-btn svg,
+[data-theme="dark"] .action-btn svg,
+[data-theme="dark"] .info-item svg,
+[data-theme="dark"] .summary-item svg,
+[data-theme="dark"] .stat-icon-container svg,
+[data-theme="dark"] .shift-stat-icon svg,
+[data-theme="dark"] .machine-name svg,
+[data-theme="dark"] .item-icon svg,
+[data-theme="dark"] .card-icon svg {
+  color: inherit !important;
+}
+
+/* ===== EFFICIENCY COLORS - FORCED FOR ALL COMPONENTS ===== */
+[data-theme="dark"] .shift-stat-value[style*="color: #10b981"],
+[data-theme="dark"] .machine-stat-value[style*="color: #10b981"],
+[data-theme="dark"] .item-stat-value[style*="color: #10b981"],
+[data-theme="dark"] .summary-card-value[style*="color: #10b981"],
+[data-theme="dark"] .stat-value[style*="color: #10b981"] {
+  color: #34d399 !important;
+}
+
+[data-theme="dark"] .shift-stat-value[style*="color: #f59e0b"],
+[data-theme="dark"] .machine-stat-value[style*="color: #f59e0b"],
+[data-theme="dark"] .item-stat-value[style*="color: #f59e0b"],
+[data-theme="dark"] .summary-card-value[style*="color: #f59e0b"],
+[data-theme="dark"] .stat-value[style*="color: #f59e0b"] {
+  color: #fbbf24 !important;
+}
+
+[data-theme="dark"] .shift-stat-value[style*="color: #ef4444"],
+[data-theme="dark"] .machine-stat-value[style*="color: #ef4444"],
+[data-theme="dark"] .item-stat-value[style*="color: #ef4444"],
+[data-theme="dark"] .summary-card-value[style*="color: #ef4444"],
+[data-theme="dark"] .stat-value[style*="color: #ef4444"] {
+  color: #f87171 !important;
+}

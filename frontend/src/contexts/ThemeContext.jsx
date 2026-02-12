@@ -139,8 +139,10 @@ export const ThemeProvider = ({
         setCurrentTheme(selectedTheme);
         setMode(selectedTheme.mode);
         
-        // 6. DOM پر تھیم اپلائی کریں (فکسڈ: indigo/navy text colors)
-        const applied = applyThemeWithForcedColors(selectedTheme);
+        // ============================================================
+        // ✅ FIXED: اب صرف CSS Variables استعمال ہوں گے، کوئی زبردستی نہیں
+        // ============================================================
+        const applied = applyThemeToDOM(selectedTheme);
         setIsThemeApplied(applied);
         
         // 7. localStorage میں سیو کریں
@@ -168,7 +170,7 @@ export const ThemeProvider = ({
       // ڈیفالٹ تھیم اپلائی کریں
       const defaultTheme = getThemeById(defaultThemeId);
       if (defaultTheme) {
-        applyThemeWithForcedColors(defaultTheme);
+        applyThemeToDOM(defaultTheme);
         setCurrentTheme(defaultTheme);
         setMode(defaultTheme.mode);
       }
@@ -177,98 +179,10 @@ export const ThemeProvider = ({
     }
   }, [defaultThemeId, enableSystemThemeDetection, persistTheme]);
 
-  // === تھیم اپلائی فنکشن - فکسڈ ===
-
-  /**
-   * تھیم اپلائی کریں فورسڈ ٹیکسٹ کالرز کے ساتھ
-   * @param {Object} theme - تھیم آبجیکٹ
-   * @returns {boolean} کامیابی کی صورت میں true
-   */
-  const applyThemeWithForcedColors = useCallback((theme) => {
-    if (!theme || !theme.colors) {
-      console.error('Invalid theme object');
-      return false;
-    }
-
-    try {
-      const root = document.documentElement;
-      const body = document.body;
-      
-      // 1. کلین اپ
-      body.classList.remove(
-        'theme-light', 'theme-dark',
-        'light-mode', 'dark-mode',
-        'light-theme', 'dark-theme'
-      );
-      
-      root.removeAttribute('data-theme');
-      root.removeAttribute('data-theme-mode');
-      body.removeAttribute('data-theme');
-      body.removeAttribute('data-theme-mode');
-      
-      // 2. فورس کالرز سیٹ کریں
-      const isDarkMode = theme.mode === 'dark';
-      
-      if (isDarkMode) {
-        // FIX: Dark mode میں بلیک ٹیکسٹ کے بجائے indigo/blue
-        body.style.color = '#E3F2FD'; // Light Blue/White
-        body.style.backgroundColor = '#121212'; // Dark background
-        body.classList.add('dark-mode', 'theme-dark', 'dark-theme');
-      } else {
-        // FIX: Light mode میں indigo/navy blue text
-        body.style.color = '#1A237E'; // Deep Indigo/Navy Blue
-        body.style.backgroundColor = '#FFFFFF'; // Light background
-        body.classList.add('light-mode', 'theme-light', 'light-theme');
-      }
-      
-      // 3. تھیم اپلائی کریں
-      const applied = applyThemeToDOM(theme);
-      
-      // 4. اضافی فورس کالرز
-      const forceTextColors = () => {
-        const textSelectors = [
-          'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-          'p', 'span', 'div', 'a', 'li', 'td', 'th',
-          '.text', '.title', '.subtitle', '.label',
-          '.card', '.panel', '.modal', '.dialog',
-          '.sidebar', '.header', '.navbar',
-          'aside', 'nav', 'header', 'footer', 'section'
-        ];
-        
-        textSelectors.forEach(selector => {
-          try {
-            document.querySelectorAll(selector).forEach(element => {
-              if (element.tagName === 'BUTTON' || 
-                  element.tagName === 'INPUT' || 
-                  element.tagName === 'TEXTAREA' || 
-                  element.tagName === 'SELECT') {
-                return;
-              }
-              
-              if (isDarkMode) {
-                element.style.color = '#E3F2FD';
-                element.style.setProperty('color', '#E3F2FD', 'important');
-              } else {
-                element.style.color = '#1A237E';
-                element.style.setProperty('color', '#1A237E', 'important');
-              }
-            });
-          } catch (e) {
-            // Silent fail
-          }
-        });
-      };
-      
-      // 5. فورس کالرز اپلائی کریں
-      setTimeout(forceTextColors, 100);
-      setTimeout(forceTextColors, 500);
-      
-      return applied;
-    } catch (err) {
-      console.error('Error applying theme with forced colors:', err);
-      return false;
-    }
-  }, []);
+  // ============================================================
+  // ✅ FIXED: applyThemeWithForcedColors کو مکمل طور پر ہٹا دیا
+  // ============================================================
+  // اب صرف applyThemeToDOM استعمال ہو گا جو CSS Variables سیٹ کرتا ہے
 
   // === تھیم ایونٹ ہینڈلرز ===
 
@@ -304,7 +218,7 @@ export const ThemeProvider = ({
           const newTheme = themesForSystemMode[0];
           setCurrentTheme(newTheme);
           setMode(systemMode);
-          applyThemeWithForcedColors(newTheme);
+          applyThemeToDOM(newTheme);
           
           if (persistTheme) {
             localStorage.setItem('selectedThemeId', newTheme.id);
@@ -321,7 +235,7 @@ export const ThemeProvider = ({
     return () => {
       mediaQuery.removeEventListener('change', handleSystemThemeChange);
     };
-  }, [enableSystemThemeDetection, persistTheme, currentTheme, applyThemeWithForcedColors]);
+  }, [enableSystemThemeDetection, persistTheme, currentTheme]);
 
   // === تھیم مینجمنٹ فنکشنز ===
 
@@ -342,8 +256,10 @@ export const ThemeProvider = ({
         throw new Error(`Theme "${themeId}" not found`);
       }
 
-      // تھیم اپلائی کریں (فورسڈ کالرز کے ساتھ)
-      const applied = applyThemeWithForcedColors(themeToApply);
+      // ============================================================
+      // ✅ FIXED: اب صرف applyThemeToDOM استعمال کریں
+      // ============================================================
+      const applied = applyThemeToDOM(themeToApply);
       if (!applied) {
         throw new Error('Failed to apply theme');
       }
@@ -380,7 +296,7 @@ export const ThemeProvider = ({
       });
       return null;
     }
-  }, [currentTheme, persistTheme, applyThemeWithForcedColors]);
+  }, [currentTheme, persistTheme]);
 
   /**
    * تھیم موڈ تبدیل کریں
@@ -479,7 +395,9 @@ export const ThemeProvider = ({
       // تھیم ID بنائیں
       const themeId = `custom-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       
-      // رنگوں کو indigo/navy blue میں تبدیل کریں
+      // ============================================================
+      // ✅ FIXED: ڈارک موڈ میں BLACK نہیں، انڈیگو/نیوی بلیو
+      // ============================================================
       const textColors = themeMode === 'dark' ? {
         textPrimary: '#E3F2FD',    // Light Blue/White
         textSecondary: '#BBDEFB',  // Light Blue
@@ -834,16 +752,16 @@ export const ThemeProvider = ({
         justifyContent: 'center',
         alignItems: 'center',
         minHeight: '100vh',
-        backgroundColor: mode === 'dark' ? '#121212' : '#FFFFFF',
-        color: mode === 'dark' ? '#E3F2FD' : '#1A237E', // FIXED: indigo/navy colors
+        backgroundColor: mode === 'dark' ? '#0B1F3A' : '#F8FAFC',
+        color: mode === 'dark' ? '#E3F2FD' : '#1A237E',
         transition: 'all 0.3s ease'
       }}>
         <div style={{ textAlign: 'center' }}>
           <div style={{
             width: '40px',
             height: '40px',
-            border: `3px solid ${mode === 'dark' ? '#333' : '#EEE'}`,
-            borderTop: `3px solid ${currentTheme?.colors?.primary || '#1976D2'}`,
+            border: `3px solid ${mode === 'dark' ? '#1E3A5F' : '#E2E8F0'}`,
+            borderTop: `3px solid ${currentTheme?.colors?.primary || '#1E40AF'}`,
             borderRadius: '50%',
             animation: 'spin 1s linear infinite',
             margin: '0 auto 20px'
@@ -870,19 +788,19 @@ export const ThemeProvider = ({
         justifyContent: 'center',
         alignItems: 'center',
         minHeight: '100vh',
-        backgroundColor: '#f8d7da',
-        color: '#721c24',
+        backgroundColor: '#FEF2F2',
+        color: '#991B1B',
         padding: '20px',
         textAlign: 'center'
       }}>
         <div>
-          <h3 style={{ marginBottom: '10px' }}>Theme Error</h3>
-          <p style={{ marginBottom: '20px' }}>{error.message}</p>
+          <h3 style={{ marginBottom: '10px', color: '#991B1B' }}>Theme Error</h3>
+          <p style={{ marginBottom: '20px', color: '#B91C1C' }}>{error.message}</p>
           <button
             onClick={initializeTheme}
             style={{
               padding: '10px 20px',
-              backgroundColor: '#dc3545',
+              backgroundColor: '#DC2626',
               color: 'white',
               border: 'none',
               borderRadius: '4px',
