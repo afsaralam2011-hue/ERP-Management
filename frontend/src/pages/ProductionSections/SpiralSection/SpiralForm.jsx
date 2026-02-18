@@ -20,7 +20,8 @@ const SpiralForm = () => {
     section_name: 'Spiral',
     machine_id: '',
     machine_no: '',
-    item_code: '',
+    item_id: '', // Changed from item_code to item_id
+    item_code: '', // New field for item code display
     item_name: '',
     raw_material_flatsize: '',
     material_type: '',
@@ -230,7 +231,7 @@ const SpiralForm = () => {
         .select('*')
         .order('start_time');
       
-      // 2. Fetch spiral items
+      // 2. Fetch spiral items - now using id as primary key
       const { data: spiralItemData } = await supabase
         .from('spiralitem')
         .select('*')
@@ -264,7 +265,7 @@ const SpiralForm = () => {
       
     } catch (error) {
       console.error('Error fetching configuration:', error);
-      // Fallback to static data
+      // Fallback to static data with proper ID structure
       setShifts([
         { id: 1, shift_code: 'D', shift_name: 'Day', start_time: '08:30:00', end_time: '22:30:00' },
         { id: 2, shift_code: 'N', shift_name: 'Night', start_time: '22:30:00', end_time: '08:30:00' },
@@ -282,6 +283,17 @@ const SpiralForm = () => {
           finishedproductname: '7mm2P',
           unit: 'Meter',
           per_meter_wt: 0.064
+        },
+        { 
+          id: 2, 
+          item_code: 'ITEM007', 
+          item_name: '6.0mm2P', 
+          raw_material_flatsize: 'T0.60_W3.50', 
+          material_type: 'PVC', 
+          wire_size: '1.70mm', 
+          finishedproductname: '8mm2P',
+          unit: 'Meter',
+          per_meter_wt: 0.072
         }
       ]);
       
@@ -302,138 +314,6 @@ const SpiralForm = () => {
           section_name: 'Spiral', 
           machine_id: 'SP # 02', 
           machine_no: '02', 
-          shift_code: 'D', 
-          shift_name: 'Day', 
-          target_qty: 12000, 
-          uom: 'Meter', 
-          is_active: true 
-        },
-        { 
-          id: 3, 
-          section_name: 'Spiral', 
-          machine_id: 'SP # 03', 
-          machine_no: '03', 
-          shift_code: 'D', 
-          shift_name: 'Day', 
-          target_qty: 12000, 
-          uom: 'Meter', 
-          is_active: true 
-        },
-        { 
-          id: 4, 
-          section_name: 'Spiral', 
-          machine_id: 'SP # 04', 
-          machine_no: '04', 
-          shift_code: 'D', 
-          shift_name: 'Day', 
-          target_qty: 12000, 
-          uom: 'Meter', 
-          is_active: true 
-        },
-        { 
-          id: 5, 
-          section_name: 'Spiral', 
-          machine_id: 'SP # 05', 
-          machine_no: '05', 
-          shift_code: 'D', 
-          shift_name: 'Day', 
-          target_qty: 12000, 
-          uom: 'Meter', 
-          is_active: true 
-        },
-        { 
-          id: 6, 
-          section_name: 'Spiral', 
-          machine_id: 'SP # 06', 
-          machine_no: '06', 
-          shift_code: 'D', 
-          shift_name: 'Day', 
-          target_qty: 12000, 
-          uom: 'Meter', 
-          is_active: true 
-        },
-        { 
-          id: 7, 
-          section_name: 'Spiral', 
-          machine_id: 'SP # 07', 
-          machine_no: '07', 
-          shift_code: 'D', 
-          shift_name: 'Day', 
-          target_qty: 12000, 
-          uom: 'Meter', 
-          is_active: true 
-        },
-        { 
-          id: 8, 
-          section_name: 'Spiral', 
-          machine_id: 'SP # 08', 
-          machine_no: '08', 
-          shift_code: 'D', 
-          shift_name: 'Day', 
-          target_qty: 12000, 
-          uom: 'Meter', 
-          is_active: true 
-        },
-        { 
-          id: 9, 
-          section_name: 'Spiral', 
-          machine_id: 'SP # 09', 
-          machine_no: '09', 
-          shift_code: 'D', 
-          shift_name: 'Day', 
-          target_qty: 12000, 
-          uom: 'Meter', 
-          is_active: true 
-        },
-        { 
-          id: 10, 
-          section_name: 'Spiral', 
-          machine_id: 'SP # 10', 
-          machine_no: '10', 
-          shift_code: 'D', 
-          shift_name: 'Day', 
-          target_qty: 12000, 
-          uom: 'Meter', 
-          is_active: true 
-        },
-        { 
-          id: 11, 
-          section_name: 'Spiral', 
-          machine_id: 'SP # 11', 
-          machine_no: '11', 
-          shift_code: 'D', 
-          shift_name: 'Day', 
-          target_qty: 12000, 
-          uom: 'Meter', 
-          is_active: true 
-        },
-        { 
-          id: 12, 
-          section_name: 'Spiral', 
-          machine_id: 'SP # 12', 
-          machine_no: '12', 
-          shift_code: 'D', 
-          shift_name: 'Day', 
-          target_qty: 12000, 
-          uom: 'Meter', 
-          is_active: true 
-        },
-        { 
-          id: 13, 
-          section_name: 'Spiral', 
-          machine_id: 'SP # 13', 
-          machine_no: '13', 
-          shift_code: 'D', 
-          shift_name: 'Day', 
-          target_qty: 12000, 
-          uom: 'Meter', 
-          is_active: true 
-        },
-        { 
-          id: 14, 
-          section_name: 'Spiral', 
-          machine_id: 'SP # 14', 
-          machine_no: '14', 
           shift_code: 'D', 
           shift_name: 'Day', 
           target_qty: 12000, 
@@ -659,7 +539,15 @@ const SpiralForm = () => {
         shift_name: selectedShift ? selectedShift.shift_name : '',
         machine_id: '',
         machine_no: '',
-        target_qty: ''
+        target_qty: '',
+        item_id: '', // Clear item selection when shift changes
+        item_code: '',
+        item_name: '',
+        raw_material_flatsize: '',
+        material_type: '',
+        wire_size: '',
+        finishedproductname: '',
+        per_meter_wt: ''
       }));
       // Mark shift_name as filled if shift selected
       if (value) {
@@ -694,12 +582,13 @@ const SpiralForm = () => {
         }));
       }
     }
-    else if (name === 'item_code') {
-      const selectedItem = spiralItems.find(item => item.item_code === value);
+    else if (name === 'item_id') {
+      const selectedItem = spiralItems.find(item => item.id.toString() === value);
       if (selectedItem) {
         setFormData(prev => ({
           ...prev,
-          item_code: value,
+          item_id: value, // Store the ID
+          item_code: selectedItem.item_code || '', // Display item code
           item_name: selectedItem.item_name || '',
           raw_material_flatsize: selectedItem.raw_material_flatsize || '',
           material_type: selectedItem.material_type || '',
@@ -710,7 +599,7 @@ const SpiralForm = () => {
         }));
         // Mark all related fields as filled
         const relatedFields = [
-          'item_name', 'raw_material_flatsize', 'material_type', 
+          'item_code', 'item_name', 'raw_material_flatsize', 'material_type', 
           'wire_size', 'finishedproductname', 'per_meter_wt'
         ];
         relatedFields.forEach(field => {
@@ -722,7 +611,14 @@ const SpiralForm = () => {
       } else {
         setFormData(prev => ({
           ...prev,
-          [name]: value
+          [name]: value,
+          item_code: '',
+          item_name: '',
+          raw_material_flatsize: '',
+          material_type: '',
+          wire_size: '',
+          finishedproductname: '',
+          per_meter_wt: ''
         }));
       }
     }
@@ -768,7 +664,7 @@ const SpiralForm = () => {
       isFilled,
       hasError,
       // Required fields validation
-      isRequired: ['machine_id', 'item_code', 'production_quantity', 'shift_code', 'operator_name', 'target_qty', 'production_date'].includes(fieldName)
+      isRequired: ['machine_id', 'item_id', 'production_quantity', 'shift_code', 'operator_name', 'target_qty', 'production_date'].includes(fieldName)
     };
   };
 
@@ -804,8 +700,9 @@ const SpiralForm = () => {
     if (!formData.section_name.trim()) newErrors.section_name = 'Section name is required';
     if (!formData.machine_id.trim()) newErrors.machine_id = 'Machine ID is required';
     if (!formData.machine_no.trim()) newErrors.machine_no = 'Machine number is required';
-    if (!formData.item_code) newErrors.item_code = 'Item code is required';
+    if (!formData.item_id) newErrors.item_id = 'Item selection is required'; // Changed from item_code to item_id
     if (!formData.item_name.trim()) newErrors.item_name = 'Item name is required';
+    if (!formData.item_code.trim()) newErrors.item_code = 'Item code is required'; // New validation for item_code
     if (!formData.production_quantity) {
       newErrors.production_quantity = 'Production quantity is required';
     } else if (isNaN(formData.production_quantity) || formData.production_quantity <= 0) {
@@ -849,11 +746,15 @@ const SpiralForm = () => {
     setIsSubmitting(true);
 
     try {
+      // Find the selected item to get all details
+      const selectedItem = spiralItems.find(item => item.id.toString() === formData.item_id);
+      
       const recordData = {
         section_name: formData.section_name.trim(),
         machine_id: formData.machine_id.trim(),
         machine_no: formData.machine_no.trim(),
-        item_code: formData.item_code,
+        item_id: parseInt(formData.item_id), // Store item_id
+        item_code: formData.item_code.trim(), // Store item_code
         item_name: formData.item_name.trim(),
         raw_material_flatsize: formData.raw_material_flatsize.trim(),
         material_type: formData.material_type.trim(),
@@ -1333,42 +1234,55 @@ const SpiralForm = () => {
             </div>
           </div>
 
-          {/* Section 3: Item Details */}
+          {/* Section 3: Item Details - Modified to use ID for selection and display Code separately */}
           <div className="form-section">
             <h3 className="section-title">
               Item Details
             </h3>
             <div className="form-grid">
-              {/* Item Code */}
+              {/* Item ID Selection - New dropdown using ID */}
               <div className="form-field">
                 <label className="form-label">
-                  Item Code *
-                  {getFieldStatus('item_code', formData.item_code).hasError && (
+                  Select Item *
+                  {getFieldStatus('item_id', formData.item_id).hasError && (
                     <FiAlertCircle className="error-indicator" />
                   )}
-                  {getFieldStatus('item_code', formData.item_code).isFilled && (
+                  {getFieldStatus('item_id', formData.item_id).isFilled && (
                     <FiCheck className="success-indicator" />
                   )}
                 </label>
                 <div className="select-with-indicator">
                   <select
-                    name="item_code"
-                    value={formData.item_code}
+                    name="item_id"
+                    value={formData.item_id}
                     onChange={handleChange}
-                    className={getFieldClass('item_code', formData.item_code, true)}
+                    className={getFieldClass('item_id', formData.item_id, true)}
                   >
-                    <option value="">Select item code</option>
+                    <option value="">Select item by ID</option>
                     {spiralItems.map(item => (
-                      <option key={item.id} value={item.item_code}>
-                        {item.item_code} - {item.item_name}
+                      <option key={item.id} value={item.id}>
+                        ID: {item.id} - {item.item_name}
                       </option>
                     ))}
                   </select>
-                  {getFieldStatus('item_code', formData.item_code).isFilled && (
+                  {getFieldStatus('item_id', formData.item_id).isFilled && (
                     <div className="select-checkmark">✓</div>
                   )}
                 </div>
-                {errors.item_code && <div className="error-text">{errors.item_code}</div>}
+                {errors.item_id && <div className="error-text">{errors.item_id}</div>}
+              </div>
+
+              {/* Item Code - New display field */}
+              <div className="form-field">
+                <label className="form-label">
+                  Item Code
+                  {getFieldStatus('item_code', formData.item_code).isFilled && (
+                    <FiCheck className="success-indicator" />
+                  )}
+                </label>
+                <div className={getDisplayFieldClass('item_code', formData.item_code)}>
+                  {formData.item_code || 'Select Item first'}
+                </div>
               </div>
 
               {/* Item Name */}
@@ -1380,7 +1294,7 @@ const SpiralForm = () => {
                   )}
                 </label>
                 <div className={getDisplayFieldClass('item_name', formData.item_name)}>
-                  {formData.item_name || 'Select Item Code first'}
+                  {formData.item_name || 'Select Item first'}
                 </div>
               </div>
 
@@ -1393,7 +1307,7 @@ const SpiralForm = () => {
                   )}
                 </label>
                 <div className={getDisplayFieldClass('finishedproductname', formData.finishedproductname)}>
-                  {formData.finishedproductname || 'Select Item Code first'}
+                  {formData.finishedproductname || 'Select Item first'}
                 </div>
               </div>
             </div>

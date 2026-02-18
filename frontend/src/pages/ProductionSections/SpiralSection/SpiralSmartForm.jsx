@@ -1,7 +1,7 @@
 // ========================================================
 // FILE: SpiralSmartForm.jsx
 // PURPOSE: Smart Production Entry - Navy Blue Theme + All Fixes + WhatsApp Feature + Production Date
-// VERSION: 5.4 - Fixed Layout + Production Date Position
+// VERSION: 5.5 - Fixed Layout + Production Date Position + Item ID Selection
 // ========================================================
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
@@ -289,7 +289,8 @@ const SpiralSmartForm = () => {
           production_date: productionDate,
           items: [{ 
             id: Date.now(), 
-            item_code: '', 
+            item_id: '', // New field for item ID
+            item_code: '', // Separate field for item code display
             item_name: '', 
             raw_material_flatsize: '',
             material_type: '',
@@ -467,9 +468,11 @@ const SpiralSmartForm = () => {
         if (item.id === itemId) {
           const newItem = { ...item, [field]: value };
 
-          if (field === 'item_code' && value) {
-            const selectedItem = items.find(i => i.item_code === value);
+          // Handle item_id selection
+          if (field === 'item_id' && value) {
+            const selectedItem = items.find(i => i.id.toString() === value);
             if (selectedItem) {
+              newItem.item_code = selectedItem?.item_code || '';
               newItem.item_name = selectedItem?.item_name || '';
               newItem.unit = selectedItem?.unit || 'Kg';
               newItem.raw_material_flatsize = selectedItem?.raw_material_flatsize || '';
@@ -541,7 +544,8 @@ const SpiralSmartForm = () => {
         ...machine,
         items: [{ 
           id: Date.now(), 
-          item_code: '', 
+          item_id: '', // New field for item ID
+          item_code: '', // Separate field for item code display
           item_name: '', 
           raw_material_flatsize: '',
           material_type: '',
@@ -576,7 +580,8 @@ const SpiralSmartForm = () => {
           ...prev[machineNo].items,
           { 
             id: Date.now() + Math.random(),
-            item_code: '', 
+            item_id: '', // New field for item ID
+            item_code: '', // Separate field for item code display
             item_name: '', 
             raw_material_flatsize: '',
             material_type: '',
@@ -722,8 +727,11 @@ const SpiralSmartForm = () => {
       }
 
       machine.items.forEach((item, index) => {
-        if (!item.item_code) {
+        if (!item.item_id) { // Changed from item_code to item_id
           errors[`item_${machineNo}_${index}`] = 'Item selection is required';
+        }
+        if (!item.item_code?.trim()) { // New validation for item_code
+          errors[`item_code_${machineNo}_${index}`] = 'Item code is required';
         }
         if (!item.production_quantity || parseFloat(item.production_quantity) <= 0) {
           errors[`qty_${machineNo}_${index}`] = 'Valid production quantity is required';
@@ -764,8 +772,8 @@ const SpiralSmartForm = () => {
         const machine = machineData[machineNo];
 
         machine.items.forEach(item => {
-          if (item.item_code && item.production_quantity) {
-            const selectedItem = items.find(i => i.item_code === item.item_code);
+          if (item.item_id && item.production_quantity) {
+            const selectedItem = items.find(i => i.id.toString() === item.item_id);
 
             const productionQty = parseFloat(item.production_quantity) || 0;
             const targetQty = machine.target_qty || 0;
@@ -775,7 +783,8 @@ const SpiralSmartForm = () => {
               section_name: CURRENT_SECTION,
               machine_id: machine.machine_id,
               machine_no: machine.machine_no,
-              item_code: item.item_code,
+              item_id: parseInt(item.item_id), // Store item_id
+              item_code: selectedItem?.item_code || item.item_code || '', // Store item_code
               item_name: selectedItem?.item_name || item.item_name || '',
               raw_material_flatsize: item.raw_material_flatsize || '',
               material_type: item.material_type || '',
@@ -1769,7 +1778,7 @@ const SpiralSmartForm = () => {
                         }}
                       >
                         
-                        {/* COMPACT ITEMS TABLE */}
+                        {/* COMPACT ITEMS TABLE - UPDATED WITH ITEM ID SELECTION AND ITEM CODE DISPLAY */}
                         <div className="items-table-wrapper" style={{ marginTop: '5px' }}>
                           <table className="items-table" style={{
                             width: '100%',
@@ -1784,7 +1793,8 @@ const SpiralSmartForm = () => {
                                 background: isDarkMode ? '#334155' : '#f1f5f9',
                                 color: themeColors.textPrimary
                               }}>
-                                <th style={{ padding: '12px', textAlign: 'left', fontWeight: 600 }}>Item Details</th>
+                                <th style={{ padding: '12px', textAlign: 'left', fontWeight: 600 }}>Select Item</th>
+                                <th style={{ padding: '12px', textAlign: 'left', fontWeight: 600 }}>Item Code</th>
                                 <th style={{ padding: '12px', textAlign: 'left', fontWeight: 600 }}>Raw Material</th>
                                 <th style={{ padding: '12px', textAlign: 'left', fontWeight: 600 }}>Production</th>
                                 <th style={{ padding: '12px', textAlign: 'left', fontWeight: 600 }}>Weight</th>
@@ -1798,12 +1808,13 @@ const SpiralSmartForm = () => {
                                   borderBottom: `1px solid ${themeColors.border}`,
                                   color: themeColors.textPrimary
                                 }}>
+                                  {/* Item ID Selection Dropdown */}
                                   <td style={{ padding: '10px' }}>
                                     <select
-                                      value={item.item_code}
-                                      onChange={(e) => handleItemChange(machineNo, item.id, 'item_code', e.target.value)}
+                                      value={item.item_id || ''}
+                                      onChange={(e) => handleItemChange(machineNo, item.id, 'item_id', e.target.value)}
                                       className={`form-select ${validationErrors[`item_${machineNo}_${itemIndex}`] ? 'error' : ''}`}
-                                      title="Select item"
+                                      title="Select item by ID"
                                       style={{
                                         background: isDarkMode ? '#334155' : '#ffffff',
                                         border: `1px solid ${themeColors.border}`,
@@ -1813,15 +1824,33 @@ const SpiralSmartForm = () => {
                                         width: '100%'
                                       }}
                                     >
-                                      <option value="">-- Select Item --</option>
+                                      <option value="">-- Select Item ID --</option>
                                       {items.map(itm => (
-                                        <option key={itm.item_code} value={itm.item_code}>
-                                          {itm.item_code} - {itm.item_name || 'Unnamed Item'}
+                                        <option key={itm.id} value={itm.id.toString()}>
+                                          ID: {itm.id} - {itm.item_name || 'Unnamed Item'}
                                         </option>
                                       ))}
                                     </select>
                                   </td>
                                   
+                                  {/* Item Code Display Field */}
+                                  <td style={{ padding: '10px' }}>
+                                    <div className="item-code-display" style={{
+                                      background: isDarkMode ? '#1e293b' : '#f1f5f9',
+                                      border: `1px solid ${themeColors.border}`,
+                                      color: themeColors.textPrimary,
+                                      borderRadius: '6px',
+                                      padding: '8px 12px',
+                                      minHeight: '38px',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      fontWeight: 500
+                                    }}>
+                                      {item.item_code || '—'}
+                                    </div>
+                                  </td>
+                                  
+                                  {/* Raw Material Fields */}
                                   <td style={{ padding: '10px' }}>
                                     <div className="raw-material-fields" style={{ display: 'flex', gap: '5px' }}>
                                       <input
@@ -1837,7 +1866,8 @@ const SpiralSmartForm = () => {
                                           color: themeColors.textPrimary,
                                           borderRadius: '6px',
                                           padding: '8px',
-                                          fontSize: '0.9rem'
+                                          fontSize: '0.9rem',
+                                          width: '100px'
                                         }}
                                       />
                                       <input
@@ -1853,12 +1883,14 @@ const SpiralSmartForm = () => {
                                           color: themeColors.textPrimary,
                                           borderRadius: '6px',
                                           padding: '8px',
-                                          fontSize: '0.9rem'
+                                          fontSize: '0.9rem',
+                                          width: '120px'
                                         }}
                                       />
                                     </div>
                                   </td>
                                   
+                                  {/* Production Fields */}
                                   <td style={{ padding: '10px' }}>
                                     <div className="production-fields" style={{ display: 'flex', gap: '5px' }}>
                                       <input
@@ -1868,7 +1900,7 @@ const SpiralSmartForm = () => {
                                         step="0.01"
                                         min="0"
                                         className={`form-input small ${validationErrors[`qty_${machineNo}_${itemIndex}`] ? 'error' : ''}`}
-                                        placeholder="Quantity"
+                                        placeholder="Qty"
                                         title="Production quantity"
                                         style={{
                                           background: isDarkMode ? '#334155' : '#ffffff',
@@ -1876,7 +1908,8 @@ const SpiralSmartForm = () => {
                                           color: themeColors.textPrimary,
                                           borderRadius: '6px',
                                           padding: '8px',
-                                          fontSize: '0.9rem'
+                                          fontSize: '0.9rem',
+                                          width: '90px'
                                         }}
                                       />
                                       <input
@@ -1886,7 +1919,7 @@ const SpiralSmartForm = () => {
                                         step="0.001"
                                         min="0"
                                         className={`form-input small ${validationErrors[`weight_${machineNo}_${itemIndex}`] ? 'error' : ''}`}
-                                        placeholder="Per M Wt"
+                                        placeholder="Per M"
                                         title="Per meter weight"
                                         style={{
                                           background: isDarkMode ? '#334155' : '#ffffff',
@@ -1894,22 +1927,26 @@ const SpiralSmartForm = () => {
                                           color: themeColors.textPrimary,
                                           borderRadius: '6px',
                                           padding: '8px',
-                                          fontSize: '0.9rem'
+                                          fontSize: '0.9rem',
+                                          width: '80px'
                                         }}
                                       />
                                     </div>
                                   </td>
                                   
+                                  {/* Weight Display */}
                                   <td style={{ padding: '10px' }}>
                                     <div className="weight-display" style={{ 
                                       color: themeColors.textPrimary,
                                       fontWeight: 600,
-                                      padding: '8px'
+                                      padding: '8px',
+                                      whiteSpace: 'nowrap'
                                     }}>
                                       {formatNumber(item.weight || '0')} Kg
                                     </div>
                                   </td>
                                   
+                                  {/* Efficiency Display */}
                                   <td style={{ padding: '10px' }}>
                                     <div 
                                       className="efficiency-badge"
@@ -1922,7 +1959,8 @@ const SpiralSmartForm = () => {
                                         fontSize: '0.85rem',
                                         display: 'inline-flex',
                                         alignItems: 'center',
-                                        gap: '5px'
+                                        gap: '5px',
+                                        whiteSpace: 'nowrap'
                                       }}
                                     >
                                       {formatNumber(item.efficiency)}%

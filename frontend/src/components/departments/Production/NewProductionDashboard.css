@@ -382,6 +382,33 @@
   display: block;
 }
 
+/* Chart Footer Stats */
+.chart-footer-stats {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 15px;
+  padding: 12px 16px;
+  background-color: var(--color-surface-elevated);
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  font-size: 13px;
+}
+
+.chart-footer-stat {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.chart-footer-label {
+  color: var(--color-text-secondary);
+}
+
+.chart-footer-value {
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
 /* Loading States */
 .loading-state {
   display: flex;

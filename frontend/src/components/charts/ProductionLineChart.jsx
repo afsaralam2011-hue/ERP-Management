@@ -26,42 +26,6 @@ ChartJS.register(
 );
 
 // ----------------------
-// Reusable Stats Component
-// ----------------------
-const ChartStats = ({ stats, unit, isDarkMode }) => (
-  <div
-    style={{
-      position: 'absolute',
-      top: 10,
-      right: 10,
-      display: 'flex',
-      gap: 20,
-      zIndex: 10
-    }}
-  >
-    {['max', 'avg', 'trend'].map((key) => {
-      let label = key.toUpperCase();
-      let value = stats[key];
-      let color = 'inherit';
-
-      if (key === 'trend') {
-        color = value >= 0 ? 'green' : 'red';
-        value = `${value >= 0 ? '↑' : '↓'} ${Math.abs(value).toLocaleString()}${unit}`;
-      } else {
-        value = `${Math.round(value).toLocaleString()}${unit}`;
-      }
-
-      return (
-        <div key={key} style={{ textAlign: 'center', color }}>
-          <div style={{ fontSize: 10, fontWeight: 500 }}>{label}</div>
-          <div style={{ fontSize: 14, fontWeight: 700 }}>{value}</div>
-        </div>
-      );
-    })}
-  </div>
-);
-
-// ----------------------
 // Main Component
 // ----------------------
 const ProductionLineChart = ({
@@ -72,7 +36,7 @@ const ProductionLineChart = ({
   lineColor,
   height = 300,
   unit = '',
-  showStats = true,
+  showStats = true,      // نیا prop - stats دکھانا ہے یا نہیں
   showLegend = true,
   showGrid = true,
   tension = 0.4,
@@ -121,7 +85,7 @@ const ProductionLineChart = ({
     const max = Math.max(...chartValues);
     const min = Math.min(...chartValues);
     const trend = chartValues[chartValues.length - 1] - chartValues[0];
-    return { max, min, avg, trend };
+    return { max, min, avg, trend, total };
   }, [chartValues]);
 
   // ----------------------
@@ -173,23 +137,52 @@ const ProductionLineChart = ({
       legend: {
         display: showLegend,
         position: 'top',
-        labels: { color: isDarkMode ? 'white' : 'black' }
+        labels: { 
+          color: isDarkMode ? '#e5e7eb' : '#1f2937'
+        }
       },
-      title: { display: !!title, text: title },
+      title: { 
+        display: !!title, 
+        text: title,
+        color: isDarkMode ? '#e5e7eb' : '#1f2937'
+      },
       tooltip: {
         mode: 'index',
         intersect: false,
+        backgroundColor: isDarkMode ? '#1f2937' : '#ffffff',
+        titleColor: isDarkMode ? '#e5e7eb' : '#1f2937',
+        bodyColor: isDarkMode ? '#d1d5db' : '#4b5563',
+        borderColor: isDarkMode ? '#374151' : '#e5e7eb',
+        borderWidth: 1,
         callbacks: {
-          label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y.toLocaleString()}${unit ? ` ${unit}` : ''}`
+          label: (ctx) => {
+            const label = ctx.dataset.label || '';
+            return `${label}: ${ctx.parsed.y.toLocaleString()}${unit ? ` ${unit}` : ''}`;
+          }
         }
       },
     },
     scales: {
-      x: { grid: { display: showGrid, color: gridColor } },
+      x: { 
+        grid: { 
+          display: showGrid, 
+          color: gridColor 
+        },
+        ticks: {
+          color: isDarkMode ? '#9ca3af' : '#6b7280'
+        }
+      },
       y: {
         beginAtZero: true,
-        grid: { display: showGrid, color: gridColor },
-        ticks: { stepSize, callback: v => v.toLocaleString() }
+        grid: { 
+          display: showGrid, 
+          color: gridColor 
+        },
+        ticks: { 
+          stepSize, 
+          callback: v => v.toLocaleString(),
+          color: isDarkMode ? '#9ca3af' : '#6b7280'
+        }
       }
     },
     interaction: { mode: 'index', intersect: false },
@@ -197,13 +190,95 @@ const ProductionLineChart = ({
   }), [showLegend, title, unit, showGrid, gridColor, stepSize, isDarkMode]);
 
   // ----------------------
+  // Render Stats Box
+  // ----------------------
+  const renderStats = () => {
+    if (!showStats || chartValues.length === 0) return null;
+
+    return (
+      <div
+        style={{
+          position: 'absolute',
+          top: 10,
+          right: 10,
+          display: 'flex',
+          gap: 20,
+          zIndex: 10,
+          backgroundColor: isDarkMode ? '#1f2937' : '#ffffff',
+          padding: '8px 16px',
+          borderRadius: '8px',
+          border: `1px solid ${isDarkMode ? '#374151' : '#e5e7eb'}`,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          fontSize: '13px'
+        }}
+      >
+        {/* Total */}
+        <div>
+          <strong style={{ color: isDarkMode ? '#e5e7eb' : '#1f2937' }}>Total:</strong>{' '}
+          <span style={{ color: isDarkMode ? '#d1d5db' : '#4b5563' }}>
+            {stats.total.toLocaleString()}{unit ? ` ${unit}` : ''}
+          </span>
+        </div>
+
+        {/* Average */}
+        <div>
+          <strong style={{ color: isDarkMode ? '#e5e7eb' : '#1f2937' }}>Avg:</strong>{' '}
+          <span style={{ color: isDarkMode ? '#d1d5db' : '#4b5563' }}>
+            {Math.round(stats.avg).toLocaleString()}{unit ? ` ${unit}` : ''}
+          </span>
+        </div>
+
+        {/* Max */}
+        <div>
+          <strong style={{ color: isDarkMode ? '#e5e7eb' : '#1f2937' }}>Max:</strong>{' '}
+          <span style={{ color: isDarkMode ? '#d1d5db' : '#4b5563' }}>
+            {stats.max.toLocaleString()}{unit ? ` ${unit}` : ''}
+          </span>
+        </div>
+
+        {/* Trend */}
+        <div>
+          <strong style={{ color: isDarkMode ? '#e5e7eb' : '#1f2937' }}>Trend:</strong>{' '}
+          <span style={{ 
+            color: stats.trend >= 0 
+              ? (isDarkMode ? '#34d399' : '#10b981') 
+              : (isDarkMode ? '#f87171' : '#ef4444'),
+            fontWeight: 600
+          }}>
+            {stats.trend >= 0 ? '↑' : '↓'} {Math.abs(stats.trend).toLocaleString()}{unit ? ` ${unit}` : ''}
+          </span>
+        </div>
+      </div>
+    );
+  };
+
+  // ----------------------
   // Render
   // ----------------------
   return (
     <div style={{ position: 'relative', height: `${height}px`, width: '100%' }}>
-      {showStats && chartValues.length > 0 && <ChartStats stats={stats} unit={unit} isDarkMode={isDarkMode} />}
+      {/* Stats Box - صرف اس وقت دکھے گا جب showStats = true ہو */}
+      {renderStats()}
+
+      {/* Chart */}
       <Line data={chartData} options={options} />
-      {chartValues.length === 0 && <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>No production data available</div>}
+
+      {/* Empty State */}
+      {chartValues.length === 0 && (
+        <div style={{ 
+          position: 'absolute', 
+          inset: 0, 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center',
+          backgroundColor: isDarkMode ? '#111827' : '#f9fafb',
+          color: isDarkMode ? '#9ca3af' : '#6b7280',
+          fontSize: '14px',
+          borderRadius: '8px'
+        }}>
+          No production data available
+        </div>
+      )}
     </div>
   );
 };

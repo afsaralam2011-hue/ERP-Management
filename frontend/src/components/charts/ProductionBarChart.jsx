@@ -27,7 +27,7 @@ const ProductionBarChart = ({
   labels = [],
   colors = null,
   height = 300,
-  unit = 'Kg',
+  unit = '',
   showLegend = true,
   showGrid = true,
   horizontal = false,
@@ -36,6 +36,7 @@ const ProductionBarChart = ({
   borderRadius = 8,
   barThickness = 'flex',
   maxBarThickness = 40,
+  showStats = true,  // نیا prop - stats دکھانا ہے یا نہیں
 }) => {
 
   const { isDarkMode } = useTheme();
@@ -108,7 +109,7 @@ const ProductionBarChart = ({
   const chartData = useMemo(() => {
     const datasets = [
       {
-        label: `Production (${unit})`,
+        label: `Production ${unit ? `(${unit})` : ''}`,
         data: chartValues,
         backgroundColor: barColors,
         borderColor: borderColors,
@@ -122,7 +123,7 @@ const ProductionBarChart = ({
 
     if (stacked && data.length) {
       datasets.push({
-        label: `Target (${unit})`,
+        label: `Target ${unit ? `(${unit})` : ''}`,
         data: chartValues.map(v => Math.round(v * 0.8)),
         backgroundColor: isDarkMode
           ? 'rgba(144,202,249,0.3)'
@@ -161,20 +162,33 @@ const ProductionBarChart = ({
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: { display: showLegend, position: 'top' },
+      legend: { 
+        display: showLegend, 
+        position: 'top',
+        labels: {
+          color: isDarkMode ? '#e5e7eb' : '#1f2937'
+        }
+      },
       title: {
         display: !!title,
         text: title,
+        color: isDarkMode ? '#e5e7eb' : '#1f2937'
       },
       tooltip: {
         mode: 'index',
         intersect: false,
+        backgroundColor: isDarkMode ? '#1f2937' : '#ffffff',
+        titleColor: isDarkMode ? '#e5e7eb' : '#1f2937',
+        bodyColor: isDarkMode ? '#d1d5db' : '#4b5563',
+        borderColor: isDarkMode ? '#374151' : '#e5e7eb',
+        borderWidth: 1,
         callbacks: {
           label: (context) => {
             const value = context.parsed[
               horizontal ? 'x' : 'y'
             ];
-            return `${context.dataset.label}: ${value.toLocaleString()} ${unit}`;
+            const label = context.dataset.label || '';
+            return `${label}: ${value.toLocaleString()}${unit ? ` ${unit}` : ''}`;
           }
         }
       },
@@ -182,15 +196,25 @@ const ProductionBarChart = ({
     scales: {
       x: {
         stacked,
-        grid: { display: horizontal ? false : showGrid }
+        grid: { 
+          display: horizontal ? false : showGrid,
+          color: isDarkMode ? '#374151' : '#e5e7eb'
+        },
+        ticks: {
+          color: isDarkMode ? '#9ca3af' : '#6b7280'
+        }
       },
       y: {
         stacked,
         beginAtZero: true,
-        grid: { display: !horizontal ? showGrid : false },
+        grid: { 
+          display: !horizontal ? showGrid : false,
+          color: isDarkMode ? '#374151' : '#e5e7eb'
+        },
         ticks: {
           stepSize,
-          callback: (val) => val.toLocaleString()
+          callback: (val) => val.toLocaleString(),
+          color: isDarkMode ? '#9ca3af' : '#6b7280'
         }
       }
     },
@@ -212,7 +236,8 @@ const ProductionBarChart = ({
         width: '100%',
       }}
     >
-      {data.length > 0 && (
+      {/* Stats Box - صرف اس وقت دکھے گا جب showStats = true ہو */}
+      {data.length > 0 && showStats && (
         <div
           style={{
             position: 'absolute',
@@ -220,12 +245,33 @@ const ProductionBarChart = ({
             right: 10,
             display: 'flex',
             gap: 20,
-            zIndex: 10
+            zIndex: 10,
+            backgroundColor: isDarkMode ? '#1f2937' : '#ffffff',
+            padding: '8px 16px',
+            borderRadius: '8px',
+            border: `1px solid ${isDarkMode ? '#374151' : '#e5e7eb'}`,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+            fontSize: '13px'
           }}
         >
-          <div><strong>Total:</strong> {stats.total.toLocaleString()}{unit}</div>
-          <div><strong>Avg:</strong> {Math.round(stats.avg).toLocaleString()}{unit}</div>
-          <div><strong>Max:</strong> {stats.max.toLocaleString()}{unit}</div>
+          <div>
+            <strong style={{ color: isDarkMode ? '#e5e7eb' : '#1f2937' }}>Total:</strong>{' '}
+            <span style={{ color: isDarkMode ? '#d1d5db' : '#4b5563' }}>
+              {stats.total.toLocaleString()}{unit ? ` ${unit}` : ''}
+            </span>
+          </div>
+          <div>
+            <strong style={{ color: isDarkMode ? '#e5e7eb' : '#1f2937' }}>Avg:</strong>{' '}
+            <span style={{ color: isDarkMode ? '#d1d5db' : '#4b5563' }}>
+              {Math.round(stats.avg).toLocaleString()}{unit ? ` ${unit}` : ''}
+            </span>
+          </div>
+          <div>
+            <strong style={{ color: isDarkMode ? '#e5e7eb' : '#1f2937' }}>Max:</strong>{' '}
+            <span style={{ color: isDarkMode ? '#d1d5db' : '#4b5563' }}>
+              {stats.max.toLocaleString()}{unit ? ` ${unit}` : ''}
+            </span>
+          </div>
         </div>
       )}
 
@@ -238,7 +284,11 @@ const ProductionBarChart = ({
             inset: 0,
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center'
+            justifyContent: 'center',
+            backgroundColor: isDarkMode ? '#111827' : '#f9fafb',
+            color: isDarkMode ? '#9ca3af' : '#6b7280',
+            fontSize: '14px',
+            borderRadius: '8px'
           }}
         >
           No production data available

@@ -172,27 +172,24 @@ const NewProductionDashboard = () => {
     [departments, selectedDepartment]
   );
 
-  // 🔥 **Fix: Remove decimals completely**
+  // Fix: Remove decimals completely
   const removeDecimals = useCallback((value) => {
     if (value === null || value === undefined || value === '') return '0';
     
-    // Handle string values
     if (typeof value === 'string') {
-      // Remove any commas first
       const cleanValue = value.replace(/,/g, '');
       const num = parseFloat(cleanValue);
       if (isNaN(num)) return '0';
       return Math.floor(num).toLocaleString();
     }
     
-    // Handle number values
     const num = Number(value);
     if (isNaN(num)) return '0';
     
     return Math.floor(num).toLocaleString();
   }, []);
 
-  // 🔥 **Fix: Comprehensive shift field detection**
+  // Fix: Comprehensive shift field detection
   const detectShiftField = useCallback(async (tableName) => {
     try {
       const { data, error } = await supabase
@@ -202,7 +199,6 @@ const NewProductionDashboard = () => {
       
       if (error || !data || data.length === 0) return 'shift_name';
       
-      // Check each record for shift fields
       const shiftFields = ['shift_name', 'shift', 'shift_type', 'shift_code'];
       
       for (const field of shiftFields) {
@@ -281,31 +277,19 @@ const NewProductionDashboard = () => {
     );
   }, [getDarkColor, getLightColor]);
 
-  // Shift name formatting
+  // Shift name formatting - اصل نام رکھیں، تبدیل نہ کریں
   const formatShiftName = useCallback((shiftName) => {
     if (!shiftName) return 'Unknown';
     
-    const name = shiftName.toLowerCase().trim();
-    
-    // Common shift patterns
-    if (name.includes('day') || name.includes('morning') || name === 'a' || name.includes('shift a')) {
-      return 'Morning Shift (A)';
-    }
-    if (name.includes('night') || name.includes('evening') || name === 'c' || name.includes('shift c')) {
-      return 'Night Shift (C)';
-    }
-    if (name.includes('evening') || name === 'b' || name.includes('shift b')) {
-      return 'Evening Shift (B)';
-    }
-    
-    // Capitalize first letter of each word
+    // صرف capitalize کریں، تبدیل نہ کریں
     return shiftName
       .split(' ')
       .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-      .join(' ');
+      .join(' ')
+      .trim();
   }, []);
 
-  // 🔥 **Calculate change percentage**
+  // Calculate change percentage
   const calculateChange = useCallback((current, previous) => {
     if (previous === 0) {
       return current > 0 ? "+100%" : "0%";
@@ -314,7 +298,7 @@ const NewProductionDashboard = () => {
     return `${change >= 0 ? '+' : ''}${Math.round(change)}%`;
   }, []);
 
-  // 🔥 **Calculate total production from data array**
+  // Calculate total production from data array
   const calculateTotalProduction = useCallback((data, department) => {
     if (!data || !data.length || !department) return 0;
     
@@ -324,7 +308,7 @@ const NewProductionDashboard = () => {
     }, 0);
   }, []);
 
-  // 🔥 **Calculate average efficiency from data array**
+  // Calculate average efficiency from data array
   const calculateAverageEfficiency = useCallback((data, department) => {
     if (!data || !data.length || !department || !department.efficiencyField) return 0;
     
@@ -342,16 +326,14 @@ const NewProductionDashboard = () => {
     return Math.floor(totalEfficiency / efficiencyRecords.length);
   }, []);
 
-  // 🔥 **Fetch yesterday's production data - FIXED**
+  // Fetch yesterday's production data
   const fetchYesterdayProduction = useCallback(async (department) => {
     if (!department) return 0;
     
     try {
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
-      const yesterdayStr = yesterday.toISOString().split('T')[0];
-      
-      console.log('Fetching yesterday data for date:', yesterdayStr);
+      const yesterdayStr = getLocalDateString(yesterday);
       
       const { data, error } = await supabase
         .from(department.tableName)
@@ -363,16 +345,14 @@ const NewProductionDashboard = () => {
         return 0;
       }
       
-      const production = calculateTotalProduction(data || [], department);
-      console.log('Yesterday production found:', production, 'records:', data?.length || 0);
-      return production;
+      return calculateTotalProduction(data || [], department);
     } catch (error) {
       console.error('Error fetching yesterday production:', error);
       return 0;
     }
   }, [calculateTotalProduction]);
 
-  // 🔥 **Fetch last week's production data - FIXED**
+  // Fetch last week's production data
   const fetchLastWeekProduction = useCallback(async (department) => {
     if (!department) return 0;
     
@@ -381,10 +361,8 @@ const NewProductionDashboard = () => {
       const lastWeekStart = new Date();
       lastWeekStart.setDate(today.getDate() - 7);
       
-      const lastWeekStartStr = lastWeekStart.toISOString().split('T')[0];
-      const todayStr = today.toISOString().split('T')[0];
-      
-      console.log('Fetching last week data from:', lastWeekStartStr, 'to:', todayStr);
+      const lastWeekStartStr = getLocalDateString(lastWeekStart);
+      const todayStr = getLocalDateString(today);
       
       const { data, error } = await supabase
         .from(department.tableName)
@@ -397,16 +375,14 @@ const NewProductionDashboard = () => {
         return 0;
       }
       
-      const production = calculateTotalProduction(data || [], department);
-      console.log('Last week production found:', production, 'records:', data?.length || 0);
-      return production;
+      return calculateTotalProduction(data || [], department);
     } catch (error) {
       console.error('Error fetching last week production:', error);
       return 0;
     }
   }, [calculateTotalProduction]);
 
-  // 🔥 **Fetch last month's production data - COMPLETELY FIXED**
+  // Fetch last month's production data
   const fetchLastMonthProduction = useCallback(async (department) => {
     if (!department) return { production: 0, efficiency: 0 };
     
@@ -415,7 +391,6 @@ const NewProductionDashboard = () => {
       const currentMonth = today.getMonth();
       const currentYear = today.getFullYear();
       
-      // Calculate first day of last month
       let lastMonth = currentMonth - 1;
       let year = currentYear;
       if (lastMonth < 0) {
@@ -426,11 +401,8 @@ const NewProductionDashboard = () => {
       const firstDayOfLastMonth = new Date(year, lastMonth, 1);
       const lastDayOfLastMonth = new Date(year, lastMonth + 1, 0);
       
-      const firstDayStr = firstDayOfLastMonth.toISOString().split('T')[0];
-      const lastDayStr = lastDayOfLastMonth.toISOString().split('T')[0];
-      
-      console.log(`Fetching last month data from ${firstDayStr} to ${lastDayStr}`);
-      console.log('Last month range:', firstDayOfLastMonth.toDateString(), 'to', lastDayOfLastMonth.toDateString());
+      const firstDayStr = getLocalDateString(firstDayOfLastMonth);
+      const lastDayStr = getLocalDateString(lastDayOfLastMonth);
       
       const { data, error } = await supabase
         .from(department.tableName)
@@ -443,12 +415,8 @@ const NewProductionDashboard = () => {
         throw error;
       }
       
-      console.log(`Last month data found: ${data?.length || 0} records`);
-      
       const production = calculateTotalProduction(data || [], department);
       const efficiency = calculateAverageEfficiency(data || [], department);
-      
-      console.log(`Last month results - Production: ${production}, Efficiency: ${efficiency}%`);
       
       return { production, efficiency };
     } catch (error) {
@@ -457,7 +425,7 @@ const NewProductionDashboard = () => {
     }
   }, [calculateTotalProduction, calculateAverageEfficiency]);
 
-  // 🔥 **Fetch shift data for any date - NEW FUNCTION**
+  // Fetch shift data for any date
   const fetchShiftDataForDate = useCallback(async (dateStr, department = currentDept) => {
     if (!department) return {};
     
@@ -495,33 +463,34 @@ const NewProductionDashboard = () => {
     }
   }, [detectShiftField, formatShiftName]);
 
-  // 🔥 **Fetch all shift data - NEW FUNCTION**
+  // Fetch all shift data
   const fetchAllShiftData = useCallback(async (department = currentDept) => {
     if (!department) return;
     
     try {
       // Today's shift data
-      const today = new Date().toISOString().split('T')[0];
+      const today = getLocalDateString(new Date());
       const todayShiftData = await fetchShiftDataForDate(today, department);
       setShiftData(todayShiftData);
       
       // Yesterday's shift data
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
-      const yesterdayStr = yesterday.toISOString().split('T')[0];
+      const yesterdayStr = getLocalDateString(yesterday);
       const yesterdayShiftData = await fetchShiftDataForDate(yesterdayStr, department);
       setYesterdayShiftData(yesterdayShiftData);
       
       // Last week shift data (aggregate)
       const lastWeekStart = new Date();
       lastWeekStart.setDate(lastWeekStart.getDate() - 7);
-      const lastWeekStartStr = lastWeekStart.toISOString().split('T')[0];
+      const lastWeekStartStr = getLocalDateString(lastWeekStart);
+      const todayStr = getLocalDateString(new Date());
       
       const { data: lastWeekData } = await supabase
         .from(department.tableName)
         .select('*')
         .gte(department.dateField, lastWeekStartStr)
-        .lt(department.dateField, today);
+        .lt(department.dateField, todayStr);
       
       const lastWeekShiftData = {};
       lastWeekData?.forEach(record => {
@@ -544,8 +513,8 @@ const NewProductionDashboard = () => {
       const firstDayOfLastMonth = new Date(lastMonth.getFullYear(), lastMonth.getMonth(), 1);
       const lastDayOfLastMonth = new Date(todayObj.getFullYear(), todayObj.getMonth(), 0);
       
-      const firstDayStr = firstDayOfLastMonth.toISOString().split('T')[0];
-      const lastDayStr = lastDayOfLastMonth.toISOString().split('T')[0];
+      const firstDayStr = getLocalDateString(firstDayOfLastMonth);
+      const lastDayStr = getLocalDateString(lastDayOfLastMonth);
       
       const { data: lastMonthData } = await supabase
         .from(department.tableName)
@@ -571,9 +540,17 @@ const NewProductionDashboard = () => {
     } catch (error) {
       console.error('Error fetching all shift data:', error);
     }
-  }, [fetchShiftDataForDate]);
+  }, [fetchShiftDataForDate, formatShiftName]);
 
-  // 🔥 **Weekly Data Fetch**
+  // Get local date string (fix timezone issue)
+  const getLocalDateString = useCallback((date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }, []);
+
+  // Weekly Data Fetch
   const fetchWeeklyData = useCallback(async (offset = 0, department = currentDept) => {
     if (!department) return;
     
@@ -584,34 +561,34 @@ const NewProductionDashboard = () => {
       const endDate = new Date();
       endDate.setDate(today.getDate() - (7 * offset));
       
+      const startDateStr = getLocalDateString(startDate);
+      const endDateStr = getLocalDateString(endDate);
+      
       const { data, error } = await supabase
         .from(department.tableName)
         .select('*')
-        .gte(department.dateField, startDate.toISOString().split('T')[0])
-        .lte(department.dateField, endDate.toISOString().split('T')[0])
+        .gte(department.dateField, startDateStr)
+        .lte(department.dateField, endDateStr)
         .order(department.dateField, { ascending: true });
       
       if (error) throw error;
       
-      // Group by day
       const dayGroups = {};
       const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
       
-      // Initialize with 0 for each day of the week
       for (let i = 0; i < 7; i++) {
         const date = new Date(startDate);
         date.setDate(date.getDate() + i);
         const dayName = days[date.getDay()];
-        const dateStr = date.toISOString().split('T')[0];
+        const dateStr = getLocalDateString(date);
         dayGroups[dateStr] = {
           day: dayName,
           date: dateStr,
           production: 0,
-          formattedDate: `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}`
+          formattedDate: `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}`
         };
       }
       
-      // Fill with actual data
       data?.forEach(record => {
         const date = record[department.dateField];
         if (dayGroups[date]) {
@@ -620,7 +597,6 @@ const NewProductionDashboard = () => {
         }
       });
       
-      // Convert to array and sort by date
       const weeklyDataArray = Object.values(dayGroups)
         .sort((a, b) => new Date(a.date) - new Date(b.date));
       
@@ -630,9 +606,9 @@ const NewProductionDashboard = () => {
       console.error('Error fetching weekly data:', error);
       setWeeklyData([]);
     }
-  }, []);
+  }, [getLocalDateString]);
 
-  // 🔥 **Monthly Data Fetch**
+  // Monthly Data Fetch
   const fetchMonthlyData = useCallback(async (offset = 0, department = currentDept) => {
     if (!department) return;
     
@@ -642,20 +618,21 @@ const NewProductionDashboard = () => {
       const firstDayOfMonth = new Date(targetDate.getFullYear(), targetDate.getMonth(), 1);
       const lastDayOfMonth = new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 0);
       
+      const firstDayStr = getLocalDateString(firstDayOfMonth);
+      const lastDayStr = getLocalDateString(lastDayOfMonth);
+      
       const { data, error } = await supabase
         .from(department.tableName)
         .select('*')
-        .gte(department.dateField, firstDayOfMonth.toISOString().split('T')[0])
-        .lte(department.dateField, lastDayOfMonth.toISOString().split('T')[0]);
+        .gte(department.dateField, firstDayStr)
+        .lte(department.dateField, lastDayStr);
       
       if (error) throw error;
       
-      // Group by week (4-5 weeks in month)
       const daysInMonth = lastDayOfMonth.getDate();
       const weeksCount = Math.ceil(daysInMonth / 7);
       const weeklyGroups = {};
       
-      // Create week groups
       for (let week = 1; week <= weeksCount; week++) {
         const weekName = `Week ${week}`;
         const startDay = (week - 1) * 7 + 1;
@@ -669,7 +646,6 @@ const NewProductionDashboard = () => {
         };
       }
       
-      // Distribute data to weeks
       data?.forEach(record => {
         const date = new Date(record[department.dateField]);
         const dayOfMonth = date.getDate();
@@ -683,7 +659,6 @@ const NewProductionDashboard = () => {
         }
       });
       
-      // Convert to array for chart
       const monthlyDataArray = Object.entries(weeklyGroups).map(([week, data]) => ({
         week: week,
         production: data.production,
@@ -700,7 +675,7 @@ const NewProductionDashboard = () => {
       console.error('Error fetching monthly data:', error);
       setMonthlyData([]);
     }
-  }, []);
+  }, [getLocalDateString]);
 
   // Current month daily data
   const fetchCurrentMonthDailyData = useCallback(async (department = currentDept) => {
@@ -710,20 +685,22 @@ const NewProductionDashboard = () => {
       const today = new Date();
       const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
       
+      const firstDayStr = getLocalDateString(firstDayOfMonth);
+      const todayStr = getLocalDateString(today);
+      
       const { data, error } = await supabase
         .from(department.tableName)
         .select('*')
-        .gte(department.dateField, firstDayOfMonth.toISOString().split('T')[0])
-        .lte(department.dateField, today.toISOString().split('T')[0]);
+        .gte(department.dateField, firstDayStr)
+        .lte(department.dateField, todayStr);
       
       if (error) throw error;
       
-      // Get current month days
       const currentMonthDays = [];
       const currentDate = new Date(firstDayOfMonth);
       
       while (currentDate <= today) {
-        const dateStr = currentDate.toISOString().split('T')[0];
+        const dateStr = getLocalDateString(currentDate);
         currentMonthDays.push({
           date: dateStr,
           day: currentDate.getDate(),
@@ -734,7 +711,6 @@ const NewProductionDashboard = () => {
         currentDate.setDate(currentDate.getDate() + 1);
       }
       
-      // Fill with actual data
       data?.forEach(record => {
         const recordDate = record[department.dateField];
         const dayData = currentMonthDays.find(d => d.date === recordDate);
@@ -750,9 +726,9 @@ const NewProductionDashboard = () => {
       console.error('Error fetching current month daily data:', error);
       setDailyData([]);
     }
-  }, []);
+  }, [getLocalDateString]);
 
-  // 🔥 **Calculate Statistics - REMOVED FAKE CALCULATIONS**
+  // Calculate Statistics
   const calculateStats = useCallback((data, department = currentDept) => {
     if (!data || !data.length || !department) {
       setStats(prev => ({
@@ -778,22 +754,18 @@ const NewProductionDashboard = () => {
     const operatorGroups = {};
     
     data.forEach(record => {
-      // Total production
       const production = Math.floor(Number(record[department.keyField]) || 0);
       totalProduction += production;
       
-      // Efficiency (if available)
       if (department.efficiencyField && record[department.efficiencyField]) {
         const efficiency = Math.floor(Number(record[department.efficiencyField]) || 0);
         totalEfficiency += efficiency;
         efficiencyCount++;
       }
       
-      // Machines
       let machineName = record.machine_no || record.machine_id || record.machine || 'Unknown';
       machines.add(machineName);
       
-      // Aggregate machine-wise data
       if (!machineGroups[machineName]) {
         machineGroups[machineName] = {
           production: 0,
@@ -808,7 +780,6 @@ const NewProductionDashboard = () => {
         machineGroups[machineName].count++;
       }
       
-      // Operators - unique only
       if (record[department.operatorField]) {
         const operator = record[department.operatorField].toString().trim();
         if (operator) {
@@ -831,7 +802,6 @@ const NewProductionDashboard = () => {
       }
     });
     
-    // Format machine-wise data
     const machineWiseData = Object.entries(machineGroups).map(([machine, stats]) => ({
       name: machine === 'Unknown' ? 'Unknown Machine' : machine,
       production: stats.production,
@@ -839,7 +809,6 @@ const NewProductionDashboard = () => {
       operator: stats.operator
     })).sort((a, b) => b.production - a.production);
     
-    // Format operator-wise data
     const operatorWiseData = Object.entries(operatorGroups).map(([operator, stats]) => ({
       name: operator,
       production: stats.production,
@@ -859,35 +828,20 @@ const NewProductionDashboard = () => {
     }));
   }, []);
 
-  // 🔥 **Fetch historical data separately - FIXED**
+  // Fetch historical data separately
   const fetchHistoricalData = useCallback(async (department = currentDept) => {
     if (!department) return;
     
     try {
-      console.log('Starting to fetch historical data for:', department.name);
-      
-      // Fetch yesterday's data
       const yesterdayProd = await fetchYesterdayProduction(department);
       setYesterdayProduction(yesterdayProd);
-      console.log('Yesterday production:', yesterdayProd);
       
-      // Fetch last week's data
       const lastWeekProd = await fetchLastWeekProduction(department);
       setLastWeekProduction(lastWeekProd);
-      console.log('Last week production:', lastWeekProd);
       
-      // Fetch last month's data - FIXED
       const lastMonthResult = await fetchLastMonthProduction(department);
       setLastMonthProduction(lastMonthResult.production);
       setLastMonthEfficiency(lastMonthResult.efficiency);
-      
-      console.log('Last month results:', lastMonthResult);
-      console.log('Historical Data Summary:', {
-        yesterday: yesterdayProd,
-        lastWeek: lastWeekProd,
-        lastMonth: lastMonthResult.production,
-        lastMonthEfficiency: lastMonthResult.efficiency
-      });
       
     } catch (error) {
       console.error('Error fetching historical data:', error);
@@ -898,7 +852,7 @@ const NewProductionDashboard = () => {
     }
   }, [currentDept, fetchYesterdayProduction, fetchLastWeekProduction, fetchLastMonthProduction]);
 
-  // 🔥 **Main Fetch Function - Fixed with actual data fetching**
+  // Main Fetch Function
   const fetchDepartmentData = useCallback(async () => {
     if (!currentDept) return;
     
@@ -910,22 +864,21 @@ const NewProductionDashboard = () => {
         .select('*')
         .order('id', { ascending: false });
       
-      // Apply date filter
-      const today = new Date().toISOString().split('T')[0];
+      const today = getLocalDateString(new Date());
       if (dateFilter === 'today') {
         query = query.eq(currentDept.dateField, today);
       } else if (dateFilter === 'yesterday') {
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
-        query = query.eq(currentDept.dateField, yesterday.toISOString().split('T')[0]);
+        query = query.eq(currentDept.dateField, getLocalDateString(yesterday));
       } else if (dateFilter === 'week') {
         const weekAgo = new Date();
         weekAgo.setDate(weekAgo.getDate() - 7);
-        query = query.gte(currentDept.dateField, weekAgo.toISOString().split('T')[0]);
+        query = query.gte(currentDept.dateField, getLocalDateString(weekAgo));
       } else if (dateFilter === 'month') {
         const monthAgo = new Date();
         monthAgo.setMonth(monthAgo.getMonth() - 1);
-        query = query.gte(currentDept.dateField, monthAgo.toISOString().split('T')[0]);
+        query = query.gte(currentDept.dateField, getLocalDateString(monthAgo));
       }
       
       const { data, error } = await query;
@@ -934,27 +887,15 @@ const NewProductionDashboard = () => {
       
       setProductionData(data || []);
       
-      // Get last entry
       if (data && data.length > 0) {
         setLastEntry(data[0]);
       }
       
-      // Calculate statistics
       calculateStats(data || [], currentDept);
-      
-      // Fetch historical data (yesterday, last week, last month)
       fetchHistoricalData(currentDept);
-      
-      // Fetch shift data for all periods
       fetchAllShiftData(currentDept);
-      
-      // Fetch weekly data with current offset
       fetchWeeklyData(weeklyOffset, currentDept);
-      
-      // Fetch monthly data with current offset
       fetchMonthlyData(monthlyOffset, currentDept);
-      
-      // Fetch current month daily data
       fetchCurrentMonthDailyData(currentDept);
       
     } catch (error) {
@@ -987,7 +928,7 @@ const NewProductionDashboard = () => {
     } finally {
       setLoading(false);
     }
-  }, [currentDept, dateFilter, weeklyOffset, monthlyOffset, 
+  }, [currentDept, dateFilter, weeklyOffset, monthlyOffset, getLocalDateString,
       calculateStats, fetchHistoricalData, fetchAllShiftData, fetchWeeklyData, fetchMonthlyData, 
       fetchCurrentMonthDailyData]);
 
@@ -1029,7 +970,7 @@ const NewProductionDashboard = () => {
     const first = new Date(firstDate);
     const last = new Date(lastDate);
     
-    const format = (date) => `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+    const format = (date) => `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}`;
     
     return `${format(first)} - ${format(last)}`;
   }, [weeklyData]);
@@ -1047,7 +988,7 @@ const NewProductionDashboard = () => {
     return `${monthNames[targetDate.getMonth()]} ${targetDate.getFullYear()}`;
   }, [monthlyOffset]);
 
-  // 🔥 **Get shift data based on date filter**
+  // Get shift data based on date filter
   const getShiftDataForCurrentFilter = useCallback(() => {
     switch(dateFilter) {
       case 'yesterday':
@@ -1056,12 +997,12 @@ const NewProductionDashboard = () => {
         return lastWeekShiftData;
       case 'month':
         return lastMonthShiftData;
-      default: // today
+      default:
         return shiftData;
     }
   }, [dateFilter, shiftData, yesterdayShiftData, lastWeekShiftData, lastMonthShiftData]);
 
-  // 🔥 **Get shift data label based on date filter**
+  // Get shift data label based on date filter
   const getShiftDataLabel = useCallback(() => {
     switch(dateFilter) {
       case 'yesterday':
@@ -1075,14 +1016,14 @@ const NewProductionDashboard = () => {
     }
   }, [dateFilter]);
 
-  // 🔥 **Fix: Main useEffect - No infinite loop**
+  // Main useEffect
   useEffect(() => {
     if (currentDept) {
       fetchDepartmentData();
     }
   }, [currentDept, dateFilter, fetchDepartmentData]);
 
-  // 🔥 **Fix: Reset offsets when department changes**
+  // Reset offsets when department changes
   useEffect(() => {
     setWeeklyOffset(0);
     setMonthlyOffset(0);
@@ -1176,11 +1117,11 @@ const NewProductionDashboard = () => {
     return name.length > 12 ? name.substring(0, 12) + '...' : name;
   }, []);
 
-  // 🔥 **Stats cards data - Fixed with REAL data**
+  // Stats cards data
   const statsCards = useMemo(() => [
     { 
       title: "Today's Production", 
-      value: loading ? "..." : removeDecimals(stats.todayProduction), 
+      value: loading ? "..." : `${removeDecimals(stats.todayProduction)} ${currentDept?.unit}`,
       change: calculateChange(stats.todayProduction, yesterdayProduction), 
       icon: FiPackage, 
       color: currentDept?.color || "#3b82f6",
@@ -1190,7 +1131,7 @@ const NewProductionDashboard = () => {
     },
     { 
       title: "Yesterday's Production", 
-      value: loading ? "..." : removeDecimals(yesterdayProduction), 
+      value: loading ? "..." : `${removeDecimals(yesterdayProduction)} ${currentDept?.unit}`,
       change: calculateChange(yesterdayProduction, lastWeekProduction / 7), 
       icon: FaHistory, 
       color: "#8b5cf6",
@@ -1200,7 +1141,7 @@ const NewProductionDashboard = () => {
     },
     { 
       title: "Last Week Total", 
-      value: loading ? "..." : removeDecimals(lastWeekProduction), 
+      value: loading ? "..." : `${removeDecimals(lastWeekProduction)} ${currentDept?.unit}`,
       change: calculateChange(lastWeekProduction, lastMonthProduction / 4), 
       icon: FaCalendarAlt, 
       color: "#10b981",
@@ -1210,7 +1151,7 @@ const NewProductionDashboard = () => {
     },
     { 
       title: "Last Month Total", 
-      value: loading ? "..." : removeDecimals(lastMonthProduction), 
+      value: loading ? "..." : `${removeDecimals(lastMonthProduction)} ${currentDept?.unit}`,
       change: "+0%", 
       icon: FaRegCalendarCheck, 
       color: "#ec4899",
@@ -1240,7 +1181,7 @@ const NewProductionDashboard = () => {
     }
   ], [loading, stats, yesterdayProduction, lastWeekProduction, lastMonthProduction, lastMonthEfficiency, currentDept, removeDecimals, calculateChange]);
 
-  // 🔥 **Render function - Main component return**
+  // Render function
   return (
     <div className={`production-dashboard ${darkMode ? 'dark-theme' : 'light-theme'}`}>
       {/* Header */}
@@ -1467,7 +1408,7 @@ const NewProductionDashboard = () => {
                   color: "var(--color-text-secondary)",
                   marginTop: '4px'
                 }}>
-                  Table: {dept.tableName}
+                  Table: {dept.tableName} • {dept.unit}
                 </div>
               </div>
             </button>
@@ -1576,7 +1517,7 @@ const NewProductionDashboard = () => {
         </div>
       )}
 
-      {/* Stats Cards - 🔥 Now showing REAL data */}
+      {/* Stats Cards */}
       <div className="grid-cards">
         {statsCards.map((stat, index) => (
           <div className="dashboard-card" key={index}>
@@ -1651,7 +1592,7 @@ const NewProductionDashboard = () => {
               Loading weekly data...
             </div>
           ) : weeklyData.length > 0 ? (
-            <div>
+            <>
               <ProductionBarChart 
                 title={null}
                 labels={weeklyData.map(d => d.day.substring(0, 3))}
@@ -1659,7 +1600,31 @@ const NewProductionDashboard = () => {
                 colors={['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#ef4444']}
                 height={250}
                 darkMode={darkMode}
+                unit={currentDept?.unit || ''}
+                showStats={false}
               />
+              
+              {/* Footer Stats */}
+              <div className="chart-footer-stats">
+                <div className="chart-footer-stat">
+                  <span className="chart-footer-label">Total:</span>
+                  <span className="chart-footer-value">
+                    {removeDecimals(weeklyData.reduce((sum, d) => sum + d.production, 0))} {currentDept?.unit}
+                  </span>
+                </div>
+                <div className="chart-footer-stat">
+                  <span className="chart-footer-label">Avg:</span>
+                  <span className="chart-footer-value">
+                    {removeDecimals(Math.round(weeklyData.reduce((sum, d) => sum + d.production, 0) / 7))} {currentDept?.unit}
+                  </span>
+                </div>
+                <div className="chart-footer-stat">
+                  <span className="chart-footer-label">Max:</span>
+                  <span className="chart-footer-value">
+                    {removeDecimals(Math.max(...weeklyData.map(d => d.production)))} {currentDept?.unit}
+                  </span>
+                </div>
+              </div>
               
               <div className="week-chart-labels">
                 {weeklyData.map((day, index) => (
@@ -1672,7 +1637,7 @@ const NewProductionDashboard = () => {
                   </div>
                 ))}
               </div>
-            </div>
+            </>
           ) : (
             <div className="empty-state">
               No weekly data available
@@ -1733,7 +1698,7 @@ const NewProductionDashboard = () => {
               Loading monthly data...
             </div>
           ) : monthlyData.length > 0 ? (
-            <div>
+            <>
               <ProductionBarChart 
                 title={null}
                 labels={monthlyData.map(m => `${m.week}\n(${m.range})`)}
@@ -1741,7 +1706,32 @@ const NewProductionDashboard = () => {
                 colors={['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899']}
                 height={250}
                 darkMode={darkMode}
+                unit={currentDept?.unit || ''}
+                showStats={false}
               />
+              
+              {/* Footer Stats */}
+              <div className="chart-footer-stats">
+                <div className="chart-footer-stat">
+                  <span className="chart-footer-label">Total:</span>
+                  <span className="chart-footer-value">
+                    {removeDecimals(monthlyData.reduce((sum, m) => sum + m.production, 0))} {currentDept?.unit}
+                  </span>
+                </div>
+                <div className="chart-footer-stat">
+                  <span className="chart-footer-label">Avg per Week:</span>
+                  <span className="chart-footer-value">
+                    {removeDecimals(Math.round(monthlyData.reduce((sum, m) => sum + m.production, 0) / monthlyData.length))} {currentDept?.unit}
+                  </span>
+                </div>
+                <div className="chart-footer-stat">
+                  <span className="chart-footer-label">Max Week:</span>
+                  <span className="chart-footer-value">
+                    {removeDecimals(Math.max(...monthlyData.map(m => m.production)))} {currentDept?.unit}
+                  </span>
+                </div>
+              </div>
+              
               <div style={{
                 display: "grid",
                 gridTemplateColumns: `repeat(${monthlyData.length}, 1fr)`,
@@ -1762,7 +1752,7 @@ const NewProductionDashboard = () => {
                   </div>
                 ))}
               </div>
-            </div>
+            </>
           ) : (
             <div className="empty-state">
               No monthly data available
@@ -1787,7 +1777,7 @@ const NewProductionDashboard = () => {
               Loading daily data...
             </div>
           ) : dailyData.length > 0 ? (
-            <div>
+            <>
               <ProductionLineChart 
                 title={null}
                 labels={dailyData.map(d => d.day.toString())}
@@ -1796,7 +1786,32 @@ const NewProductionDashboard = () => {
                 fillColor={darkMode ? "#1f2937" : "#fce7f3"}
                 height={250}
                 darkMode={darkMode}
+                unit={currentDept?.unit || ''}
+                showStats={false}
               />
+              
+              {/* Footer Stats */}
+              <div className="chart-footer-stats">
+                <div className="chart-footer-stat">
+                  <span className="chart-footer-label">Total:</span>
+                  <span className="chart-footer-value">
+                    {removeDecimals(dailyData.reduce((sum, d) => sum + d.production, 0))} {currentDept?.unit}
+                  </span>
+                </div>
+                <div className="chart-footer-stat">
+                  <span className="chart-footer-label">Avg per Day:</span>
+                  <span className="chart-footer-value">
+                    {removeDecimals(Math.round(dailyData.reduce((sum, d) => sum + d.production, 0) / dailyData.length))} {currentDept?.unit}
+                  </span>
+                </div>
+                <div className="chart-footer-stat">
+                  <span className="chart-footer-label">Max Day:</span>
+                  <span className="chart-footer-value">
+                    {removeDecimals(Math.max(...dailyData.map(d => d.production)))} {currentDept?.unit}
+                  </span>
+                </div>
+              </div>
+              
               <div style={{
                 display: "flex",
                 justifyContent: "space-between",
@@ -1817,7 +1832,7 @@ const NewProductionDashboard = () => {
                   <div>{removeDecimals(dailyData.reduce((sum, day) => sum + day.production, 0))} {currentDept?.unit}</div>
                 </div>
               </div>
-            </div>
+            </>
           ) : (
             <div className="empty-state">
               No daily data available for current month
@@ -1825,7 +1840,7 @@ const NewProductionDashboard = () => {
           )}
         </div>
 
-        {/* 🔥 Shift-wise Production - COMPLETELY FIXED */}
+        {/* Shift-wise Production - FIXED */}
         <div className="dashboard-section">
           <div className="chart-controls">
             <h3 className="chart-title">
@@ -1870,57 +1885,21 @@ const NewProductionDashboard = () => {
               Loading shift data...
             </div>
           ) : Object.keys(getShiftDataForCurrentFilter()).length > 0 ? (
-            <div>
+            <>
               <ProductionPieChart 
-                title={null}
+                title={getShiftDataLabel()}
                 labels={Object.keys(getShiftDataForCurrentFilter())}
                 data={Object.values(getShiftDataForCurrentFilter())}
                 colors={['#f59e0b', '#06b6d4', '#8b5cf6', '#10b981', '#ec4899', '#ef4444']}
-                height={250}
-                darkMode={darkMode}
+                height={500}
+                unit={currentDept?.unit || ''}
+                showCenterTotal={true}
+                showPercentages={true}
+                showValues={true}
+                innerRadius="65%"
+                showLegend={false}
               />
-              <div style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
-                gap: "15px",
-                marginTop: "20px"
-              }}>
-                {Object.entries(getShiftDataForCurrentFilter()).map(([shift, production], index) => (
-                  <div key={index} style={{
-                    background: `${['#f59e0b', '#06b6d4', '#8b5cf6', '#10b981', '#ec4899', '#ef4444'][index % 6]}${darkMode ? '20' : '10'}`,
-                    padding: "15px",
-                    borderRadius: "10px",
-                    textAlign: "center",
-                    border: `1px solid var(--color-border)`
-                  }}>
-                    <div className="data-label" style={{ 
-                      marginBottom: "5px",
-                      justifyContent: 'center'
-                    }}>
-                      {shift.toLowerCase().includes('morning') || shift.includes('(A)') ? (
-                        <FiSun size={12} />
-                      ) : shift.toLowerCase().includes('night') || shift.includes('(C)') ? (
-                        <FiMoon size={12} />
-                      ) : shift.toLowerCase().includes('evening') || shift.includes('(B)') ? (
-                        <FiSunset size={12} />
-                      ) : (
-                        <FiClock size={12} />
-                      )}
-                      {shift}
-                    </div>
-                    <div className="data-value" style={{ 
-                      fontSize: "20px", 
-                      color: ['#f59e0b', '#06b6d4', '#8b5cf6', '#10b981', '#ec4899', '#ef4444'][index % 6]
-                    }}>
-                      {removeDecimals(production)}
-                    </div>
-                    <div className="data-unit">
-                      {currentDept?.unit}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            </>
           ) : (
             <div className="empty-state">
               {dateFilter === 'today' ? 'No shift data available for today' :
@@ -1932,7 +1911,7 @@ const NewProductionDashboard = () => {
         </div>
       </div>
 
-      {/* 🔥 Machine-wise and Operator-wise Charts Section - NEW */}
+      {/* Machine-wise and Operator-wise Charts Section */}
       <div className="grid-charts">
         {/* Machine-wise Production Chart */}
         <div className="dashboard-section">
@@ -1951,7 +1930,7 @@ const NewProductionDashboard = () => {
               Loading machine data...
             </div>
           ) : stats.machineWise.length > 0 ? (
-            <div>
+            <>
               <ProductionBarChart 
                 title={null}
                 labels={stats.machineWise.slice(0, 5).map(m => formatMachineName(m.name))}
@@ -1959,7 +1938,31 @@ const NewProductionDashboard = () => {
                 colors={['#8b5cf6', '#3b82f6', '#06b6d4', '#10b981', '#f59e0b']}
                 height={250}
                 darkMode={darkMode}
+                unit={currentDept?.unit || ''}
+                showStats={false}
               />
+              
+              {/* Footer Stats */}
+              <div className="chart-footer-stats">
+                <div className="chart-footer-stat">
+                  <span className="chart-footer-label">Total:</span>
+                  <span className="chart-footer-value">
+                    {removeDecimals(stats.machineWise.reduce((sum, m) => sum + m.production, 0))} {currentDept?.unit}
+                  </span>
+                </div>
+                <div className="chart-footer-stat">
+                  <span className="chart-footer-label">Active Machines:</span>
+                  <span className="chart-footer-value">
+                    {stats.activeMachines}
+                  </span>
+                </div>
+                <div className="chart-footer-stat">
+                  <span className="chart-footer-label">Top Machine:</span>
+                  <span className="chart-footer-value">
+                    {stats.machineWise[0]?.name || 'N/A'}
+                  </span>
+                </div>
+              </div>
               
               {/* Machine-wise Chart Details */}
               <div className="chart-details">
@@ -2042,7 +2045,7 @@ const NewProductionDashboard = () => {
                   ))}
                 </div>
               </div>
-            </div>
+            </>
           ) : (
             <div className="chart-empty-state">
               <div className="chart-empty-icon">
@@ -2073,7 +2076,7 @@ const NewProductionDashboard = () => {
               Loading operator data...
             </div>
           ) : stats.operatorWise.length > 0 ? (
-            <div>
+            <>
               <ProductionBarChart 
                 title={null}
                 labels={stats.operatorWise.slice(0, 5).map(o => 
@@ -2083,7 +2086,31 @@ const NewProductionDashboard = () => {
                 colors={['#10b981', '#06b6d4', '#3b82f6', '#8b5cf6', '#f59e0b']}
                 height={250}
                 darkMode={darkMode}
+                unit={currentDept?.unit || ''}
+                showStats={false}
               />
+              
+              {/* Footer Stats */}
+              <div className="chart-footer-stats">
+                <div className="chart-footer-stat">
+                  <span className="chart-footer-label">Total:</span>
+                  <span className="chart-footer-value">
+                    {removeDecimals(stats.operatorWise.reduce((sum, o) => sum + o.production, 0))} {currentDept?.unit}
+                  </span>
+                </div>
+                <div className="chart-footer-stat">
+                  <span className="chart-footer-label">Unique Operators:</span>
+                  <span className="chart-footer-value">
+                    {stats.totalOperators}
+                  </span>
+                </div>
+                <div className="chart-footer-stat">
+                  <span className="chart-footer-label">Top Operator:</span>
+                  <span className="chart-footer-value">
+                    {stats.operatorWise[0]?.name || 'N/A'}
+                  </span>
+                </div>
+              </div>
               
               {/* Operator-wise Chart Details */}
               <div className="chart-details">
@@ -2229,7 +2256,7 @@ const NewProductionDashboard = () => {
                   </div>
                 </div>
               </div>
-            </div>
+            </>
           ) : (
             <div className="chart-empty-state">
               <div className="chart-empty-icon">
