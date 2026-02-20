@@ -620,6 +620,12 @@ const Navigation = () => {
                 label: "New Spiral Record", 
                 icon: <FiClipboard />,
                 iconColor: themeColors.accent
+              },
+               { 
+                path: "/production-sections/spiral/multi-entry", 
+                label: "Multi-Item Spiral", 
+                icon: <FiActivity />,
+                iconColor: themeColors.success
               }
             ]
           },

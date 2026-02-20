@@ -20,8 +20,8 @@ const SpiralForm = () => {
     section_name: 'Spiral',
     machine_id: '',
     machine_no: '',
-    item_id: '', // Changed from item_code to item_id
-    item_code: '', // New field for item code display
+    item_id: '',
+    item_code: '',
     item_name: '',
     raw_material_flatsize: '',
     material_type: '',
@@ -54,7 +54,7 @@ const SpiralForm = () => {
     totalMachines: 0,
     completedMachines: 0,
     completionPercentage: 0,
-    todayEntries: [],
+    entriesForDate: [],
     shiftMachines: []
   });
   
@@ -86,7 +86,6 @@ const SpiralForm = () => {
             ...prev,
             users_name: user.email || 'System'
           }));
-          // Mark user_name as filled
           setFilledFields(prev => ({
             ...prev,
             users_name: true
@@ -111,7 +110,6 @@ const SpiralForm = () => {
 
   // Function to clear the form after successful submission
   const clearForm = () => {
-    // Clear all fields except section_name, users_name, unit, and production_date
     setFormData({
       ...initialFormData,
       section_name: 'Spiral',
@@ -120,39 +118,26 @@ const SpiralForm = () => {
       production_date: new Date().toISOString().split('T')[0]
     });
     
-    // Clear all filled fields except production_date
     setFilledFields({
       section_name: true,
       users_name: true,
       production_date: true
     });
     
-    // Clear errors
     setErrors({});
-    
-    // Clear duplicate error
     setDuplicateError('');
-    
-    // Reset calculated fields
     setCalculatedWeight(0);
     setCalculatedEfficiency(0);
-    
-    // Reset current target
     setCurrentTarget(null);
   };
 
-  // Fetch entries for selected date and shift
-  const fetchDateEntries = useCallback(async (date = null, shiftCode = null) => {
+  // Fetch entries for selected date using production_date
+  const fetchEntriesForDate = useCallback(async (date, shiftCode = null) => {
     try {
-      const selectedDate = date || new Date();
-      const dateStart = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate(), 0, 0, 0).toISOString();
-      const dateEnd = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate(), 23, 59, 59).toISOString();
-
       let query = supabase
         .from('spiralsection')
-        .select('machine_id, shift_code')
-        .gte('production_date', dateStart)
-        .lte('production_date', dateEnd);
+        .select('machine_id, shift_code, production_date')
+        .eq('production_date', date);  // ✅ production_date استعمال کریں
 
       if (shiftCode) {
         query = query.eq('shift_code', shiftCode);
@@ -161,31 +146,25 @@ const SpiralForm = () => {
       const { data, error } = await query;
 
       if (error) {
-        console.error('Error fetching date entries:', error);
+        console.error('Error fetching entries for date:', error);
         return [];
       }
 
       return data || [];
     } catch (error) {
-      console.error('Error in fetchDateEntries:', error);
+      console.error('Error in fetchEntriesForDate:', error);
       return [];
     }
   }, []);
 
   // Calculate machine completion status for selected date
-  const calculateMachineCompletion = useCallback((dateEntries, shiftCode, targets) => {
-    // Filter targets for current shift
+  const calculateMachineCompletion = useCallback((entriesForDate, shiftCode, targets) => {
     const shiftTargets = shiftCode 
       ? targets.filter(target => target.shift_code === shiftCode)
       : targets;
     
-    // Get unique machines for this shift
     const uniqueMachines = [...new Set(shiftTargets.map(target => target.machine_id))];
-    
-    // Get machines already entered for selected date
-    const enteredMachines = [...new Set(dateEntries.map(entry => entry.machine_id))];
-    
-    // Calculate completion
+    const enteredMachines = [...new Set(entriesForDate.map(entry => entry.machine_id))];
     const completedMachines = enteredMachines.filter(machineId => 
       uniqueMachines.includes(machineId)
     ).length;
@@ -197,20 +176,22 @@ const SpiralForm = () => {
       totalMachines,
       completedMachines,
       completionPercentage: Math.round(completionPercentage),
-      todayEntries: enteredMachines,
+      entriesForDate: enteredMachines,
       shiftMachines: uniqueMachines
     };
   }, []);
 
-  // Update machine completion when shift or date changes
+  // Update machine completion when date, shift changes or targets load
   useEffect(() => {
     const updateMachineCompletion = async () => {
       if (targetsData.length === 0 || !formData.production_date) return;
       
-      const selectedDate = new Date(formData.production_date);
-      const dateEntries = await fetchDateEntries(selectedDate, formData.shift_code);
+      const entriesForDate = await fetchEntriesForDate(
+        formData.production_date, 
+        formData.shift_code
+      );
       const completion = calculateMachineCompletion(
-        dateEntries, 
+        entriesForDate, 
         formData.shift_code, 
         targetsData
       );
@@ -219,25 +200,22 @@ const SpiralForm = () => {
     };
     
     updateMachineCompletion();
-  }, [formData.shift_code, formData.production_date, targetsData, fetchDateEntries, calculateMachineCompletion]);
+  }, [formData.production_date, formData.shift_code, targetsData, fetchEntriesForDate, calculateMachineCompletion]);
 
   const fetchConfigurationData = useCallback(async () => {
     try {
       setLoading(true);
       
-      // 1. Fetch shifts
       const { data: shiftData } = await supabase
         .from('shifts')
         .select('*')
         .order('start_time');
       
-      // 2. Fetch spiral items - now using id as primary key
       const { data: spiralItemData } = await supabase
         .from('spiralitem')
         .select('*')
         .order('item_name');
       
-      // 3. Fetch targets for Spiral section
       const { data: targetsData } = await supabase
         .from('targets')
         .select('*')
@@ -245,19 +223,16 @@ const SpiralForm = () => {
         .eq('is_active', true)
         .order('machine_id');
 
-      // 4. Fetch operators from spiralsection table
       const { data: operatorsData } = await supabase
         .from('spiralsection')
         .select('operator_name')
         .order('operator_name');
       
-      // Get unique operator names
       let uniqueOperators = [];
       if (operatorsData) {
         uniqueOperators = [...new Set(operatorsData.map(item => item.operator_name).filter(name => name))];
       }
 
-      // Set data to state
       setShifts(shiftData || []);
       setSpiralItems(spiralItemData || []);
       setTargetsData(targetsData || []);
@@ -265,7 +240,6 @@ const SpiralForm = () => {
       
     } catch (error) {
       console.error('Error fetching configuration:', error);
-      // Fallback to static data with proper ID structure
       setShifts([
         { id: 1, shift_code: 'D', shift_name: 'Day', start_time: '08:30:00', end_time: '22:30:00' },
         { id: 2, shift_code: 'N', shift_name: 'Night', start_time: '22:30:00', end_time: '08:30:00' },
@@ -404,7 +378,6 @@ const SpiralForm = () => {
       setCurrentTarget(target || null);
       
       if (target) {
-        // Update form data with target information
         setFormData(prev => ({
           ...prev,
           machine_no: target.machine_no,
@@ -456,24 +429,19 @@ const SpiralForm = () => {
     setCalculatedEfficiency(efficiency);
   }, [calculateWeight, calculateEfficiency]);
 
-  // Check for duplicate entry before submitting
+  // Check for duplicate entry based on machine, shift, and production_date ONLY
   const checkDuplicateEntry = async () => {
     if (!formData.machine_id || !formData.shift_code || !formData.production_date) {
       return false;
     }
 
     try {
-      const selectedDate = new Date(formData.production_date);
-      const dateStart = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate(), 0, 0, 0).toISOString();
-      const dateEnd = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate(), 23, 59, 59).toISOString();
-
       const { data, error } = await supabase
         .from('spiralsection')
-        .select('*')
+        .select('id, machine_id, shift_code, production_date')
         .eq('machine_id', formData.machine_id)
         .eq('shift_code', formData.shift_code)
-        .gte('production_date', dateStart)
-        .lte('production_date', dateEnd);
+        .eq('production_date', formData.production_date);  // ✅ production_date استعمال کریں
 
       if (error) {
         console.error('Error checking duplicate:', error);
@@ -490,7 +458,6 @@ const SpiralForm = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     
-    // Clear duplicate error and success message when user changes data
     if (duplicateError) {
       setDuplicateError('');
     }
@@ -498,7 +465,6 @@ const SpiralForm = () => {
       setSuccessMessage('');
     }
     
-    // Mark field as filled if it has value
     if (value && value.toString().trim() !== '') {
       setFilledFields(prev => ({
         ...prev,
@@ -516,20 +482,6 @@ const SpiralForm = () => {
         ...prev,
         production_date: value
       }));
-      // Refresh machine completion for new date
-      if (value && formData.shift_code) {
-        const updateCompletion = async () => {
-          const selectedDate = new Date(value);
-          const dateEntries = await fetchDateEntries(selectedDate, formData.shift_code);
-          const completion = calculateMachineCompletion(
-            dateEntries, 
-            formData.shift_code, 
-            targetsData
-          );
-          setMachineCompletion(completion);
-        };
-        updateCompletion();
-      }
     }
     else if (name === 'shift_code') {
       const selectedShift = shifts.find(shift => shift.shift_code === value);
@@ -540,7 +492,7 @@ const SpiralForm = () => {
         machine_id: '',
         machine_no: '',
         target_qty: '',
-        item_id: '', // Clear item selection when shift changes
+        item_id: '',
         item_code: '',
         item_name: '',
         raw_material_flatsize: '',
@@ -549,7 +501,6 @@ const SpiralForm = () => {
         finishedproductname: '',
         per_meter_wt: ''
       }));
-      // Mark shift_name as filled if shift selected
       if (value) {
         setFilledFields(prev => ({
           ...prev,
@@ -567,7 +518,6 @@ const SpiralForm = () => {
           machine_no: selectedMachine.machine_no,
           target_qty: selectedMachine.target_qty || ''
         }));
-        // Mark machine_no and target_qty as filled if machine selected
         setFilledFields(prev => ({
           ...prev,
           machine_no: true,
@@ -587,8 +537,8 @@ const SpiralForm = () => {
       if (selectedItem) {
         setFormData(prev => ({
           ...prev,
-          item_id: value, // Store the ID
-          item_code: selectedItem.item_code || '', // Display item code
+          item_id: value,
+          item_code: selectedItem.item_code || '',
           item_name: selectedItem.item_name || '',
           raw_material_flatsize: selectedItem.raw_material_flatsize || '',
           material_type: selectedItem.material_type || '',
@@ -597,7 +547,6 @@ const SpiralForm = () => {
           per_meter_wt: selectedItem.per_meter_wt || '',
           unit: 'Meter'
         }));
-        // Mark all related fields as filled
         const relatedFields = [
           'item_code', 'item_name', 'raw_material_flatsize', 'material_type', 
           'wire_size', 'finishedproductname', 'per_meter_wt'
@@ -628,13 +577,11 @@ const SpiralForm = () => {
         [name]: value
       }));
       
-      // Add new operator to list if not already present
       if (value && !operators.includes(value)) {
         setOperators(prev => [...prev, value].sort());
       }
     }
     else if (name === 'target_qty') {
-      // Allow manual entry of target_qty if needed
       setFormData(prev => ({
         ...prev,
         [name]: value
@@ -663,7 +610,6 @@ const SpiralForm = () => {
     return {
       isFilled,
       hasError,
-      // Required fields validation
       isRequired: ['machine_id', 'item_id', 'production_quantity', 'shift_code', 'operator_name', 'target_qty', 'production_date'].includes(fieldName)
     };
   };
@@ -700,9 +646,9 @@ const SpiralForm = () => {
     if (!formData.section_name.trim()) newErrors.section_name = 'Section name is required';
     if (!formData.machine_id.trim()) newErrors.machine_id = 'Machine ID is required';
     if (!formData.machine_no.trim()) newErrors.machine_no = 'Machine number is required';
-    if (!formData.item_id) newErrors.item_id = 'Item selection is required'; // Changed from item_code to item_id
+    if (!formData.item_id) newErrors.item_id = 'Item selection is required';
     if (!formData.item_name.trim()) newErrors.item_name = 'Item name is required';
-    if (!formData.item_code.trim()) newErrors.item_code = 'Item code is required'; // New validation for item_code
+    if (!formData.item_code.trim()) newErrors.item_code = 'Item code is required';
     if (!formData.production_quantity) {
       newErrors.production_quantity = 'Production quantity is required';
     } else if (isNaN(formData.production_quantity) || formData.production_quantity <= 0) {
@@ -736,7 +682,6 @@ const SpiralForm = () => {
       return;
     }
 
-    // Check for duplicate entry
     const isDuplicate = await checkDuplicateEntry();
     if (isDuplicate) {
       setDuplicateError(`This machine (${formData.machine_id}) already has an entry for ${formData.shift_name} shift on ${formData.production_date}. Only one entry per machine per shift per day is allowed.`);
@@ -746,15 +691,14 @@ const SpiralForm = () => {
     setIsSubmitting(true);
 
     try {
-      // Find the selected item to get all details
       const selectedItem = spiralItems.find(item => item.id.toString() === formData.item_id);
       
       const recordData = {
         section_name: formData.section_name.trim(),
         machine_id: formData.machine_id.trim(),
         machine_no: formData.machine_no.trim(),
-        item_id: parseInt(formData.item_id), // Store item_id
-        item_code: formData.item_code.trim(), // Store item_code
+        item_id: parseInt(formData.item_id),
+        item_code: formData.item_code.trim(),
         item_name: formData.item_name.trim(),
         raw_material_flatsize: formData.raw_material_flatsize.trim(),
         material_type: formData.material_type.trim(),
@@ -783,19 +727,16 @@ const SpiralForm = () => {
       if (error) throw error;
       
       // Refresh machine completion status after successful submission
-      const selectedDate = new Date(formData.production_date);
-      const dateEntries = await fetchDateEntries(selectedDate, formData.shift_code);
+      const entriesForDate = await fetchEntriesForDate(formData.production_date, formData.shift_code);
       const completion = calculateMachineCompletion(
-        dateEntries, 
+        entriesForDate, 
         formData.shift_code, 
         targetsData
       );
       setMachineCompletion(completion);
       
-      // Show success message
       setSuccessMessage(`✅ Record saved successfully for ${formData.machine_id} - ${formData.operator_name} on ${formData.production_date}!`);
       
-      // Clear the form after 1.5 seconds (to show success message)
       setTimeout(() => {
         clearForm();
         setSuccessMessage('');
@@ -821,7 +762,6 @@ const SpiralForm = () => {
     }
   };
 
-  // Add New Entry button functionality (same as reset but with different message)
   const handleAddNew = () => {
     clearForm();
     setSuccessMessage('');
@@ -829,7 +769,7 @@ const SpiralForm = () => {
 
   // Function to get machine status icon
   const getMachineStatusIcon = (machineId) => {
-    const isCompleted = machineCompletion.todayEntries.includes(machineId);
+    const isCompleted = machineCompletion.entriesForDate.includes(machineId);
     return isCompleted ? (
       <FiCheckCircle className="machine-icon-completed" />
     ) : (
@@ -979,7 +919,7 @@ const SpiralForm = () => {
               
               <div className="machine-grid">
                 {machineCompletion.shiftMachines.map((machineId, index) => {
-                  const isCompleted = machineCompletion.todayEntries.includes(machineId);
+                  const isCompleted = machineCompletion.entriesForDate.includes(machineId);
                   const isCurrentMachine = machineId === formData.machine_id;
                   
                   const statusClass = isCurrentMachine 
@@ -1234,13 +1174,13 @@ const SpiralForm = () => {
             </div>
           </div>
 
-          {/* Section 3: Item Details - Modified to use ID for selection and display Code separately */}
+          {/* Section 3: Item Details */}
           <div className="form-section">
             <h3 className="section-title">
               Item Details
             </h3>
             <div className="form-grid">
-              {/* Item ID Selection - New dropdown using ID */}
+              {/* Item ID Selection */}
               <div className="form-field">
                 <label className="form-label">
                   Select Item *
@@ -1272,7 +1212,7 @@ const SpiralForm = () => {
                 {errors.item_id && <div className="error-text">{errors.item_id}</div>}
               </div>
 
-              {/* Item Code - New display field */}
+              {/* Item Code */}
               <div className="form-field">
                 <label className="form-label">
                   Item Code
@@ -1421,7 +1361,7 @@ const SpiralForm = () => {
               Operator Details
             </h3>
             <div className="form-grid">
-              {/* Operator Name with datalist for suggestions */}
+              {/* Operator Name */}
               <div className="form-field">
                 <label className="form-label">
                   Operator Name *
@@ -1451,7 +1391,7 @@ const SpiralForm = () => {
                 {errors.operator_name && <div className="error-text">{errors.operator_name}</div>}
               </div>
 
-              {/* User Name - Auto-filled and disabled */}
+              {/* User Name */}
               <div className="form-field">
                 <label className="form-label">
                   User Name

@@ -3,9 +3,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { 
   FiSave, FiX, FiArrowLeft,
   FiSettings, FiCheck, FiAlertCircle,
-   FiTarget,
-  FiPlus, FiTrash2, FiList
-} from 'react-icons/fi'; // FiTrendingUp کو remove کیا ہے
+  FiTarget,
+  FiPlus, FiTrash2, FiList, FiCalendar
+} from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../../supabaseClient';
 
@@ -36,6 +36,7 @@ const SpiralMultiEntryForm = () => {
     users_name: '',
     shift_code: '',
     shift_name: '',
+    production_date: new Date().toISOString().split('T')[0],
     remarks: ''
   });
 
@@ -45,32 +46,25 @@ const SpiralMultiEntryForm = () => {
   const [loading, setLoading] = useState(true);
   const [duplicateError, setDuplicateError] = useState('');
   
-  // Track which fields have been filled
   const [filledFields, setFilledFields] = useState({});
   
-  // Machine completion tracking
   const [machineCompletion, setMachineCompletion] = useState({
     totalMachines: 0,
     completedMachines: 0,
     completionPercentage: 0,
-    todayEntries: [],
+    entriesForDate: [],
     shiftMachines: []
   });
   
-  // Dynamic data from Supabase
   const [shifts, setShifts] = useState([]);
   const [spiralItems, setSpiralItems] = useState([]);
   const [targetsData, setTargetsData] = useState([]);
   const [operators, setOperators] = useState([]);
   const [currentUser, setCurrentUser] = useState('');
 
-  // Filtered machines based on selected shift
   const [filteredMachines, setFilteredMachines] = useState([]);
-  
-  // Current target for selected shift and machine
   const [currentTarget, setCurrentTarget] = useState(null);
   
-  // Calculated fields
   const [totalProduction, setTotalProduction] = useState(0);
   const [totalWeight, setTotalWeight] = useState(0);
   const [overallEfficiency, setOverallEfficiency] = useState(0);
@@ -108,18 +102,13 @@ const SpiralMultiEntryForm = () => {
     fetchCurrentUser();
   }, []);
 
-  // Fetch today's machine entries to track completion
-  const fetchTodayEntries = useCallback(async (shiftCode = null) => {
+  // Fetch entries for selected date using production_date
+  const fetchEntriesForDate = useCallback(async (date, shiftCode = null) => {
     try {
-      const today = new Date();
-      const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0).toISOString();
-      const todayEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59).toISOString();
-
       let query = supabase
         .from('spiralsection')
-        .select('machine_id, shift_code')
-        .gte('created_at', todayStart)
-        .lte('created_at', todayEnd);
+        .select('machine_id, shift_code, production_date')
+        .eq('production_date', date);
 
       if (shiftCode) {
         query = query.eq('shift_code', shiftCode);
@@ -128,27 +117,25 @@ const SpiralMultiEntryForm = () => {
       const { data, error } = await query;
 
       if (error) {
-        console.error('Error fetching today entries:', error);
+        console.error('Error fetching entries for date:', error);
         return [];
       }
 
       return data || [];
     } catch (error) {
-      console.error('Error in fetchTodayEntries:', error);
+      console.error('Error in fetchEntriesForDate:', error);
       return [];
     }
   }, []);
 
-  // Calculate machine completion status
-  const calculateMachineCompletion = useCallback((todayEntries, shiftCode, targets) => {
+  // Calculate machine completion status for selected date
+  const calculateMachineCompletion = useCallback((entriesForDate, shiftCode, targets) => {
     const shiftTargets = shiftCode 
       ? targets.filter(target => target.shift_code === shiftCode)
       : targets;
     
     const uniqueMachines = [...new Set(shiftTargets.map(target => target.machine_id))];
-    
-    const enteredMachines = [...new Set(todayEntries.map(entry => entry.machine_id))];
-    
+    const enteredMachines = [...new Set(entriesForDate.map(entry => entry.machine_id))];
     const completedMachines = enteredMachines.filter(machineId => 
       uniqueMachines.includes(machineId)
     ).length;
@@ -160,19 +147,22 @@ const SpiralMultiEntryForm = () => {
       totalMachines,
       completedMachines,
       completionPercentage: Math.round(completionPercentage),
-      todayEntries: enteredMachines,
+      entriesForDate: enteredMachines,
       shiftMachines: uniqueMachines
     };
   }, []);
 
-  // Update machine completion when shift changes or targets load
+  // Update machine completion when date, shift changes or targets load
   useEffect(() => {
     const updateMachineCompletion = async () => {
-      if (targetsData.length === 0) return;
+      if (targetsData.length === 0 || !commonData.production_date) return;
       
-      const todayEntries = await fetchTodayEntries(commonData.shift_code);
+      const entriesForDate = await fetchEntriesForDate(
+        commonData.production_date, 
+        commonData.shift_code
+      );
       const completion = calculateMachineCompletion(
-        todayEntries, 
+        entriesForDate, 
         commonData.shift_code, 
         targetsData
       );
@@ -181,7 +171,7 @@ const SpiralMultiEntryForm = () => {
     };
     
     updateMachineCompletion();
-  }, [commonData.shift_code, targetsData, fetchTodayEntries, calculateMachineCompletion]);
+  }, [commonData.production_date, commonData.shift_code, targetsData, fetchEntriesForDate, calculateMachineCompletion]);
 
   const fetchConfigurationData = useCallback(async () => {
     try {
@@ -221,6 +211,7 @@ const SpiralMultiEntryForm = () => {
       
     } catch (error) {
       console.error('Error fetching configuration:', error);
+      // Fallback data
       setShifts([
         { id: 1, shift_code: 'D', shift_name: 'Day', start_time: '08:30:00', end_time: '22:30:00' },
         { id: 2, shift_code: 'N', shift_name: 'Night', start_time: '22:30:00', end_time: '08:30:00' },
@@ -249,17 +240,6 @@ const SpiralMultiEntryForm = () => {
           finishedproductname: '5.5mm2P',
           unit: 'Meter',
           per_meter_wt: 0.048
-        },
-        { 
-          id: 3, 
-          item_code: 'ITEM003', 
-          item_name: '2.5mm2P', 
-          raw_material_flatsize: 'T0.35_W2.20', 
-          material_type: 'PVC', 
-          wire_size: '1.15mm', 
-          finishedproductname: '4mm2P',
-          unit: 'Meter',
-          per_meter_wt: 0.035
         }
       ]);
       
@@ -280,50 +260,6 @@ const SpiralMultiEntryForm = () => {
           section_name: 'Spiral', 
           machine_id: 'SP # 02', 
           machine_no: '02', 
-          shift_code: 'D', 
-          shift_name: 'Day', 
-          target_qty: 12000, 
-          uom: 'Meter', 
-          is_active: true 
-        },
-        { 
-          id: 3, 
-          section_name: 'Spiral', 
-          machine_id: 'SP # 03', 
-          machine_no: '03', 
-          shift_code: 'D', 
-          shift_name: 'Day', 
-          target_qty: 12000, 
-          uom: 'Meter', 
-          is_active: true 
-        },
-        { 
-          id: 4, 
-          section_name: 'Spiral', 
-          machine_id: 'SP # 04', 
-          machine_no: '04', 
-          shift_code: 'D', 
-          shift_name: 'Day', 
-          target_qty: 12000, 
-          uom: 'Meter', 
-          is_active: true 
-        },
-        { 
-          id: 5, 
-          section_name: 'Spiral', 
-          machine_id: 'SP # 05', 
-          machine_no: '05', 
-          shift_code: 'D', 
-          shift_name: 'Day', 
-          target_qty: 12000, 
-          uom: 'Meter', 
-          is_active: true 
-        },
-        { 
-          id: 6, 
-          section_name: 'Spiral', 
-          machine_id: 'SP # 06', 
-          machine_no: '06', 
           shift_code: 'D', 
           shift_name: 'Day', 
           target_qty: 12000, 
@@ -548,7 +484,6 @@ const SpiralMultiEntryForm = () => {
       if (item.id === id) {
         const updatedItem = { ...item, [field]: value };
         
-        // Auto-fill item details when item_code is selected
         if (field === 'item_code') {
           const selectedItem = spiralItems.find(spItem => spItem.item_code === value);
           if (selectedItem) {
@@ -561,7 +496,6 @@ const SpiralMultiEntryForm = () => {
           }
         }
         
-        // Calculate weight for this item
         if (field === 'production_quantity' || field === 'per_meter_wt') {
           const productionQty = parseFloat(field === 'production_quantity' ? value : updatedItem.production_quantity) || 0;
           const perMeterWt = parseFloat(field === 'per_meter_wt' ? value : updatedItem.per_meter_wt) || 0;
@@ -578,7 +512,6 @@ const SpiralMultiEntryForm = () => {
       return item;
     }));
     
-    // Clear error for this field
     const itemIndex = items.findIndex(item => item.id === id);
     if (itemIndex >= 0 && itemErrors[itemIndex]?.[field]) {
       setItemErrors(prev => {
@@ -597,7 +530,7 @@ const SpiralMultiEntryForm = () => {
     return {
       isFilled,
       hasError,
-      isRequired: ['machine_id', 'shift_code', 'operator_name'].includes(fieldName)
+      isRequired: ['machine_id', 'shift_code', 'operator_name', 'production_date'].includes(fieldName)
     };
   };
 
@@ -661,7 +594,6 @@ const SpiralMultiEntryForm = () => {
     const newItemErrors = items.map(() => ({}));
     let isValid = true;
     
-    // Validate common data
     if (!commonData.section_name.trim()) {
       newErrors.section_name = 'Section name is required';
       isValid = false;
@@ -674,12 +606,15 @@ const SpiralMultiEntryForm = () => {
       newErrors.shift_code = 'Shift is required';
       isValid = false;
     }
+    if (!commonData.production_date) {
+      newErrors.production_date = 'Production date is required';
+      isValid = false;
+    }
     if (!commonData.operator_name.trim()) {
       newErrors.operator_name = 'Operator name is required';
       isValid = false;
     }
     
-    // Validate items
     items.forEach((item, index) => {
       if (!item.item_code) {
         newItemErrors[index].item_code = 'Item code is required';
@@ -699,24 +634,19 @@ const SpiralMultiEntryForm = () => {
     return isValid;
   };
 
-  // Check for duplicate entry
+  // Check for duplicate entry based on machine, shift, and production_date ONLY
   const checkDuplicateEntry = async () => {
-    if (!commonData.machine_id || !commonData.shift_code) {
+    if (!commonData.machine_id || !commonData.shift_code || !commonData.production_date) {
       return false;
     }
 
     try {
-      const today = new Date();
-      const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0).toISOString();
-      const todayEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59).toISOString();
-
       const { data, error } = await supabase
         .from('spiralsection')
-        .select('*')
+        .select('id, machine_id, shift_code, production_date')
         .eq('machine_id', commonData.machine_id)
         .eq('shift_code', commonData.shift_code)
-        .gte('created_at', todayStart)
-        .lte('created_at', todayEnd);
+        .eq('production_date', commonData.production_date);
 
       if (error) {
         console.error('Error checking duplicate:', error);
@@ -740,7 +670,10 @@ const SpiralMultiEntryForm = () => {
 
     const isDuplicate = await checkDuplicateEntry();
     if (isDuplicate) {
-      setDuplicateError(`This machine (${commonData.machine_id}) already has an entry for ${commonData.shift_name} shift today. Only one entry per machine per shift per day is allowed.`);
+      setDuplicateError(
+        `This machine (${commonData.machine_id}) already has an entry for ${commonData.shift_name} shift on ${commonData.production_date}. ` +
+        `Only one entry per machine per shift per day is allowed.`
+      );
       return;
     }
 
@@ -766,6 +699,7 @@ const SpiralMultiEntryForm = () => {
         users_name: currentUser,
         shift_code: commonData.shift_code,
         shift_name: commonData.shift_name,
+        production_date: commonData.production_date,
         remarks: commonData.remarks.trim(),
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
@@ -777,15 +711,7 @@ const SpiralMultiEntryForm = () => {
 
       if (error) throw error;
       
-      const todayEntries = await fetchTodayEntries(commonData.shift_code);
-      const completion = calculateMachineCompletion(
-        todayEntries, 
-        commonData.shift_code, 
-        targetsData
-      );
-      setMachineCompletion(completion);
-      
-      alert(`${items.length} record(s) created successfully for ${commonData.machine_id}!`);
+      alert(`${items.length} record(s) created successfully for ${commonData.machine_id} on ${commonData.production_date}!`);
       navigate('/production-sections/spiral');
       
     } catch (error) {
@@ -805,13 +731,14 @@ const SpiralMultiEntryForm = () => {
   const handleReset = () => {
     if (window.confirm('Reset all fields to default?')) {
       setCommonData({
-        section_name: 'Spiral Section',
+        section_name: 'Spiral',
         machine_id: '',
         machine_no: '',
         operator_name: '',
         users_name: currentUser,
         shift_code: '',
         shift_name: '',
+        production_date: new Date().toISOString().split('T')[0],
         remarks: ''
       });
       setItems([{
@@ -860,7 +787,6 @@ const SpiralMultiEntryForm = () => {
     );
   }
 
-  // Filter shifts to only show those that have targets in Spiral section
   const availableShifts = shifts.filter(shift => 
     targetsData.some(target => 
       target.shift_code === shift.shift_code && 
@@ -925,7 +851,7 @@ const SpiralMultiEntryForm = () => {
       </div>
 
       {/* Machine Completion Tracker */}
-      {commonData.shift_code && (
+      {commonData.shift_code && commonData.production_date && (
         <div style={{
           background: 'white',
           border: '2px solid #e5e7eb',
@@ -944,10 +870,10 @@ const SpiralMultiEntryForm = () => {
               <FiTarget style={{ color: '#3b82f6', fontSize: '20px' }} />
               <div>
                 <div style={{ fontWeight: '600', color: '#1e293b', fontSize: '16px' }}>
-                  {commonData.shift_name} Shift Machine Completion
+                  {commonData.shift_name} Shift Machine Completion for {commonData.production_date}
                 </div>
                 <div style={{ fontSize: '13px', color: '#64748b', marginTop: '2px' }}>
-                  Today's progress for selected shift
+                  Progress for selected date
                 </div>
               </div>
             </div>
@@ -987,7 +913,6 @@ const SpiralMultiEntryForm = () => {
               borderRadius: '6px'
             }} />
             
-            {/* Machine markers */}
             <div style={{
               position: 'absolute',
               top: 0,
@@ -1077,7 +1002,7 @@ const SpiralMultiEntryForm = () => {
                 <strong>Duplicate Entry Detected!</strong>
                 <div style={{ marginTop: '5px' }}>{duplicateError}</div>
                 <div style={{ marginTop: '5px', fontSize: '13px' }}>
-                  Please check existing records or select a different machine/shift.
+                  Please check existing records or select a different date/machine/shift.
                 </div>
               </div>
             </div>
@@ -1118,6 +1043,57 @@ const SpiralMultiEntryForm = () => {
                 </div>
               </div>
 
+              {/* Production Date */}
+              <div>
+                <label style={labelStyle}>
+                  Production Date *
+                  {getFieldStatus('production_date', commonData.production_date).hasError && (
+                    <FiAlertCircle style={{ marginLeft: '5px', color: '#ef4444' }} size={14} />
+                  )}
+                  {getFieldStatus('production_date', commonData.production_date).isFilled && (
+                    <FiCheck style={{ marginLeft: '5px', color: '#10b981' }} size={14} />
+                  )}
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type="date"
+                    name="production_date"
+                    value={commonData.production_date}
+                    onChange={handleCommonChange}
+                    max={new Date().toISOString().split('T')[0]}
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      paddingRight: '40px',
+                      borderRadius: '6px',
+                      border: '1px solid #e5e7eb',
+                      background: '#f8fafc',
+                      fontSize: '14px',
+                      color: '#1f2937',
+                      outline: 'none',
+                      boxSizing: 'border-box',
+                      ...getFieldStyle('production_date', commonData.production_date)
+                    }}
+                  />
+                  <FiCalendar style={{
+                    position: 'absolute',
+                    right: '12px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    color: getFieldStatus('production_date', commonData.production_date).isFilled ? '#065f46' : '#9ca3af',
+                    pointerEvents: 'none'
+                  }} size={16} />
+                </div>
+                {errors.production_date && <ErrorText text={errors.production_date} />}
+                <div style={{ 
+                  fontSize: '12px', 
+                  color: '#6b7280', 
+                  marginTop: '4px'
+                }}>
+                  Select the date when production occurred
+                </div>
+              </div>
+
               {/* Shift Code */}
               <div>
                 <label style={labelStyle}>
@@ -1135,7 +1111,22 @@ const SpiralMultiEntryForm = () => {
                     value={commonData.shift_code}
                     onChange={handleCommonChange}
                     style={{
-                      ...selectStyle(getFieldStatus('shift_code', commonData.shift_code).hasError),
+                      width: '100%',
+                      padding: '10px 12px',
+                      paddingRight: '35px',
+                      borderRadius: '6px',
+                      border: '1px solid #e5e7eb',
+                      background: '#f8fafc',
+                      fontSize: '14px',
+                      color: '#1f2937',
+                      outline: 'none',
+                      boxSizing: 'border-box',
+                      cursor: 'pointer',
+                      appearance: 'none',
+                      backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                      backgroundRepeat: 'no-repeat',
+                      backgroundPosition: 'right 12px center',
+                      backgroundSize: '14px',
                       ...getFieldStyle('shift_code', commonData.shift_code, true)
                     }}
                   >
@@ -1196,10 +1187,24 @@ const SpiralMultiEntryForm = () => {
                     onChange={handleCommonChange}
                     disabled={!commonData.shift_code}
                     style={{
-                      ...selectStyle(getFieldStatus('machine_id', commonData.machine_id).hasError),
-                      ...getFieldStyle('machine_id', commonData.machine_id, true),
+                      width: '100%',
+                      padding: '10px 12px',
+                      paddingRight: '35px',
+                      borderRadius: '6px',
+                      border: '1px solid #e5e7eb',
+                      background: '#f8fafc',
+                      fontSize: '14px',
+                      color: '#1f2937',
+                      outline: 'none',
+                      boxSizing: 'border-box',
+                      cursor: commonData.shift_code ? 'pointer' : 'not-allowed',
+                      appearance: 'none',
+                      backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                      backgroundRepeat: 'no-repeat',
+                      backgroundPosition: 'right 12px center',
+                      backgroundSize: '14px',
                       opacity: commonData.shift_code ? 1 : 0.6,
-                      cursor: commonData.shift_code ? 'pointer' : 'not-allowed'
+                      ...getFieldStyle('machine_id', commonData.machine_id, true)
                     }}
                   >
                     <option value="">
@@ -1304,7 +1309,15 @@ const SpiralMultiEntryForm = () => {
                     placeholder="Enter or select operator name"
                     list="operatorSuggestions"
                     style={{
-                      ...inputStyle(getFieldStatus('operator_name', commonData.operator_name).hasError),
+                      width: '100%',
+                      padding: '10px 12px',
+                      borderRadius: '6px',
+                      border: '1px solid #e5e7eb',
+                      background: '#f8fafc',
+                      fontSize: '14px',
+                      color: '#1f2937',
+                      outline: 'none',
+                      boxSizing: 'border-box',
                       ...getFieldStyle('operator_name', commonData.operator_name)
                     }}
                   />
@@ -1331,10 +1344,17 @@ const SpiralMultiEntryForm = () => {
                   value={currentUser}
                   disabled
                   style={{
-                    ...inputStyle(),
-                    ...getFieldStyle('users_name', currentUser),
+                    width: '100%',
+                    padding: '10px 12px',
+                    borderRadius: '6px',
+                    border: '1px solid #e5e7eb',
                     background: getFieldStatus('users_name', currentUser).isFilled ? '#d1fae5' : '#f3f4f6',
-                    cursor: 'not-allowed'
+                    fontSize: '14px',
+                    color: getFieldStatus('users_name', currentUser).isFilled ? '#065f46' : '#1f2937',
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                    cursor: 'not-allowed',
+                    fontWeight: getFieldStatus('users_name', currentUser).isFilled ? '600' : '400'
                   }}
                 />
                 <div style={{ 
@@ -1477,12 +1497,24 @@ const SpiralMultiEntryForm = () => {
                         value={item.item_code}
                         onChange={(e) => handleItemChange(item.id, 'item_code', e.target.value)}
                         style={{
-                          ...selectStyle(itemError.item_code),
-                          borderColor: item.item_code ? '#10b981' : (itemError.item_code ? '#ef4444' : '#e5e7eb'),
-                          backgroundColor: item.item_code ? '#d1fae5' : '#f8fafc',
-                          color: item.item_code ? '#065f46' : '#1f2937',
+                          width: '100%',
+                          padding: '10px 12px',
+                          paddingRight: '35px',
+                          borderRadius: '6px',
+                          border: '1px solid #e5e7eb',
+                          background: item.item_code ? '#d1fae5' : '#f8fafc',
                           fontSize: item.item_code ? '15px' : '14px',
-                          fontWeight: item.item_code ? '600' : '400'
+                          color: item.item_code ? '#065f46' : '#1f2937',
+                          fontWeight: item.item_code ? '600' : '400',
+                          outline: 'none',
+                          boxSizing: 'border-box',
+                          cursor: 'pointer',
+                          appearance: 'none',
+                          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                          backgroundRepeat: 'no-repeat',
+                          backgroundPosition: 'right 12px center',
+                          backgroundSize: '14px',
+                          borderColor: item.item_code ? '#10b981' : (itemError.item_code ? '#ef4444' : '#e5e7eb')
                         }}
                       >
                         <option value="">Select item code</option>
@@ -1544,13 +1576,18 @@ const SpiralMultiEntryForm = () => {
                           min="0.01"
                           step="0.01"
                           style={{
-                            ...inputStyle(itemError.production_quantity),
-                            borderColor: item.production_quantity ? '#10b981' : (itemError.production_quantity ? '#ef4444' : '#e5e7eb'),
-                            backgroundColor: item.production_quantity ? '#d1fae5' : '#f8fafc',
-                            color: item.production_quantity ? '#065f46' : '#1f2937',
+                            width: '100%',
+                            padding: '10px 12px',
+                            paddingRight: '70px',
+                            borderRadius: '6px',
+                            border: '1px solid #e5e7eb',
+                            background: item.production_quantity ? '#d1fae5' : '#f8fafc',
                             fontSize: item.production_quantity ? '15px' : '14px',
+                            color: item.production_quantity ? '#065f46' : '#1f2937',
                             fontWeight: item.production_quantity ? '600' : '400',
-                            paddingRight: '70px'
+                            outline: 'none',
+                            boxSizing: 'border-box',
+                            borderColor: item.production_quantity ? '#10b981' : (itemError.production_quantity ? '#ef4444' : '#e5e7eb')
                           }}
                         />
                         <div style={{
@@ -1585,13 +1622,18 @@ const SpiralMultiEntryForm = () => {
                           min="0"
                           step="0.0001"
                           style={{
-                            ...inputStyle(),
-                            borderColor: item.per_meter_wt ? '#10b981' : '#e5e7eb',
-                            backgroundColor: item.per_meter_wt ? '#d1fae5' : '#f8fafc',
-                            color: item.per_meter_wt ? '#065f46' : '#1f2937',
+                            width: '100%',
+                            padding: '10px 12px',
+                            paddingRight: '45px',
+                            borderRadius: '6px',
+                            border: '1px solid #e5e7eb',
+                            background: item.per_meter_wt ? '#d1fae5' : '#f8fafc',
                             fontSize: item.per_meter_wt ? '15px' : '14px',
+                            color: item.per_meter_wt ? '#065f46' : '#1f2937',
                             fontWeight: item.per_meter_wt ? '600' : '400',
-                            paddingRight: '45px'
+                            outline: 'none',
+                            boxSizing: 'border-box',
+                            borderColor: item.per_meter_wt ? '#10b981' : '#e5e7eb'
                           }}
                         />
                         <div style={{
@@ -1802,7 +1844,8 @@ const SpiralMultiEntryForm = () => {
                   resize: 'vertical',
                   fontFamily: 'inherit',
                   boxSizing: 'border-box',
-                  fontWeight: commonData.remarks ? '500' : '400'
+                  fontWeight: commonData.remarks ? '500' : '400',
+                  outline: 'none'
                 }}
               />
             </div>
@@ -1903,13 +1946,6 @@ const SpiralMultiEntryForm = () => {
           100% { transform: rotate(360deg); }
         }
         
-        @keyframes pulse {
-          0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
-          70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(59, 130, 246, 0); }
-          100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
-        }
-        
-        /* Mobile Responsive Styles */
         @media (max-width: 768px) {
           div[style*="grid-template-columns"] {
             grid-template-columns: 1fr !important;
@@ -1930,25 +1966,21 @@ const SpiralMultiEntryForm = () => {
           }
         }
         
-        /* Better mobile input styles */
         input, select, textarea {
           font-size: 16px !important;
           width: 100% !important;
           box-sizing: border-box !important;
         }
         
-        /* Larger touch targets for mobile */
-        button, select, input[type="text"], input[type="number"] {
+        button, select, input[type="text"], input[type="number"], input[type="date"] {
           min-height: 44px;
         }
         
-        /* Green filled field animations */
         input:focus, select:focus, textarea:focus {
           outline: none;
           box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
         }
         
-        /* Transition effects */
         input, select, textarea, div[style*="border"] {
           transition: all 0.3s ease;
         }
@@ -1965,37 +1997,6 @@ const labelStyle = {
   fontSize: '13px',
   display: 'block'
 };
-
-const inputStyle = (hasError) => ({
-  width: '100%',
-  padding: '10px 12px',
-  borderRadius: '6px',
-  border: '1px solid #e5e7eb',
-  background: '#f8fafc',
-  fontSize: '14px',
-  color: '#1f2937',
-  outline: 'none',
-  boxSizing: 'border-box'
-});
-
-const selectStyle = (hasError) => ({
-  width: '100%',
-  padding: '10px 12px',
-  paddingRight: '35px',
-  borderRadius: '6px',
-  border: '1px solid #e5e7eb',
-  background: '#f8fafc',
-  fontSize: '14px',
-  color: '#1f2937',
-  outline: 'none',
-  boxSizing: 'border-box',
-  cursor: 'pointer',
-  appearance: 'none',
-  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-  backgroundRepeat: 'no-repeat',
-  backgroundPosition: 'right 12px center',
-  backgroundSize: '14px'
-});
 
 const ErrorText = ({ text }) => (
   <div style={{ 
